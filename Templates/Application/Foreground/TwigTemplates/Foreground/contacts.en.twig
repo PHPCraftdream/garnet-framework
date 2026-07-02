@@ -1,0 +1,48 @@
+{% if telegram %}
+    <a href="https://t.me/{{ telegram }}"
+       title="Telegram"
+       target="_blank"
+       rel="noopener noreferrer"
+       class="target-link tg-link"
+       data-target="contact"
+       data-target-id="telegram"
+    >
+        <i class="bi bi-telegram"></i>
+    </a>
+{% endif %}
+{% if whatsapp %}
+    <a href="https://wa.me/{{ whatsapp }}"
+       title="Whatsapp"
+       target="_blank"
+       rel="noopener noreferrer"
+       class="target-link wa-link"
+       data-target="contact"
+       data-target-id="whatsapp"
+    >
+        <i class="bi bi-whatsapp"></i>
+    </a>
+{% endif %}
+{% if telephone %}
+    <a href="tel:{{ telephone }}"
+       title="Phone"
+       target="_blank"
+       rel="noopener noreferrer"
+       class="target-link phone-link"
+       data-target="contact"
+       data-target-id="telephone"
+    >
+        <i class="bi bi-telephone"></i>
+    </a>
+{% endif %}
+{% if email %}
+    <a href="mailto:{{ email }}"
+       title="Email"
+       target="_blank"
+       rel="noopener noreferrer"
+       class="target-link email-link"
+       data-target="contact"
+       data-target-id="email"
+    >
+        <i class="bi bi-at"></i>
+    </a>
+{% endif %}

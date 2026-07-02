@@ -1,0 +1,362 @@
+/* ============================================================
+   Glass skin — gradient + frosted-glass layer (2026 trend).
+
+   Everything is gated behind  body.glass-skin  so it's a clean
+   drop-in: flip the body class on/off to A/B against the flat
+   design. Re-skins EXISTING component classes (.welcome-card,
+   .card, .stat-tile, .btn-primary, …) — no TSX changes.
+
+   Frosted glass is only visible over a textured backdrop, so the
+   body gets two fixed layers behind the content:
+     ::before — soft coloured "aurora" blobs (the blur shifts hue)
+     ::after  — a repeating dot-grid + fractal-noise grain (the
+                blur visibly softens fine detail = the "matte" look)
+   ============================================================ */
+
+/* ── Backdrop ───────────────────────────────────────────────── */
+
+/* Always reserve the scrollbar gutter so a page that grows a vertical
+   scrollbar after load doesn't shove the (centered) content left. */
+html {
+    scrollbar-gutter: stable;
+}
+
+body.glass-skin {
+    background: var(--color-bg-page);
+}
+
+/* Coloured blobs — give the glass something to tint. */
+body.glass-skin::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    background:
+        radial-gradient(38rem 38rem at 8% 4%,   color-mix(in srgb, var(--color-accent) 24%, transparent), transparent 60%),
+        radial-gradient(34rem 34rem at 92% 0%,  color-mix(in srgb, var(--color-status-purple) 20%, transparent), transparent 60%),
+        radial-gradient(42rem 42rem at 80% 100%, color-mix(in srgb, var(--color-info) 16%, transparent), transparent 62%);
+}
+
+/* Repeating texture — a triangular honeycomb grid (three line families at
+   0° / 60° / 120° tile into isosceles triangles) plus a fractal-noise grain
+   (the matte tactility). The blur softens both = the "frosted" read. */
+body.glass-skin::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.38;
+    /* A single SEAMLESS SVG tile of an equilateral triangular grid: the tile
+       is 44×76.21 (side 44, height 44·√3/2≈38.1) and its edges line up with
+       its own copies, so background-repeat tiles it identically at any browser
+       zoom — no drifting, perfect joins (three independent CSS gradients can't
+       guarantee shared vertices, which is what made the grid drift). */
+    background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='76.21'%3E%3Cpath d='M0 0H44M0 38.1H44M0 0L22 38.1M44 0L22 38.1M22 38.1L0 76.21M22 38.1L44 76.21' stroke='%236f6da6' stroke-opacity='0.16' stroke-width='1' fill='none'/%3E%3C/svg%3E"),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+    background-size: 44px 76.21px, 160px 160px;
+}
+
+[data-theme="dark"] body.glass-skin::after {
+    opacity: 0.4;
+}
+
+/* ── The glass surface (reusable utility) ───────────────────── */
+
+@utility glass {
+    background: color-mix(in srgb, var(--color-bg-surface) 46%, transparent);
+    -webkit-backdrop-filter: blur(14px) saturate(112%);
+    backdrop-filter: blur(14px) saturate(112%);
+    border: 1px solid color-mix(in srgb, white 30%, var(--color-border));
+    box-shadow:
+        0 10px 12px -12px color-mix(in srgb, var(--color-accent) 30%, transparent),
+        inset 0 1px 0 color-mix(in srgb, white 45%, transparent);
+}
+
+/* ── Skin: re-frost existing component containers ───────────── */
+/* One `:is()` list = every block that should read as frosted glass.   */
+
+.glass-skin :is(
+    .welcome-card, .card, .stat-tile, .empty-state-card, .user-balance-card,
+    .booking-card, .slot-card, .admin-dash-card, .modal-content, .page-hero,
+    [data-test-id="news-feed"], [data-test-id="notifications-widget"],
+    [data-test-id="moderator-stats"], [data-test-id="expert-stats"]
+) {
+    background-color: color-mix(in srgb, var(--color-bg-surface) 48%, transparent) !important;
+    -webkit-backdrop-filter: blur(12px) saturate(112%);
+    backdrop-filter: blur(12px) saturate(112%);
+    border: 1px solid color-mix(in srgb, white 26%, var(--color-border)) !important;
+    /* Glowing 2026 edge: a crisp accent ring + a soft accent/violet bloom. */
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--color-accent) 20%, transparent),
+        0 10px 11px -14px color-mix(in srgb, var(--color-accent) 34%, transparent),
+        0 0 10px -10px color-mix(in srgb, var(--color-status-purple) 30%, transparent),
+        inset 0 1px 0 color-mix(in srgb, white 40%, transparent);
+    transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+/* Panel chrome — the top bar and the admin sidebar read as light frosted
+   glass so the honeycomb backdrop shows softly through the menu. */
+/* Single frosted layer per menu. The sidebar lives in .app-sidebar (the aside)
+   — do NOT also frost the inner .nav-sidebar, or the two stacked layers make
+   the sidebar denser/whiter than the top bar. Both menus share these values so
+   they read as the same glass colour. */
+.glass-skin :is(.nav-topbar, .app-sidebar, .sp-nav, .sp-footer, .mobile-topbar) {
+    background-color: color-mix(in srgb, var(--color-bg-surface) 32%, transparent) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(120%);
+    backdrop-filter: blur(18px) saturate(120%);
+}
+
+/* The drawer is a full reading panel stacked over the dark scrim, so a 32%
+   tint would read muddy and drop text contrast. Keep it frosted but more
+   opaque (works in both themes: the surface token is light in light, dark in
+   dark) so the menu labels stay crisp. */
+.glass-skin .mobile-drawer {
+    background-color: color-mix(in srgb, var(--color-bg-surface) 80%, transparent) !important;
+    -webkit-backdrop-filter: blur(22px) saturate(140%);
+    backdrop-filter: blur(22px) saturate(140%);
+}
+
+/* Tab strips (.tab-bar / .admin-tabnav) are NOT frosted on their own — they
+   live inside a single .section-soft panel together with their content so the
+   tabs, sub-tabs and grid read as one block (no separate backgrounds/borders).
+   See .admin-panel-block / page-level wrappers. */
+
+/* Hover: the edge glow blooms a little brighter (cards only). */
+.glass-skin :is(.card, .user-balance-card, .slot-card, .admin-dash-card, .booking-card):hover {
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--color-accent) 38%, transparent),
+        0 14px 14px -14px color-mix(in srgb, var(--color-accent) 42%, transparent),
+        0 0 12px -8px color-mix(in srgb, var(--color-status-purple) 40%, transparent),
+        inset 0 1px 0 color-mix(in srgb, white 45%, transparent);
+}
+
+/* Welcome card — the showpiece: gradient wash + a true gradient border
+   ring drawn with the mask trick (accent → violet → fade). */
+.glass-skin .welcome-card {
+    position: relative;
+    background-image: linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 18%, transparent), transparent 55%);
+}
+.glass-skin .welcome-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg,
+        color-mix(in srgb, var(--color-accent) 85%, transparent),
+        color-mix(in srgb, var(--color-status-purple) 70%, transparent) 45%,
+        transparent 70%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+}
+
+/* Dark theme: drop the bright top highlight, deepen the bloom. */
+[data-theme="dark"] .glass-skin :is(
+    .welcome-card, .card, .stat-tile, .empty-state-card, .user-balance-card,
+    .booking-card, .slot-card, .admin-dash-card, .modal-content, .page-hero,
+    [data-test-id="news-feed"], [data-test-id="notifications-widget"],
+    [data-test-id="moderator-stats"], [data-test-id="expert-stats"]
+) {
+    border-color: color-mix(in srgb, white 10%, var(--color-border)) !important;
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--color-accent) 28%, transparent),
+        0 12px 12px -14px rgba(0, 0, 0, 0.6),
+        0 0 11px -10px color-mix(in srgb, var(--color-status-purple) 36%, transparent),
+        inset 0 1px 0 color-mix(in srgb, white 10%, transparent);
+}
+
+/* ── Buttons: slight glass + glowing edge ───────────────────── */
+/* All buttons get a hairline + a glow on hover. Non-solid variants
+   (outline / secondary / ghost) also get a translucent frosted fill. */
+
+.glass-skin .btn {
+    transition: box-shadow 0.18s ease, filter 0.18s ease, transform 0.12s ease;
+    border: 1px solid color-mix(in srgb, white 16%, var(--color-border));
+}
+.glass-skin .btn:hover {
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--color-accent) 32%, transparent),
+        0 6px 7px -8px color-mix(in srgb, var(--color-accent) 45%, transparent),
+        0 0 6px -6px color-mix(in srgb, var(--color-accent) 40%, transparent);
+}
+
+.glass-skin :is(.btn-outline-primary, .btn-secondary, .btn-ghost) {
+    background-color: color-mix(in srgb, var(--color-bg-surface) 35%, transparent) !important;
+    -webkit-backdrop-filter: blur(8px) saturate(110%);
+    backdrop-filter: blur(8px) saturate(110%);
+}
+/* .btn-secondary bakes text-white for its solid gray fill; the glass skin
+   replaces that fill with a light translucent one, so white text would be
+   invisible (white-on-white). Force readable on-surface text for every
+   .btn-secondary under the skin — one central fix, no per-button overrides. */
+.glass-skin .btn-secondary {
+    color: var(--color-on-surface) !important;
+}
+
+/* On hover/focus an outline-primary button fills with accent and turns its
+   text white. The base !important frosted background above would keep the fill
+   light, leaving that white text invisible — so restore the accent fill (and
+   white text) on hover/focus. One central rule for every such button. */
+.glass-skin .btn-outline-primary:hover,
+.glass-skin .btn-outline-primary:focus-visible {
+    background-color: var(--color-accent) !important;
+    color: var(--color-accent-text) !important;
+    border-color: var(--color-accent);
+}
+
+/* Primary action — gradient fill + permanent soft glow. */
+.glass-skin .btn-primary {
+    background-image: linear-gradient(135deg, var(--color-accent), color-mix(in srgb, var(--color-status-purple) 70%, var(--color-accent)));
+    border: 1px solid color-mix(in srgb, white 22%, transparent);
+    box-shadow:
+        0 6px 7px -6px color-mix(in srgb, var(--color-accent) 55%, transparent),
+        0 0 7px -8px color-mix(in srgb, var(--color-status-purple) 50%, transparent),
+        inset 0 1px 0 color-mix(in srgb, white 28%, transparent);
+}
+.glass-skin .btn-primary:hover {
+    background-image: linear-gradient(135deg, var(--color-accent-hover), color-mix(in srgb, var(--color-status-purple) 78%, var(--color-accent-hover)));
+    filter: brightness(1.04);
+    box-shadow:
+        0 8px 8px -6px color-mix(in srgb, var(--color-accent) 65%, transparent),
+        0 0 10px -6px color-mix(in srgb, var(--color-status-purple) 60%, transparent),
+        inset 0 1px 0 color-mix(in srgb, white 32%, transparent);
+}
+
+/* ── Frosted top bar (the sticky header strip) ──────────────── */
+
+.glass-skin header {
+    background-color: color-mix(in srgb, var(--color-bg-surface) 53%, transparent) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(112%);
+    backdrop-filter: blur(16px) saturate(112%);
+}
+
+/* ── Alerts / banners / toasts — modern frosted look ────────── */
+/* Replaces the flat "2010" coloured block with a frosted panel whose
+   edge glows in the variant's own colour. */
+
+.glass-skin :is(.banner, .toast) {
+    background-color: color-mix(in srgb, var(--color-bg-surface) 52%, transparent) !important;
+    -webkit-backdrop-filter: blur(13px) saturate(112%);
+    backdrop-filter: blur(13px) saturate(112%);
+    border: 1px solid color-mix(in srgb, white 22%, var(--color-border));
+    border-radius: 0.85rem;
+    box-shadow:
+        0 10px 11px -12px rgba(0, 0, 0, 0.22),
+        inset 0 1px 0 color-mix(in srgb, white 35%, transparent);
+}
+
+.glass-skin .banner-warn {
+    background-image: linear-gradient(135deg, color-mix(in srgb, var(--color-warning) 20%, transparent), transparent 60%);
+    border-color: color-mix(in srgb, var(--color-warning) 40%, transparent) !important;
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--color-warning) 24%, transparent),
+        0 10px 11px -12px rgba(0, 0, 0, 0.22),
+        0 0 10px -10px color-mix(in srgb, var(--color-warning) 42%, transparent),
+        inset 0 1px 0 color-mix(in srgb, white 35%, transparent);
+}
+.glass-skin .banner-danger {
+    background-image: linear-gradient(135deg, color-mix(in srgb, var(--color-danger) 18%, transparent), transparent 60%);
+    border-color: color-mix(in srgb, var(--color-danger) 40%, transparent) !important;
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--color-danger) 24%, transparent),
+        0 10px 11px -12px rgba(0, 0, 0, 0.22),
+        0 0 10px -10px color-mix(in srgb, var(--color-danger) 42%, transparent),
+        inset 0 1px 0 color-mix(in srgb, white 35%, transparent);
+}
+.glass-skin .banner-success {
+    background-image: linear-gradient(135deg, color-mix(in srgb, var(--color-success) 18%, transparent), transparent 60%);
+    border-color: color-mix(in srgb, var(--color-success) 40%, transparent) !important;
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--color-success) 22%, transparent),
+        0 10px 11px -12px rgba(0, 0, 0, 0.22),
+        0 0 10px -10px color-mix(in srgb, var(--color-success) 40%, transparent),
+        inset 0 1px 0 color-mix(in srgb, white 35%, transparent);
+}
+.glass-skin .banner-info {
+    background-image: linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 14%, transparent), transparent 60%);
+    border-color: color-mix(in srgb, var(--color-accent) 30%, transparent) !important;
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--color-accent) 18%, transparent),
+        0 10px 11px -12px rgba(0, 0, 0, 0.22),
+        0 0 9px -10px color-mix(in srgb, var(--color-accent) 34%, transparent),
+        inset 0 1px 0 color-mix(in srgb, white 35%, transparent);
+}
+
+.glass-skin .toast {
+    box-shadow:
+        0 16px 14px -10px rgba(0, 0, 0, 0.3),
+        0 0 10px -10px color-mix(in srgb, var(--color-accent) 34%, transparent),
+        inset 0 1px 0 color-mix(in srgb, white 40%, transparent);
+}
+
+/* The .text-bg-* helpers paint WHITE text on a solid colour, but the frosted
+   override above swaps that solid colour for the light surface — leaving the
+   message white-on-white (a danger toast was unreadable). Restore readable
+   on-surface text + a per-variant coloured tint and edge glow, like the
+   banners. The close button follows the text colour too. */
+.glass-skin .toast,
+.glass-skin .toast .toast-body {
+    color: var(--color-on-surface) !important;
+}
+.glass-skin .toast .btn-close {
+    /* Undo .btn-close-white's invert so the × follows the on-surface text
+       colour above instead of staying white-on-light. */
+    filter: none;
+}
+.glass-skin .toast.text-bg-danger {
+    background-image: linear-gradient(135deg, color-mix(in srgb, var(--color-danger) 20%, transparent), transparent 62%);
+    border-color: color-mix(in srgb, var(--color-danger) 42%, transparent) !important;
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--color-danger) 26%, transparent),
+        0 16px 14px -10px rgba(0, 0, 0, 0.3),
+        0 0 10px -10px color-mix(in srgb, var(--color-danger) 42%, transparent);
+}
+.glass-skin .toast.text-bg-success {
+    background-image: linear-gradient(135deg, color-mix(in srgb, var(--color-success) 20%, transparent), transparent 62%);
+    border-color: color-mix(in srgb, var(--color-success) 42%, transparent) !important;
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--color-success) 24%, transparent),
+        0 16px 14px -10px rgba(0, 0, 0, 0.3),
+        0 0 10px -10px color-mix(in srgb, var(--color-success) 40%, transparent);
+}
+.glass-skin .toast.text-bg-warning {
+    background-image: linear-gradient(135deg, color-mix(in srgb, var(--color-warning) 24%, transparent), transparent 62%);
+    border-color: color-mix(in srgb, var(--color-warning) 44%, transparent) !important;
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--color-warning) 26%, transparent),
+        0 16px 14px -10px rgba(0, 0, 0, 0.3),
+        0 0 10px -10px color-mix(in srgb, var(--color-warning) 44%, transparent);
+}
+.glass-skin .toast.text-bg-primary {
+    background-image: linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 16%, transparent), transparent 62%);
+    border-color: color-mix(in srgb, var(--color-accent) 32%, transparent) !important;
+}
+
+/* Dark theme: tame the white top-highlight on alerts. */
+[data-theme="dark"] .glass-skin :is(.banner, .toast) {
+    border-color: color-mix(in srgb, white 10%, var(--color-border));
+}
+
+/* ── Accessibility: honour reduced transparency ─────────────── */
+
+@media (prefers-reduced-transparency: reduce) {
+    .glass-skin :is(
+        .welcome-card, .card, .stat-tile, .empty-state-card, .user-balance-card,
+        .booking-card, .slot-card, .admin-dash-card, .modal-content,
+        [data-test-id="news-feed"], [data-test-id="notifications-widget"],
+        [data-test-id="moderator-stats"], [data-test-id="expert-stats"]
+    ),
+    .glass-skin :is(.btn-outline-primary, .btn-secondary, .btn-ghost),
+    .glass-skin :is(.banner, .toast),
+    .glass-skin header {
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+        background-color: var(--color-bg-surface) !important;
+    }
+}

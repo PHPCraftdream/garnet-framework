@@ -1,0 +1,1 @@
+content of file "dir/test_file.txt"

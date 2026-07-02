@@ -1,0 +1,14 @@
+{% import 'Email/Macro.twig' as m %}
+{% if info_block and info_block.rows %}
+    {% if info_block.title %}
+        {% include 'Email/InfoBlockTitle.twig' with {title: info_block.title, align: content_align} %}
+    {% endif %}
+    {% for row in info_block.rows %}
+        {% if row.raw %}
+            {{ row.raw | trim | raw }}
+        {% elseif not row.raw %}
+            {% include 'Email/Row.twig' with {row, align: content_align} %}
+        {% endif %}
+    {% endfor %}
+    {% include 'Email/Row.twig' with {row: ' ', align: 'center'} %}
+{% endif %}

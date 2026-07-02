@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "allowJs": true,
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "types": ["web"],
+    "noEmit": true,
+    "strict": false,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "paths": {
+      "@common/*": ["./vendor/phpcraftdream/garnet-framework/Bundle/Front/Common/*"],
+      "@framework/*": ["./vendor/phpcraftdream/garnet-framework/Bundle/Front/*"],
+      "*": ["./vendor/phpcraftdream/garnet-framework/FrontBuilder/node_modules/*"]
+    },
+    "target": "esnext"
+  },
+  "exclude": ["node_modules", "vendor"],
+  "include": [
+    "Front/**/*.ts",
+    "Front/**/*.tsx",
+    "Common/Front/**/*.ts",
+    "Common/Front/**/*.tsx",
+    "Dashboard/Front/**/*.ts",
+    "Dashboard/Front/**/*.tsx"
+  ]
+}

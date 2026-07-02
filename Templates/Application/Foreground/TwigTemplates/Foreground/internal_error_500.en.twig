@@ -1,0 +1,14 @@
+{% extends "Foreground/main.twig" %}
+
+{% block content %}
+    <div class="middle-v w100p">
+        <div class="middle-h">Internal server error.</div>
+        {% if errorContent %}
+            <div>
+                <pre>
+                    {{errorContent}}
+                </pre>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

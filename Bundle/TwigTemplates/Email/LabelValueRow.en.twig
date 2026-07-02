@@ -1,0 +1,4 @@
+{# Label/value pair as an email-grid row. Built on top of Row.twig so the
+   caller doesn't have to assemble the inline HTML by hand. #}
+{% set row %}<strong>{{ label | e }}:</strong> {{ value | e | nl2br }}{% endset %}
+{% include 'Email/Row.twig' with {row: row, align: 'left'} %}

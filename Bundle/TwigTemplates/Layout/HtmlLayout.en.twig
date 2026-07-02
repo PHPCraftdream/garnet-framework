@@ -1,0 +1,151 @@
+{# Base HTML layout shell — head + body skeleton with topbar/sidebar/mobile
+   menu islands and the main content area.
+
+   All HTML-emitting logic that used to live in HtmlLayout::render() lives
+   here. PHP only prepares the params (asset URLs, menu arrays, JSON-encoded
+   island props) — Twig does the markup. #}
+<!doctype html>
+{# `lang` (from FwI18n::getLang() → RU/EN) is lower-cased to a valid BCP-47
+   tag. The browser uses it to localise native UI for <input type="date">,
+   <input type="time">, spellcheck, weekday/format defaults, etc. "auto" is
+   not a valid value here — it left those defaults at the OS UI locale, so a
+   user on an English-OS machine saw English month names in the slot
+   datepicker even with the site in Russian. #}
+<html lang="{{ (lang|default('en'))|lower }}" data-theme="light">
+<head>
+{% if title %}<title>{{ title }}</title>{% endif %}
+
+{% if content_type %}
+    <meta http-equiv="Content-Type" content="{{ content_type }}"/>
+{% else %}
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+{% endif %}
+
+{% if description %}<meta name="description" content="{{ description }}"/>{% endif %}
+{% if keywords %}<meta name="keywords" content="{{ keywords }}"/>{% endif %}
+<meta name="viewport" content="{{ viewport }}">
+{% if meta_referrer %}<meta name="referrer" content="{{ meta_referrer }}">{% endif %}
+
+{# --- SEO / social sharing (cascade: per-page → global → defaults) --- #}
+{% if canonical %}<link rel="canonical" href="{{ canonical }}"/>{% endif %}
+{% if robots %}<meta name="robots" content="{{ robots }}"/>{% endif %}
+{% if theme_color %}<meta name="theme-color" content="{{ theme_color }}"/>{% endif %}
+{% if og_title %}<meta property="og:title" content="{{ og_title }}"/>{% endif %}
+{% if og_description %}<meta property="og:description" content="{{ og_description }}"/>{% endif %}
+<meta property="og:type" content="{{ og_type }}"/>
+{% if og_url %}<meta property="og:url" content="{{ og_url }}"/>{% endif %}
+{% if og_image %}<meta property="og:image" content="{{ og_image }}"/>
+{% if og_image_is_real %}<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>{% endif %}
+{% if og_title %}<meta property="og:image:alt" content="{{ og_title }}"/>{% endif %}{% endif %}
+{% if og_site_name %}<meta property="og:site_name" content="{{ og_site_name }}"/>{% endif %}
+{% if og_locale %}<meta property="og:locale" content="{{ og_locale }}"/>{% endif %}
+<meta name="twitter:card" content="{{ twitter_card }}"/>
+{% if og_title %}<meta name="twitter:title" content="{{ og_title }}"/>{% endif %}
+{% if og_description %}<meta name="twitter:description" content="{{ og_description }}"/>{% endif %}
+{% if og_image %}<meta name="twitter:image" content="{{ og_image }}"/>{% endif %}
+{% if twitter_site %}<meta name="twitter:site" content="{{ twitter_site }}"/>{% endif %}
+{% if build_id %}<meta name="garnet-build" content="{{ build_id }}">
+<script id="__GARNET_BUILD__">window.__GARNET_BUILD__ = "{{ build_id }}";</script>{% endif %}
+
+{% if lang %}<script id="__GARNET_UI_LANG__">window.__GARNET_UI_LANG__ = "{{ lang }}";</script>{% endif %}
+{% if csrf %}<script id="__GARNET_CSRF__">window.__GARNET_CSRF__ = "{{ csrf }}";</script>{% endif %}
+
+{% if account_id > 0 %}
+    <script id="__GARNET_ACCOUNT_ID__">window.__GARNET_ACCOUNT_ID__ = {{ account_id }};</script>
+    {# user_payload_json is pre-encoded JSON; emit verbatim via `raw`. #}
+    <script id="__GARNET_USER__">window.__GARNET_USER__ = {{ user_payload_json | raw }};</script>
+{% endif %}
+
+<script>(function(){var t=localStorage.getItem("garnet-theme")||"light";document.documentElement.setAttribute("data-theme",t)})()</script>
+
+{% if is_dev %}<script id="__GARNET_IS_DEV__">window.__GARNET_IS_DEV__ = true;</script>{% endif %}
+{% if base_url %}<script id="__GARNET_BASE_URL__">window.__GARNET_BASE_URL__ = "{{ base_url }}";</script>{% endif %}
+{% if upload_dir %}<script id="__GARNET_UPLOAD_DIR__">window.__GARNET_UPLOAD_DIR__ = "{{ upload_dir }}";</script>{% endif %}
+<script id="__GARNET_PREFIX__">window.__GARNET_PREFIX__ = "{{ route_prefix }}";</script>
+{% if counts_url %}<script id="__GARNET_COUNTS_URL__">window.__GARNET_COUNTS_URL__ = "{{ counts_url }}";</script>{% endif %}
+
+{% if no_prefix_paths_json %}
+    {# no_prefix_paths_json is pre-encoded JSON; emit verbatim via `raw`. #}
+    <script id="__GARNET_NO_PREFIX_PATHS__">window.__GARNET_NO_PREFIX_PATHS__ = {{ no_prefix_paths_json | raw }};</script>
+{% endif %}
+
+{% if styles_assets %}
+    {% for href in styles_assets %}
+        <link rel="stylesheet" href="{{ href }}">
+    {% endfor %}
+{% else %}
+    <style>
+        .content{display:flex;font-size:16px;justify-content:center}
+        .error{max-width:900px;min-width:600px;padding:60px;margin:60px 15px;border:1px solid #ccc}
+        .line{background-color:#d4ecf3;padding:10px 15px}
+        .line+.line{margin-top:20px}
+    </style>
+{% endif %}
+
+<style id="fw-main-css">label{cursor:pointer}</style>
+
+{# Prefetch common async chunks so the browser caches them during idle
+   time after the main page paints. Each chunk has a content-hash in
+   its filename, so prefetch lasts indefinitely until rebuild. #}
+{% for href in prefetch_js_assets %}
+    <link rel="prefetch" as="script" href="{{ href }}">
+{% endfor %}
+</head>
+<body class="flex flex-col min-h-screen bg-page text-on-surface text-sm glass-skin">
+
+{% if has_menus %}
+    {# mobile_menu_props_json is pre-encoded JSON; safe to inject verbatim.
+       `mobile-menu-mount` is display:contents so the sticky .mobile-topbar
+       inside it sticks against <body> (a tall scroll container) instead of
+       this short wrapper — otherwise the bar wouldn't float. The
+       `mobile-menu-init` class is consumed on hydration, so the stable
+       `mobile-menu-mount` class carries the layout rule. #}
+    <div class="mobile-menu-init mobile-menu-mount" data-props='{{ mobile_menu_props_json | raw }}'></div>
+{% endif %}
+
+<div class="flex flex-col lg:flex-row grow hot-click-container-init">
+    <div class="grow flex flex-col min-w-0">
+
+        {% if top_items %}
+            {# top_menu_props_json is pre-encoded JSON. #}
+            <div class="top-menu-init app-topbar" data-props='{{ top_menu_props_json | raw }}'></div>
+        {% endif %}
+
+        <div class="flex flex-col lg:flex-row grow">
+
+            {% if side_items %}
+                <aside class="app-sidebar">
+                    {# sidebar_menu_props_json is pre-encoded JSON. #}
+                    <div class="sidebar-menu-init" data-props='{{ sidebar_menu_props_json | raw }}'></div>
+                </aside>
+            {% endif %}
+
+            <div class="grow flex flex-col min-w-0">
+                <main class="grow flex flex-col min-w-0 main-container{% if not bare_main %} p-4 lg:p-6{% endif %}">
+                    {% if account_id > 0 and (tz_banner ?? true) %}<div class="tz-banner-init"></div>{% endif %}
+                    {# `content` is the page body — already rendered HTML, hence raw. #}
+                    {{ content | raw }}
+                </main>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if support_email %}
+<footer class="app-footer" data-test-id="app-footer">
+    <span class="app-footer-label">{{ support_contact_label }}</span>
+    <a class="app-footer-email" href="mailto:{{ support_email }}">{{ support_email }}</a>
+</footer>
+{% endif %}
+
+{# Pre-rendered widget HTML fragments. Emitted verbatim. #}
+{% if support_widget %}{{ support_widget | raw }}{% endif %}
+{% if im_widget %}{{ im_widget | raw }}{% endif %}
+
+{% for src in vendor_js_assets %}<script src="{{ src }}"></script>
+{% endfor %}
+{% for src in js_assets %}<script async src="{{ src }}"></script>
+{% endfor %}
+</body>
+</html>

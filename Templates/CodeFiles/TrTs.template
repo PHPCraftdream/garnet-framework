@@ -1,0 +1,10 @@
+// noinspection DuplicatedCode
+[[imports]]
+
+type t = (args?: (string|number)[]) => string;
+
+class I18n extends I18nBase {
+[[methods]]
+}
+
+export const [[className]] = new I18n([[[classNames]]]);

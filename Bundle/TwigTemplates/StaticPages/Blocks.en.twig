@@ -1,0 +1,45 @@
+{# Renders the body blocks of a static page. PHP prepares a normalized
+   list (heading text, image url/alt/lightbox, gallery rows + sizes,
+   pre-rendered markdown HTML) so this template only does the markup.
+
+   block.kind ∈ {heading, image, gallery, text}
+   - heading: { text }
+   - image:   { url, alt, lightbox, alt_attr_visible }
+   - gallery: { lightbox, rows: [ { size, images: [ { url, alt } ] } ] }
+   - text:    { html (already-rendered markdown) }
+#}
+{% for block in blocks %}
+    {% if block.kind == 'heading' %}
+        <h2 class="text-xl font-semibold text-on-surface mt-6 mb-3">{{ block.text }}</h2>
+
+    {% elseif block.kind == 'image' %}
+        <div class="sp-image-block mb-4">
+            {% set img_tag %}<img src="{{ block.url }}" alt="{{ block.alt }}"{% if block.alt %} title="{{ block.alt }}"{% endif %} class="sp-block-image" loading="lazy"/>{% endset %}
+            {% if block.lightbox %}
+                <a href="{{ block.url }}" data-lightbox="page"{% if block.alt %} data-alt="{{ block.alt }}"{% endif %} class="sp-lightbox-link">{{ img_tag | raw }}</a>
+            {% else %}
+                {{ img_tag | raw }}
+            {% endif %}
+        </div>
+
+    {% elseif block.kind == 'gallery' %}
+        <div class="sp-gallery-block mb-4">
+            {% for row in block.rows %}
+                <div class="sp-gallery-row" style="grid-template-columns: repeat({{ row.size }}, 1fr);">
+                    {% for img in row.images %}
+                        {% set img_tag %}<img src="{{ img.url }}" alt="{{ img.alt }}"{% if img.alt %} title="{{ img.alt }}"{% endif %} class="sp-gallery-image" loading="lazy"/>{% endset %}
+                        {% if block.lightbox %}
+                            <a href="{{ img.url }}" data-lightbox="page"{% if img.alt %} data-alt="{{ img.alt }}"{% endif %} class="sp-lightbox-link">{{ img_tag | raw }}</a>
+                        {% else %}
+                            <div>{{ img_tag | raw }}</div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+
+    {% elseif block.kind == 'text' %}
+        {# `html` is pre-rendered markdown from FwStaticPagesService::markdownToHtml. #}
+        <div class="md-preview mb-4">{{ block.html | raw }}</div>
+    {% endif %}
+{% endfor %}

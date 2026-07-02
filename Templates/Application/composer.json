@@ -1,0 +1,37 @@
+{
+    "name": "phpcraftdream/app",
+    "description": "A Garnet framework application",
+    "type": "project",
+    "license": "proprietary",
+    "repositories": [
+        {"type": "path", "url": "../../garnet-framework", "options": {"symlink": true}}
+    ],
+    "autoload": {
+        "psr-4": {
+            "PHPCraftdream\\Application\\": "./"
+        }
+    },
+    "require": {
+        "phpcraftdream/garnet-framework": "@dev"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "~2.1.0",
+        "friendsofphp/php-cs-fixer": "~3.93.0"
+    },
+    "scripts": {
+        "setup": "@php garnet setup --skip-composer",
+        "post-install-cmd": "@php garnet setup --skip-composer --soft",
+        "phpstan": "phpstan analyse --configuration=phpstan.neon",
+        "cs:check": "php-cs-fixer fix --dry-run --allow-risky=yes",
+        "cs:fix": "php-cs-fixer fix --allow-risky=yes",
+        "test:e2e": "npm --prefix Tests test",
+        "build": "@php garnet build",
+        "build:check": "@php garnet build:check",
+        "ci": [
+            "@cs:check",
+            "@build",
+            "@phpstan",
+            "@build:check"
+        ]
+    }
+}

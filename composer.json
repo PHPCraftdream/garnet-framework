@@ -1,0 +1,72 @@
+{
+  "name": "phpcraftdream/garnet-framework",
+  "description": "High-performance, opinionated PHP 8 web framework with O(1) routing, parallel async MySQL, type-safe asset bridge, and React-island frontend",
+  "type": "library",
+  "license": ["MIT", "Apache-2.0"],
+  "keywords": ["framework", "php", "web", "router", "mysql", "async"],
+  "homepage": "https://github.com/PHPCraftdream/garnet-framework",
+  "authors": [
+    {"name": "PHPCraftdream", "homepage": "https://github.com/PHPCraftdream"}
+  ],
+  "support": {
+    "issues": "https://github.com/PHPCraftdream/garnet-framework/issues",
+    "source": "https://github.com/PHPCraftdream/garnet-framework"
+  },
+  "bin": ["bin/garnet"],
+  "autoload": {
+    "psr-4": {
+      "PHPCraftdream\\Garnet\\Kernel\\": "./Kernel/",
+      "PHPCraftdream\\Garnet\\Bundle\\": "./Bundle/"
+    }
+  },
+  "minimum-stability": "stable",
+  "require": {
+    "php": "^8.1",
+    "aura/cli": "^2.2",
+    "aura/sql": "^3.0",
+    "aura/sqlquery": "^3.0",
+    "ext-json": "*",
+    "ext-mbstring": "*",
+    "ext-pdo": "*",
+    "guzzlehttp/psr7": "^2.4",
+    "psr/http-factory": "^1.0",
+    "psr/http-message": "^1.0",
+    "twig/twig": "^3.4",
+    "symfony/mailer": "^6.3",
+    "gumlet/php-image-resize": "^2.0",
+    "psr/clock": "^1.0",
+    "league/commonmark": "^2.4",
+    "mobiledetect/mobiledetectlib": "^4.9"
+  },
+  "require-dev": {
+    "kahlan/kahlan": "^5.2",
+    "janmarek/mockista": "^1.1",
+    "mockery/mockery": "^1.6",
+    "phpstan/phpstan": "2.1.38",
+    "friendsofphp/php-cs-fixer": "~3.93.0"
+  },
+  "config": {
+    "preferred-install": {
+      "*": "dist"
+    }
+  },
+  "scripts": {
+    "setup": "@php bin/garnet setup --skip-composer",
+    "post-install-cmd": "@php bin/garnet setup --skip-composer --soft",
+    "cs:check": "php-cs-fixer fix --dry-run --allow-risky=yes",
+    "cs:fix": "php-cs-fixer fix --allow-risky=yes",
+    "phpstan": "phpstan analyse",
+    "test": [
+      "@test:kernel",
+      "@test:bundle"
+    ],
+    "test:kernel": "php vendor/bin/kahlan --spec=Kernel --pattern=*Spec.php",
+    "test:bundle": "php vendor/bin/kahlan --spec=Bundle --pattern=*Spec.php",
+    "test:e2e": "node tooling/scripts/test-e2e.mjs",
+    "ci": [
+      "@cs:check",
+      "@phpstan",
+      "@test"
+    ]
+  }
+}

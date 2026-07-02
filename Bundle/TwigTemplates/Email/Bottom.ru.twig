@@ -1,0 +1,8 @@
+{% import 'Email/Macro.twig' as m %}
+{% if bottom %}
+    <tr>
+        <td {{ m.bottom_row(align) | trim | raw }}>
+            {{ bottom | trim | raw }}
+        </td>
+    </tr>
+{% endif %}

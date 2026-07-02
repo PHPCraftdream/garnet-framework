@@ -1,0 +1,8 @@
+{% import 'Email/Macro.twig' as m %}
+{% if row %}
+    <tr>
+        <td {{ m.block_row(align) | trim | raw }}>
+            {{ row | trim | raw }}
+        </td>
+    </tr>
+{% endif %}

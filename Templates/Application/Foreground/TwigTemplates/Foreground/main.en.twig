@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="{{ (lang|default('en'))|lower }}" class="h-100">
+<head>
+    <title>{{ title|default('Garnet App') }}</title>
+    {% if title %}
+        <meta property="og:title" content="{{ title }}" />
+    {% endif %}
+
+    <meta property="og:type" content="website" />
+
+    {% if ogImage %}
+        <meta property="og:image" content="{{ ogImage }}" />
+    {% endif %}
+
+    {% if content_type %}
+        <meta http-equiv="Content-Type" content="{{ content_type }}"/>
+    {% else %}
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    {% endif %}
+
+    {% if description %}
+        <meta name="Description" content="{{ description }}"/>
+        <meta property="og:description" content="{{ description }}" />
+    {% endif %}
+
+    {% if keywords %}
+        <meta name="Keywords" content="{{ keywords }}"/>
+    {% endif %}
+
+    {% if viewport %}
+        <meta name="viewport" content="{{ viewport }}">
+    {% else %}
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    {% endif %}
+
+    {% if lang %}
+        <script id="__GARNET_UI_LANG__">window.__GARNET_UI_LANG__ = "{{ lang }}";</script>
+    {% endif %}
+
+    {% if csrf %}
+        <script id="__GARNET_CSRF__">window.__GARNET_CSRF__ = "{{ csrf }}";</script>
+    {% endif %}
+
+    {% if base_url %}
+        <script id="__GARNET_BASE_URL__">window.__GARNET_BASE_URL__ = "{{ base_url }}";</script>
+    {% endif %}
+
+    {% if upload_dir %}
+        <script id="__GARNET_UPLOAD_DIR__ ">window.__GARNET_UPLOAD_DIR__ = "{{ upload_dir }}";</script>
+    {% endif %}
+    <script>
+        window.____IS_MOBILE____ = {{ isMobile ? 'true' : 'false' }};
+    </script>
+    {% block styles %}
+        {% for style in styles_assets %}
+            <link rel="stylesheet" href="{{ style }}">
+        {% endfor %}
+    {% endblock %}
+</head>
+<body class="h-100">
+
+{% block content %}
+    {{ content | raw }}
+{% endblock %}
+
+{% block debugBlock %}
+    {% if isDev and debugData %}
+        <div class="debug">
+            <pre>
+                {{ debugData | raw }}
+            </pre>
+        </div>
+    {% endif %}
+{% endblock %}
+
+
+{% block scripts %}
+    {% for script in js_assets %}
+        <script src="{{ script }}"></script>
+    {% endfor %}
+{% endblock %}
+</body>
+</html>

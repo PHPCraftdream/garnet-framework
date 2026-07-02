@@ -1,0 +1,412 @@
+:root {
+  /* Warm off-white surfaces — professional, calm, not cold-blue */
+  --color-bg-page: #FAFAF7;
+  --color-bg-surface: #FFFFFF;
+  --color-bg-surface-alt: #F4F2EE;
+  --color-bg-surface-hover: #F5F5F4;
+  --color-text-primary: #1C1917;
+  --color-text-secondary: #57534E;
+  --color-text-muted: #A8A29E;
+  --color-text-inverse: #ffffff;
+  --color-border: #E7E5E4;
+  --color-border-subtle: #EFEDEA;
+  --color-border-strong: #D6D3D1;
+  /* Muted deep indigo — paler & darker than #4F46E5, professional */
+  --color-accent: #6f6da6;
+  --color-accent-hover: #8785c2;
+  --color-accent-subtle: #EEEDF7;
+  --color-accent-text: #ffffff;
+  /* Semantic colors — desaturated (calmer, less neon) */
+  --color-success: #5b9d76;
+  --color-success-subtle: #f1f7f3;
+  --color-warning: #c79248;
+  --color-warning-subtle: #faf6ee;
+  --color-danger: #cf6a63;
+  --color-danger-subtle: #faf1f0;
+  --color-info: #6385bb;
+  --color-info-subtle: #f0f3f8;
+
+  /* Status palette — for badges, labels, indicators (muted) */
+  --color-status-blue: #4a4886;
+  --color-status-blue-bg: rgba(74,72,134,0.09);
+  --color-status-green: #4f8a66;
+  --color-status-green-bg: rgba(79,138,102,0.11);
+  --color-status-red: #c25c55;
+  --color-status-red-bg: rgba(194,92,85,0.11);
+  --color-status-yellow: #927233;
+  --color-status-yellow-bg: rgba(146,114,51,0.11);
+  --color-status-orange: #b06a4a;
+  --color-status-orange-bg: rgba(176,106,74,0.11);
+  --color-status-purple: #9b8bc4;
+  --color-status-purple-bg: rgba(124,99,170,0.11);
+  --color-status-cyan: #4a8a9b;
+  --color-status-cyan-bg: rgba(74,138,155,0.11);
+  --color-status-gray: #6b7280;
+  --color-status-gray-bg: rgba(107,114,128,0.10);
+}
+
+[data-theme="dark"] {
+  /* Deep neutral dark — not cold-blue */
+  --color-bg-page: #0A0A0B;
+  --color-bg-surface: #18181B;
+  --color-bg-surface-alt: #27272A;
+  --color-bg-surface-hover: #27272A;
+  --color-text-primary: #FAFAF9;
+  --color-text-secondary: #D4D4D8;
+  --color-text-muted: #A1A1AA;
+  --color-text-inverse: #18181B;
+  --color-border: #27272A;
+  --color-border-subtle: #1F1F22;
+  --color-border-strong: #3F3F46;
+  /* Muted indigo on dark — less neon than #818CF8 */
+  --color-accent: #6366A6;
+  --color-accent-hover: #7B7DBA;
+  --color-accent-subtle: #2A2A4D;
+  --color-accent-text: #FAFAF9;
+  --color-success: #5fa078;
+  --color-success-subtle: #1c3b29;
+  --color-warning: #cc9a52;
+  --color-warning-subtle: #3a2a12;
+  --color-danger: #d07a72;
+  --color-danger-subtle: #3d1f1d;
+  --color-info: #6f8fc2;
+  --color-info-subtle: #1e3a5f;
+
+  /* Status palette — brighter for dark backgrounds */
+  --color-status-blue: #6366A6;
+  --color-status-blue-bg: rgba(99,102,166,0.15);
+  --color-status-green: #4ade80;
+  --color-status-green-bg: rgba(74,222,128,0.15);
+  --color-status-red: #f87171;
+  --color-status-red-bg: rgba(248,113,113,0.15);
+  --color-status-yellow: #fbbf24;
+  --color-status-yellow-bg: rgba(251,191,36,0.15);
+  --color-status-orange: #fb923c;
+  --color-status-orange-bg: rgba(251,146,60,0.15);
+  --color-status-purple: #c084fc;
+  --color-status-purple-bg: rgba(192,132,252,0.15);
+  --color-status-cyan: #22d3ee;
+  --color-status-cyan-bg: rgba(34,211,238,0.15);
+  --color-status-gray: #9ca3af;
+  --color-status-gray-bg: rgba(156,163,175,0.15);
+}
+
+/* ── Semantic utility classes ────────────────────────────────────── */
+/* Use these instead of bg-[var(--color-*)] in components           */
+
+/* Backgrounds */
+.bg-page { background-color: var(--color-bg-page); }
+.bg-surface { background-color: var(--color-bg-surface); }
+.bg-surface-alt { background-color: var(--color-bg-surface-alt); }
+.bg-surface-hover { background-color: var(--color-bg-surface-hover); }
+.bg-accent { background-color: var(--color-accent); }
+.bg-accent-subtle { background-color: var(--color-accent-subtle); }
+.bg-accent-hover { background-color: var(--color-accent-hover); }
+.bg-success-subtle { background-color: var(--color-success-subtle); }
+.bg-warning-subtle { background-color: var(--color-warning-subtle); }
+.bg-danger-subtle { background-color: var(--color-danger-subtle); }
+
+/* Text */
+.text-on-surface { color: var(--color-text-primary); }
+.text-secondary { color: var(--color-text-secondary); }
+.text-muted { color: var(--color-text-muted); }
+.text-accent { color: var(--color-accent); }
+.text-accent-text { color: var(--color-accent-text); }
+.text-accent-hover { color: var(--color-accent-hover); }
+.text-success { color: var(--color-success); }
+.text-danger { color: var(--color-danger); }
+.text-warning { color: var(--color-warning); }
+
+/* Borders */
+.border-default { border-color: var(--color-border); }
+.border-subtle { border-color: var(--color-border-subtle); }
+.border-strong { border-color: var(--color-border-strong); }
+.border-accent { border-color: var(--color-accent); }
+
+/* Hover states */
+.hover\:bg-surface-hover:hover { background-color: var(--color-bg-surface-hover); }
+.hover\:bg-accent-hover:hover { background-color: var(--color-accent-hover); }
+.hover\:text-on-surface:hover { color: var(--color-text-primary); }
+.hover\:text-secondary:hover { color: var(--color-text-secondary); }
+.hover\:text-accent:hover { color: var(--color-accent); }
+.hover\:border-strong:hover { border-color: var(--color-border-strong); }
+.hover\:border-accent:hover { border-color: var(--color-accent); }
+
+/* Focus */
+.focus\:ring-accent:focus { --tw-ring-color: var(--color-accent); }
+.focus\:border-accent:focus { border-color: var(--color-accent); }
+
+/* Accent for form controls */
+.accent-theme { accent-color: var(--color-accent); }
+
+/* ================================================
+   Theme utility classes — short aliases for
+   CSS custom property values.
+   Use @utility so Tailwind variants (hover:, focus:, etc.) work.
+   ================================================ */
+
+/* --- Backgrounds --- */
+@utility bg-page { background-color: var(--color-bg-page); }
+@utility bg-surface { background-color: var(--color-bg-surface); }
+@utility bg-surface-alt { background-color: var(--color-bg-surface-alt); }
+@utility bg-surface-hover { background-color: var(--color-bg-surface-hover); }
+@utility bg-accent { background-color: var(--color-accent); }
+@utility bg-accent-subtle { background-color: var(--color-accent-subtle); }
+@utility bg-accent-hover { background-color: var(--color-accent-hover); }
+@utility bg-success-subtle { background-color: var(--color-success-subtle); }
+@utility bg-warning-subtle { background-color: var(--color-warning-subtle); }
+@utility bg-danger-subtle { background-color: var(--color-danger-subtle); }
+@utility bg-info-subtle { background-color: var(--color-info-subtle); }
+@utility bg-theme-border { background-color: var(--color-border); }
+
+/* --- Text colors --- */
+@utility text-on-surface { color: var(--color-text-primary); }
+@utility text-secondary { color: var(--color-text-secondary); }
+@utility text-muted { color: var(--color-text-muted); }
+@utility text-inverse { color: var(--color-text-inverse); }
+@utility text-accent { color: var(--color-accent); }
+@utility text-accent-text { color: var(--color-accent-text); }
+@utility text-accent-hover { color: var(--color-accent-hover); }
+@utility text-success { color: var(--color-success); }
+@utility text-danger { color: var(--color-danger); }
+@utility text-warning { color: var(--color-warning); }
+
+/* --- Border colors --- */
+@utility border-default { border-color: var(--color-border); }
+@utility border-subtle { border-color: var(--color-border-subtle); }
+@utility border-strong { border-color: var(--color-border-strong); }
+@utility border-accent { border-color: var(--color-accent); }
+@utility border-success { border-color: var(--color-success); }
+
+/* --- Accent color --- */
+@utility accent-theme { accent-color: var(--color-accent); }
+
+/* --- Dividers --- */
+@utility divide-subtle { & > * + * { border-top: 1px solid var(--color-border-subtle); } }
+@utility divide-standard { & > * + * { border-top: 1px solid var(--color-border); } }
+
+/* --- Ring --- */
+@utility ring-accent { --tw-ring-color: var(--color-accent); }
+
+/* --- Placeholder text --- */
+@utility placeholder-muted { &::placeholder { color: var(--color-text-muted); } }
+
+/* --- Status badge utilities --- */
+/* Semantic names: info, success, danger, warning, notice, special, active, muted */
+@utility status-info { background-color: var(--color-status-blue-bg); color: var(--color-status-blue); }
+@utility status-success { background-color: var(--color-status-green-bg); color: var(--color-status-green); }
+@utility status-danger { background-color: var(--color-status-red-bg); color: var(--color-status-red); }
+@utility status-warning { background-color: var(--color-status-yellow-bg); color: var(--color-status-yellow); }
+@utility status-notice { background-color: var(--color-status-orange-bg); color: var(--color-status-orange); }
+@utility status-special { background-color: var(--color-status-purple-bg); color: var(--color-status-purple); }
+@utility status-active { background-color: var(--color-status-cyan-bg); color: var(--color-status-cyan); }
+@utility status-muted { background-color: var(--color-status-gray-bg); color: var(--color-status-gray); }
+
+/* --- Border-left status colors --- */
+@utility border-l-special { border-left-color: var(--color-status-purple); }
+
+/* ───── Global utility cluster (top-right zone in TopMenu) ───── */
+
+.util-cluster-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.util-cluster {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding-left: 0.75rem;
+  margin-left: 0.5rem;
+  border-left: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+}
+
+.util-divider {
+  width: 1px;
+  height: 1.25rem;
+  margin: 0 0.375rem;
+  background-color: color-mix(in srgb, var(--color-border) 60%, transparent);
+}
+
+/* ── Icon button (messages, support, logout, theme toggle frame) ── */
+
+.util-icon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    color 150ms ease,
+    background-color 150ms ease,
+    transform 150ms ease;
+}
+
+.util-icon-btn:hover {
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-surface-hover);
+  transform: translateY(-1px);
+}
+
+.util-icon-btn:active {
+  transform: translateY(0);
+}
+
+.util-icon-btn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.util-icon-btn--danger:hover {
+  color: var(--color-danger);
+  background-color: var(--color-danger-subtle);
+}
+
+.util-icon-btn--active {
+  color: var(--color-accent);
+  background-color: var(--color-accent-subtle);
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+}
+
+.util-icon-btn--active:hover {
+  color: var(--color-accent-hover);
+  background-color: var(--color-accent-subtle);
+  box-shadow: inset 0 0 0 1px var(--color-accent-hover);
+  transform: translateY(0);
+}
+
+/* ── Badge (unread count) ── */
+
+.util-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 1.05rem;
+  height: 1.05rem;
+  padding: 0 0.25rem;
+  border-radius: 9999px;
+  background-color: var(--color-accent);
+  color: var(--color-accent-text);
+  font-size: 0.625rem;
+  font-weight: 600;
+  line-height: 1.05rem;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--color-bg-surface);
+  font-variant-numeric: tabular-nums;
+  animation: util-badge-pulse 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes util-badge-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .util-badge { animation: none; }
+}
+
+/* ── Balance pill ── */
+
+.util-balance-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 2.25rem;
+  padding: 0 0.75rem;
+  border-radius: 0.5rem;
+  background-color: var(--color-bg-surface-alt);
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  color: var(--color-text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    transform 150ms ease;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.util-balance-pill:hover {
+  background-color: var(--color-bg-surface-hover);
+  border-color: color-mix(in srgb, var(--color-accent) 35%, transparent);
+  transform: translateY(-1px);
+}
+
+.util-balance-pill:active {
+  transform: translateY(0);
+}
+
+.util-balance-pill:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.util-balance-pill--active {
+  background-color: var(--color-accent-subtle);
+  border-color: var(--color-accent);
+}
+
+.util-balance-pill--active:hover {
+  background-color: var(--color-accent-subtle);
+  border-color: var(--color-accent-hover);
+}
+
+.util-balance-pill--active .util-balance-icon {
+  color: var(--color-accent);
+  opacity: 1;
+}
+
+.util-balance-icon {
+  color: var(--color-success);
+  opacity: 0.85;
+  flex-shrink: 0;
+}
+
+.util-balance-amount {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+.util-balance-currency {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 400;
+  margin-left: 0.05rem;
+}
+
+/* ── Mobile: collapse balance to icon-only ── */
+
+@media (max-width: 640px) {
+  .util-cluster {
+    gap: 0.125rem;
+    padding-left: 0.5rem;
+    margin-left: 0.25rem;
+  }
+
+  .util-balance-amount,
+  .util-balance-currency {
+    display: none;
+  }
+
+  .util-balance-pill {
+    width: 2.25rem;
+    padding: 0;
+    gap: 0;
+    justify-content: center;
+  }
+
+  .util-balance-icon {
+    opacity: 1;
+  }
+}

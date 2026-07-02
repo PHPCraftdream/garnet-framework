@@ -1,0 +1,46 @@
+{# Public-page top navigation (header snippet).
+
+   menu_items: [{ url, label, target_attr, is_divider }]
+     - target_attr: pre-built ' target="..." rel="..."' string or empty
+     - is_divider: items where the label/url filtering ran in PHP and
+                   produced a divider only (nothing else)
+   logo: { url, alt, link, height } | null
+   layout: 'left' | 'center' | 'right'
+   sticky: bool
+   nav_id: unique id tying the burger <label> to its toggle checkbox
+   theme_toggle: rendered HTML of the toggle (already templated)
+
+   Responsive: on narrow screens the menu collapses behind a hamburger.
+   The toggle is a pure CSS checkbox-hack (no JavaScript) — the hidden
+   `.sp-nav-toggle` checkbox drives the open state via `:checked`, the
+   `<label>` is the burger button. Following a menu link navigates away,
+   which resets the state; `md:` resets restore the inline row on desktop. #}
+<nav class="sp-nav sp-nav-{{ layout }}{% if sticky %} sp-nav-sticky{% endif %}" data-sp-nav>
+    {% if menu_items|length > 0 %}
+        <input type="checkbox" id="{{ nav_id }}" class="sp-nav-toggle" hidden>
+    {% endif %}
+    <div class="sp-nav-inner">
+        {% if logo and logo.url %}
+            <a href="{{ logo.link }}" class="sp-nav-logo">
+                <img src="{{ logo.url }}" alt="{{ logo.alt }}" style="height:{{ logo.height }}px"/>
+            </a>
+        {% endif %}
+        {% if menu_items|length > 0 %}
+            <ul class="sp-nav-menu">
+                {% for item in menu_items %}
+                    {% if item.is_divider %}
+                        <li class="sp-nav-divider"></li>
+                    {% else %}
+                        <li><a href="{{ item.url }}"{{ item.target_attr | raw }} class="sp-nav-link">{{ item.label }}</a></li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {{ theme_toggle | raw }}
+        {% if menu_items|length > 0 %}
+            <label for="{{ nav_id }}" class="sp-nav-burger" aria-label="{{ menu_label }}" data-test-id="sp-nav-burger">
+                <span></span><span></span><span></span>
+            </label>
+        {% endif %}
+    </div>
+</nav>

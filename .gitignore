@@ -1,0 +1,39 @@
+/.idea
+/.claude
+/.crush
+/node_modules/
+**/node_modules/**
+**/vendor/**
+**/dist/**
+# Vendored ThirdParty packages ship pre-built dist/ artifacts — keep them.
+!**/ThirdParty/**/dist/**
+**/WorkDir/**
+**/WorkDir/ConfigDev/*
+!**/WorkDir/ConfigDev/.keep
+**/Public/assets/**
+**/Public/upload/**
+/serve.log
+/memory/
+
+.php-cs-fixer.cache
+*.js.map
+*.css.map
+*.gen.css
+*.gen.js
+*Gen.php
+/errors.log
+**/errors.log
+
+# Test-scope secret token planted by `php garnet test:provision`.
+**/.allow_tests
+# Test-mode marker (`php garnet test-mode on`).
+**/.test-mode
+
+# Quality tools are composer dev-deps now, never vendored phars.
+*.phar
+
+# Node dev-server per-worker logs (tooling/server/garnet-serve.mjs).
+/tooling/server/logs/
+
+# AI session checkpoints (local working notes)
+/docs/checkpoints/

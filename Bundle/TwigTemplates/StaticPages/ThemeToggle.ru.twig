@@ -1,0 +1,27 @@
+{# Theme toggle button rendered into every public sp-nav. Self-contained:
+   the inline bootstrapper flips data-theme on <html>, persists to the
+   garnet-theme localStorage key (same key React's ThemeManager uses),
+   and swaps the visible Sun/Moon icon. Renders interactively before
+   any React bundle hydrates. #}
+<button type="button"
+        class="sp-nav-theme-toggle util-icon-btn"
+        data-sp-nav-theme-toggle
+        data-test-id="sp-nav-theme-toggle"
+        aria-label="{{ label }}"
+        title="{{ label }}">
+    <svg class="spnt-icon spnt-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden>
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2v2"/>
+        <path d="M12 20v2"/>
+        <path d="m4.93 4.93 1.41 1.41"/>
+        <path d="m17.66 17.66 1.41 1.41"/>
+        <path d="M2 12h2"/>
+        <path d="M20 12h2"/>
+        <path d="m6.34 17.66-1.41 1.41"/>
+        <path d="m19.07 4.93-1.41 1.41"/>
+    </svg>
+    <svg class="spnt-icon spnt-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+    </svg>
+</button>
+<script>(function(){var bs=document.querySelectorAll("[data-sp-nav-theme-toggle]");bs.forEach(function(b){if(b.dataset.spNavThemeBound)return;b.dataset.spNavThemeBound="1";function sync(){var t=document.documentElement.getAttribute("data-theme")==="dark"?"dark":"light";var s=b.querySelector(".spnt-sun"),m=b.querySelector(".spnt-moon");if(s)s.hidden=t!=="dark";if(m)m.hidden=t==="dark";}b.addEventListener("click",function(){var d=document.documentElement;var n=d.getAttribute("data-theme")==="dark"?"light":"dark";d.setAttribute("data-theme",n);try{localStorage.setItem("garnet-theme",n);}catch(_){}sync();});sync();});})();</script>

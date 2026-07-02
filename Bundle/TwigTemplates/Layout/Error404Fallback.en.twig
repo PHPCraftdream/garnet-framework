@@ -1,0 +1,33 @@
+{# Standalone 404 fallback page — used by BaseController::render404Fallback
+   when no custom 404 handler returns a response. Self-contained on purpose
+   (no shared layout, no asset pipeline) so it renders even when those are
+   broken or mid-migration. SVG icons are inlined literals — trusted, no
+   user data flows into them. #}
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ title }}</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f8f9fa}
+.c{text-align:center;padding:2rem}
+.n{font-size:10rem;font-weight:800;line-height:1;letter-spacing:-.06em;background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 50%,#a78bfa 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:2rem}
+.i{display:flex;justify-content:center;gap:1.5rem;margin-bottom:2.5rem}
+.i a{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:#e0e7ff;color:#6366f1;text-decoration:none;transition:all .2s}
+.i a:hover{background:#6366f1;color:#fff;transform:scale(1.1)}
+.i svg{width:22px;height:22px}
+@media(prefers-color-scheme:dark){body{background:#0f172a}.i a{background:#1e293b;color:#a78bfa}.i a:hover{background:#6366f1;color:#fff}}
+</style>
+</head>
+<body>
+<div class="c">
+<div class="n">{{ code }}</div>
+<div class="i">
+<a href="{{ home_href }}" title="{{ home_title }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></a>
+<a href="{{ back_href }}" title="{{ back_title }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></a>
+</div>
+</div>
+</body>
+</html>

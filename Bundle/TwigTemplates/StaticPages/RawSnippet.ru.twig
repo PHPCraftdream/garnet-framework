@@ -1,0 +1,9 @@
+{# Fallback wrapper for unstructured snippets (raw markdown content,
+   not the structured header/footer JSON forms). The wrapper class is
+   driven by snippet kind so 'header' gets a bottom margin while
+   'footer' gets a top margin, matching the gap conventions of the
+   structured renderers next to them.
+
+   inner_html: already-converted markdown HTML (markdownToHtml output)
+   kind: 'header' | 'footer' #}
+<div class="{% if kind == 'footer' %}sp-snippet-footer mt-4{% else %}sp-snippet-header mb-4{% endif %}">{{ inner_html | raw }}</div>

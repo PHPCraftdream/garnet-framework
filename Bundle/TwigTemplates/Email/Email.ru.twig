@@ -1,0 +1,41 @@
+{% import 'Email/Macro.twig' as m %}
+<!DOCTYPE html>
+<html lang="auto">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html charset=UTF-8"/>
+    {% if page_title %}
+        <title>{{ page_title }}</title>
+    {% endif %}
+</head>
+<body {{ m.body() | trim | raw }} >
+<table {{ m.main_table() | trim  | raw }}>
+    {% if head %}
+        {% include 'Email/HeadRow.twig' with {head, align: head_align} %}
+    {% endif %}
+
+    {% if pre_blocks_items %}
+        {% for pre_blocks_item in pre_blocks_items %}
+            {{ pre_blocks_item | trim  | raw }}
+        {% endfor %}
+    {% endif %}
+
+    {% if info_blocks %}
+        {% for info_block in info_blocks %}
+            {% include 'Email/InfoBlock.twig' with {info_block, content_align, title_align: block_title_align} %}
+        {% endfor %}
+    {% endif %}
+
+    {% if after_blocks_items %}
+        {% for after_blocks_item in after_blocks_items %}
+            {{ after_blocks_item | trim  | raw }}
+        {% endfor %}
+    {% endif %}
+
+    {% if bottom %}
+        {% include 'Email/Bottom.twig' with {bottom, align: bottom_align} %}
+    {% endif %}
+</table>
+</body>
+</html>

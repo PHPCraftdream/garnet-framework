@@ -1,0 +1,41 @@
+{# Public-page footer (footer snippet).
+
+   columns: array of { title, items: [{ url, label, target_attr }] }
+            (already filtered: each column has at least one item)
+   copyright: rendered string (variables already substituted) | ''
+
+   Layout choice:
+     - exactly 1 column → flat horizontal `.sp-footer-row` with bullet
+       separators (slim meta-footer, looks intentional)
+     - 2+ columns → original column grid with per-column titles
+
+   Both branches share the inner wrapper + copyright. #}
+<footer class="sp-footer">
+    <div class="sp-footer-inner">
+        {% if columns|length == 1 %}
+            <ul class="sp-footer-row">
+                {% for item in columns[0].items %}
+                    <li><a href="{{ item.url }}"{{ item.target_attr | raw }} class="sp-footer-link">{{ item.label }}</a></li>
+                {% endfor %}
+            </ul>
+        {% elseif columns|length >= 2 %}
+            <div class="sp-footer-cols">
+                {% for col in columns %}
+                    <div class="sp-footer-col">
+                        {% if col.title %}
+                            <div class="sp-footer-col-title">{{ col.title }}</div>
+                        {% endif %}
+                        <ul class="sp-footer-col-links">
+                            {% for item in col.items %}
+                                <li><a href="{{ item.url }}"{{ item.target_attr | raw }} class="sp-footer-link">{{ item.label }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% if copyright %}
+            <div class="sp-footer-copyright">{{ copyright }}</div>
+        {% endif %}
+    </div>
+</footer>

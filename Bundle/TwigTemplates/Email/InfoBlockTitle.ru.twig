@@ -1,0 +1,8 @@
+{% import 'Email/Macro.twig' as m %}
+{% if title %}
+    <tr>
+        <td {{ m.block_title(align) | trim | raw }}>
+            {% include 'Email/H2.twig' with {head: title, align} %}
+        </td>
+    </tr>
+{% endif %}

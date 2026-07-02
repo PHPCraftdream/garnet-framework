@@ -1,0 +1,4 @@
+{% import 'Email/Macro.twig' as m %}
+{% if href and text %}
+    {{ m.button_main(text, href) | trim | raw }}
+{% endif %}

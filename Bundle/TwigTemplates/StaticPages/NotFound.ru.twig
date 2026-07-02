@@ -1,0 +1,8 @@
+{# Default 404 body, rendered inside the public-page shell (header + footer)
+   when no dedicated static page with slug "404" exists. #}
+<div class="sp-notfound">
+    <div class="sp-notfound-code">404</div>
+    <h1 class="sp-notfound-title">{{ title }}</h1>
+    <p class="sp-notfound-text">{{ text }}</p>
+    <a href="/" class="sp-notfound-home">{{ home }}</a>
+</div>

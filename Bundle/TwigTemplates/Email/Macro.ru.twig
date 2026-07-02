@@ -1,0 +1,102 @@
+{% macro body_bg() %}#F3F3F5{% endmacro %}
+{% macro content_bg() %}#FFFFFF{% endmacro %}
+{% macro left_color() %}#4BB780{% endmacro %}
+{% macro right_color() %}#003366{% endmacro %}
+{% macro bottom_color() %}#A9BCCE{% endmacro %}
+{% macro font_color_m() %}#003366{% endmacro %}
+
+{# --------------------------------------------------------------------- #}
+
+{% macro font_s() %}
+    font-family:Poppins,Helvetica,Arial,sans-serif;color:{{ _self.font_color_m() }};
+{% endmacro %}
+
+{% macro main_table_s() %}
+    style="max-width:800px;width:100%;background-color:{{ _self.content_bg() }};" bgcolor="{{ _self.content_bg() }}"
+{% endmacro %}
+
+{% macro reset_table() %}
+    align="center" border="0" cellpadding="0" cellspacing="0" width="100%"
+{% endmacro %}
+
+{% macro body_s() %}
+    style="{{ _self.font_s() }}; background-color:{{ _self.body_bg() }};padding:20px;"
+{% endmacro %}
+
+{% macro body() %}
+    bgcolor="{{ _self.body_bg() }}" {{ _self.body_s() }}
+{% endmacro %}
+
+{% macro main_table() %}
+    {{ _self.reset_table() | raw }}
+    {{ _self.main_table_s() | raw }}
+{% endmacro %}
+
+{# --------------------------------------------------------------------- #}
+
+{% macro h1(align = 'left') %}
+    style="text-align:{{ align }};font-size:24px;font-weight:400;margin:0;"
+{% endmacro %}
+
+{% macro h2(align = 'left') %}
+    style="text-align:{{ align }};font-size:20px;font-weight:400;margin:0;"
+{% endmacro %}
+
+{# --------------------------------------------------------------------- #}
+
+{% macro common_title_s() %}
+    padding:20px 20px 15px
+{% endmacro %}
+
+{% macro head_common() %}
+    {{ _self.common_title_s() | trim | raw }};background-color:{{ _self.left_color() }};color:{{ _self.font_color_m() }}
+{% endmacro %}
+
+{% macro head(align = 'left') %}
+    style="text-align:{{ align }};{{ _self.head_common() | trim | raw }};"
+{% endmacro %}
+
+{% macro block_title(align = 'left') %}
+    style="text-align:{{ align }};{{ _self.common_title_s() | trim | raw }};"
+{% endmacro %}
+
+{# --------------------------------------------------------------------- #}
+
+{% macro common_block_s() %}
+    padding:5px 20px 10px
+{% endmacro %}
+
+{% macro content_text() %}
+    font-size:14px;line-height:20px;font-weight:300;color:{{ _self.font_color_m() }};
+{% endmacro %}
+
+{% macro block_row(align = 'left') %}
+    style="text-align:{{ align }};{{ _self.common_block_s() | trim | raw }};{{ _self.content_text() | trim | raw }}"
+{% endmacro %}
+
+{% macro button_common_s() %}display:inline-table;padding:6px 15px;text-decoration:none;border-radius:4px;{% endmacro %}
+
+{% macro button_main(label, href) %}
+    <a href="{{ href | raw }}" style="{{ _self.button_common_s() }}background-color:{{ _self.right_color() }};color:{{ _self.body_bg() }};">
+        {{ label }}
+    </a>
+{% endmacro %}
+
+{% macro button_secondary(label, href) %}
+    <a href="{{ href | raw }}" style="{{ _self.button_common_s() }}background-color:{{ _self.bottom_color() }};color:{{ _self.right_color() }};">
+        {{ label }}
+    </a>
+{% endmacro %}
+
+{# --------------------------------------------------------------------- #}
+
+{% macro bottom_text() %}
+    font-size:12px;background-color:{{ _self.bottom_color() }};color:{{ _self.body_bg() }};
+{% endmacro %}
+
+{% macro bottom_row(align = 'left') %}
+    style="text-align:{{ align }};padding:20px;{{ _self.bottom_text()  | trim | raw }}"
+{% endmacro %}
+
+
+

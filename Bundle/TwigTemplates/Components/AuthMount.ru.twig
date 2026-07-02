@@ -1,0 +1,7 @@
+{# Layout wrapper around the auth2 React island mount. Centres and
+   constrains the auth widget; the inner island HTML is produced by
+   RenderIsland::render('auth2-container', $props), pre-encoded and
+   trusted (no user data flows into the wrapper itself). #}
+<div class="max-w-md mx-auto p-4 flex grow flex-col">
+    {{ island_html | raw }}
+</div>

@@ -1,0 +1,53 @@
+@import (css) "tailwindcss";
+/* Paths are relative to THIS file (Framework/Bundle/Front/Styles/). The repo
+   root is four levels up, so Apps lives at ../../../../Apps — the previous
+   ../../../Apps pointed at Framework/Apps (nonexistent), so app-only utility
+   classes (e.g. a one-off mb-5 in an island) were never generated. */
+@source "../../../../Apps";
+@source "../../TwigTemplates";
+@source "../..";
+/* HtmlLayout.php and SidebarMenu/TopMenu classes not reachable via file scan */
+@source inline("flex-col lg:flex-row shrink-0 lg:border-b-0 lg:border-r lg:w-20 lg:py-3 lg:p-6 lg:hidden lg:border-r-2 lg:block lg:flex-col lg:py-1 lg:py-2 lg:items-center lg:gap-2 bg-page text-on-surface bg-surface border-default");
+/* Week calendars (SlotsCalendar/WeekGrid + ExpertCalendar) build their 7-day
+   row with `grid-cols-7`; these utilities aren't always picked up by the
+   content scan, so safelist them — otherwise the grid loses its columns and
+   the days stack vertically. */
+@source inline("grid-cols-7 gap-0 max-md:grid-cols-1 max-md:gap-2 max-md:border-0");
+/* Slots/expert calendar grids + their filter rows use these column counts
+   and responsive variants; safelist so the layout never collapses to a
+   single stacked column when the content scan misses these files. */
+@source inline("grid-cols-1 grid-cols-2 grid-cols-3 grid-cols-4 grid-cols-5 sm:grid-cols-2 md:grid-cols-2 md:grid-cols-3 md:grid-cols-4 lg:grid-cols-5");
+
+@import "modules/hotClick";
+@import "modules/listbox";
+@import "modules/uploads";
+@import (inline) "modules/components.css";
+@import (inline) "modules/theme.css";
+@import (inline) "modules/glass.css";
+
+.garnet-form-error {
+  cursor: default;
+}
+
+.side-title {
+  word-break: keep-all;
+  white-space: break-spaces;
+}
+
+.grid-container {
+  font-size: 14px;
+
+  th.gridjs-th, td.gridjs-td {
+    padding: 10px 5px 10px 10px;
+  }
+
+
+}
+
+.garnet-control {
+  cursor: pointer;
+}
+
+.pointer-disabled {
+  pointer-events: none;
+}

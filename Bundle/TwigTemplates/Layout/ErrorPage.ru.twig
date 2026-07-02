@@ -1,0 +1,26 @@
+{# Standalone error page — used by FrameworkController::makeErrorPage and
+   ErrorTools::makeErrorPageHtml. Stays self-contained on purpose: no
+   shared layout, no asset pipeline, so it renders even when those are
+   broken. `error_html` is pre-rendered fragment HTML (ErrorTools
+   formats stack trace lines) — output via raw.
+
+   Quoting style (single quotes inside `class='...'`, no space after
+   `.foo {`) is kept verbatim to match the assertion fixtures in
+   ErrorToolsSpec / FrameworkControllerSpec. #}
+<!doctype html>
+<html lang='auto'>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ title }}</title>
+{% if description %}<meta name="Description" content="{{ description }}"/>{% endif %}
+<style>.content {display: flex; font-size: 16px; justify-content: center;} .error {max-width: 900px; min-width: 600px; padding: 60px; margin: 60px 15px; border: 1px solid #ccc;} .line {background-color: #d4ecf3; padding: 10px 15px;} .line + .line {margin-top: 20px;}</style>
+</head>
+<body>
+<div class='content'>
+<div class='error'>
+{{ error_html | raw }}
+</div>
+</div>
+</body>
+</html>

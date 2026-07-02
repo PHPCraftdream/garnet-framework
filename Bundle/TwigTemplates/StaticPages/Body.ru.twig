@@ -1,0 +1,9 @@
+{# Inner body of a public CMS-driven page — title heading + rendered
+   block stream. Used inside StaticPageShell.twig (which adds the
+   max-width wrapper) or, for the 404 path, directly inside its own
+   ad-hoc wrapper.
+
+   title: page title (variables already substituted upstream)
+   blocks_html: pre-rendered block stream HTML (renderBlocksToHtml) #}
+<h1 class="text-2xl font-semibold text-on-surface mb-6">{{ title }}</h1>
+<div class="text-on-surface">{{ blocks_html | raw }}</div>

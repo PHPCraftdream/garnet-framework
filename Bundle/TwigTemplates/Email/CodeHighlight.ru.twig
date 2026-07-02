@@ -1,0 +1,4 @@
+{# Inline highlight for a one-time auth code embedded inside an email body.
+   Used by AuthMiddleware / EmailAuthMiddleware. Inline styles are required
+   here — email clients strip <style> blocks. #}
+<b style="font-weight: 600; font-size: 20px;">{{ code }}</b>

@@ -1,0 +1,6 @@
+{% import 'Email/Macro.twig' as m %}
+{% if head %}
+    <h1 {{ m.h1(align) | trim | raw }}>
+        {{ head }}
+    </h1>
+{% endif %}

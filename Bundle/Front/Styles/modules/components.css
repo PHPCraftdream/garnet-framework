@@ -1,0 +1,2547 @@
+/* ================================================
+   Component layer — Bootstrap-compatible class names
+   for JS-generated HTML (innerHTML) and common patterns.
+   Rewritten with Tailwind CSS v4 @apply.
+   ================================================ */
+
+/* ---------- Global interactive ---------- */
+
+html {
+  scrollbar-gutter: stable;
+  overflow-y: scroll;
+}
+
+/* ---------- Hot-navigation cross-fade ----------
+   PageLoader mounts the incoming page in this layer (stacked over the old one)
+   and fades it in once hydrated, then drops the old content — no blank flash. */
+body.page-swapping {
+  position: relative;
+}
+.page-swap-incoming {
+  position: absolute;
+  inset: 0 0 auto 0;        /* top/left/right pinned; height follows content */
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transition: opacity 0.28s ease;
+  will-change: opacity;
+}
+.page-swap-incoming.page-swap-in {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-swap-incoming { transition: none; opacity: 1; }
+}
+
+/* Click-time fade-out of the current page — instant "loading" feedback the
+   moment a hot link is clicked. The incoming page and the persistent toast
+   root keep full opacity; on error HotClickInit removes the class and the page
+   snaps back. */
+/* Dim the outgoing page while a navigation is in flight. We deliberately keep
+   it clickable: clicking ANOTHER link mid-navigation should supersede the
+   pending one (goTo's token guard drops the first result). Re-clicking the SAME
+   link is still blocked by `.hot-clicked { pointer-events: none }`. */
+body.page-leaving > :not(.page-swap-incoming):not(#global-toast) {
+  opacity: 0.5;
+  transition: opacity 0.4s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  body.page-leaving > :not(.page-swap-incoming):not(#global-toast) { transition: none; }
+}
+
+button, [role="button"] {
+  cursor: pointer;
+}
+
+/* ---------- Base typography ---------- */
+
+h1, h2, h3, h4, h5, h6 {
+  @apply font-semibold leading-tight text-on-surface;
+}
+
+h1 { @apply text-2xl mb-4; }
+h2 { @apply text-xl mb-3; }
+h3 { @apply text-lg mb-3; }
+h4 { @apply text-base mb-2; }
+h5 { @apply mb-1.5; font-size: 0.9375rem; }
+h6 { @apply text-sm mb-1; }
+
+a:not(.btn):not([class*="bg-"]) { @apply text-accent; }
+a:not(.btn):not([class*="bg-"]):hover { @apply text-accent-hover; }
+
+hr {
+  @apply border-0 border-t border-default my-4;
+}
+
+/* ---------- Form Controls ---------- */
+
+.form-label {
+  @apply block font-medium mb-1 text-secondary;
+  font-size: 0.8125rem;
+}
+
+.form-control {
+  @apply block w-full px-3 text-sm leading-normal text-on-surface bg-surface border border-strong rounded-md;
+  padding-top: 0.4375rem;
+  padding-bottom: 0.4375rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus {
+    @apply border-accent outline-none ring-3 ring-[var(--color-accent)]/15;
+  }
+
+  &::placeholder {
+    @apply text-muted;
+  }
+}
+
+.form-control-sm {
+  @apply px-2 py-1;
+  font-size: 0.8rem;
+}
+
+/* Native number-input spinners differ between engines: Chrome paints an
+   up/down stack inside the box, Firefox/Waterfox paints a left/right pair
+   at the right edge, neither is themeable beyond a few pseudo-elements.
+   Drop the spinner everywhere so the field looks identical in every
+   browser — users still type freely and the up/down arrow keys keep
+   working. If a specific input wants a styled +/- pair we'll add a
+   dedicated React NumberInput; this rule only kills the native chrome. */
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+
+/* Custom date picker — we paint our own popup, so kill every piece of
+   native calendar chrome the browser would otherwise add on top. */
+input.custom-date-input {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+input.custom-date-input::-webkit-calendar-picker-indicator,
+input.custom-date-input::-webkit-clear-button,
+input.custom-date-input::-webkit-inner-spin-button {
+  display: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.cdp-popup {
+  @apply fixed z-50 bg-surface border border-default rounded-md shadow-lg p-2 text-sm text-on-surface;
+  min-width: 18rem;
+}
+.cdp-header {
+  @apply flex items-center justify-between mb-2;
+}
+.cdp-title {
+  @apply font-semibold;
+}
+.cdp-nav {
+  @apply w-7 h-7 inline-flex items-center justify-center rounded hover:bg-surface-alt text-on-surface;
+}
+.cdp-weekdays {
+  @apply grid grid-cols-7 gap-1 mb-1 text-xs text-muted text-center;
+}
+.cdp-weekday {
+  @apply font-medium;
+}
+.cdp-grid {
+  @apply grid grid-cols-7 gap-1;
+}
+.cdp-day {
+  @apply h-8 inline-flex items-center justify-center rounded text-on-surface hover:bg-surface-alt;
+}
+.cdp-day-outside {
+  @apply text-muted;
+}
+.cdp-day-today {
+  @apply border border-default;
+}
+.cdp-day-selected {
+  @apply bg-accent text-white hover:bg-accent;
+}
+.cdp-day-disabled {
+  @apply text-muted opacity-40 cursor-not-allowed hover:bg-transparent;
+}
+.cdp-footer {
+  @apply flex justify-between mt-2 pt-2 border-t border-default;
+}
+.cdp-foot-link {
+  @apply text-accent text-sm hover:underline cursor-pointer;
+}
+
+.form-select {
+  @apply block w-full pl-3 pr-8 text-sm leading-normal text-on-surface bg-surface border border-strong rounded-md appearance-none;
+  padding-top: 0.4375rem;
+  padding-bottom: 0.4375rem;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus {
+    @apply border-accent outline-none ring-3 ring-[var(--color-accent)]/15;
+  }
+}
+
+.form-select-sm {
+  @apply py-1 pl-2 pr-8;
+  font-size: 0.8rem;
+}
+
+.col-form-label {
+  @apply leading-normal;
+  padding-top: calc(0.4375rem + 1px);
+  padding-bottom: calc(0.4375rem + 1px);
+  font-size: inherit;
+}
+
+.form-switch input {
+  @apply cursor-pointer;
+}
+
+.col-form-label.main-label {
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
+}
+
+@media screen and (min-width: 576px) {
+  .col-form-label.main-label {
+    @apply text-right;
+  }
+}
+
+/* ---------- Buttons ---------- */
+
+.btn {
+  @apply inline-flex items-center justify-center gap-1.5 font-medium leading-normal rounded-md border border-transparent cursor-pointer no-underline whitespace-nowrap;
+  padding: 0.4375rem 0.875rem;
+  font-size: 0.8125rem;
+  transition: all 0.15s ease;
+
+  &:active { @apply translate-y-px; }
+}
+
+.btn-primary {
+  @apply bg-accent text-accent-text;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-accent) 25%, transparent);
+  &:hover { @apply bg-accent-hover; }
+}
+
+.btn-success {
+  @apply bg-green-600 text-white;
+  box-shadow: 0 1px 2px rgba(22, 163, 74, 0.2);
+  &:hover { @apply bg-green-700; }
+}
+
+.btn-danger {
+  @apply bg-red-600 text-white;
+  box-shadow: 0 1px 2px rgba(220, 38, 38, 0.2);
+  &:hover { @apply bg-red-700; }
+}
+
+.btn-secondary {
+  @apply bg-gray-500 text-white;
+  &:hover { @apply bg-gray-600; }
+}
+
+.btn-outline-primary {
+  @apply border-accent text-accent bg-transparent;
+  &:hover { @apply bg-accent text-accent-text; }
+}
+
+.btn-outline-secondary {
+  @apply border-strong text-muted bg-transparent;
+  &:hover { @apply bg-surface-hover text-secondary border-gray-400; }
+}
+
+.btn-outline-danger {
+  @apply border-red-300 text-red-600 bg-transparent;
+  &:hover { @apply bg-red-600 text-white border-red-600; }
+}
+
+.btn-outline-info {
+  @apply border-cyan-300 text-cyan-600 bg-transparent;
+  &:hover { @apply bg-cyan-600 text-white border-cyan-600; }
+}
+
+.btn-sm {
+  @apply px-2 py-1 text-xs rounded;
+}
+
+.btn-lg {
+  @apply px-6 py-2.5;
+  font-size: 0.9375rem;
+}
+
+.btn-close {
+  @apply inline-flex items-center justify-center w-6 h-6 p-0 bg-transparent border-0 cursor-pointer opacity-50 text-xl leading-none;
+
+  &::before { content: '\00d7'; }
+  &:hover { @apply opacity-100; }
+}
+
+.btn-close-white {
+  @apply invert;
+}
+
+.btn-light {
+  @apply bg-surface-hover text-secondary border-strong;
+  &:hover { @apply bg-gray-200; }
+}
+
+/* ---------- Cards ---------- */
+
+.card {
+  @apply rounded-lg border border-default bg-surface shadow overflow-hidden;
+}
+
+.card-body {
+  @apply p-5;
+}
+
+.card-title {
+  @apply text-base font-semibold mb-2 text-on-surface;
+}
+
+.card-text {
+  @apply mb-1 text-secondary text-sm;
+}
+
+/* ---------- Badges ---------- */
+
+.badge {
+  @apply inline-flex items-center rounded-full px-2.5 py-0.5 font-semibold leading-normal tracking-wide;
+  font-size: 0.6875rem;
+}
+
+.bg-success { @apply status-success; }
+.bg-warning { @apply status-warning; }
+.bg-danger  { @apply status-danger; }
+.bg-primary { @apply status-info; }
+.bg-info    { @apply status-info; }
+.bg-secondary { @apply bg-surface-hover text-secondary; }
+.bg-light   { @apply bg-surface-alt text-secondary; }
+
+.text-bg-primary { @apply bg-accent text-accent-text; }
+.text-bg-danger  { @apply bg-red-600 text-white; }
+.text-bg-success { @apply bg-green-600 text-white; }
+
+/* ---------- Tables ---------- */
+
+.table {
+  @apply w-full border-collapse;
+  font-size: 0.8125rem;
+
+  & th, & td {
+    @apply py-2 px-3 align-top border-b border-subtle;
+  }
+
+  & thead th {
+    @apply font-semibold text-left text-secondary bg-surface-alt text-xs uppercase tracking-wider;
+  }
+}
+
+.table-sm {
+  & th, & td { @apply py-1 px-2; }
+}
+
+.table-bordered {
+  @apply border border-default;
+  & th, & td { @apply border border-default; }
+}
+
+.table-warning {
+  @apply bg-amber-50;
+}
+
+/* ---------- List Groups ---------- */
+
+.list-group {
+  @apply flex flex-col rounded-md border border-default;
+}
+
+.list-group-flush {
+  @apply rounded-none border-x-0;
+}
+
+.list-group-item {
+  @apply py-2 px-4 border-b border-default text-sm;
+
+  &:last-child { @apply border-b-0; }
+}
+
+/* ---------- Modal (vanilla JS) ---------- */
+
+.modal {
+  @apply hidden fixed inset-0 z-50 items-center justify-center bg-black/50 backdrop-blur-[2px];
+}
+
+.modal.show {
+  @apply flex;
+}
+
+.modal-dialog {
+  @apply bg-surface rounded-xl shadow-2xl max-w-lg m-4;
+  width: calc(100% - 2rem);
+}
+
+.modal-dialog-centered {
+  @apply self-center;
+}
+
+.modal-content {
+  @apply overflow-hidden;
+}
+
+.modal-body {
+  @apply p-6;
+}
+
+.modal-footer {
+  @apply px-6 py-3 flex justify-end gap-2 border-t border-default bg-surface-alt;
+}
+
+/* ---------- Toast (vanilla JS) ---------- */
+
+.toast-container {
+  @apply fixed bottom-6 z-[100];
+  right: 5rem;
+}
+
+.toast {
+  @apply rounded-lg overflow-hidden opacity-0 pointer-events-none min-w-64;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  transition: opacity 0.3s, transform 0.3s;
+  transform: translateY(0.5rem);
+}
+
+.toast.show {
+  @apply opacity-100 pointer-events-auto translate-y-0;
+}
+
+.toast-body {
+  @apply py-3 px-4 text-sm font-medium;
+}
+
+/* ---------- Utility Bridges ---------- */
+
+.text-muted   { color: var(--color-text-muted); }
+.text-dark    { color: var(--color-text-primary); }
+.text-warning { @apply text-amber-600; }
+.text-primary { @apply text-accent; }
+
+/* d-none: used by DomEl.ts core visibility toggle — do NOT remove */
+.d-none  { display: none !important; }
+.d-flex  { @apply flex; }
+
+.border-success { border-color: #86efac !important; }
+.border-warning { border-color: #fde68a !important; }
+.border-primary { border-color: #93c5fd !important; }
+
+/* ---------- Form Check / Switch ---------- */
+
+.form-check {
+  @apply flex items-center gap-2 min-h-6;
+}
+
+.form-check-input {
+  @apply w-4 h-4 cursor-pointer accent-theme;
+}
+
+.form-switch .form-check-input {
+  @apply w-8 h-4 appearance-none bg-gray-300 rounded-full relative cursor-pointer;
+  transition: background-color 0.15s;
+
+  &::before {
+    content: '';
+    @apply absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white;
+    transition: transform 0.15s;
+  }
+
+  &:checked {
+    @apply bg-accent;
+    &::before { @apply translate-x-4; }
+  }
+}
+
+.form-check-label {
+  @apply text-sm cursor-pointer;
+}
+
+/* ---------- Progress ---------- */
+
+.progress {
+  @apply h-2 bg-theme-border rounded-full overflow-hidden;
+}
+
+.progress-bar {
+  @apply h-full bg-accent rounded-full;
+  transition: width 0.3s;
+}
+
+/* ---------- Reusable design tokens ---------- */
+
+/* Pill / chip — used for filter tabs, status filters, small selectors. */
+.chip {
+  @apply inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border transition-all;
+  @apply border-transparent text-secondary bg-surface-hover hover:text-on-surface;
+}
+.chip-active {
+  @apply bg-accent text-accent-text border-accent shadow-sm;
+  box-shadow: 0 2px 8px -2px color-mix(in srgb, var(--color-accent) 35%, transparent);
+}
+/* Keep active state readable on hover/focus/active — base class' hover would
+   leave text-accent-text on the unchanged accent bg with no feedback, but the
+   bigger risk is class-order surprises; explicitly pin colors for active. */
+.chip-active:hover,
+.chip-active:focus,
+.chip-active:active {
+  @apply bg-accent-hover text-accent-text border-accent;
+}
+.chip-count {
+  @apply tabular-nums text-[10px] px-1.5 py-px rounded-full bg-surface-alt text-muted;
+}
+.chip-active .chip-count {
+  @apply bg-white/20 text-accent-text;
+}
+
+/* Mini section label — small uppercase tracker label above form groups. */
+.label-mini {
+  @apply block text-[11px] font-semibold uppercase tracking-wider mb-1.5 text-muted;
+}
+
+/* Round icon nav button — used for week prev/next arrows. */
+.btn-icon-round {
+  @apply inline-flex items-center justify-center w-9 h-9 rounded-full text-secondary bg-surface-hover hover:text-on-surface transition-all;
+}
+
+/* Soft section — subtle, frameless container that groups content without a hard border. */
+.section-soft {
+  @apply rounded-2xl p-4;
+  background-color: color-mix(in srgb, var(--color-bg-surface-alt) 55%, transparent);
+  /* A light diagonal wash — faint accent in the top-left fading to a hint of
+     violet bottom-right — gives the uniform admin content block subtle depth. */
+  background-image: linear-gradient(150deg,
+    color-mix(in srgb, var(--color-accent) 9%, transparent) 0%,
+    transparent 42%,
+    color-mix(in srgb, var(--color-status-purple) 7%, transparent) 100%);
+}
+/* Frost section-soft panels (filters, calendar, …) over the honeycomb backdrop. */
+.glass-skin .section-soft {
+  -webkit-backdrop-filter: blur(10px) saturate(110%);
+  backdrop-filter: blur(10px) saturate(110%);
+  border: 1px solid color-mix(in srgb, var(--color-border-strong) 85%, var(--color-accent));
+}
+
+/* Slot card — borderless card relying on shadow + lift for depth.
+   Used in slots calendar; can be reused for other booking-style cards. */
+.slot-card {
+  @apply rounded-xl bg-surface p-3 mb-2 cursor-pointer;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition: box-shadow 200ms ease, transform 200ms ease;
+}
+.slot-card:hover {
+  box-shadow: 0 12px 28px -10px rgba(15, 23, 42, 0.18),
+              0 2px 6px -2px rgba(15, 23, 42, 0.08);
+  transform: translateY(-2px);
+}
+[data-theme="dark"] .slot-card {
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04),
+              inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+[data-theme="dark"] .slot-card:hover {
+  box-shadow: 0 14px 32px -10px rgba(0, 0, 0, 0.6),
+              inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 30%, transparent);
+}
+
+/* Day number badge — circular indicator above each day column. */
+.day-num-badge {
+  @apply mt-1 inline-flex items-center justify-center min-w-8 h-8 px-2 rounded-full text-sm font-bold tabular-nums text-on-surface;
+}
+.day-num-badge-active {
+  @apply bg-accent text-accent-text;
+}
+
+/* Muted empty state — small centered placeholder text inside columns/lists. */
+.muted-empty-state {
+  @apply text-center text-[11px] py-6;
+  color: color-mix(in srgb, var(--color-text-muted) 75%, transparent);
+}
+
+/* ---------- Markdown Preview ---------- */
+
+.md-preview {
+  @apply rounded border border-subtle p-3 min-h-[120px] text-sm text-on-surface bg-surface-alt;
+}
+
+.md-preview p { @apply mb-2 last:mb-0; }
+.md-preview ul { @apply list-disc pl-5 mb-2; }
+.md-preview ol { @apply list-decimal pl-5 mb-2; }
+.md-preview li { @apply mb-0.5; }
+.md-preview hr { @apply border-0 border-t border-default my-3; }
+.md-preview strong { @apply font-bold; }
+.md-preview em { @apply italic; }
+.md-preview a { @apply text-accent underline; }
+.md-preview blockquote {
+    @apply border-l-4 border-accent pl-4 py-1 my-2 text-secondary italic;
+}
+.md-preview h2 {
+    @apply text-lg font-semibold text-on-surface mt-4 mb-2;
+}
+.md-preview h3 {
+    @apply text-base font-semibold text-on-surface mt-3 mb-1;
+}
+/* GFM pipe tables. On mobile the table scrolls horizontally (display:block +
+   nowrap) so wide tables stay readable instead of squashing every column. */
+.md-preview table {
+    @apply w-full my-3 text-sm;
+    border-collapse: collapse;
+}
+.md-preview :is(th, td) {
+    @apply border border-default px-3 py-2 text-left align-top;
+}
+.md-preview thead th {
+    @apply bg-surface font-semibold text-on-surface;
+}
+.md-preview tbody tr:nth-child(even) td {
+    background-color: color-mix(in srgb, var(--color-bg-surface-alt) 55%, transparent);
+}
+@media (max-width: 767px) {
+    .md-preview table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}
+
+/* ---------- Mobile Drawer Navigation ----------
+   Off-canvas drawer pattern toggled via #show--menu checkbox-hack.
+   Only visible <lg breakpoint; desktop uses TopMenu + SidebarMenu instead. */
+
+.hamburger-btn {
+  @apply inline-flex items-center justify-center w-10 h-10 rounded-md text-on-surface hover:bg-surface-hover transition-colors;
+}
+
+/* The island mount wrapper carries no box (display:contents) so the sticky
+   bar inside it sticks against <body>, not this 1-row-tall wrapper. */
+.mobile-menu-mount {
+  display: contents;
+}
+
+.mobile-topbar {
+  @apply sticky top-0 z-30 flex items-center justify-between px-2 h-14 bg-surface border-b border-default;
+}
+
+@media (width >= 64rem) {
+  .mobile-topbar { display: none; }
+}
+
+.mobile-topbar-brand {
+  @apply font-semibold text-on-surface text-base truncate;
+}
+
+.mobile-topbar-utility {
+  @apply flex items-center gap-1;
+}
+
+.mobile-balance-pill {
+  @apply inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium text-accent bg-accent-subtle no-underline;
+}
+
+.mobile-drawer {
+  @apply fixed top-0 bottom-0 right-0 z-50 w-72 max-w-[80vw] bg-surface flex flex-col;
+  transform: translateX(100%);
+  transition: transform 240ms cubic-bezier(0.32, 0.72, 0, 1);
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.18);
+}
+
+@media (width >= 64rem) {
+  .mobile-drawer { display: none; }
+}
+
+#show--menu:checked ~ .mobile-drawer {
+  transform: translateX(0);
+}
+
+.mobile-overlay {
+  @apply fixed inset-0 z-40 opacity-0 pointer-events-none block;
+  background: rgba(0, 0, 0, 0.4);
+  transition: opacity 240ms ease;
+}
+
+@media (width >= 64rem) {
+  .mobile-overlay { display: none; }
+}
+
+#show--menu:checked ~ .mobile-overlay {
+  @apply opacity-100 pointer-events-auto;
+}
+
+.drawer-header {
+  @apply flex items-center justify-between px-4 h-14 border-b border-default;
+}
+
+.drawer-brand {
+  @apply font-semibold text-on-surface text-base;
+}
+
+.drawer-close {
+  @apply inline-flex items-center justify-center w-8 h-8 rounded-md text-muted hover:text-on-surface hover:bg-surface-hover transition-colors;
+}
+
+.drawer-nav {
+  @apply flex-1 overflow-y-auto py-2;
+}
+
+.drawer-section {
+  @apply flex flex-col;
+}
+
+.drawer-section-bordered {
+  @apply border-t border-default mt-2 pt-2;
+}
+
+/* Drawer links over frosted glass. Layout here; colours are scoped under
+   `.mobile-drawer a…` below so they outrank the global `a:not(.btn)` accent
+   rule (spec 21) — otherwise every item would render as flat accent purple. */
+.drawer-nav-link {
+  @apply flex items-center gap-3 px-4 py-3 font-medium no-underline text-sm;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+/* Plain items: high-contrast on-surface text (crisp in both themes), with a
+   translucent hover so the glass shows through (no solid fill). */
+.mobile-drawer a.drawer-nav-link {
+  color: var(--color-on-surface);
+}
+.mobile-drawer a.drawer-nav-link:hover,
+.mobile-drawer a.drawer-nav-link:focus {
+  background-color: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+/* Active item: accent text + a translucent accent wash and a left accent bar
+   instead of a solid (near-white) pill, so it belongs to the glass. */
+.mobile-drawer a.drawer-nav-link.active {
+  color: var(--color-accent);
+  font-weight: 600;
+  background-color: color-mix(in srgb, var(--color-accent) 16%, transparent);
+  box-shadow: inset 3px 0 0 var(--color-accent);
+}
+.mobile-drawer a.drawer-nav-link.active:hover,
+.mobile-drawer a.drawer-nav-link.active:focus {
+  background-color: color-mix(in srgb, var(--color-accent) 22%, transparent);
+}
+/* Dark theme: lift the accent so the active label reads as a paler indigo
+   against the dark glass (mirrors the sp-nav link treatment). */
+[data-theme="dark"] .mobile-drawer a.drawer-nav-link.active {
+  color: color-mix(in srgb, var(--color-accent) 60%, var(--color-text-primary) 40%);
+}
+
+.drawer-footer {
+  @apply border-t border-default p-3 flex items-center gap-2;
+}
+
+/* Lock body scroll while drawer is open (modern browsers — :has support) */
+body:has(#show--menu:checked) {
+  overflow: hidden;
+}
+
+/* ─── admin dashboard widgets ─── */
+
+.admin-dash-card {
+  @apply rounded-lg border border-default bg-surface p-5;
+}
+
+.admin-dash-card-header {
+  @apply flex items-center justify-between mb-4;
+}
+
+.admin-dash-card-title {
+  @apply text-base font-semibold text-secondary;
+}
+
+.admin-dash-card-title-mb {
+  @apply text-base font-semibold text-secondary mb-4;
+}
+
+.admin-dash-count {
+  @apply text-2xl font-bold;
+}
+
+.admin-dash-list {
+  @apply space-y-2;
+}
+
+.admin-dash-list-tight {
+  @apply space-y-1;
+}
+
+.admin-dash-list-row {
+  @apply flex items-center justify-between text-sm border-b border-subtle pb-2 last:border-b-0;
+}
+
+.admin-dash-row-main {
+  @apply min-w-0 flex-1;
+}
+
+.admin-dash-row-aside {
+  @apply text-right ml-3 shrink-0;
+}
+
+.admin-dash-row-aside-time {
+  @apply text-xs text-muted ml-3 shrink-0;
+}
+
+.admin-dash-link-primary {
+  @apply font-medium text-accent hover:underline;
+}
+
+.admin-dash-link-primary-truncate {
+  @apply font-medium text-accent hover:underline truncate block;
+}
+
+.admin-dash-link-inline {
+  @apply text-accent hover:underline;
+}
+
+.admin-dash-link-footer {
+  @apply block mt-3 text-sm text-accent hover:underline;
+}
+
+.admin-dash-empty {
+  @apply text-sm text-muted;
+}
+
+.admin-dash-meta {
+  @apply text-xs text-muted;
+}
+
+.admin-dash-meta-mt {
+  @apply text-xs text-muted mt-0.5;
+}
+
+.admin-dash-stats-grid {
+  @apply grid grid-cols-2 gap-3;
+}
+
+.admin-dash-stat-tile {
+  @apply block p-4 rounded-lg border border-subtle bg-surface-alt text-center hover:border-strong hover:bg-surface transition-colors no-underline;
+}
+
+.admin-dash-stat-value {
+  @apply text-2xl font-bold;
+}
+
+.admin-dash-stat-label {
+  @apply text-xs text-muted mt-1;
+}
+
+/* One activity = one visual block: an action line (label + time) on top,
+   the two users (actor → target) wrapping underneath. Keeps long dual-links
+   from blowing the row out sideways. */
+.admin-dash-activity-item {
+  @apply flex flex-col gap-1 text-sm border-b border-subtle pb-2 last:border-b-0;
+}
+
+.admin-dash-activity-head {
+  @apply flex items-baseline justify-between gap-2;
+}
+
+.admin-dash-activity-time {
+  @apply text-xs text-muted shrink-0;
+}
+
+.admin-dash-activity-users {
+  @apply flex items-center flex-wrap gap-y-1 min-w-0;
+}
+
+/* Out-of-window slot counts shown beside the calendar pager arrows — one pill
+   per slot kind (number + label), so it's clear whether paging is worth it.
+   Vivid coloured border + saturated tint so the kinds read at a glance. */
+.cal-nav-counts {
+  @apply inline-flex items-center gap-1 flex-wrap;
+}
+.cal-nav-badge {
+  @apply inline-flex items-center gap-1 h-[1.35rem] px-1.5 rounded-full text-[11px] leading-none;
+  border: 1.5px solid transparent;
+}
+.cal-nav-badge-num { @apply font-bold; }
+.cal-nav-badge-label { @apply font-medium; }
+
+.cal-nav-badge--free {
+  background-color: color-mix(in srgb, var(--color-status-green) 18%, transparent);
+  color: var(--color-status-green);
+  border-color: var(--color-status-green);
+}
+.cal-nav-badge--pending {
+  background-color: color-mix(in srgb, var(--color-status-orange) 18%, transparent);
+  color: var(--color-status-orange);
+  border-color: var(--color-status-orange);
+}
+.cal-nav-badge--booked,
+.cal-nav-badge--mine {
+  background-color: color-mix(in srgb, var(--color-status-blue) 18%, transparent);
+  color: var(--color-status-blue);
+  border-color: var(--color-status-blue);
+}
+.cal-nav-badge--completed {
+  background-color: color-mix(in srgb, var(--color-status-gray) 20%, transparent);
+  color: var(--color-status-gray);
+  border-color: var(--color-status-gray);
+}
+
+.admin-dash-activity-actor {
+  @apply font-medium text-on-surface;
+}
+
+.admin-dash-activity-arrow {
+  @apply text-muted mx-1.5;
+}
+
+/* Action label: one line, truncates instead of pushing the time off-row. */
+.admin-dash-activity-action {
+  @apply text-secondary truncate min-w-0;
+}
+
+/* ─── admin panel sections ─── */
+
+/* Hide WebKit's clear-X button on date/time inputs in the request-log filters
+   (and any other admin date-picker that uses .form-control inside admin-request-log). */
+[data-test-id="admin-request-log"] input[type="date"]::-webkit-clear-button,
+[data-test-id="admin-request-log"] input[type="date"]::-webkit-inner-spin-button {
+  display: none;
+  -webkit-appearance: none;
+}
+
+/* Filter pill button (rounded-md), used for status/sub-tab filters above grids.
+   Distinct from .chip (rounded-full). Toggle .admin-filter-btn-active for selected state. */
+.admin-filter-btn {
+  @apply inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md border transition-colors border-default text-secondary hover:bg-surface-hover;
+}
+
+.admin-filter-btn-active {
+  @apply bg-accent text-accent-text border-accent;
+}
+/* Pin active-state colors on all interaction pseudos so the base class' hover
+   (hover:bg-surface-hover) doesn't fight bg-accent and leave white-on-white. */
+.admin-filter-btn-active:hover,
+.admin-filter-btn-active:focus,
+.admin-filter-btn-active:active {
+  @apply bg-accent-hover text-accent-text border-accent;
+}
+
+.admin-filter-count {
+  @apply text-xs ml-1.5 opacity-75;
+}
+
+/* Underline-style segmented tab nav (UsersSection top tabs). */
+.admin-tabnav {
+  @apply flex flex-wrap border-b border-default mb-4;
+}
+
+.admin-tabnav-item {
+  @apply mr-1;
+}
+
+.admin-tabnav-btn {
+  @apply inline-block px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors border-transparent text-muted hover:text-on-surface hover:border-strong;
+}
+
+.admin-tabnav-btn-active {
+  @apply border-accent text-accent;
+}
+/* Pin colors on hover/focus/active so the base class' hover:text-on-surface
+   and hover:border-strong don't override the active accent state. */
+.admin-tabnav-btn-active:hover,
+.admin-tabnav-btn-active:focus,
+.admin-tabnav-btn-active:active {
+  @apply border-accent text-accent;
+}
+
+.admin-tabnav-count {
+  @apply text-xs text-muted ml-1;
+}
+
+/* Centered narrow page container — for pages whose content shouldn't span the full width
+   (dashboards, bookings, profile views). Use as the root element class on the island. */
+.page-narrow {
+  @apply mx-auto w-full max-w-4xl;
+}
+
+/* Detail panel container — used by UserDetailPanel and SupportTicketTab */
+.admin-detail-pane {
+  @apply p-4 max-w-4xl;
+}
+
+.admin-detail-loading {
+  @apply p-6 text-muted text-sm;
+}
+
+.admin-detail-error {
+  @apply p-6 text-danger;
+}
+
+/* User detail header */
+.admin-user-header {
+  @apply flex items-start gap-4 mb-4;
+}
+
+.admin-user-avatar-img {
+  @apply w-16 h-16 rounded-full object-cover;
+}
+
+.admin-user-avatar-fallback {
+  @apply w-16 h-16 rounded-full bg-accent-subtle text-accent flex items-center justify-center text-xl font-bold select-none;
+}
+
+.admin-user-meta {
+  @apply text-xs text-muted mt-1 flex gap-4 flex-wrap;
+}
+
+.admin-user-balance {
+  @apply text-right shrink-0;
+}
+
+.admin-user-balance-label {
+  @apply text-xs text-muted;
+}
+
+.admin-user-balance-amount {
+  @apply text-xl font-bold;
+}
+
+/* Section title (h3) inside detail panes */
+.admin-section-title {
+  @apply text-sm font-semibold text-muted uppercase tracking-wide mb-2 mt-5;
+}
+
+/* Detail tables (compact list of slots/bookings/ledger/tickets etc.) */
+.admin-detail-table {
+  @apply w-full text-sm border-collapse;
+}
+
+.admin-detail-table thead tr {
+  @apply text-left text-xs text-muted border-b border-subtle;
+}
+
+.admin-detail-table tbody tr {
+  @apply border-b border-subtle;
+}
+
+.admin-detail-table th {
+  @apply py-1 pr-3 font-medium;
+}
+
+.admin-detail-table td {
+  @apply py-1 pr-3;
+}
+
+.admin-detail-table th:last-child,
+.admin-detail-table td:last-child {
+  @apply pr-0;
+}
+
+.admin-cell-id {
+  @apply text-muted;
+}
+
+.admin-cell-date {
+  @apply text-muted text-xs whitespace-nowrap;
+}
+
+.admin-cell-note {
+  @apply text-muted text-xs;
+}
+
+.admin-cell-mono {
+  @apply font-mono text-xs;
+}
+
+/* Inline link-style buttons (open user, open ticket, party link, etc.) */
+.admin-link-btn {
+  @apply text-accent hover:underline text-xs;
+}
+
+.admin-link-btn-md {
+  @apply text-accent hover:underline text-sm;
+}
+
+.admin-link-btn-strong {
+  @apply text-accent hover:underline text-left font-medium;
+}
+
+/* Floating toast inside detail pane */
+.admin-floating-toast {
+  @apply fixed top-4 right-4 z-50 px-4 py-2 rounded shadow-lg text-sm;
+  background-color: var(--color-status-green-bg);
+  color: var(--color-status-green);
+}
+
+/* Expert profile compact card inside UserDetailPanel.teachingTab */
+.admin-expert-profile-card {
+  @apply bg-surface-alt rounded p-3 text-sm mb-4;
+}
+
+.admin-expert-profile-row {
+  @apply flex gap-6 flex-wrap;
+}
+
+/* Misc admin layout helpers */
+.admin-filter-bar {
+  @apply flex flex-wrap gap-2 mb-4;
+}
+
+.admin-header-badges {
+  @apply flex items-center gap-2 flex-wrap;
+}
+
+.admin-header-actions {
+  @apply flex items-center gap-2 flex-wrap mt-2;
+}
+
+.admin-unread-pill {
+  @apply text-xs rounded-full px-1.5 py-0.5 font-bold;
+}
+
+/* ─── shared dashboard primitives ─── */
+
+/* Section heading: small sub-h2 used above lists/widgets. */
+.section-heading {
+  @apply text-base font-semibold text-secondary mb-3;
+}
+
+/* Inline header row: title on the left, "view all" link on the right. */
+.section-header-row {
+  @apply flex items-center justify-between mb-3;
+}
+
+/* "View all" / inline accent link inside section headers. */
+.view-all-link {
+  @apply text-sm text-accent hover:underline;
+}
+
+/* ─── Page hero header ───
+   The styled title block at the top of a page (title + hint, optional icon
+   and actions). A soft accent-gradient panel with a glowing left rail; the
+   glass skin layers frosting + an edge glow on top (see glass.css). Use via
+   the shared <PageHeader> component so every page reads consistently. */
+.page-hero {
+  @apply relative rounded-2xl border border-default px-5 py-4 mb-6 overflow-hidden;
+  background-image: linear-gradient(135deg,
+    color-mix(in srgb, var(--color-accent) 13%, var(--color-bg-surface)),
+    var(--color-bg-surface) 62%);
+}
+.page-hero::before {
+  content: "";
+  @apply absolute left-0 top-0 bottom-0;
+  width: 4px;
+  background: linear-gradient(to bottom,
+    var(--color-accent),
+    color-mix(in srgb, var(--color-status-purple) 70%, var(--color-accent)));
+}
+.page-hero-row {
+  @apply flex items-start justify-between gap-4;
+}
+.page-hero-main {
+  @apply flex items-start gap-3 min-w-0;
+}
+.page-hero-icon {
+  @apply shrink-0 grid place-items-center rounded-xl text-accent;
+  width: 2.75rem;
+  height: 2.75rem;
+  background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 30%, transparent);
+}
+.page-hero-title {
+  @apply text-2xl font-bold tracking-tight text-on-surface;
+}
+.page-hero-subtitle {
+  @apply mt-1 text-sm text-muted;
+}
+.page-hero-actions {
+  @apply shrink-0 flex items-center gap-2 flex-wrap;
+}
+
+/* Small count badge (filled accent pill, e.g. "X/Y booked"). */
+.count-badge-accent {
+  @apply inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-accent-subtle text-accent;
+}
+.count-badge-warning {
+  @apply inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-warning-subtle text-warning;
+}
+.count-badge-success {
+  @apply inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-success-subtle text-success;
+}
+
+/* Booking/slot list row — bordered card-like row used in upcoming widgets. */
+.booking-row {
+  @apply flex items-center justify-between p-3 rounded-lg border border-default bg-surface;
+}
+
+/* Booking group — wraps multiple bookings for the same time slot. */
+.booking-group {
+  @apply rounded-lg border border-default bg-surface-alt p-3 flex flex-col gap-3;
+}
+.booking-group-header {
+  @apply flex items-center justify-between gap-2 flex-wrap;
+}
+.booking-group-title {
+  @apply text-base font-semibold text-on-surface;
+}
+.booking-group-meta {
+  @apply text-sm text-muted;
+}
+.booking-group-count {
+  @apply inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-accent-subtle text-accent;
+}
+.booking-group-list {
+  @apply flex flex-col gap-3;
+}
+
+/* News feed group suffix — "+ N more" tail under primary line. */
+.news-group-suffix {
+  @apply text-xs text-muted mt-0.5 italic;
+}
+.news-group-others {
+  @apply text-xs text-muted mt-0.5;
+}
+
+/* Empty/dashed placeholder card (upcoming bookings/slots when none). */
+.empty-state-card {
+  @apply p-6 rounded-lg border border-dashed border-strong bg-surface-alt text-center;
+}
+
+/* Generic stat tile (centered value + label inside a bordered card). */
+.stat-tile {
+  @apply p-4 rounded-lg border border-default bg-surface text-center;
+}
+.stat-tile-value {
+  @apply text-2xl font-bold;
+}
+.stat-tile-label {
+  @apply text-xs text-muted mt-1;
+}
+
+/* Quick-link pill (horizontal: icon + text). */
+.quick-link-pill {
+  @apply flex items-center gap-2 px-4 py-2.5 rounded-lg border border-default bg-surface hover:bg-surface-hover hover:border-strong transition-colors text-sm font-medium text-secondary no-underline;
+}
+
+/* Quick-link tile (vertical: icon over text). */
+.quick-link-tile {
+  @apply flex flex-col items-center gap-1.5 p-4 rounded-lg border border-default bg-surface hover:bg-surface-hover hover:border-strong transition-colors text-center no-underline;
+}
+
+/* Avatar circle (initials, accent surface). */
+.avatar-circle {
+  @apply w-9 h-9 rounded-full bg-accent-subtle text-accent flex items-center justify-center text-sm font-semibold flex-shrink-0;
+}
+.avatar-circle-lg {
+  @apply w-20 h-20 rounded-full bg-accent-subtle text-accent text-2xl font-bold flex items-center justify-center;
+}
+/* Photo variants — same footprint as the initials circles, image cropped to fill. */
+.avatar-circle-img {
+  @apply w-9 h-9 rounded-full object-cover flex-shrink-0 border border-default;
+}
+.avatar-circle-lg-img {
+  @apply w-20 h-20 rounded-full object-cover border border-default;
+}
+
+/* ─── modals (shared, for foreground islands) ─── */
+
+.fg-modal-overlay {
+  @apply fixed inset-0 z-50 flex items-center justify-center bg-black/50;
+}
+.fg-modal-overlay-high {
+  @apply fixed inset-0 z-[200] flex items-center justify-center bg-black/50;
+}
+.fg-modal-card {
+  @apply bg-surface rounded-xl shadow-2xl border border-default w-full mx-4 p-6;
+}
+.fg-modal-card-md  { @apply max-w-md; }
+.fg-modal-card-lg  { @apply max-w-lg; }
+.fg-modal-card-3xl { @apply max-w-3xl; }
+.fg-modal-card-flush {
+  @apply bg-surface rounded-xl shadow-2xl border border-default w-full mx-4 max-h-[90vh] flex flex-col;
+}
+.fg-modal-flush-header {
+  @apply flex items-center justify-between px-6 py-4 border-b border-default shrink-0;
+}
+.fg-modal-flush-body {
+  @apply overflow-y-auto flex-1 p-6;
+}
+.fg-modal-header-row {
+  @apply flex items-center justify-between mb-4;
+}
+.fg-modal-title {
+  @apply text-lg font-semibold text-on-surface;
+}
+.fg-modal-close-x {
+  @apply text-muted hover:text-on-surface text-xl leading-none;
+}
+.fg-modal-subtitle { @apply text-sm text-muted mb-3; }
+.fg-modal-error    { @apply text-danger text-sm mb-3; }
+.fg-modal-actions  { @apply flex justify-end gap-2; }
+
+/* ─── log detail modal ─── */
+
+.log-detail-grid {
+  @apply grid gap-x-4 gap-y-2 text-sm;
+  grid-template-columns: max-content 1fr;
+}
+.log-detail-label {
+  @apply text-muted text-xs uppercase tracking-wide font-semibold whitespace-nowrap pt-0.5;
+}
+.log-detail-value {
+  @apply text-on-surface break-words min-w-0;
+}
+.log-detail-section {
+  @apply mt-4 pt-4 border-t border-subtle;
+}
+.log-detail-section-title {
+  @apply text-muted text-xs uppercase tracking-wide font-semibold mb-2;
+}
+.log-detail-pre {
+  @apply bg-surface-alt border border-default rounded p-3 text-xs font-mono whitespace-pre-wrap break-words overflow-x-auto;
+}
+.log-detail-iframe {
+  @apply w-full border border-default rounded bg-surface;
+  height: 360px;
+}
+
+/* ─── user dashboard ─── */
+
+.user-dash-stat-value-accent  { @apply text-2xl font-bold text-accent; }
+.user-dash-stat-value-success { @apply text-2xl font-bold text-success; }
+.user-dash-stat-value-warning { @apply text-2xl font-bold text-warning; }
+.user-dash-stat-value-danger  { @apply text-2xl font-bold text-danger; }
+
+/* Notification pills on main dashboard. */
+.notification-pill {
+  @apply flex items-center gap-2 px-4 py-2.5 rounded-lg border border-default text-sm font-medium hover:bg-surface-hover transition-colors no-underline;
+}
+.notification-pill-warning { @apply bg-warning-subtle text-warning; }
+.notification-pill-accent  { @apply bg-accent-subtle text-accent; }
+
+/* Welcome card (top of main dashboard). */
+.welcome-card {
+  @apply p-5 rounded-lg border border-default bg-surface;
+}
+.welcome-card-row {
+  @apply flex items-center justify-between flex-wrap gap-3;
+}
+
+/* Role badge — pill for user/expert/owner etc. */
+.role-badge {
+  @apply inline-block px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+/* ─── balance page ─── */
+
+.user-balance-card {
+  @apply rounded-lg border border-default bg-accent-subtle shadow overflow-hidden mb-6;
+}
+.user-balance-amount {
+  @apply text-3xl font-bold text-accent;
+}
+
+/* ─── bookings ─── */
+
+.user-cancel-info-bar {
+  @apply mb-3 text-sm text-accent rounded-lg p-3;
+  background-color: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+
+/* ─── user preview modal ─── */
+
+.preview-header-row {
+  @apply flex items-center gap-4 mb-4;
+}
+.preview-identity {
+  @apply flex flex-col gap-1;
+}
+.preview-name {
+  @apply text-lg font-semibold text-on-surface;
+}
+.preview-role-badge {
+  @apply bg-accent-subtle text-accent self-start;
+}
+.preview-section {
+  @apply mb-4 p-3 rounded-lg border border-default bg-surface-alt text-sm;
+}
+.preview-row {
+  @apply mb-1 last:mb-0 text-sm text-on-surface;
+}
+.preview-bio {
+  @apply whitespace-pre-line;
+}
+.preview-label {
+  @apply text-secondary;
+}
+.preview-stats-grid {
+  @apply grid grid-cols-3 gap-2 mb-4;
+}
+.preview-actions {
+  @apply flex gap-2 flex-wrap;
+}
+
+/* ─── slots calendar ─── */
+
+/* Status filter tab buttons (4-week filter, free/booked/etc.). */
+.status-filter-btn {
+  @apply text-xs px-2.5 py-1 rounded border transition-colors;
+  @apply border-default text-secondary hover:bg-surface-hover;
+}
+.status-filter-btn-active {
+  @apply bg-accent text-accent-text border-accent;
+}
+/* Keep active state readable on hover/focus/active — base class' hover bg
+   would otherwise replace bg-accent with bg-surface-hover, leaving the
+   accent-text color (white) on a near-white surface (invisible). */
+.status-filter-btn-active:hover,
+.status-filter-btn-active:focus,
+.status-filter-btn-active:active {
+  @apply bg-accent-hover text-accent-text border-accent;
+}
+
+/* Day-column wrapper inside week grids. */
+.day-column-head {
+  @apply text-center py-3 px-2;
+}
+.day-column-label {
+  @apply text-[11px] uppercase tracking-wider font-semibold;
+}
+
+/* ─── expert pages ─── */
+
+.expert-stat-value-success { @apply text-2xl font-bold text-success; }
+.expert-stat-value-accent  { @apply text-2xl font-bold text-accent; }
+.expert-stat-value-warning { @apply text-2xl font-bold text-warning; }
+
+/* Header inside ExpertCalendar day cell. */
+.expert-cal-day-head {
+  @apply text-center py-1.5 px-1 border-b border-default text-xs font-medium;
+}
+.expert-cal-slot {
+  @apply mb-1.5 p-2 rounded border border-default bg-surface text-xs;
+}
+.expert-cal-icon-btn {
+  @apply text-sm px-1.5 py-0.5 rounded transition-colors;
+}
+
+/* Toggle-archived chip-style button (NewsFeed). */
+.toggle-pill {
+  @apply text-xs px-2 py-1 rounded border transition-colors;
+}
+.toggle-pill-on  { @apply bg-accent text-accent-text border-accent; }
+.toggle-pill-on:hover,
+.toggle-pill-on:focus,
+.toggle-pill-on:active {
+  @apply bg-accent-hover text-accent-text border-accent;
+}
+.toggle-pill-off { @apply border-default text-muted hover:bg-surface-hover hover:text-on-surface; }
+
+/* ─── profile / users ─── */
+
+.profile-card {
+  @apply border border-default rounded-lg bg-surface overflow-hidden;
+}
+.profile-header {
+  @apply px-6 py-8 text-center bg-surface-alt border-b border-default;
+}
+.profile-stat-cell {
+  @apply px-6 py-5 text-center;
+}
+.profile-stat-value {
+  @apply text-2xl font-bold text-accent;
+}
+.profile-admin-link {
+  @apply text-sm px-2 py-1 rounded border border-default text-muted hover:text-accent hover:border-accent;
+}
+.registration-form-card {
+  @apply bg-surface rounded-lg p-6 border border-default;
+}
+
+/* ─── support ─── */
+
+.support-layout {
+  @apply flex gap-6;
+  min-height: 500px;
+}
+
+.support-list-panel {
+  @apply w-1/3 flex flex-col border border-default rounded-lg overflow-hidden bg-surface;
+}
+
+.support-thread-panel {
+  @apply w-2/3 border border-default rounded-lg flex flex-col overflow-hidden bg-surface;
+}
+
+/* Mobile: collapse the two-column master/detail into one column showing a
+   single panel at a time — the list by default, the thread once a
+   conversation/ticket is open (`support-layout-detail`), with a back button. */
+@media (max-width: 767px) {
+  .support-layout { @apply flex-col gap-3; min-height: 0; }
+  .support-list-panel,
+  .support-thread-panel { @apply w-full; }
+  .support-layout:not(.support-layout-detail) .support-thread-panel { display: none; }
+  .support-layout.support-layout-detail .support-list-panel { display: none; }
+}
+
+/* Back-to-list button — mobile only (the desktop master/detail shows both). */
+.support-back-btn {
+  @apply hidden max-md:flex items-center gap-1 w-full px-4 py-2.5 text-sm font-medium text-accent border-b border-default bg-surface-alt text-left;
+}
+
+.support-list-header {
+  @apply p-3 border-b border-default bg-surface-alt;
+}
+
+.support-list-pagination {
+  @apply p-2 border-b border-default;
+}
+
+.support-list-pagination-bottom {
+  @apply p-2 border-t border-default;
+}
+
+.support-list-scroll {
+  @apply flex-1 overflow-y-auto;
+}
+
+.support-new-btn {
+  @apply w-full py-2 px-3 bg-accent text-accent-text rounded text-sm font-medium hover:bg-accent-hover transition-colors;
+}
+
+.support-new-btn-soft {
+  @apply w-full py-2 px-3 bg-accent-subtle text-accent rounded text-sm font-medium hover:bg-surface-hover transition-colors;
+}
+
+.support-ticket-row {
+  @apply px-4 py-3 border-b border-subtle cursor-pointer transition-colors;
+}
+
+.support-ticket-row-active {
+  @apply bg-accent-subtle;
+}
+/* Pin active background on hover/focus so it doesn't visually flatten into a
+   different shade when the user re-hovers the already-selected ticket. */
+.support-ticket-row-active:hover,
+.support-ticket-row-active:focus {
+  @apply bg-accent-subtle;
+}
+
+.support-ticket-row-inactive {
+  @apply hover:bg-surface-hover;
+}
+
+.support-ticket-row-head {
+  @apply flex items-start justify-between gap-2;
+}
+
+.support-ticket-row-meta {
+  @apply flex items-center gap-2 mt-1;
+}
+
+.support-ticket-title {
+  @apply text-sm font-medium text-on-surface flex-1 truncate;
+}
+
+.support-unread-badge {
+  @apply status-danger text-xs rounded-full w-5 h-5 flex items-center justify-center shrink-0;
+}
+
+.support-empty {
+  @apply p-4 text-center text-muted text-sm;
+}
+
+.support-empty-flex {
+  @apply flex-1 flex items-center justify-center text-muted text-sm;
+}
+
+.support-empty-line {
+  @apply text-center text-muted text-sm py-4;
+}
+
+.support-conv-header {
+  @apply px-6 py-4 border-b border-default bg-surface-alt;
+}
+
+.support-conv-header-row {
+  @apply flex items-center gap-3;
+}
+
+.support-conv-title {
+  @apply text-base font-semibold text-on-surface flex-1;
+}
+
+.support-conv-meta {
+  @apply text-xs text-muted mt-1;
+}
+
+.support-thread-body {
+  @apply flex-1 overflow-y-auto px-6 py-4;
+}
+
+.support-thread-input {
+  @apply px-6 py-4 border-t border-default;
+}
+
+.support-thread-actions {
+  @apply flex items-center gap-3;
+}
+
+.support-system-line {
+  @apply text-center text-xs text-muted italic my-3 px-4;
+}
+
+.support-system-line-tight {
+  @apply text-center text-xs text-muted italic my-2 px-2;
+}
+
+.support-new-form {
+  @apply p-6 flex flex-col gap-4;
+}
+
+.support-new-form-title {
+  @apply text-lg font-semibold text-on-surface;
+}
+
+.support-form-label {
+  @apply text-sm text-secondary mb-1 block;
+}
+
+.support-widget-fab {
+  @apply fixed bottom-4 right-4 z-[100] w-14 h-14 rounded-full bg-accent text-accent-text shadow-lg hover:bg-accent-hover transition-colors flex items-center justify-center;
+}
+
+.support-im-fab {
+  @apply fixed bottom-4 right-20 z-[100] w-12 h-12 rounded-full bg-surface-alt text-on-surface shadow-lg hover:bg-surface-hover transition-colors flex items-center justify-center no-underline;
+}
+
+.support-fab-badge {
+  @apply absolute -top-1 -right-1 status-danger text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center;
+}
+
+.support-widget-panel {
+  @apply fixed bottom-20 right-4 z-[100] bg-surface rounded-lg shadow-xl border border-default flex flex-col;
+  width: 380px;
+  max-height: 500px;
+}
+
+.support-widget-header {
+  @apply flex items-center justify-between px-4 py-3 border-b border-default bg-accent rounded-t-lg;
+}
+
+.support-widget-title {
+  @apply text-accent-text font-medium text-sm;
+}
+
+.support-widget-link {
+  @apply text-accent-text opacity-80 hover:opacity-100 text-xs underline;
+}
+
+.support-widget-close {
+  @apply text-accent-text opacity-80 hover:opacity-100 text-lg leading-none;
+}
+
+.support-widget-im-link {
+  @apply flex items-center gap-2 px-4 py-2 bg-surface-alt border-b border-default text-sm no-underline hover:bg-surface-hover;
+}
+
+.support-widget-body {
+  @apply flex-1 overflow-y-auto;
+  min-height: 200px;
+}
+
+.support-widget-ticket-row {
+  @apply px-4 py-3 border-b border-subtle cursor-pointer hover:bg-surface-hover transition-colors;
+}
+
+.support-widget-conv-header {
+  @apply px-4 py-2 border-b border-subtle bg-surface-alt;
+}
+
+.support-widget-conv-body {
+  @apply flex-1 overflow-y-auto px-3 py-2;
+  max-height: 300px;
+}
+
+.support-widget-conv-input {
+  @apply px-3 py-2 border-t border-subtle;
+}
+
+.support-widget-back-btn {
+  @apply text-xs text-accent hover:underline mb-1;
+}
+
+.support-widget-back-btn-self {
+  @apply text-xs text-accent hover:underline self-start;
+}
+
+.support-widget-new-form {
+  @apply p-4 flex flex-col gap-3;
+}
+
+/* ─── IM ─── */
+
+.im-bubble-row {
+  @apply flex mb-3;
+}
+
+.im-bubble-row-tight {
+  @apply flex mb-2;
+}
+
+.im-bubble {
+  @apply max-w-[70%] rounded-lg px-4 py-3 text-sm;
+}
+
+.im-bubble-tight {
+  @apply max-w-[80%] rounded-lg px-3 py-2 text-sm;
+}
+
+.im-bubble-mine {
+  @apply bg-accent-subtle text-on-surface;
+}
+
+.im-bubble-theirs {
+  @apply bg-surface-hover text-on-surface;
+}
+
+.im-bubble-author {
+  @apply text-xs font-medium text-muted mb-1;
+}
+
+.im-bubble-author-tight {
+  @apply text-xs font-medium text-muted mb-0.5;
+}
+
+.im-bubble-body {
+  @apply whitespace-pre-wrap break-words;
+}
+
+.im-bubble-time {
+  @apply text-xs mt-1 text-muted;
+}
+
+.im-list-header {
+  @apply p-3 border-b border-default bg-surface-alt flex flex-col gap-2;
+}
+
+.im-conv-snippet {
+  @apply text-xs text-muted truncate flex-1;
+}
+
+.im-conv-time {
+  @apply text-xs text-muted shrink-0;
+}
+
+.im-combobox-trigger {
+  @apply flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm border-strong bg-surface text-on-surface hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-accent;
+}
+
+.im-combobox-trigger-empty {
+  @apply text-muted;
+}
+
+.im-combobox-content {
+  @apply z-50 rounded-md border shadow-lg border-default bg-surface;
+  width: var(--radix-popover-trigger-width);
+}
+
+.im-combobox-search-wrap {
+  @apply p-2 border-b border-default;
+}
+
+.im-combobox-search-input {
+  @apply w-full px-2 py-1.5 text-sm rounded border-0 outline-none bg-surface-alt text-on-surface placeholder:text-muted;
+}
+
+.im-combobox-list {
+  @apply max-h-60 overflow-y-auto p-1;
+}
+
+.im-combobox-empty {
+  @apply py-4 text-center text-sm text-muted;
+}
+
+.im-combobox-option {
+  @apply flex w-full items-center gap-2.5 rounded-sm px-2 py-2 text-sm cursor-pointer hover:bg-accent-subtle text-on-surface;
+}
+
+.im-combobox-option-active {
+  @apply bg-accent-subtle text-accent;
+}
+
+.im-combobox-chevron {
+  @apply ml-2 shrink-0 opacity-50;
+}
+
+.im-avatar {
+  @apply w-8 h-8 rounded-full bg-accent-subtle text-accent text-xs font-bold flex items-center justify-center shrink-0;
+}
+
+.im-avatar-sm {
+  @apply w-6 h-6 rounded-full bg-accent-subtle text-accent text-[10px] font-bold flex items-center justify-center shrink-0;
+}
+
+/* ─── comments ─── */
+
+.comment-card {
+  @apply border border-default rounded-lg px-4 py-3 bg-surface;
+}
+
+.comment-card-row {
+  @apply flex items-start justify-between gap-2;
+}
+
+.comment-author {
+  @apply text-sm font-medium text-on-surface;
+}
+
+.comment-body {
+  @apply text-sm text-secondary mt-1 whitespace-pre-wrap break-words;
+}
+
+.comment-time {
+  @apply text-xs text-muted mt-1;
+}
+
+.comment-delete-btn {
+  @apply text-danger text-xs hover:text-danger shrink-0;
+}
+
+.comment-list {
+  @apply flex flex-col gap-3 mb-4;
+}
+
+.comment-form {
+  @apply flex gap-3;
+}
+
+/* ─── common ui ─── */
+
+.common-status-pill {
+  @apply inline-block px-2 py-0.5 rounded text-xs font-medium;
+}
+
+.common-link {
+  @apply text-accent hover:underline;
+}
+
+.common-link-admin-tag {
+  @apply text-[10px] px-1 py-0.5 rounded border border-default text-muted hover:text-accent hover:border-accent no-underline;
+}
+
+.common-role-tag {
+  @apply text-[10px] px-1.5 py-0.5 rounded status-muted;
+}
+
+.common-entity-link {
+  @apply inline-flex items-center gap-1.5;
+}
+
+.common-attach-image {
+  @apply block border border-default rounded overflow-hidden hover:border-accent transition-colors p-0 bg-transparent cursor-zoom-in;
+}
+
+.common-attach-image-img {
+  @apply max-w-48 max-h-32 object-contain block;
+}
+
+.common-attach-file {
+  @apply block border border-default rounded overflow-hidden hover:border-accent transition-colors;
+}
+
+.common-attach-file-inner {
+  @apply px-3 py-2 bg-surface-alt flex items-center gap-2 text-sm;
+}
+
+.common-attach-list {
+  @apply flex flex-wrap gap-2 mt-2;
+}
+
+.common-pick-grid {
+  @apply flex flex-wrap gap-2 mb-2;
+}
+
+.common-pick-tile {
+  @apply relative border border-default rounded overflow-hidden cursor-pointer;
+}
+
+.common-pick-tile-fallback {
+  @apply w-full h-full flex items-center justify-center bg-surface-alt text-xs text-muted p-1 text-center;
+}
+
+.common-pick-remove {
+  @apply absolute top-0 right-0 bg-danger-subtle text-danger rounded-bl text-xs px-1.5 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity;
+}
+
+.common-pick-lightbox {
+  @apply fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center;
+}
+
+.common-pick-lightbox-frame {
+  @apply relative max-w-[90vw] max-h-[90vh];
+}
+
+.common-pick-lightbox-img {
+  @apply max-w-full max-h-[85vh] object-contain rounded shadow-2xl;
+}
+
+.common-pick-lightbox-actions {
+  @apply absolute top-2 right-2 flex gap-2;
+}
+
+.common-pick-lightbox-btn-danger {
+  @apply bg-danger-subtle text-danger rounded-full w-8 h-8 flex items-center justify-center hover:bg-danger-subtle;
+}
+
+.common-pick-lightbox-btn-neutral {
+  @apply bg-surface-alt text-on-surface rounded-full w-8 h-8 flex items-center justify-center hover:bg-surface-hover;
+}
+
+.common-pick-lightbox-nav {
+  @apply absolute top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-black/70 text-xl;
+}
+
+.common-pick-lightbox-caption {
+  @apply text-center text-white text-sm mt-2 opacity-70;
+}
+
+.common-spinner {
+  @apply animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full;
+}
+
+.common-send-spinner-wrap {
+  @apply inline-flex items-center gap-1;
+}
+
+.common-theme-toggle {
+  @apply inline-flex items-center gap-1 px-3 py-1.5 text-sm text-muted hover:text-warning hover:bg-warning-subtle rounded transition-colors;
+}
+
+.common-pgn-btn {
+  @apply inline-flex items-center justify-center min-w-[2rem] h-8 px-2 text-sm rounded border transition-colors disabled:opacity-40 disabled:cursor-not-allowed border-default bg-surface text-on-surface hover:bg-surface-hover;
+}
+
+.common-pgn-btn-active {
+  @apply inline-flex items-center justify-center min-w-[2rem] h-8 px-2 text-sm rounded border transition-colors disabled:opacity-40 disabled:cursor-not-allowed border-accent bg-accent text-accent-text font-semibold;
+}
+.common-pgn-btn-active:hover,
+.common-pgn-btn-active:focus,
+.common-pgn-btn-active:active {
+  @apply bg-accent-hover text-accent-text border-accent;
+}
+
+.common-pgn-ellipsis {
+  @apply px-1 text-muted text-sm select-none;
+}
+
+.common-pgn-info {
+  @apply text-sm text-muted;
+}
+
+/* ─── animations ─── */
+
+/* Reusable attention shake — pair with the useShake() hook. */
+@keyframes shake-x {
+  0%, 100% { transform: translateX(0); }
+  15%, 45%, 75% { transform: translateX(-6px); }
+  30%, 60%, 90% { transform: translateX(6px); }
+}
+.animate-shake {
+  animation: shake-x 0.5s ease-in-out;
+}
+
+/* ─── nav ─── */
+
+.nav-topbar {
+  @apply bg-surface border-b border-default px-4;
+}
+
+/* Sticky slot that carries the top-menu island so it frosts over scrolled
+   content (the island consumes its *-init class but keeps these). The reserved
+   min-height matches the rendered bar (h-14 row + 1px border) so content below
+   doesn't jump down when the top-menu island hydrates after load. */
+.app-topbar {
+  @apply hidden lg:block lg:sticky lg:top-0 z-30;
+  min-height: 57px;
+}
+
+/* Admin sidebar column — sticky under the top bar, own scroll when tall.
+   The fixed w-20 (matching the inner .nav-sidebar) reserves the column width
+   server-side, so content doesn't jump right by ~80px when the sidebar island
+   hydrates after load. */
+.app-sidebar {
+  @apply hidden lg:block w-20 shrink-0 self-start overflow-y-auto overflow-x-hidden bg-surface border-r border-default lg:sticky lg:top-14;
+  max-height: calc(100vh - 3.5rem);
+}
+
+.nav-topbar-row {
+  @apply grid w-full items-center h-14 gap-3;
+  grid-template-columns: 1fr auto 1fr;
+}
+
+.nav-topbar-list {
+  @apply flex justify-center flex-wrap list-none m-0 p-0 gap-1 min-w-0;
+  grid-column: 2;
+}
+
+/* Site logo in the far-left grid cell — links to the home page.
+   The box mirrors the w-20 sidebar below it (width 5rem) and cancels the
+   .nav-topbar px-4 padding via a negative margin, so the centered logo lines
+   up exactly over the centre of the left sidebar. */
+.nav-topbar-logo {
+  @apply inline-flex items-center justify-center no-underline;
+  grid-column: 1;
+  justify-self: start;
+  width: 5rem;
+  margin-left: -1rem;
+}
+.nav-topbar-logo img {
+  @apply rounded;
+  width: 28px;
+  height: 28px;
+}
+/* Page footer with the configured support/contact email. */
+.app-footer {
+  @apply flex items-center justify-center gap-1.5 flex-wrap px-4 py-3 text-xs text-muted border-t border-subtle;
+}
+.app-footer-email {
+  @apply text-accent hover:underline;
+}
+
+.mobile-topbar-logo {
+  @apply inline-flex items-center no-underline;
+}
+.mobile-topbar-logo img {
+  @apply rounded;
+  width: 26px;
+  height: 26px;
+}
+
+.nav-topbar-row > .util-cluster-wrap {
+  grid-column: 3;
+  justify-self: end;
+}
+
+.nav-top-link {
+  @apply inline-flex items-center gap-2 px-4 py-2.5 text-sm no-underline transition-colors text-muted hover:text-on-surface;
+}
+
+.nav-top-link-active {
+  @apply inline-flex items-center gap-2 px-4 py-2.5 text-sm no-underline transition-colors text-accent border-b-2 border-accent font-medium;
+}
+
+.nav-sidebar {
+  @apply w-20 py-3;
+}
+
+.nav-side-list {
+  @apply flex flex-col list-none m-0 p-0;
+}
+
+.nav-side-link {
+  @apply flex flex-col items-center justify-center gap-0.5 px-2 py-3 transition-colors no-underline text-muted hover:text-on-surface hover:bg-surface-hover;
+}
+
+.nav-side-link-active {
+  @apply flex flex-col items-center justify-center gap-0.5 px-2 py-3 transition-colors no-underline text-accent font-semibold border-r-4 border-accent;
+  /* Stronger accent wash than bg-accent-subtle so the active item clearly
+     stands out over the frosted (translucent) sidebar. */
+  background-color: color-mix(in srgb, var(--color-accent) 20%, transparent);
+}
+
+.nav-side-label {
+  @apply text-[0.6rem] leading-tight text-center;
+}
+
+/* ---------- Admin Log Filters ---------- */
+
+/* Unified filter grid for admin log pages (requests, errors, etc.).
+   All filter cells live in one grid; on small screens it collapses to fewer columns. */
+.admin-log-filters {
+  @apply grid gap-3 mb-4 items-end;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.admin-log-filters .filter-cell {
+  @apply flex flex-col min-w-0;
+}
+
+.admin-log-filters .filter-cell label {
+  @apply block text-xs text-muted mb-1;
+}
+
+.admin-log-filters .filter-cell input,
+.admin-log-filters .filter-cell select {
+  @apply text-sm w-full;
+}
+
+/* Searchable user filter takes a wider slot to avoid looking cramped. */
+.admin-log-filters .filter-cell-user {
+  grid-column: span 2 / span 2;
+}
+
+/* Action cell: search button, reset, counter — bottom-aligned via items-end on grid. */
+.admin-log-filters .filter-actions {
+  @apply flex items-center gap-2 flex-wrap;
+}
+
+.admin-log-filters .filter-actions .filter-counter {
+  @apply text-xs text-muted whitespace-nowrap ml-1;
+}
+
+/* On narrow screens collapse to a single column. */
+@media (max-width: 640px) {
+  .admin-log-filters {
+    grid-template-columns: 1fr;
+  }
+  .admin-log-filters .filter-cell-user {
+    grid-column: auto;
+  }
+}
+
+/* ---------- Admin Bookings Filters ---------- */
+
+/* Unified filter grid for admin bookings/slots/cancellations tabs.
+   Same auto-fit grid as admin-log-filters but with a denser min-column to fit
+   more compact controls (status select, ID search, date inputs). */
+.admin-bookings-filters {
+  @apply grid gap-2 mb-4 items-end;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.admin-bookings-filters .filter-cell {
+  @apply flex flex-col min-w-0;
+}
+
+.admin-bookings-filters .filter-cell label {
+  @apply block text-xs text-muted mb-1;
+}
+
+.admin-bookings-filters .filter-cell input,
+.admin-bookings-filters .filter-cell select {
+  @apply text-sm w-full;
+}
+
+.admin-bookings-filters .filter-actions {
+  @apply flex items-end justify-end;
+}
+
+@media (max-width: 640px) {
+  .admin-bookings-filters {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Block Editor (Static Pages Admin) ---------- */
+
+/* Small square icon button for move arrows, delete, etc. */
+.blk-icon-btn {
+  @apply inline-flex items-center justify-center w-7 h-7 rounded-md text-xs text-secondary bg-surface-hover hover:text-on-surface transition-colors disabled:opacity-40;
+}
+
+.blk-icon-btn-danger {
+  @apply inline-flex items-center justify-center w-7 h-7 rounded-md text-xs text-danger bg-surface-hover hover:bg-danger-subtle transition-colors disabled:opacity-40;
+}
+
+/* Visibility chip toggle */
+.blk-vis-chip {
+  @apply inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full transition-colors cursor-pointer;
+}
+
+.blk-vis-chip-on {
+  @apply bg-success-subtle text-success;
+}
+
+.blk-vis-chip-off {
+  @apply bg-surface-hover text-muted;
+}
+
+/* Segmented toggle for Edit/Preview */
+.blk-seg-toggle {
+  @apply inline-flex rounded-md overflow-hidden border border-default;
+}
+
+.blk-seg-toggle-btn {
+  @apply px-3 py-1 text-xs font-medium transition-colors cursor-pointer;
+}
+
+.blk-seg-toggle-active {
+  @apply bg-accent text-accent-text;
+}
+
+.blk-seg-toggle-inactive {
+  @apply bg-surface-alt text-secondary hover:text-on-surface;
+}
+
+/* Markdown formatting toolbar button */
+.blk-fmt-btn {
+  @apply inline-flex items-center justify-center w-8 h-8 rounded-md text-sm text-secondary bg-surface-alt hover:bg-surface-hover hover:text-on-surface transition-colors;
+}
+
+/* Dashed "add block" separator */
+.blk-add-separator {
+  @apply relative flex items-center justify-center py-2;
+}
+
+.blk-add-separator::before {
+  content: '';
+  @apply absolute inset-x-0 top-1/2 border-t border-dashed border-subtle;
+}
+
+.blk-add-btn {
+  @apply relative z-10 inline-flex items-center justify-center w-7 h-7 rounded-full border border-dashed border-subtle bg-surface text-muted text-sm hover:border-accent hover:text-accent transition-colors disabled:opacity-40;
+}
+
+/* Block card container */
+.blk-card {
+  @apply rounded-lg border border-default p-3 transition-opacity;
+}
+
+.blk-card-dimmed {
+  @apply opacity-50;
+}
+
+/* Block header row */
+.blk-header {
+  @apply flex items-center gap-1 mb-2;
+}
+
+/* Block type selector */
+.blk-type-select {
+  @apply w-28;
+}
+
+/* ---------- Static Page Image/Gallery Blocks ---------- */
+
+.sp-block-image { @apply max-w-full rounded-lg; }
+.sp-image-block { @apply flex justify-center; }
+.sp-lightbox-link { @apply cursor-zoom-in; }
+.sp-gallery-block { @apply space-y-2; }
+.sp-gallery-row { @apply grid gap-2; }
+.sp-gallery-image { @apply w-full h-full object-cover rounded-lg; }
+
+/* Static Page Admin: image upload area */
+.blk-upload-area {
+  @apply border-2 border-dashed border-subtle rounded-lg p-6 text-center cursor-pointer transition-colors bg-surface-alt;
+}
+.blk-upload-area-active {
+  @apply border-accent bg-accent-subtle;
+}
+.blk-upload-hint {
+  @apply text-sm text-muted;
+}
+
+/* Static Page Admin: gallery thumbnail grid */
+.blk-gal-grid {
+  @apply grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3;
+}
+.blk-gal-thumb {
+  @apply relative rounded-lg overflow-hidden border border-default bg-surface-alt;
+}
+.blk-gal-thumb-img {
+  @apply w-full h-24 object-cover;
+}
+.blk-gal-thumb-remove {
+  @apply absolute top-1 right-1 inline-flex items-center justify-center w-6 h-6 rounded-md text-xs text-danger bg-surface-hover hover:bg-danger-subtle transition-colors opacity-0 transition-opacity;
+}
+.blk-gal-thumb:hover .blk-gal-thumb-remove {
+  opacity: 1;
+}
+
+/* Static Page Admin: image block preview */
+.blk-img-preview {
+  @apply relative inline-block;
+}
+.blk-img-preview-img {
+  @apply max-h-48 rounded-lg;
+}
+.blk-img-preview-remove {
+  @apply absolute top-1 right-1 inline-flex items-center justify-center w-7 h-7 rounded-md text-xs text-danger bg-surface-hover hover:bg-danger-subtle transition-colors;
+}
+
+/* Static pages navigation (header snippet).
+   Floats on top; the frosted-glass fill is supplied by the shared
+   `glass-skin` chrome rule (glass.css) and the bottom divider matches the
+   admin top bar exactly (border-b border-default) so the line under the
+   menu reads identically across the app and the public static pages. */
+.sp-nav {
+  @apply sticky top-0 z-40 py-3 px-4 border-b border-default;
+  position: sticky; /* floats on every page, not just sticky-flagged ones */
+}
+.sp-nav-inner { @apply flex items-center gap-4 md:gap-6 max-w-5xl mx-auto; }
+.sp-nav-center .sp-nav-inner { @apply md:justify-center; }
+/* sp-nav-sticky kept as an explicit alias; the base nav already floats. */
+.sp-nav-sticky { @apply sticky top-0 z-40; }
+.sp-nav-logo img { @apply block; }
+/* Menu: inline row on desktop; collapsed behind the burger on mobile and
+   shown as a full-width frosted dropdown when the nav is open. */
+.sp-nav-menu { @apply hidden md:flex items-center gap-4 list-none m-0 p-0; }
+/* Pure CSS checkbox-hack: the hidden .sp-nav-toggle drives the open state.
+   On mobile the menu drops down as a frosted panel; md: resets restore the
+   inline row on desktop regardless of checked state (handles resize). */
+.sp-nav-toggle { @apply hidden; }
+.sp-nav-toggle:checked ~ .sp-nav-inner .sp-nav-menu {
+  @apply flex flex-col absolute left-0 right-0 top-full px-4 py-3 gap-3 z-40
+         border-b border-subtle
+         md:static md:flex-row md:items-center md:gap-4 md:p-0 md:border-0;
+  background: color-mix(in srgb, var(--color-bg-surface) 92%, transparent);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  backdrop-filter: blur(12px) saturate(1.4);
+  box-shadow: 0 6px 14px -8px color-mix(in srgb, var(--color-accent) 45%, transparent);
+}
+@media (min-width: 768px) {
+  .sp-nav-toggle:checked ~ .sp-nav-inner .sp-nav-menu { background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; }
+}
+.sp-nav-link { @apply text-sm text-secondary no-underline transition-colors; }
+.sp-nav-link:hover { @apply text-accent; }
+.sp-nav-divider { @apply hidden md:block h-4 self-center border-l border-subtle; }
+.sp-nav-theme-toggle { @apply ml-auto md:ml-1; }
+.sp-nav-theme-toggle .spnt-icon { @apply block; }
+/* Hamburger (the toggle's <label>) — mobile only; bars animate into an X. */
+.sp-nav-burger { @apply md:hidden inline-flex flex-col justify-center items-center gap-[5px] w-9 h-9 rounded-md text-on-surface cursor-pointer; }
+.sp-nav-burger span { @apply block h-0.5 w-5 rounded bg-current transition-all; }
+.sp-nav-toggle:checked ~ .sp-nav-inner .sp-nav-burger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.sp-nav-toggle:checked ~ .sp-nav-inner .sp-nav-burger span:nth-child(2) { opacity: 0; }
+.sp-nav-toggle:checked ~ .sp-nav-inner .sp-nav-burger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* Static pages footer (footer snippet). Frosted-glass fill is supplied by
+   the shared glass-skin chrome rule (glass.css) to match the admin chrome. */
+.sp-footer {
+  @apply border-t border-subtle mt-8 pt-6 pb-4 px-4;
+}
+.sp-footer-inner { @apply max-w-5xl mx-auto; }
+.sp-footer-cols { @apply grid gap-8 mb-4; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.sp-footer-col-title { @apply text-sm font-semibold text-on-surface mb-2; }
+.sp-footer-col-links { @apply list-none m-0 p-0 space-y-1; }
+.sp-footer-link { @apply text-sm text-secondary no-underline transition-colors; }
+.sp-footer-link:hover { @apply text-accent; }
+.sp-footer-copyright { @apply text-xs text-muted text-center pt-4 border-t border-subtle; }
+/* Single-column meta-footer fallback: when only one column survived
+   placeholder filtering, the footer renders a flat horizontal row of
+   links separated by bullets. Keeps the slim look of a marketing
+   site footer instead of a half-empty grid. Wraps on narrow screens. */
+.sp-footer-row { @apply flex flex-wrap items-center justify-center gap-x-4 gap-y-2 list-none m-0 p-0 mb-4; }
+.sp-footer-row li { @apply flex items-center; }
+.sp-footer-row li + li::before { content: "·"; @apply text-muted mr-4; }
+
+/* Default 404 body (rendered inside the public-page shell). */
+.sp-notfound { @apply text-center py-12; }
+.sp-notfound-code { @apply text-6xl font-bold text-accent leading-none mb-2; }
+.sp-notfound-title { @apply text-2xl font-semibold text-on-surface mb-2; }
+.sp-notfound-text { @apply text-secondary mb-6; }
+.sp-notfound-home { @apply inline-block rounded-lg bg-accent px-4 py-2 font-medium text-accent-text no-underline hover:bg-accent-hover transition-colors; }
+
+/* Lift sp-nav / sp-footer link colour in dark mode — the resolved
+   --color-accent (#6366A6) reads as "too dark" against #0A0A0B for
+   chrome links. Keep the blue/indigo identity, just shift it toward
+   primary text so it reads as a paler, more readable indigo.
+   NB: the `a` prefix is required to outrank the global
+   `a:not(.btn):not([class*="bg-"])` rule (specificity 21). */
+[data-theme="dark"] a.sp-nav-link,
+[data-theme="dark"] a.sp-footer-link { color: color-mix(in srgb, var(--color-accent) 55%, var(--color-text-primary) 45%); }
+[data-theme="dark"] a.sp-nav-link:hover,
+[data-theme="dark"] a.sp-footer-link:hover { color: var(--color-text-primary); }
+
+/* Static pages structured snippet admin editors */
+.sp-editor-section { @apply rounded-lg border border-default bg-surface p-4 space-y-3; }
+.sp-editor-section-title { @apply text-sm font-semibold text-on-surface; }
+.sp-menu-item-row { @apply flex flex-wrap items-center gap-2 py-2 border-b border-subtle; }
+.sp-menu-item-row:last-child { @apply border-b-0; }
+.sp-col-card { @apply rounded-lg border border-default bg-surface-alt p-4 space-y-3; }
+
+/* ---------- Centralised admin-table styling ---------- */
+/*
+ * Single source of truth for admin tables. Apply `admin-table` to <table>
+ * and the headers + row underlines come for free; no need to dust each
+ * <thead>/<tr> with the same Tailwind cocktail.
+ */
+.admin-table { @apply w-full text-sm; }
+.admin-table thead tr { @apply bg-surface-alt border-b border-subtle text-left text-secondary; }
+.admin-table thead th { @apply px-4 py-3 font-semibold; }
+.admin-table tbody tr { @apply border-b border-subtle; }
+.admin-table tbody tr:last-child { @apply border-b-0; }
+.admin-table tbody td { @apply px-4 py-3 align-top; }
+
+/* ---------- Banners (inline notices) ---------- */
+/*
+ * Generic full-width notice strip used for any inline page message:
+ * timezone notice, deprecation hint, error summary, success confirmation.
+ * Use the <Banner variant=…> React component, not these classes directly.
+ *
+ * Variants share padding/radius/layout; only the colour palette changes:
+ *  - info    — calm, surface-alt background, default border
+ *  - warn    — eye-catching amber on warning-subtle bg
+ *  - danger  — red text on danger-subtle bg
+ *  - success — green text on success-subtle bg
+ */
+.banner {
+    @apply flex items-start gap-2 rounded-md px-3 py-2 mb-3 text-sm;
+    border: 1px solid var(--border-default-color, transparent);
+}
+.banner-info    { @apply bg-surface-alt text-secondary; }
+.banner-warn    {
+    @apply bg-warning-subtle text-on-surface;
+    border-color: var(--color-warning);
+}
+.banner-danger  {
+    @apply bg-danger-subtle text-on-surface;
+    border-color: var(--color-danger);
+}
+.banner-success {
+    @apply bg-success-subtle text-on-surface;
+    border-color: var(--color-success);
+}
+.banner-icon { @apply text-base leading-none shrink-0; }
+.banner-title { @apply font-semibold; }
+
+/* ---------- TZ-mismatch row (TimezoneNotice warn variant) ---------- */
+/*
+ * One-line layout: two inline chips (browser • time, profile • time) with a
+ * diff pill between them. Wraps to two/three lines on narrow viewports via
+ * flex-wrap — no media-query breakpoint needed, the content reflows when
+ * it can't fit.
+ */
+.tz-mismatch-row {
+    @apply flex flex-wrap items-center gap-x-2 gap-y-1 leading-tight;
+}
+.tz-chip-inline {
+    /* No flex-wrap: the check/icon and time stay on the same row as the
+       label; only the label text itself wraps (min-w-0 below). items-start
+       keeps the ✓ aligned to the first line when the label runs long. */
+    @apply inline-flex items-start gap-1.5 rounded-md px-2 py-0.5 text-sm max-w-full min-w-0;
+    /* Was var(--bg-surface) — that token doesn't exist, so it always fell back
+       to #fff (white). In dark theme the muted label then sat on a white chip
+       (gray-on-white, invisible). Use the real theme surface token. */
+    background: color-mix(in srgb, var(--color-bg-surface) 55%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-warning, #d97706) 25%, transparent);
+}
+/* Active chip — the timezone the page actually uses for rendering times. */
+.tz-chip-active {
+    background: color-mix(in srgb, var(--color-success, #16a34a) 12%, transparent);
+    border-color: color-mix(in srgb, var(--color-success, #16a34a) 45%, transparent);
+}
+.tz-chip-muted     { @apply opacity-80; }
+.tz-chip-check     { @apply font-bold; color: var(--color-success, #16a34a); }
+.tz-chip-label-text{ @apply text-muted text-xs min-w-0; }
+.tz-chip-name      { @apply font-medium; }
+.tz-chip-sep       { @apply text-muted; }
+.tz-chip-time      { @apply font-mono tabular-nums; }
+.tz-diff-pill {
+    @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap;
+    background: color-mix(in srgb, var(--color-warning, #d97706) 18%, transparent);
+    color: var(--color-warning, #b45309);
+}
+.tz-mismatch-footer { @apply mt-1 text-xs text-muted; }
+
+/* ---------- Centralised tab bar ---------- */
+/*
+ * Tab bar = ul.tab-bar > li > button.tab-link[.tab-link-active]. Used by
+ * TabNav and any page-level tab strip. The base .tab-link is inline-flex
+ * with gap-1 so an optional close × span renders cleanly; pages without
+ * a close button render the same.
+ */
+.tab-bar { @apply flex flex-wrap border-b border-default; }
+.tab-link {
+    @apply inline-flex items-center gap-1 px-4 py-2 text-sm font-medium rounded-t-lg
+           border-b-2 border-transparent text-muted transition-colors
+           hover:text-secondary hover:border-strong;
+}
+.tab-link-active { @apply border-accent text-accent hover:text-accent hover:border-accent; }
+
+/* ---------- Admin Dashboard (GarnetCli admin server) ---------- */
+/*
+ * Component classes used by the AdminDashboard island. The panel is the
+ * card-like container; the terminal-panel is the command output area.
+ * Button-warning/info are framework-level button variants that didn't
+ * exist before but are needed here (and elsewhere) to keep the 4-layer
+ * colour rule (no raw tailwind palette in TSX).
+ */
+.btn-warning {
+    @apply bg-warning-subtle text-on-surface;
+    border-color: var(--color-warning);
+    &:hover { @apply bg-warning-subtle text-on-surface; }
+}
+
+.btn-info {
+    @apply bg-info-subtle text-on-surface;
+    &:hover { @apply bg-info-subtle text-on-surface; }
+}
+
+.admin-dash-page {
+    @apply min-h-screen bg-page;
+}
+
+.admin-dash-topbar {
+    @apply bg-surface shadow;
+}
+
+.admin-dash-topbar-inner {
+    @apply max-w-4xl mx-auto px-4 py-4 flex items-center justify-between;
+}
+
+.admin-dash-title {
+    @apply text-xl font-bold text-on-surface;
+}
+
+.admin-dash-main {
+    @apply max-w-4xl mx-auto px-4 py-6 space-y-6;
+}
+
+.admin-dash-panel {
+    @apply bg-surface rounded-lg shadow p-4;
+}
+
+.admin-dash-panel-row {
+    @apply flex items-center gap-3;
+}
+
+.admin-dash-panel-actions {
+    @apply flex flex-wrap gap-2;
+}
+
+.admin-dash-panel-header {
+    @apply flex items-center justify-between mb-2;
+}
+
+.admin-dash-panel-label {
+    @apply font-medium text-secondary;
+}
+
+.admin-dash-panel-hint {
+    @apply text-sm text-muted;
+}
+
+.admin-dash-panel-mini-action {
+    @apply text-xs text-muted hover:text-on-surface bg-transparent border-0 cursor-pointer;
+}
+
+.admin-dash-select {
+    @apply border border-default rounded px-3 py-1.5 text-sm bg-surface text-on-surface;
+}
+
+/*
+ * Terminal-style output panel (e.g. AdminDashboard cmd runner output).
+ * We use bg-surface-alt + text-success to stay inside the 4-layer rule:
+ * the visual "console-on-dark" look is the dark-theme rendering of these
+ * layer-3 classes, and light-theme stays readable too.
+ */
+.terminal-panel {
+    @apply bg-surface-alt text-success rounded p-4 h-96 overflow-y-auto text-sm font-mono whitespace-pre-wrap;
+}
+
+/* ---------- Misc Utilities ---------- */
+
+.fs-5 { @apply text-xl; }
+.h-100 { @apply h-full; }
+

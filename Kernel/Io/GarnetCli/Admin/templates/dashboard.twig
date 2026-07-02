@@ -1,0 +1,9 @@
+{% extends 'layout.twig' %}
+
+{% block content %}
+{# `props_json` is pre-encoded JSON for the React island's data-props.
+   Emit verbatim — the JSON encoder already strips quotes/apostrophes
+   that would break the attribute. #}
+<div class="admin-dashboard-init" data-props='{{ props_json | raw }}'></div>
+<script src="/__garnet/assets/admin.js"></script>
+{% endblock %}

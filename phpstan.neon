@@ -1,0 +1,27 @@
+parameters:
+    reportUnmatchedIgnoredErrors: false
+
+    bootstrapFiles:
+        - phpstan-bootstrap.php
+
+    excludePaths:
+    	- */Spec/*
+    	- */TwigCache/*
+    	- */composer/*
+    	- */vendor/*
+    	- *Spec.php
+
+    paths:
+        - Kernel
+        - Bundle
+
+    level: 5
+
+    ignoreErrors:
+        - '#PHPDoc tag @var#'
+        - '#Unsafe usage of new static#'
+        - '#Unsafe call to private method .* through static#'
+        - '#Unsafe access to private (property|constant) .* through static#'
+        - '#Match expression does not handle remaining value#'
+        - '#Call to an undefined method PHPCraftdream\\Garnet\\Kernel\\Interfaces\\II18n::#'
+        - '#Access to an undefined static property#'

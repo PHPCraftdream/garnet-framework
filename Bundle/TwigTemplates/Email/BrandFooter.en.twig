@@ -1,0 +1,4 @@
+{# Compact footer used in transactional email bodies — copyright line +
+   short brand note. Entities (`&copy;`, `&middot;`) live in the template,
+   not in PHP. #}
+&copy; {{ year }} {{ title | e }} &middot; {{ note | e }}{% if contactEmail %}<br>{{ contactLabel | e }} <a href="mailto:{{ contactEmail | e }}">{{ contactEmail | e }}</a>{% endif %}

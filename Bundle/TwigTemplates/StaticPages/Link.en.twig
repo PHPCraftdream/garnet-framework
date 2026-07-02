@@ -1,0 +1,4 @@
+{# Inline link to a static page — rendered when a `{link:slug}` placeholder
+   is found inside a static-page body. PHP looks the page up and feeds us
+   its slug + title; Twig escapes both. #}
+<a href="/page/view~{{ slug }}">{{ title }}</a>

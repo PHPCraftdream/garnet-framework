@@ -1,0 +1,17 @@
+{# Public-page shell composition.
+
+   header_html: pre-rendered nav snippet | ''
+   footer_html: pre-rendered footer snippet | ''
+   body_html:   inner page body (h1 + blocks)
+   max_width_px: '576px' | '672px' | ... | '100%' — body wrapper cap
+
+   Header / footer sit OUTSIDE the per-page max-width body wrapper so
+   their own .sp-nav-inner / .sp-footer-inner cap (max-w-5xl) drives
+   chrome width independently from the body's max_width — keeps the
+   nav identical across "/", any /page/view~slug, and pages with
+   different max_width settings. #}
+{{ header_html | raw }}
+<div style="max-width:{{ max_width_px }}" class="mx-auto px-4 py-8">
+    {{ body_html | raw }}
+</div>
+{{ footer_html | raw }}

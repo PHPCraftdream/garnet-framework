@@ -1,0 +1,66 @@
+@keyframes hot-click-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Click feedback for icon-less links: an accent ring that pulses outward. */
+@keyframes hot-click-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent) 55%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 7px color-mix(in srgb, var(--color-accent) 0%, transparent);
+  }
+}
+
+/**
+ * Centralised navigation loader / click feedback.
+ *
+ * HotClickInit tags the clicked link with `.hot-clicked` the moment a hot
+ * navigation starts (and removes it only if the navigation fails — on success
+ * the body is swapped). Two consistent feedback styles, wired in ONE place:
+ *   - links WITH a leading icon (menus): the icon is swapped for a spinner;
+ *   - links/buttons WITHOUT one: a pulsing accent ring.
+ */
+.hot-clicked {
+  position: relative;
+  pointer-events: none;
+}
+
+/* ── Icon links (top menu, sidebar, utility cluster): icon → spinner ── */
+.hot-clicked:has(> svg:first-of-type) > svg:first-of-type {
+  display: none;
+}
+.hot-clicked:has(> svg:first-of-type)::before {
+  content: '';
+  display: inline-block;
+  flex: 0 0 auto;
+  /* Match the leading icon's px box exactly (lucide size=18 in the menus) so
+     swapping the hidden icon for the spinner doesn't resize the slot — no jerk. */
+  width: 18px;
+  height: 18px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  vertical-align: middle;
+  animation: hot-click-spin 0.6s linear infinite;
+}
+/* Sidebar menu icons are rendered at size=20 — match them. */
+:is(.nav-side-link, .nav-sidebar, .app-sidebar) .hot-clicked:has(> svg:first-of-type)::before,
+.nav-side-link.hot-clicked:has(> svg:first-of-type)::before {
+  width: 20px;
+  height: 20px;
+}
+
+/* ── Icon-less links / link-buttons: pulsing accent ring ── */
+.hot-clicked:not(:has(> svg:first-of-type)) {
+  border-radius: inherit;
+  animation: hot-click-pulse 0.85s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hot-clicked:not(:has(> svg:first-of-type)) {
+    animation: none;
+  }
+}

@@ -1,0 +1,5 @@
+{# Mount point for a React island. `Foreground.ts` looks for elements with
+   the matching `${className}-init` class and hydrates them with the
+   `data-props` JSON. The JSON encoder strips `'`/`"`/`<`, so the value
+   is safe inside the single-quoted attribute. #}
+<div class="{{ class_name }}-init" data-props='{{ props_json | raw }}'></div>

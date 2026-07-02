@@ -1,0 +1,48 @@
+#!/usr/bin/env php
+<?php declare(strict_types=1);
+
+// Global Garnet CLI bin — installed at vendor/bin/garnet when the framework
+// is required as a Composer dependency.
+//
+// Resolution order:
+//   1. If run from within an app dir (composer-installed), the app's own
+//      autoload.php is loaded and GarnetRunner is handed the cwd as $appDir.
+//   2. If run standalone (no app context), we still load the framework
+//      autoload and let GarnetRunner show help. Most commands require an
+//      app context; those will fail with a clear message.
+//
+// In practice the recommended pattern is a 4-line wrapper at the app root
+// (see docs/quickstart.md), not this bin. This file makes
+// `vendor/bin/garnet` work as a fallback.
+
+if (php_sapi_name() !== 'cli') {
+    echo 'CLI only.' . PHP_EOL;
+    exit(1);
+}
+
+// Look for the app's autoload by walking up from cwd.
+$cwd = getcwd();
+$appDir = $cwd;
+$autoload = null;
+$dir = $cwd;
+while ($dir !== dirname($dir)) {
+    $candidate = $dir . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
+    if (file_exists($candidate)) {
+        $autoload = $candidate;
+        $appDir = $dir;
+        break;
+    }
+    $dir = dirname($dir);
+}
+
+if ($autoload === null) {
+    // No app context — load the framework's own autoload.
+    $autoload = __DIR__ . '/../vendor/autoload.php';
+}
+
+require_once $autoload;
+
+// Signal app-mode so GarnetEnv reads APP_NAME from $appDir/.env.
+putenv('GARNET_APP_DIR=' . $appDir);
+
+\PHPCraftdream\Garnet\Kernel\Io\GarnetCli\GarnetRunner::main($appDir, $argv);

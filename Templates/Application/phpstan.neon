@@ -1,0 +1,37 @@
+parameters:
+    reportUnmatchedIgnoredErrors: false
+
+    bootstrapFiles:
+        # The framework is a composer dependency, pulled in via this app's
+        # own autoloader (path-repo link to the garnet-framework package).
+        - vendor/autoload.php
+
+    paths:
+        - Common
+        - Dashboard
+        - Foreground
+        - Migrations
+        - Application.php
+
+    excludePaths:
+        - */Spec/*
+        - */vendor/*
+
+    level: 5
+
+    ignoreErrors:
+        # Framework architectural patterns (static-singleton + new static).
+        - '#PHPDoc tag @var#'
+        - '#Unsafe usage of new static#'
+        - '#Unsafe call to private method .* through static#'
+        - '#Unsafe access to private (property|constant) .* through static#'
+        - '#Access to an undefined static property#'
+
+        # I18n magic methods — dispatched dynamically via II18n::__call().
+        - '#Call to an undefined method PHPCraftdream\\Garnet\\Kernel\\Interfaces\\II18n::#'
+
+        # PHPStan type-resolution limitations around the framework's generics.
+        - '#contains unresolvable type#'
+        - '#has unresolvable native type#'
+        - '#does not accept list#'
+        - '#is already a list, call has no effect#'
