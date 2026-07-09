@@ -50,8 +50,17 @@ namespace PHPCraftdream\Garnet\Kernel\Core\AppInit {
             public readonly string $workDir,
             protected readonly BaseAppInit $app,
         ) {
-            $this->bundleName = basename(static::class);
-            $this->namespace = dirname(static::class);
+            // A PHP FQCN uses `\` as its separator regardless of OS, but
+            // basename()/dirname() only split on `/` on Linux (Windows also
+            // accepts `\`, which is why this silently "worked" there and
+            // only broke in CI: on Linux, basename(static::class) returned
+            // the whole FQCN unchanged instead of the short class name,
+            // corrupting every generated *Gen.php path with a literal
+            // backslash-namespace prefix baked into the filename).
+            $fqcn = static::class;
+            $lastSep = strrpos($fqcn, '\\');
+            $this->bundleName = $lastSep !== false ? substr($fqcn, $lastSep + 1) : $fqcn;
+            $this->namespace = $lastSep !== false ? substr($fqcn, 0, $lastSep) : '';
             $this->twigEnv = $this->bundleName;
 
             if ($this->bundleName === 'Framework') {

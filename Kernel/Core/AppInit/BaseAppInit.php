@@ -150,7 +150,13 @@ namespace PHPCraftdream\Garnet\Kernel\Core\AppInit {
         public function __construct(public readonly bool $isDev) {
             $this->publicDir = $this->getPublicDir();
 
-            $this->namespace = dirname(static::class);
+            // dirname() only splits on `/` on Linux (Windows also accepts
+            // `\`, which is why this silently worked there) — a PHP FQCN
+            // always uses `\` regardless of OS, so use string ops instead.
+            // Same bug and fix as BaseBundleInit::__construct().
+            $fqcn = static::class;
+            $lastSep = strrpos($fqcn, '\\');
+            $this->namespace = $lastSep !== false ? substr($fqcn, 0, $lastSep) : '';
             $this->appDir = static::getAppDir() . DS;
             $this->appDirName = basename($this->appDir);
 
