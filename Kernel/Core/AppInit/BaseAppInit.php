@@ -310,6 +310,12 @@ namespace PHPCraftdream\Garnet\Kernel\Core\AppInit {
          * @throws CacheException
          */
         protected function defineCache(): void {
+            // Same self-heal as defineLogs(): fileCacheDir is also created by
+            // touchDirs() (only called from `php garnet prepare`), but every
+            // boot calls defineCache(), which throws CacheException if the
+            // dir isn't already there.
+            !is_dir($this->fileCacheDir) && mkdir($this->fileCacheDir, 0o755, true);
+
             FsCache::defineCache($this->fileCacheDir);
         }
 
