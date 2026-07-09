@@ -330,12 +330,17 @@ DbMySQLiLink (queryAsync, pollFinishAll)
 
 #### Table `accounts`
 
+Passwordless by design — there is no password column. Identity is
+proven by a one-time email code, then held via `token16`/`token32`.
+
 | Column | Type | Description |
 |---|---|---|
 | id | PK | Primary key |
-| email | varchar | User email |
-| password | varchar | Password hash |
-| created_at | timestamp | Creation time |
+| login | varchar | Email (or username, see `login_type`) |
+| login_type | varchar | `email` or `username` |
+| token16 / token32 | varchar | Session/verification tokens |
+| reg_time | int | Registration unix timestamp |
+| last_auth_time | int | Last successful auth unix timestamp |
 
 #### Table `account_data` (EAV)
 

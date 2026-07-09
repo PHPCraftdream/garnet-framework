@@ -27,6 +27,7 @@ return here when you need a specific topic.
 | [**Database**](database.md) | `DbPool`, `DbTable`, async queries, `Account`, EAV. |
 | [**Frontend**](frontend.md) | React islands, asset codegen, Tailwind, time/locale. |
 | [**i18n**](i18n.md) | Translation pipeline, `%s` interpolation rules, codegen. |
+| [**FrontBuilder internals**](../FrontBuilder/docs/README.md) | Deep dive into the build engine itself: Rspack config, SPA architecture, `*Gen.php` codegen. |
 
 ## Operations
 
