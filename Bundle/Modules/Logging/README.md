@@ -75,7 +75,7 @@ referenced entity. Behaviour:
 ## Related
 
 - [`../../README.md`](../../README.md) — bundle index.
-- [`../../../Kernel/Io/Logs/README.md`](../../../Kernel/Io/Logs/README.md) — the file-journal layer.
+- [`../../../Kernel/Io/Logs/Logger.php`](../../../Kernel/Io/Logs/Logger.php) — the file-journal layer.
 - [`../EntityHistory/README.md`](../EntityHistory/README.md) — per-entity audit log (complementary, not a replacement).
 
 ---

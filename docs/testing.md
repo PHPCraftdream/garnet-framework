@@ -1,7 +1,8 @@
 # Testing
 
-The framework ships 162 [kahlan](https://kahlan.github.io/) spec files with
-695 passing expectations, covering `Kernel/` and `Bundle/`. This guide covers
+The framework ships [kahlan](https://kahlan.github.io/) spec files with
+2619 passing expectations (1924 kernel + 695 bundle), covering
+`Kernel/` and `Bundle/`. This guide covers
 how to run them, how to write a new one, and where the line sits between
 framework-level unit specs and application-level e2e tests.
 

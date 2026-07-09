@@ -43,6 +43,11 @@ return here when you need a specific topic.
 | [**Testing**](testing.md) | Running kahlan specs, writing new ones, mocking, the contract-spec pattern, and kahlan vs e2e. |
 | [**E2E testing**](e2e-testing.md) | Playwright structure, per-worker DB isolation, and how a scaffolded app's CI runs e2e. |
 
+## Cookbook
+
+Short, copy-friendly recipes for the most common tasks:
+[**Cookbook index**](cookbook/README.md) — add a bundle, route, island, CLI command, admin entity, parallel queries, email, file upload, validation rules, i18n strings.
+
 ## Reference
 
 | | |

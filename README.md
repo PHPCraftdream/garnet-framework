@@ -22,6 +22,20 @@ islands.
 [![Total Downloads](https://img.shields.io/packagist/dt/phpcraftdream/garnet-framework.svg)](https://packagist.org/packages/phpcraftdream/garnet-framework)
 -->
 
+## Table of Contents
+
+- [Quickstart](#garnet-framework)
+- [Why Garnet](#why-garnet)
+- [Feature highlights](#feature-highlights)
+- [Installation](#installation)
+- [What you get in an app](#what-you-get-in-an-app)
+- [Architecture](#architecture-in-one-paragraph)
+- [Documentation](#documentation)
+- [Known limitations](#known-limitations-v0x)
+- [Development](#development)
+- [Security](#security)
+- [License](#license)
+
 ```bash
 # 1. Get the framework. `composer install` also wires the frontend
 #    toolchain (npm + node_modules) via the bundled `garnet setup` hook.
@@ -162,7 +176,13 @@ For the full story see [`docs/architecture.md`](docs/architecture.md).
 - [`docs/frontend.md`](docs/frontend.md) — React islands, codegen, asset bridge
 - [`docs/i18n.md`](docs/i18n.md) — translation pipeline
 - [`docs/deploy.md`](docs/deploy.md) — production deploy via `garnet bundle` / `deploy:diff`
+- [`docs/testing.md`](docs/testing.md) — kahlan specs, writing tests
+- [`docs/e2e-testing.md`](docs/e2e-testing.md) — Playwright end-to-end tests
+- [`docs/core.md`](docs/core.md) — kernel-level primitives
+- [`docs/io.md`](docs/io.md) — HTTP, CLI dispatch, Twig, config, caching, mailer
+- [`docs/ssh.md`](docs/ssh.md) — SSH connection and remote commands
 - [`docs/known-issues.md`](docs/known-issues.md) — sharp edges
+- [`docs/cookbook/`](docs/cookbook/) — short copy-friendly recipes (routes, islands, CRUD, parallel queries, emails, uploads, i18n, validation, CLI commands, bundles)
 - [`AGENTS.md`](AGENTS.md) — onboarding for AI agents / new devs
 
 ## Known limitations (v0.x)

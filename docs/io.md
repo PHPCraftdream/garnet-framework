@@ -268,6 +268,17 @@ class:
 | `php garnet snapshot:pull / snapshot:collect / snapshot:pack` | `GarnetSnapshotCommand` |
 | `php garnet app / app:list / app:use / app:create` | `GarnetAppCommand` |
 | `php garnet admin / admin:build / admin:logout` | `GarnetAdminCommand` |
+| `php garnet setup` | `GarnetSetupCommand` |
+| `php garnet config:init` | `GarnetConfigCommand` |
+| `php garnet db:backup / db:restore` | `GarnetDbBackupCommand` |
+| `php garnet db:wipe` | `GarnetDbWipeCommand` |
+| `php garnet sql` | `GarnetSqlCommand` |
+| `php garnet perms:fix` | `GarnetPermsCommand` |
+| `php garnet uninstall` | `GarnetUninstallCommand` |
+| `php garnet build:check` | `GarnetBuildCheckCommand` |
+| `php garnet deploy` | `GarnetDeployCommand` |
+| `php garnet test:remote` | `GarnetTestRemoteCommand` |
+| `php garnet migrate:status` | `GarnetMigrateStatusCommand` |
 
 The dispatch lives in `GarnetRunner::main()`. Full CLI reference:
 [`cli.md`](cli.md).

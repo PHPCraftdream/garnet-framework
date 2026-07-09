@@ -124,6 +124,9 @@ maps. Commit them alongside the frontend changes.
 | `migration` | Applies pending migrations (`Apps/<App>/Migrations/Items/M_*.php`). |
 | `migrate:status` | Reports current DB version vs. target. |
 | `db:wipe` | Drops EVERY table with the prefix from `db.ini`. Requires typed-token confirmation. |
+| `db:backup` | Logical SQL dump of all tables into `WorkDir/Backups/<auto>.sql.gz`. Flags: `--out=<file>`, `--list`. |
+| `db:restore <file>` | Restore from a dump (auto-backs-up the live DB first). `--no-backup` to skip the safety snapshot. |
+| `sql "<query>"` | Run a single SQL query against the active app's DB (text output). Also reads from stdin. |
 
 For the migration file structure see [`database.md`](database.md).
 
@@ -146,6 +149,10 @@ For the migration file structure see [`database.md`](database.md).
 | `ssh:put <local> [remote]` | Upload a file/directory. |
 | `ssh:get <remote> [local]` | Download a file/directory. |
 | `ssh:test` | Connection sanity check. |
+| `snapshot:pull` | Orchestrator: SSH → collect → pack → download. Gets a full business-data snapshot (DB dump, config, logs) from the deployed host. |
+| `snapshot:collect` | Runs on the server: gathers DB dump, config, logs into a staging dir. `--with-uploads` to include user files. |
+| `snapshot:pack` | Runs on the server: tar+gzip a collected staging dir into one `.tar.gz`. |
+| `test:remote` | Run Playwright e2e tests against a remote (prod/staging) box from the local machine. Provisions a test scope via SSH, runs tests, tears down. |
 
 Full SSH-config and command reference: [`ssh.md`](ssh.md).
 

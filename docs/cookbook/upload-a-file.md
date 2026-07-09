@@ -94,8 +94,7 @@ public folder.
 
 ## Related
 
-- [`../../Bundle/Modules/Files/README.md`](../../Bundle/Modules/Files/README.md)
-  (TODO) — full FileUploadManager / SecureFileServing reference.
+- [`../../Kernel/Io/FileUpload/`](../../Kernel/Io/FileUpload/) — `FileUploadManager` and `SecureFileServing` source.
 
 ---
 
