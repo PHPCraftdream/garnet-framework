@@ -70,15 +70,33 @@ jobs:
           composer install --no-progress --prefer-dist --no-interaction
           php bin/garnet setup --skip-composer
 
-      # Override the app's committed path-repo to the sibling checkout, then
-      # install. `../garnet-framework` from `app/` resolves to the sibling;
-      # Composer 2 just skips the stale committed path-repo whose path is
-      # absent.
+      # Override the app's committed path-repo to the sibling checkout.
+      # Two gotchas, both found by watching a real app's CI (IRabi) fail:
+      #   1. Once you run `composer update` locally, the resulting
+      #      committed `composer.lock` bakes in YOUR local dev path, and
+      #      `--prefer-dist` resolves path packages from the LOCKED
+      #      dist.url, not from composer.json — so overriding the repo
+      #      alone isn't enough once a lock exists; delete it to force
+      #      a fresh resolve. A freshly scaffolded app has no lock yet,
+      #      but this keeps the step correct once one gets committed.
+      #   2. `composer config repositories.0 '<json>'` eagerly validates
+      #      the path repository BEFORE we get to overwrite it (fails on
+      #      the still-present, not-yet-overridden entry) — so patch
+      #      composer.json directly with `jq` instead.
       - name: Install app dependencies
         working-directory: app
         run: |
-          composer config repositories.0 '{"type":"path","url":"../garnet-framework","options":{"symlink":true}}'
+          jq '.repositories[0].url = "../garnet-framework"' composer.json > composer.json.tmp && mv composer.json.tmp composer.json
+          rm -f composer.lock
           GARNET_SKIP_NODE_SETUP=1 composer install --no-progress --prefer-dist --no-interaction
+
+      # `composer ci`'s `@build` step needs the app's own `rspack` binary
+      # (app/node_modules/.bin/rspack) — GARNET_SKIP_NODE_SETUP above
+      # only skipped the post-install hook, so install explicitly here.
+      # No Playwright browsers needed for this PHP-focused job.
+      - name: App node deps
+        working-directory: app
+        run: php garnet setup --skip-composer --skip-playwright
 
       - name: App quality gate (cs-fixer + phpstan + build + build:check)
         working-directory: app
@@ -131,7 +149,8 @@ jobs:
       - name: Install app dependencies
         working-directory: app
         run: |
-          composer config repositories.0 '{"type":"path","url":"../garnet-framework","options":{"symlink":true}}'
+          jq '.repositories[0].url = "../garnet-framework"' composer.json > composer.json.tmp && mv composer.json.tmp composer.json
+          rm -f composer.lock
           GARNET_SKIP_NODE_SETUP=1 composer install --no-progress --prefer-dist --no-interaction
 
       # App node deps (no Playwright browsers in CI).
@@ -190,7 +209,8 @@ jobs:
       - name: Install app dependencies
         working-directory: app
         run: |
-          composer config repositories.0 '{"type":"path","url":"../garnet-framework","options":{"symlink":true}}'
+          jq '.repositories[0].url = "../garnet-framework"' composer.json > composer.json.tmp && mv composer.json.tmp composer.json
+          rm -f composer.lock
           GARNET_SKIP_NODE_SETUP=1 composer install --no-progress --prefer-dist --no-interaction
 
       # App node deps AND Playwright browsers — e2e needs the browsers,

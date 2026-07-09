@@ -27,5 +27,8 @@
     "Common/Front/**/*.tsx",
     "Dashboard/Front/**/*.ts",
     "Dashboard/Front/**/*.tsx"
+  ],
+  "files": [
+    "vendor/phpcraftdream/garnet-framework/FrontBuilder/global.d.ts"
   ]
 }
