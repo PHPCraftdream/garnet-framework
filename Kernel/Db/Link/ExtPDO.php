@@ -17,22 +17,33 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
         public static function get(): static {
             if (empty(static::$instance)) {
                 $config = IniConfig::get(IniConfig::ENV_DB);
-                $pdo = new static(
-                    $config->param('dsn'),
-                    $config->param('user'),
-                    $config->param('password'),
-                    $config->param('options', []),
-                );
+                $options = (array)$config->param('options', []);
 
+                // Merge `attrs` into the constructor's $options instead of
+                // calling setAttribute() afterward. Aura SQL's ExtendedPdo
+                // is lazy by design — the real PDO connection isn't opened
+                // until the first actual query — but setAttribute() forces
+                // an immediate connect(), which defeats that laziness for
+                // any code path that merely instantiates ExtPDO without
+                // ever querying (e.g. this framework's own kahlan test
+                // bootstrap, shared by both the DB-free Kernel suite and
+                // the DB-backed Bundle suite — the eager connect() here
+                // made every "no DB" Kernel test run crash when no MySQL
+                // was reachable).
                 $attrs = $config->param('attrs', []);
 
                 if (!empty($attrs) && is_array($attrs)) {
                     foreach ($attrs as $key => $value) {
-                        $pdo->setAttribute(intval($key), $value);
+                        $options[intval($key)] = $value;
                     }
                 }
 
-                static::$instance = $pdo;
+                static::$instance = new static(
+                    $config->param('dsn'),
+                    $config->param('user'),
+                    $config->param('password'),
+                    $options,
+                );
             }
 
             return static::$instance;
