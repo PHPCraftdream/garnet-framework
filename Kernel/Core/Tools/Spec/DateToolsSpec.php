@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Core\Tools\Spec {
-    use PHPCraftdream\Garnet\Kernel\Core\Tools\DateTools;
     use DateTimeZone;
+    use PHPCraftdream\Garnet\Kernel\Core\Tools\DateTools;
 
     describe('DateTools', function (): void {
         describe('formatForUser()', function (): void {

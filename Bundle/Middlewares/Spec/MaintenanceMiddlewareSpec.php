@@ -62,26 +62,82 @@ namespace PHPCraftdream\Garnet\Bundle\Middlewares\Spec {
             });
 
             it('returns REMOTE_ADDR when no X-Forwarded-For', function (): void {
-                $globals = new class implements \PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams {
-                    public function readServerValue(string $name, mixed $default = null): ?string { return null; }
-                    public function readServerAll(): array { return ['REMOTE_ADDR' => '10.0.0.5']; }
-                    public function readGetValue(string $name, mixed $default = null): mixed { return $default; }
-                    public function readGetAll(): array { return []; }
-                    public function readPostValue(string $name, mixed $default = null): mixed { return $default; }
-                    public function readPostAll(): array { return []; }
-                    public function readCookieValue(string $name, mixed $default = null): ?string { return null; }
-                    public function readCookieAll(): array { return []; }
-                    public function readFilesValue(string $name, mixed $default = null): mixed { return $default; }
-                    public function readFilesAll(): array { return []; }
-                    public function getUri(): string { return '/'; }
-                    public function httpMethod(): string { return 'GET'; }
-                    public function isPost(): bool { return false; }
-                    public function isEmptyPost(): bool { return false; }
-                    public function isGet(): bool { return true; }
-                    public function isLocalhost(): bool { return false; }
-                    public function isPhpServer(): bool { return false; }
-                    public function isDev(): bool { return false; }
-                    public function ip(): string { return '10.0.0.5'; }
+                $globals = new class() implements \PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams {
+                    public function readServerValue(string $name, mixed $default = null): ?string {
+                        return null;
+                    }
+
+                    public function readServerAll(): array {
+                        return ['REMOTE_ADDR' => '10.0.0.5'];
+                    }
+
+                    public function readGetValue(string $name, mixed $default = null): mixed {
+                        return $default;
+                    }
+
+                    public function readGetAll(): array {
+                        return [];
+                    }
+
+                    public function readPostValue(string $name, mixed $default = null): mixed {
+                        return $default;
+                    }
+
+                    public function readPostAll(): array {
+                        return [];
+                    }
+
+                    public function readCookieValue(string $name, mixed $default = null): ?string {
+                        return null;
+                    }
+
+                    public function readCookieAll(): array {
+                        return [];
+                    }
+
+                    public function readFilesValue(string $name, mixed $default = null): mixed {
+                        return $default;
+                    }
+
+                    public function readFilesAll(): array {
+                        return [];
+                    }
+
+                    public function getUri(): string {
+                        return '/';
+                    }
+
+                    public function httpMethod(): string {
+                        return 'GET';
+                    }
+
+                    public function isPost(): bool {
+                        return false;
+                    }
+
+                    public function isEmptyPost(): bool {
+                        return false;
+                    }
+
+                    public function isGet(): bool {
+                        return true;
+                    }
+
+                    public function isLocalhost(): bool {
+                        return false;
+                    }
+
+                    public function isPhpServer(): bool {
+                        return false;
+                    }
+
+                    public function isDev(): bool {
+                        return false;
+                    }
+
+                    public function ip(): string {
+                        return '10.0.0.5';
+                    }
                 };
 
                 $result = $this->method->invoke(null, $globals);
@@ -89,31 +145,85 @@ namespace PHPCraftdream\Garnet\Bundle\Middlewares\Spec {
             });
 
             it('returns first IP from X-Forwarded-For when present', function (): void {
-                $globals = new class implements \PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams {
-                    public function readServerValue(string $name, mixed $default = null): ?string { return null; }
+                $globals = new class() implements \PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams {
+                    public function readServerValue(string $name, mixed $default = null): ?string {
+                        return null;
+                    }
+
                     public function readServerAll(): array {
                         return [
                             'HTTP_X_FORWARDED_FOR' => '203.0.113.50, 70.41.3.18, 150.172.238.178',
                             'REMOTE_ADDR' => '127.0.0.1',
                         ];
                     }
-                    public function readGetValue(string $name, mixed $default = null): mixed { return $default; }
-                    public function readGetAll(): array { return []; }
-                    public function readPostValue(string $name, mixed $default = null): mixed { return $default; }
-                    public function readPostAll(): array { return []; }
-                    public function readCookieValue(string $name, mixed $default = null): ?string { return null; }
-                    public function readCookieAll(): array { return []; }
-                    public function readFilesValue(string $name, mixed $default = null): mixed { return $default; }
-                    public function readFilesAll(): array { return []; }
-                    public function getUri(): string { return '/'; }
-                    public function httpMethod(): string { return 'GET'; }
-                    public function isPost(): bool { return false; }
-                    public function isEmptyPost(): bool { return false; }
-                    public function isGet(): bool { return true; }
-                    public function isLocalhost(): bool { return false; }
-                    public function isPhpServer(): bool { return false; }
-                    public function isDev(): bool { return false; }
-                    public function ip(): string { return '127.0.0.1'; }
+
+                    public function readGetValue(string $name, mixed $default = null): mixed {
+                        return $default;
+                    }
+
+                    public function readGetAll(): array {
+                        return [];
+                    }
+
+                    public function readPostValue(string $name, mixed $default = null): mixed {
+                        return $default;
+                    }
+
+                    public function readPostAll(): array {
+                        return [];
+                    }
+
+                    public function readCookieValue(string $name, mixed $default = null): ?string {
+                        return null;
+                    }
+
+                    public function readCookieAll(): array {
+                        return [];
+                    }
+
+                    public function readFilesValue(string $name, mixed $default = null): mixed {
+                        return $default;
+                    }
+
+                    public function readFilesAll(): array {
+                        return [];
+                    }
+
+                    public function getUri(): string {
+                        return '/';
+                    }
+
+                    public function httpMethod(): string {
+                        return 'GET';
+                    }
+
+                    public function isPost(): bool {
+                        return false;
+                    }
+
+                    public function isEmptyPost(): bool {
+                        return false;
+                    }
+
+                    public function isGet(): bool {
+                        return true;
+                    }
+
+                    public function isLocalhost(): bool {
+                        return false;
+                    }
+
+                    public function isPhpServer(): bool {
+                        return false;
+                    }
+
+                    public function isDev(): bool {
+                        return false;
+                    }
+
+                    public function ip(): string {
+                        return '127.0.0.1';
+                    }
                 };
 
                 $result = $this->method->invoke(null, $globals);
@@ -121,26 +231,82 @@ namespace PHPCraftdream\Garnet\Bundle\Middlewares\Spec {
             });
 
             it('returns empty string when neither header is present', function (): void {
-                $globals = new class implements \PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams {
-                    public function readServerValue(string $name, mixed $default = null): ?string { return null; }
-                    public function readServerAll(): array { return []; }
-                    public function readGetValue(string $name, mixed $default = null): mixed { return $default; }
-                    public function readGetAll(): array { return []; }
-                    public function readPostValue(string $name, mixed $default = null): mixed { return $default; }
-                    public function readPostAll(): array { return []; }
-                    public function readCookieValue(string $name, mixed $default = null): ?string { return null; }
-                    public function readCookieAll(): array { return []; }
-                    public function readFilesValue(string $name, mixed $default = null): mixed { return $default; }
-                    public function readFilesAll(): array { return []; }
-                    public function getUri(): string { return '/'; }
-                    public function httpMethod(): string { return 'GET'; }
-                    public function isPost(): bool { return false; }
-                    public function isEmptyPost(): bool { return false; }
-                    public function isGet(): bool { return true; }
-                    public function isLocalhost(): bool { return false; }
-                    public function isPhpServer(): bool { return false; }
-                    public function isDev(): bool { return false; }
-                    public function ip(): string { return ''; }
+                $globals = new class() implements \PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams {
+                    public function readServerValue(string $name, mixed $default = null): ?string {
+                        return null;
+                    }
+
+                    public function readServerAll(): array {
+                        return [];
+                    }
+
+                    public function readGetValue(string $name, mixed $default = null): mixed {
+                        return $default;
+                    }
+
+                    public function readGetAll(): array {
+                        return [];
+                    }
+
+                    public function readPostValue(string $name, mixed $default = null): mixed {
+                        return $default;
+                    }
+
+                    public function readPostAll(): array {
+                        return [];
+                    }
+
+                    public function readCookieValue(string $name, mixed $default = null): ?string {
+                        return null;
+                    }
+
+                    public function readCookieAll(): array {
+                        return [];
+                    }
+
+                    public function readFilesValue(string $name, mixed $default = null): mixed {
+                        return $default;
+                    }
+
+                    public function readFilesAll(): array {
+                        return [];
+                    }
+
+                    public function getUri(): string {
+                        return '/';
+                    }
+
+                    public function httpMethod(): string {
+                        return 'GET';
+                    }
+
+                    public function isPost(): bool {
+                        return false;
+                    }
+
+                    public function isEmptyPost(): bool {
+                        return false;
+                    }
+
+                    public function isGet(): bool {
+                        return true;
+                    }
+
+                    public function isLocalhost(): bool {
+                        return false;
+                    }
+
+                    public function isPhpServer(): bool {
+                        return false;
+                    }
+
+                    public function isDev(): bool {
+                        return false;
+                    }
+
+                    public function ip(): string {
+                        return '';
+                    }
                 };
 
                 $result = $this->method->invoke(null, $globals);
