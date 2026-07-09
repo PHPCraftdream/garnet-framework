@@ -15,6 +15,7 @@ For a directory tour see [`../Kernel/Db/README.md`](../Kernel/Db/README.md).
 
 - [DbPool — parallel async queries](#dbpool--parallel-async-queries)
 - [DbTable — the gateway](#dbtable--the-gateway)
+- [Charset & collation](#charset--collation)
 - [QueryBuilder integration](#querybuilder-integration)
 - [Account — Active Record + EAV](#account--active-record--eav)
 - [Session](#session)
@@ -123,6 +124,27 @@ gateway prepends the prefix and bundle infix automatically. Never
 hard-code the full `'db_myapp_courses'` string — it breaks under
 test-worker isolation.
 
+## Charset & collation
+
+Every table is created with `utf8mb4` / `utf8mb4_unicode_ci` (see
+`defaultCollate` in `db.ini`) — the framework's default, not something
+you need to set per-column.
+
+- **`utf8mb4`**, not `utf8` — MySQL's plain `utf8` is a 3-byte-max
+  legacy encoding that can't store emoji or the full Unicode range.
+  `utf8mb4` is the real, complete UTF-8.
+- **`utf8mb4_unicode_ci`**, not `utf8mb4_0900_ai_ci` — the `0900_ai_ci`
+  collation is MySQL 8.0's own default, but it doesn't exist on MariaDB
+  or on MySQL 5.7. `unicode_ci` ships on every MySQL 5.5.3+ and every
+  MariaDB version, so it's the portable choice. It also sorts Unicode
+  more correctly than the older, faster `utf8mb4_general_ci`.
+
+Practical effect: the schema itself doesn't force the MySQL 8.0+
+floor stated in [Requirements](quickstart.md#requirements) — that floor
+is about what CI actually tests against, not a hard technical
+limit. `utf8mb4_unicode_ci` alone would run fine on MySQL 5.7 or any
+MariaDB release.
+
 ## QueryBuilder integration
 
 Need a join or a WHERE shape the simple selectors don't cover? Reach
@@ -164,8 +186,8 @@ caches; subsequent calls for the same id return the same object.
 
 | Where | What lives there |
 |---|---|
-| `accounts` (core columns) | `email`, `password_hash`, `created_at`, `is_admin`, `is_approved`, … |
-| `account_data` (EAV) | Anything app-specific: `time_zone`, `locale`, `phone`, `address`, `bio`, custom business attrs. |
+| `accounts` (core columns) | `login`, `login_type` (`email`/`username`), `token16`/`token32` (passwordless auth tokens), `reg_time`, `last_auth_time`, `last_online_time`, `name`, `about`, `time_zone`. |
+| `account_data` (EAV) | Everything else: role flags (`is_admin`, `is_owner`, `is_moderator`, `is_approved`, `is_disabled`), locale, and any app-specific attrs. |
 
 ```php
 $tz = $account->readParam('time_zone');           // first the data EAV, falls back to params

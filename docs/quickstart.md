@@ -7,7 +7,7 @@ Create and run a new Garnet application — zero manual configuration.
 - PHP 8.1+
 - Composer 2.x
 - Node.js 18+ (for the frontend build and Playwright e2e)
-- MySQL 5.7+ / MariaDB 10.4+ (optional, only if you use the DB)
+- MySQL 8.0+ / MariaDB 10.6+ (optional, only if you use the DB)
 
 ## Install the framework
 

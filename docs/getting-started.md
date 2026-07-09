@@ -9,7 +9,7 @@ The same toolchain on every platform — no bundled web-server binary:
 | **PHP 8.1+** (CLI) with `pdo`, `mbstring`, `mysqli` | Runs the app + the dev-server worker pool (`php -S`). | Windows: php.net build · macOS: `brew install php` · Linux: `apt install php-cli php-mysql` |
 | **Node 18+** | The dev server (`tooling/server/garnet-serve.mjs`) and the rspack frontend build. | [nodejs.org](https://nodejs.org) · `brew install node` · `apt install nodejs` |
 | **Composer 2** | PHP dependencies. | [getcomposer.org](https://getcomposer.org) |
-| **MySQL 8 / MariaDB** | Database. | platform package |
+| **MySQL 8.0+ / MariaDB 10.6+** | Database. | platform package |
 
 There is **no nginx requirement** — the Node dev server serves static
 files and reverse-proxies dynamic requests to the PHP worker pool. For
