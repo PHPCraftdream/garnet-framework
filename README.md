@@ -9,7 +9,7 @@ islands.
 [![PHP](https://img.shields.io/badge/PHP-8.1%2B-777BB4.svg?logo=php&logoColor=white)](https://www.php.net/)
 [![PHPStan](https://img.shields.io/badge/PHPStan-level%205-2a5d9c.svg?logo=php&logoColor=white)](phpstan.neon)
 [![Code style: php-cs-fixer](https://img.shields.io/badge/code%20style-php--cs--fixer-46a2f1.svg)](.php-cs-fixer.php)
-[![Tests: kahlan](https://img.shields.io/badge/tests-kahlan%20%E2%9C%93%202619-31c653.svg)](https://kahlan.github.io/)
+[![Tests: kahlan](https://img.shields.io/badge/tests-kahlan%20%E2%9C%93%202657-31c653.svg)](https://kahlan.github.io/)
 [![Twig](https://img.shields.io/badge/Twig-3-8bc34a.svg?logo=twig&logoColor=white)](https://twig.symfony.com/)
 [![React](https://img.shields.io/badge/React-18-61DAFB.svg?logo=react&logoColor=black)](https://react.dev/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-4479A1.svg?logo=mysql&logoColor=white)](https://www.mysql.com/)
