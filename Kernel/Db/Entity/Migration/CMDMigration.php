@@ -175,6 +175,16 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Migration {
          * @throws MigrationException
          */
         protected static function migrate(array $args, Context $context, Stdio $stdio): bool {
+            // Self-bootstrapping: a brand-new DB has no `migration` tracker
+            // table yet, and `Migration::migrate()` reads from it before
+            // ever writing to it. `init()`/`afterInit()` are idempotent
+            // (CREATE TABLE IF NOT EXISTS + insert-if-missing), so running
+            // them here makes a bare `php garnet migration` work on a fresh
+            // DB without requiring a separate `php garnet migration init`
+            // step first — matching what the docs already tell users to run.
+            MigrationTable::init()->ex();
+            MigrationTable::afterInit();
+
             $migrationClass = static::getMigrationClass();
             $migrationGet = "{$migrationClass}::get";
 
