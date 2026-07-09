@@ -283,6 +283,15 @@ namespace PHPCraftdream\Garnet\Kernel\Core\AppInit {
          * @throws LoggerException
          */
         protected function defineLogs(): void {
+            // These dirs are also created by touchDirs() (only called from
+            // `php garnet prepare`), but every boot needs Logger::define()
+            // to succeed regardless of whether `prepare` has ever run — a
+            // fresh checkout that goes straight to `migration` (per the
+            // documented quickstart order: config:init -> migration ->
+            // build) would otherwise crash with LoggerException before
+            // `build` (which triggers `prepare`) ever gets a chance to run.
+            !is_dir($this->logErrorDir) && mkdir($this->logErrorDir, 0o755, true);
+            !is_dir($this->logSystemDir) && mkdir($this->logSystemDir, 0o755, true);
             !is_dir($this->logRouteDir) && mkdir($this->logRouteDir, 0o755, true);
 
             Logger::define($this->logErrorDir, Logger::ERROR_LOGGER);
