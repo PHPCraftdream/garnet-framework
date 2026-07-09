@@ -170,9 +170,9 @@ Playwright smoke` job, separate from the framework's own `quality`
 (kahlan/phpstan/cs) job. It runs on every scaffolded app's CI out of
 the box:
 
-1. Checks out both the app repo and the framework repo (private,
-   authenticated via `GARNET_FRAMEWORK_TOKEN`) side by side, since the
-   app's Composer setup path-repos the framework.
+1. Checks out both the app repo and the framework repo (public — no
+   token needed) side by side, since the app's Composer setup
+   path-repos the framework.
 2. Sets up Node + PHP toolchains, then runs the framework's own
    frontend setup (`php bin/garnet setup --skip-composer`) so the app's
    asset build can resolve through the framework's `FrontBuilder`.
