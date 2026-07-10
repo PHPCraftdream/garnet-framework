@@ -58,10 +58,12 @@
     "phpstan": "phpstan analyse",
     "test": [
       "@test:kernel",
+      "@test:kernel-integration",
       "@test:bundle"
     ],
-    "test:kernel": "php vendor/bin/kahlan --spec=Kernel --pattern=*Spec.php",
-    "test:bundle": "php vendor/bin/kahlan --spec=Bundle --pattern=*Spec.php",
+    "test:kernel": "php tooling/scripts/test-kernel.php",
+    "test:kernel-integration": "php vendor/bin/kahlan --spec=Kernel --grep=*IntegrationSpec.php",
+    "test:bundle": "php vendor/bin/kahlan --spec=Bundle --grep=*Spec.php",
     "test:e2e": "node tooling/scripts/test-e2e.mjs",
     "ci": [
       "@cs:check",
