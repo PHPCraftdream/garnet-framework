@@ -11,6 +11,15 @@ describe('FrameworkJsGen', function (): void {
     $methods = ['auth', 'framework', 'gridtable', 'yandextarget'];
 
     describe('Path format', function () use ($methods): void {
+        // FrameworkJsGen only exists once a real frontend build has run
+        // (php garnet build/prepare) — the framework's own CI jobs that run
+        // kahlan (kernel-tests/bundle-tests) deliberately never build the
+        // frontend, so skip gracefully instead of failing with "class not
+        // found" when it isn't there.
+        beforeEach(function (): void {
+            skipIf(!class_exists(FrameworkJsGen::class));
+        });
+
         it('all paths start with /assets/framework/', function () use ($methods): void {
             foreach ($methods as $m) {
                 expect(FrameworkJsGen::$m())->toMatch('#^/assets/framework/#');
