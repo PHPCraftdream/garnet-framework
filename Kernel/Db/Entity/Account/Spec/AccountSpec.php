@@ -2,7 +2,12 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Account\Spec;
 
+use Mockery;
 use PHPCraftdream\Garnet\Kernel\Db\Entity\Account\Account;
+use PHPCraftdream\Garnet\Kernel\Db\Entity\Account\DbAccount;
+use PHPCraftdream\Garnet\Kernel\Db\Entity\Account\DbAccountData;
+use PHPCraftdream\Garnet\Kernel\Db\Tables\DbTable;
+use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbMySQLiLink;
 use ReflectionClass;
 
 describe('Account', function (): void {
@@ -16,6 +21,65 @@ describe('Account', function (): void {
         $property = $reflection->getProperty('sessionAccount');
         $property->setAccessible(true);
         $property->setValue(null);
+
+        // Account::get() eagerly performs a real async DB read even just to
+        // construct/cache an instance (see Account::readDbAsync()), so every
+        // test in this file — including ones that only check
+        // constructor/param logic — would otherwise need a live database.
+        // Mock DbAccount's singleton so the async callback fires
+        // synchronously with "no row found" (null): readDbAsync()'s own
+        // `if (!empty($params))` guard already treats that as a safe no-op,
+        // and it's exactly the real behavior for a login/id that was never
+        // persisted — which is what every `Account::get('123')` call below
+        // actually is. Real read/write round-trips against a live DB are
+        // covered separately by AccountIntegrationSpec.php.
+        $mockLink = Mockery::mock(IDbMySQLiLink::class);
+        $mockLink->shouldReceive('isBusy')->andReturn(false);
+
+        $dbAccountMock = Mockery::mock(DbAccount::class)->shouldIgnoreMissing();
+        $dbAccountMock->shouldReceive('simpleSelectOneByFieldAsync')
+            ->andReturnUsing(function (string $field, $value, callable $callback = null) use ($mockLink): IDbMySQLiLink {
+                if ($callback) {
+                    $callback(null);
+                }
+
+                return $mockLink;
+            });
+
+        // readDbAsync() also eagerly queries DbAccountData whenever $this->id
+        // is already known (true even for a numeric-ID login that was never
+        // persisted, since the constructor sets $id from the string itself)
+        // — mock it the same way, with "no rows" (empty(...) also treats
+        // that as a safe no-op).
+        $dbAccountDataMock = Mockery::mock(DbAccountData::class)->shouldIgnoreMissing();
+        $dbAccountDataMock->shouldReceive('simpleSelectByFieldAsync')
+            ->andReturnUsing(function (string $field, $value, callable $callback = null) use ($mockLink): IDbMySQLiLink {
+                if ($callback) {
+                    $callback([]);
+                }
+
+                return $mockLink;
+            });
+
+        $dbTableReflection = new ReflectionClass(DbTable::class);
+        $itemsProp = $dbTableReflection->getProperty('items');
+        $itemsProp->setAccessible(true);
+        $items = $itemsProp->getValue();
+        $items[DbAccount::class] = $dbAccountMock;
+        $items[DbAccountData::class] = $dbAccountDataMock;
+        $itemsProp->setValue($items);
+    });
+
+    afterEach(function (): void {
+        Mockery::close();
+
+        $dbTableReflection = new ReflectionClass(DbTable::class);
+        $itemsProp = $dbTableReflection->getProperty('items');
+        $itemsProp->setAccessible(true);
+        $items = $itemsProp->getValue();
+        unset($items[DbAccount::class], $items[DbAccountData::class]);
+
+        $itemsProp->setValue($items);
     });
 
     describe('get() and constructor', function (): void {
