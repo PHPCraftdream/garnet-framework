@@ -255,6 +255,20 @@ jobs:
       - name: garnet setup (framework)
         run: php bin/garnet setup --skip-composer
 
+      # Env::isDevDir() decides "dev mode" (reads WorkDir/ConfigDev/ — the
+      # zero-config quickstart defaults) vs "production mode" (reads
+      # WorkDir/Config/, empty on a fresh scaffold with no deploy/config:init
+      # step) by walking up from Kernel/Core/Env/ looking for an IDE marker
+      # dir (.vscode/.idea/etc) — true on any real dev machine, false on a
+      # bare CI checkout. Without one, a freshly-scaffolded app 500s on
+      # every request (IniConfigException: Wrong file .../WorkDir/Config/
+      # db.ini) because nothing ever populated the production Config/ dir.
+      # A real local `git clone && composer install` always has an IDE's
+      # marker directory somewhere in the tree, so recreate that condition
+      # here instead of pretending this is a production deploy.
+      - name: Mark framework checkout as a dev directory
+        run: mkdir -p .vscode
+
       # Scaffold an app. GARNET_SKIP_NODE_SETUP keeps app:create's own
       # composer install from downloading Playwright browsers via the
       # post-install hook; we run the app's own `garnet setup` explicitly
