@@ -346,7 +346,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Spec {
         $attachmentsObj = (new ReflectionClass(TestSupportAttachments::class))->newInstanceWithoutConstructor();
         $assignLogObj = (new ReflectionClass(TestSupportAssignmentLog::class))->newInstanceWithoutConstructor();
 
-        $itemsProp->setValue([
+        $itemsProp->setValue(null, [
             TestSupportTickets::class => $ticketsObj,
             TestSupportMessages::class => $messagesObj,
             TestSupportAttachments::class => $attachmentsObj,

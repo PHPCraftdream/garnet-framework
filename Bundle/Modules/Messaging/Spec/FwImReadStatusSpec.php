@@ -453,7 +453,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Spec {
         $convInst = (new ReflectionClass(TestReadConversations2::class))->newInstanceWithoutConstructor();
         $msgInst = (new ReflectionClass(TestReadMessages2::class))->newInstanceWithoutConstructor();
 
-        $itemsProp->setValue([
+        $itemsProp->setValue(null, [
             TestImReadStatus2::class => $rsInst,
             TestReadConversations2::class => $convInst,
             TestReadMessages2::class => $msgInst,

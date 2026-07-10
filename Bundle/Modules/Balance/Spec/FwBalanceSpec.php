@@ -159,7 +159,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Spec {
         $ledgerObj = $ledgerRef->newInstanceWithoutConstructor();
         $balanceObj = $balanceRef->newInstanceWithoutConstructor();
 
-        $itemsProp->setValue([
+        $itemsProp->setValue(null, [
             TestBalanceLedger::class => $ledgerObj,
             TestAccountBalance::class => $balanceObj,
         ]);

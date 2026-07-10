@@ -168,7 +168,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Invite\Spec {
         $tokensObj = $tokensInst->newInstanceWithoutConstructor();
         $regsObj = $regsInst->newInstanceWithoutConstructor();
 
-        $itemsProp->setValue([
+        $itemsProp->setValue(null, [
             TestInviteTokens::class => $tokensObj,
             TestInviteRegistrations::class => $regsObj,
         ]);
