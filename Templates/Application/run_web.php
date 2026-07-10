@@ -64,7 +64,7 @@ namespace PHPCraftdream\Application {
 
     // -------------------------------
 
-    $isEnabledDb = !!DbPool::get()->getDbConfig()->paramInt('enabled') !== 0;
+    $isEnabledDb = DbPool::get()->getDbConfig()->paramInt('enabled') !== 0;
 
     if ($isEnabledDb) {
         DbPool::get()->newLink();
