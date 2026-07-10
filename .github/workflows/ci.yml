@@ -297,7 +297,7 @@ jobs:
       - name: Serve + Playwright smoke suite
         working-directory: ${{ runner.temp }}/CiApp
         run: |
-          php garnet serve &
+          php garnet serve > /tmp/garnet-serve.log 2>&1 &
           SERVER_PID=$!
           up=0
           for i in $(seq 1 30); do
@@ -306,6 +306,12 @@ jobs:
           done
           if [ "$up" != "1" ]; then
             echo "Server did not come up in time." >&2
+            echo "--- garnet serve log ---" >&2
+            cat /tmp/garnet-serve.log >&2 || true
+            echo "--- curl verbose (last attempt) ---" >&2
+            curl -v http://localhost:8001/ 2>&1 >&2 || true
+            echo "--- PHP error log (if any) ---" >&2
+            find WorkDir -iname "*.log" -exec sh -c 'echo "== {} =="; cat "{}"' \; 2>/dev/null || true
             kill "$SERVER_PID" 2>/dev/null || true
             exit 1
           fi
