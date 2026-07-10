@@ -10,6 +10,10 @@
 **/WorkDir/**
 **/WorkDir/ConfigDev/*
 !**/WorkDir/ConfigDev/.keep
+# The app template's own WorkDir is shipped scaffolding (dev-default
+# app.ini/db.ini/email.ini + .keep placeholders), not a real app's
+# runtime state — track it, unlike every WorkDir a scaffolded app grows.
+!Templates/Application/WorkDir/**
 **/Public/assets/**
 **/Public/upload/**
 /serve.log
