@@ -269,6 +269,34 @@ jobs:
       - name: Mark framework checkout as a dev directory
         run: mkdir -p .vscode
 
+      # TEMPORARY: isDevDir() still evaluates false after the .vscode marker
+      # above — dump the exact ancestor walk to find out why before guessing
+      # again. Remove once the root cause is confirmed.
+      - name: Debug isDevDir()
+        run: |
+          php -r '
+          require "vendor/autoload.php";
+          use PHPCraftdream\Garnet\Kernel\Core\Env\Env;
+          $r = new ReflectionClass(Env::class);
+          $envFile = $r->getFileName();
+          echo "Env.php resolved path: $envFile" . PHP_EOL;
+          echo "__DIR__ equivalent: " . dirname($envFile) . PHP_EOL;
+          $dirItems = explode(DIRECTORY_SEPARATOR, dirname($envFile));
+          $dirStr = "";
+          $dirs = [];
+          foreach ($dirItems as $item) {
+              $dirStr .= $item . DIRECTORY_SEPARATOR;
+              $dirs[] = $dirStr;
+          }
+          $dirs = array_reverse($dirs);
+          $dirs = array_slice($dirs, 0, 6);
+          foreach ($dirs as $dir) {
+              $files = glob($dir . "/\.*");
+              echo "$dir => " . ($files === false ? "GLOB FALSE" : implode(", ", array_map("basename", $files))) . PHP_EOL;
+          }
+          var_dump(Env::isDevDir());
+          '
+
       # Scaffold an app. GARNET_SKIP_NODE_SETUP keeps app:create's own
       # composer install from downloading Playwright browsers via the
       # post-install hook; we run the app's own `garnet setup` explicitly
