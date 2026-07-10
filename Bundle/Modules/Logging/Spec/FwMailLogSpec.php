@@ -76,7 +76,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\Mail {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
         $prop->setAccessible(true);
-        $prop->setValue([]);
+        $prop->setValue(null, []);
     }
 
     function makeTestMailLog(): TestMailLog {
@@ -85,7 +85,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\Mail {
         $ref = new ReflectionClass(DbTable::class);
         $items = $ref->getProperty('items');
         $items->setAccessible(true);
-        $items->setValue([TestMailLog::class => $inst]);
+        $items->setValue(null, [TestMailLog::class => $inst]);
 
         return $inst;
     }
@@ -200,7 +200,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\Mail {
             $ref = new ReflectionClass(DbTable::class);
             $items = $ref->getProperty('items');
             $items->setAccessible(true);
-            $items->setValue([TestMailLogRecipients::class => $inst]);
+            $items->setValue(null, [TestMailLogRecipients::class => $inst]);
             $this->table = $inst;
         });
 

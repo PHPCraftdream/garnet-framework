@@ -186,7 +186,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\JsErrors\Spec {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
         $prop->setAccessible(true);
-        $prop->setValue([]);
+        $prop->setValue(null, []);
     }
 
     function resetControllerState(): void {
@@ -205,7 +205,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\JsErrors\Spec {
         $itemsProp->setAccessible(true);
 
         $inst = (new ReflectionClass(TestJsErrors::class))->newInstanceWithoutConstructor();
-        $itemsProp->setValue([TestJsErrors::class => $inst]);
+        $itemsProp->setValue(null, [TestJsErrors::class => $inst]);
 
         FwJsErrorLogController::setTableClass(TestJsErrors::class);
 

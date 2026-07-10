@@ -38,7 +38,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables\Spec {
                 $reflection = new ReflectionClass(DbTable::class);
                 $itemsProp = $reflection->getProperty('items');
                 $itemsProp->setAccessible(true);
-                $itemsProp->setValue([]);
+                $itemsProp->setValue(null, []);
             });
 
             it('returns singleton instance', function (): void {

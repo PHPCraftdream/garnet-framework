@@ -148,7 +148,7 @@ describe('Account Integration', function (): void {
             $reflection = new ReflectionClass(Account::class);
             $prop = $reflection->getProperty('items');
             $prop->setAccessible(true);
-            $prop->setValue([]);
+            $prop->setValue(null, []);
         });
 
         it('creates new account with touchAccount', function () use (&$dbAvailable): void {
@@ -249,7 +249,7 @@ describe('Account Integration', function (): void {
             $reflection = new ReflectionClass(Account::class);
             $prop = $reflection->getProperty('items');
             $prop->setAccessible(true);
-            $prop->setValue([]);
+            $prop->setValue(null, []);
         });
 
         afterEach(function () use (&$dbAvailable): void {
@@ -267,7 +267,7 @@ describe('Account Integration', function (): void {
             $reflection = new ReflectionClass(Account::class);
             $prop = $reflection->getProperty('items');
             $prop->setAccessible(true);
-            $prop->setValue([]);
+            $prop->setValue(null, []);
         });
 
         it('reads params from database', function () use (&$dbAvailable): void {
@@ -395,7 +395,7 @@ describe('Account Integration', function (): void {
             $reflection = new ReflectionClass(Account::class);
             $prop = $reflection->getProperty('items');
             $prop->setAccessible(true);
-            $prop->setValue([]);
+            $prop->setValue(null, []);
         });
 
         afterEach(function () use (&$dbAvailable): void {
@@ -413,7 +413,7 @@ describe('Account Integration', function (): void {
             $reflection = new ReflectionClass(Account::class);
             $prop = $reflection->getProperty('items');
             $prop->setAccessible(true);
-            $prop->setValue([]);
+            $prop->setValue(null, []);
         });
 
         it('reads data from database', function () use (&$dbAvailable): void {
@@ -563,7 +563,7 @@ describe('Account Integration', function (): void {
             $reflection = new ReflectionClass(Account::class);
             $prop = $reflection->getProperty('items');
             $prop->setAccessible(true);
-            $prop->setValue([]);
+            $prop->setValue(null, []);
         });
 
         afterEach(function () use (&$dbAvailable): void {
@@ -581,7 +581,7 @@ describe('Account Integration', function (): void {
             $reflection = new ReflectionClass(Account::class);
             $prop = $reflection->getProperty('items');
             $prop->setAccessible(true);
-            $prop->setValue([]);
+            $prop->setValue(null, []);
         });
 
         it('sets and checks admin flag', function () use (&$dbAvailable): void {

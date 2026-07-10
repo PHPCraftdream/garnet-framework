@@ -8,11 +8,11 @@ describe('IoTools', function (): void {
         $reflection = new ReflectionClass(IoTools::class);
         $benchmarkProp = $reflection->getProperty('benchmark');
         $benchmarkProp->setAccessible(true);
-        $benchmarkProp->setValue(null);
+        $benchmarkProp->setValue(null, null);
 
         $benchmarkArrProp = $reflection->getProperty('benchmarkArr');
         $benchmarkArrProp->setAccessible(true);
-        $benchmarkArrProp->setValue([]);
+        $benchmarkArrProp->setValue(null, []);
     });
 
     describe('pr()', function (): void {

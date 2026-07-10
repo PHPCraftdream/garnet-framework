@@ -13,17 +13,17 @@ describe('QueryFactory', function (): void {
         $reflection = new ReflectionClass(QueryFactory::class);
         $property = $reflection->getProperty('instance');
         $property->setAccessible(true);
-        $property->setValue(null);
+        $property->setValue(null, null);
 
         // Reset IniConfig between tests
         $reflection = new ReflectionClass(IniConfig::class);
         $property = $reflection->getProperty('initParams');
         $property->setAccessible(true);
-        $property->setValue([]);
+        $property->setValue(null, []);
 
         $property = $reflection->getProperty('items');
         $property->setAccessible(true);
-        $property->setValue([]);
+        $property->setValue(null, []);
     });
 
     describe('get()', function (): void {

@@ -8,7 +8,7 @@ describe('TwigParams', function (): void {
         $reflection = new ReflectionClass(TwigParams::class);
         $instanceProp = $reflection->getProperty('instance');
         $instanceProp->setAccessible(true);
-        $instanceProp->setValue(null);
+        $instanceProp->setValue(null, null);
     });
 
     describe('integration with parent class', function (): void {

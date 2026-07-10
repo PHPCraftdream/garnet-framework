@@ -90,7 +90,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\LogsController {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
         $prop->setAccessible(true);
-        $prop->setValue([]);
+        $prop->setValue(null, []);
     }
 
     function makeCtrlActionLog(): CtrlSpecActionLog {
@@ -99,7 +99,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\LogsController {
         $ref = new ReflectionClass(DbTable::class);
         $items = $ref->getProperty('items');
         $items->setAccessible(true);
-        $items->setValue([CtrlSpecActionLog::class => $inst]);
+        $items->setValue(null, [CtrlSpecActionLog::class => $inst]);
 
         return $inst;
     }

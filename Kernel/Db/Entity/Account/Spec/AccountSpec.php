@@ -16,11 +16,11 @@ describe('Account', function (): void {
         $reflection = new ReflectionClass(Account::class);
         $property = $reflection->getProperty('items');
         $property->setAccessible(true);
-        $property->setValue([]);
+        $property->setValue(null, []);
 
         $property = $reflection->getProperty('sessionAccount');
         $property->setAccessible(true);
-        $property->setValue(null);
+        $property->setValue(null, null);
 
         // Account::get() eagerly performs a real async DB read even just to
         // construct/cache an instance (see Account::readDbAsync()), so every
@@ -67,7 +67,7 @@ describe('Account', function (): void {
         $items = $itemsProp->getValue();
         $items[DbAccount::class] = $dbAccountMock;
         $items[DbAccountData::class] = $dbAccountDataMock;
-        $itemsProp->setValue($items);
+        $itemsProp->setValue(null, $items);
     });
 
     afterEach(function (): void {
@@ -79,7 +79,7 @@ describe('Account', function (): void {
         $items = $itemsProp->getValue();
         unset($items[DbAccount::class], $items[DbAccountData::class]);
 
-        $itemsProp->setValue($items);
+        $itemsProp->setValue(null, $items);
     });
 
     describe('get() and constructor', function (): void {

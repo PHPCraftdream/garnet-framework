@@ -8,7 +8,7 @@ describe('HCalendarTools', function (): void {
         $reflection = new ReflectionClass(HCalendarTools::class);
         $yearEdgesProp = $reflection->getProperty('yearEdges');
         $yearEdgesProp->setAccessible(true);
-        $yearEdgesProp->setValue([]);
+        $yearEdgesProp->setValue(null, []);
     });
 
     describe('getHYearInfo()', function (): void {

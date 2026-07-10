@@ -43,11 +43,11 @@ describe('GarnetI18n', function (): void {
         $reflection = new ReflectionClass(Logger::class);
         $paramsProp = $reflection->getProperty('params');
         $paramsProp->setAccessible(true);
-        $paramsProp->setValue([]);
+        $paramsProp->setValue(null, []);
 
         $loggersProp = $reflection->getProperty('loggers');
         $loggersProp->setAccessible(true);
-        $loggersProp->setValue([]);
+        $loggersProp->setValue(null, []);
 
         TestGarnetI18n::resetInstance();
 

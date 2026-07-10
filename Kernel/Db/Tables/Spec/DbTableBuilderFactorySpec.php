@@ -48,11 +48,11 @@ password = pass
         $reflection = new ReflectionClass(IniConfig::class);
         $initParamsProp = $reflection->getProperty('initParams');
         $initParamsProp->setAccessible(true);
-        $initParamsProp->setValue([]);
+        $initParamsProp->setValue(null, []);
 
         $itemsProp = $reflection->getProperty('items');
         $itemsProp->setAccessible(true);
-        $itemsProp->setValue([]);
+        $itemsProp->setValue(null, []);
 
         // Define DB config
         IniConfig::define($tempFile, 'ENV_DB');

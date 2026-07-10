@@ -107,7 +107,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\MailLogCtrl {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
         $prop->setAccessible(true);
-        $prop->setValue([]);
+        $prop->setValue(null, []);
     }
 
     function makeMailCtrlLog(): MailCtrlSpecMailLog {
@@ -116,7 +116,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\MailLogCtrl {
         $ref = new ReflectionClass(DbTable::class);
         $items = $ref->getProperty('items');
         $items->setAccessible(true);
-        $items->setValue([MailCtrlSpecMailLog::class => $inst]);
+        $items->setValue(null, [MailCtrlSpecMailLog::class => $inst]);
 
         return $inst;
     }

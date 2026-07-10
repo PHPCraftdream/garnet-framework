@@ -80,7 +80,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Comments\Spec {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
         $prop->setAccessible(true);
-        $prop->setValue([]);
+        $prop->setValue(null, []);
     }
 
     function setupCommentsTable(): TestCommentsQueried {
@@ -91,7 +91,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Comments\Spec {
         $itemsProp->setAccessible(true);
 
         $inst = (new ReflectionClass(TestCommentsQueried::class))->newInstanceWithoutConstructor();
-        $itemsProp->setValue([TestCommentsQueried::class => $inst]);
+        $itemsProp->setValue(null, [TestCommentsQueried::class => $inst]);
 
         return $inst;
     }

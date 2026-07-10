@@ -104,7 +104,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Email\Spec {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
         $prop->setAccessible(true);
-        $prop->setValue([]);
+        $prop->setValue(null, []);
     }
 
     /**
@@ -115,11 +115,11 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Email\Spec {
 
         $q = $ref->getProperty('queueTable');
         $q->setAccessible(true);
-        $q->setValue(null);
+        $q->setValue(null, null);
 
         $a = $ref->getProperty('attemptsTable');
         $a->setAccessible(true);
-        $a->setValue(null);
+        $a->setValue(null, null);
     }
 
     /**
@@ -147,7 +147,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Email\Spec {
             TestEmailQueue::class => $queueObj,
             TestEmailAttempts::class => $attemptsObj,
         ];
-        $itemsProp->setValue($items);
+        $itemsProp->setValue(null, $items);
 
         FwEmailQueueService::setTableClasses(TestEmailQueue::class, TestEmailAttempts::class);
 
@@ -166,11 +166,11 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Email\Spec {
 
         $initParams = $ref->getProperty('initParams');
         $initParams->setAccessible(true);
-        $initParams->setValue([]);
+        $initParams->setValue(null, []);
 
         $items = $ref->getProperty('items');
         $items->setAccessible(true);
-        $items->setValue([]);
+        $items->setValue(null, []);
 
         IniConfig::defineAppIni($file);
 
@@ -193,7 +193,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Email\Spec {
             foreach (['initParams', 'items'] as $name) {
                 $p = $ref->getProperty($name);
                 $p->setAccessible(true);
-                $p->setValue([]);
+                $p->setValue(null, []);
             }
             $cfg = __DIR__ . '/../../../../TestsInit/TestConfig/';
             IniConfig::defineAppIni($cfg . 'app.ini');

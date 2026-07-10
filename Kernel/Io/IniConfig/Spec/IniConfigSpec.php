@@ -48,11 +48,11 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig\Spec {
             $reflection = new ReflectionClass(IniConfig::class);
             $initParamsProp = $reflection->getProperty('initParams');
             $initParamsProp->setAccessible(true);
-            $initParamsProp->setValue($realInitParams);
+            $initParamsProp->setValue(null, $realInitParams);
 
             $itemsProp = $reflection->getProperty('items');
             $itemsProp->setAccessible(true);
-            $itemsProp->setValue($realItems);
+            $itemsProp->setValue(null, $realItems);
         });
 
         describe('Constants', function (): void {
@@ -75,11 +75,11 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig\Spec {
                 $reflection = new ReflectionClass(IniConfig::class);
                 $initParamsProp = $reflection->getProperty('initParams');
                 $initParamsProp->setAccessible(true);
-                $initParamsProp->setValue([]);
+                $initParamsProp->setValue(null, []);
 
                 $itemsProp = $reflection->getProperty('items');
                 $itemsProp->setAccessible(true);
-                $itemsProp->setValue([]);
+                $itemsProp->setValue(null, []);
             });
 
             it('defines file path for environment', function (): void {
@@ -104,7 +104,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig\Spec {
                 $reflection = new ReflectionClass(IniConfig::class);
                 $initParamsProp = $reflection->getProperty('initParams');
                 $initParamsProp->setAccessible(true);
-                $initParamsProp->setValue([]);
+                $initParamsProp->setValue(null, []);
             });
 
             it('defines app ini file path', function (): void {
@@ -129,11 +129,11 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig\Spec {
                 $reflection = new ReflectionClass(IniConfig::class);
                 $initParamsProp = $reflection->getProperty('initParams');
                 $initParamsProp->setAccessible(true);
-                $initParamsProp->setValue([]);
+                $initParamsProp->setValue(null, []);
 
                 $itemsProp = $reflection->getProperty('items');
                 $itemsProp->setAccessible(true);
-                $itemsProp->setValue([]);
+                $itemsProp->setValue(null, []);
             });
 
             it('throws exception when environment not defined', function (): void {
@@ -444,7 +444,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig\Spec {
                 $reflection = new ReflectionClass(IniConfig::class);
                 $initParamsProp = $reflection->getProperty('initParams');
                 $initParamsProp->setAccessible(true);
-                $initParamsProp->setValue([]);
+                $initParamsProp->setValue(null, []);
             });
 
             it('defines db ini file path', function (): void {
@@ -469,11 +469,11 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig\Spec {
                 $reflection = new ReflectionClass(IniConfig::class);
                 $initParamsProp = $reflection->getProperty('initParams');
                 $initParamsProp->setAccessible(true);
-                $initParamsProp->setValue([]);
+                $initParamsProp->setValue(null, []);
 
                 $itemsProp = $reflection->getProperty('items');
                 $itemsProp->setAccessible(true);
-                $itemsProp->setValue([]);
+                $itemsProp->setValue(null, []);
             });
 
             it('returns db config instance', function (): void {
@@ -502,7 +502,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig\Spec {
                 $reflection = new ReflectionClass(IniConfig::class);
                 $initParamsProp = $reflection->getProperty('initParams');
                 $initParamsProp->setAccessible(true);
-                $initParamsProp->setValue([]);
+                $initParamsProp->setValue(null, []);
             });
 
             it('defines email ini file path', function (): void {
@@ -527,11 +527,11 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig\Spec {
                 $reflection = new ReflectionClass(IniConfig::class);
                 $initParamsProp = $reflection->getProperty('initParams');
                 $initParamsProp->setAccessible(true);
-                $initParamsProp->setValue([]);
+                $initParamsProp->setValue(null, []);
 
                 $itemsProp = $reflection->getProperty('items');
                 $itemsProp->setAccessible(true);
-                $itemsProp->setValue([]);
+                $itemsProp->setValue(null, []);
             });
 
             it('returns email config instance', function (): void {
@@ -560,11 +560,11 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig\Spec {
                 $reflection = new ReflectionClass(IniConfig::class);
                 $initParamsProp = $reflection->getProperty('initParams');
                 $initParamsProp->setAccessible(true);
-                $initParamsProp->setValue([]);
+                $initParamsProp->setValue(null, []);
 
                 $itemsProp = $reflection->getProperty('items');
                 $itemsProp->setAccessible(true);
-                $itemsProp->setValue([]);
+                $itemsProp->setValue(null, []);
             });
 
             it('returns empty string when identity_file is blank', function (): void {
@@ -608,11 +608,11 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig\Spec {
                 $reflection = new ReflectionClass(IniConfig::class);
                 $initParamsProp = $reflection->getProperty('initParams');
                 $initParamsProp->setAccessible(true);
-                $initParamsProp->setValue([]);
+                $initParamsProp->setValue(null, []);
 
                 $itemsProp = $reflection->getProperty('items');
                 $itemsProp->setAccessible(true);
-                $itemsProp->setValue([]);
+                $itemsProp->setValue(null, []);
             });
 
             it('returns app config instance', function (): void {

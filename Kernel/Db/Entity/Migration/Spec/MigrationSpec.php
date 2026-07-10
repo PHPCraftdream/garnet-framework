@@ -11,7 +11,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Migration\Spec {
             $reflection = new ReflectionClass(Migration::class);
             $instanceProperty = $reflection->getProperty('instance');
             $instanceProperty->setAccessible(true);
-            $instanceProperty->setValue(null);
+            $instanceProperty->setValue(null, null);
         });
 
         describe('get()', function (): void {

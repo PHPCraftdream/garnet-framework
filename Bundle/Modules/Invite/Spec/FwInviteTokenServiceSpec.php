@@ -136,7 +136,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Invite\Spec {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
         $prop->setAccessible(true);
-        $prop->setValue([]);
+        $prop->setValue(null, []);
     }
 
     function resetServiceState(): void {
@@ -144,11 +144,11 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Invite\Spec {
 
         $t = $ref->getProperty('tokensTable');
         $t->setAccessible(true);
-        $t->setValue(null);
+        $t->setValue(null, null);
 
         $r = $ref->getProperty('registrationsTable');
         $r->setAccessible(true);
-        $r->setValue(null);
+        $r->setValue(null, null);
     }
 
     /**
@@ -185,14 +185,14 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Invite\Spec {
         $ref = new ReflectionClass(CasUpdate::class);
         $prop = $ref->getProperty('sharedLink');
         $prop->setAccessible(true);
-        $prop->setValue($link);
+        $prop->setValue(null, $link);
     }
 
     function resetCasLink(): void {
         $ref = new ReflectionClass(CasUpdate::class);
         $prop = $ref->getProperty('sharedLink');
         $prop->setAccessible(true);
-        $prop->setValue(null);
+        $prop->setValue(null, null);
     }
 
     // ---------------------------------------------------------------------------

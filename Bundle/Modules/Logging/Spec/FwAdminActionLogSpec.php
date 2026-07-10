@@ -51,7 +51,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
         $prop->setAccessible(true);
-        $prop->setValue([]);
+        $prop->setValue(null, []);
     }
 
     function makeTestAdminActionLog(): TestAdminActionLog {
@@ -60,7 +60,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec {
         $ref = new ReflectionClass(DbTable::class);
         $items = $ref->getProperty('items');
         $items->setAccessible(true);
-        $items->setValue([TestAdminActionLog::class => $inst]);
+        $items->setValue(null, [TestAdminActionLog::class => $inst]);
 
         return $inst;
     }

@@ -90,7 +90,7 @@ describe('Session CSRF lifecycle', function (): void {
         $ref = new ReflectionClass(Session::class);
         $inst = $ref->getProperty('instance');
         $inst->setAccessible(true);
-        $inst->setValue(null);
+        $inst->setValue(null, null);
     });
 
     // -------------------------------------------------------------------------

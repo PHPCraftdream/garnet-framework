@@ -50,11 +50,11 @@ describe('DbM2M', function (): void {
         $reflection = new ReflectionClass(\PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig::class);
         $itemsProp = $reflection->getProperty('items');
         $itemsProp->setAccessible(true);
-        $itemsProp->setValue([]);
+        $itemsProp->setValue(null, []);
 
         $initParamsProp = $reflection->getProperty('initParams');
         $initParamsProp->setAccessible(true);
-        $initParamsProp->setValue([]);
+        $initParamsProp->setValue(null, []);
 
         // Set up IniConfig to avoid prefix
         $tempFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'db_test_' . uniqid() . '.ini';

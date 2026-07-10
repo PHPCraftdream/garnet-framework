@@ -12,7 +12,7 @@ describe('EntityLog', function (): void {
         $reflection = new ReflectionClass(EntityLog::class);
         $property = $reflection->getProperty('items');
         $property->setAccessible(true);
-        $property->setValue([]);
+        $property->setValue(null, []);
     });
 
     describe('static properties', function (): void {

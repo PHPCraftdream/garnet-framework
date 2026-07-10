@@ -252,7 +252,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages\Spec {
         $existing[TestStaticPages::class] = $pagesObj;
         $existing[TestStaticPageBlocks::class] = $blocksObj;
         $existing[TestStaticSnippets::class] = $snippetsObj;
-        $itemsProp->setValue($existing);
+        $itemsProp->setValue(null, $existing);
 
         TestStaticPagesService::setInstances($pagesObj, $blocksObj, $snippetsObj);
 

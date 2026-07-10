@@ -59,7 +59,7 @@ describe('BenchmarkLog', function (): void {
         $reflection = new ReflectionClass(BenchmarkLog::class);
         $itemsProp = $reflection->getProperty('items');
         $itemsProp->setAccessible(true);
-        $itemsProp->setValue([]);
+        $itemsProp->setValue(null, []);
     });
 
     describe('init()', function (): void {

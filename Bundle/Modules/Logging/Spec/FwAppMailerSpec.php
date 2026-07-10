@@ -82,7 +82,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\Mailer {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
         $prop->setAccessible(true);
-        $prop->setValue([]);
+        $prop->setValue(null, []);
     }
 
     function resetIniConfigMailer(): void {
@@ -90,11 +90,11 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\Mailer {
 
         $initParams = $ref->getProperty('initParams');
         $initParams->setAccessible(true);
-        $initParams->setValue([]);
+        $initParams->setValue(null, []);
 
         $items = $ref->getProperty('items');
         $items->setAccessible(true);
-        $items->setValue([]);
+        $items->setValue(null, []);
     }
 
     function makeAppIniMailer(string $env = 'prod'): string {
@@ -112,7 +112,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\Mailer {
         $ref = new ReflectionClass(DbTable::class);
         $items = $ref->getProperty('items');
         $items->setAccessible(true);
-        $items->setValue([MailerSpecMailLog::class => $inst]);
+        $items->setValue(null, [MailerSpecMailLog::class => $inst]);
 
         return $inst;
     }

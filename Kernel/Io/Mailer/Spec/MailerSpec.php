@@ -14,17 +14,17 @@ describe('Mailer', function (): void {
         $reflection = new ReflectionClass(Mailer::class);
         $property = $reflection->getProperty('instance');
         $property->setAccessible(true);
-        $property->setValue(null);
+        $property->setValue(null, null);
 
         // Reset IniConfig between tests
         $reflection = new ReflectionClass(IniConfig::class);
         $property = $reflection->getProperty('initParams');
         $property->setAccessible(true);
-        $property->setValue([]);
+        $property->setValue(null, []);
 
         $property = $reflection->getProperty('items');
         $property->setAccessible(true);
-        $property->setValue([]);
+        $property->setValue(null, []);
     });
 
     describe('get()', function (): void {
@@ -145,17 +145,17 @@ verify_peer=0
             $reflection = new ReflectionClass(Mailer::class);
             $property = $reflection->getProperty('instance');
             $property->setAccessible(true);
-            $property->setValue(null);
+            $property->setValue(null, null);
 
             // Reset IniConfig
             $reflection = new ReflectionClass(IniConfig::class);
             $property = $reflection->getProperty('initParams');
             $property->setAccessible(true);
-            $property->setValue([]);
+            $property->setValue(null, []);
 
             $property = $reflection->getProperty('items');
             $property->setAccessible(true);
-            $property->setValue([]);
+            $property->setValue(null, []);
         });
 
         it('does not send email when enabled = 0', function (): void {

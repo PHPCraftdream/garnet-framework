@@ -439,7 +439,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Spec {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
         $prop->setAccessible(true);
-        $prop->setValue([]);
+        $prop->setValue(null, []);
     }
 
     function setupReadStatusTables(): array {

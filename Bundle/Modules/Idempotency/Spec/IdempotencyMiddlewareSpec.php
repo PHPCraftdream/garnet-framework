@@ -92,7 +92,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Idempotency\Spec {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
         $prop->setAccessible(true);
-        $prop->setValue([]);
+        $prop->setValue(null, []);
     }
 
     function resetMiddlewareState(): void {
@@ -100,11 +100,11 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Idempotency\Spec {
 
         $tc = $ref->getProperty('tableClass');
         $tc->setAccessible(true);
-        $tc->setValue(null);
+        $tc->setValue(null, null);
 
         $ri = $ref->getProperty('rowId');
         $ri->setAccessible(true);
-        $ri->setValue(null);
+        $ri->setValue(null, null);
     }
 
     /**
@@ -123,7 +123,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Idempotency\Spec {
         $tableObj = (new ReflectionClass(TestIdempotencyKeys::class))
             ->newInstanceWithoutConstructor();
 
-        $itemsProp->setValue([TestIdempotencyKeys::class => $tableObj]);
+        $itemsProp->setValue(null, [TestIdempotencyKeys::class => $tableObj]);
 
         IdempotencyMiddleware::setTableClass(TestIdempotencyKeys::class);
 

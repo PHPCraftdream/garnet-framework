@@ -12,11 +12,11 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Logs\Spec {
             $reflection = new ReflectionClass(Logger::class);
             $paramsProperty = $reflection->getProperty('params');
             $paramsProperty->setAccessible(true);
-            $paramsProperty->setValue([]);
+            $paramsProperty->setValue(null, []);
 
             $loggersProperty = $reflection->getProperty('loggers');
             $loggersProperty->setAccessible(true);
-            $loggersProperty->setValue([]);
+            $loggersProperty->setValue(null, []);
         });
 
         afterEach(function (): void {

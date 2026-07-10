@@ -9,15 +9,15 @@ describe('BenchmarkLog', function (): void {
 
         $startProp = $reflection->getProperty('start');
         $startProp->setAccessible(true);
-        $startProp->setValue(0.0);
+        $startProp->setValue(null, 0.0);
 
         $lastProp = $reflection->getProperty('last');
         $lastProp->setAccessible(true);
-        $lastProp->setValue(0.0);
+        $lastProp->setValue(null, 0.0);
 
         $itemsProp = $reflection->getProperty('items');
         $itemsProp->setAccessible(true);
-        $itemsProp->setValue([]);
+        $itemsProp->setValue(null, []);
     });
 
     describe('init()', function (): void {

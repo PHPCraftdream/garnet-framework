@@ -143,7 +143,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Spec {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
         $prop->setAccessible(true);
-        $prop->setValue([]);
+        $prop->setValue(null, []);
     }
 
     function setupBalanceTables(): array {

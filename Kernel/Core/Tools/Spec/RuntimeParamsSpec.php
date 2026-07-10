@@ -8,7 +8,7 @@ describe('RuntimeParams', function (): void {
         $reflection = new ReflectionClass(RuntimeParams::class);
         $instanceProp = $reflection->getProperty('instance');
         $instanceProp->setAccessible(true);
-        $instanceProp->setValue(null);
+        $instanceProp->setValue(null, null);
     });
 
     describe('init()', function (): void {

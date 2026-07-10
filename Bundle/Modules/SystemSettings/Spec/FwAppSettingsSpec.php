@@ -17,11 +17,11 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\SystemSettings\Spec {
 
         $initParams = $ref->getProperty('initParams');
         $initParams->setAccessible(true);
-        $initParams->setValue([]);
+        $initParams->setValue(null, []);
 
         $items = $ref->getProperty('items');
         $items->setAccessible(true);
-        $items->setValue([]);
+        $items->setValue(null, []);
     }
 
     /**

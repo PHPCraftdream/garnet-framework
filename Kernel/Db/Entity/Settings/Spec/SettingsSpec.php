@@ -9,7 +9,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Settings\Spec {
             $reflection = new ReflectionClass(Settings::class);
             $instanceProperty = $reflection->getProperty('instance');
             $instanceProperty->setAccessible(true);
-            $instanceProperty->setValue(null);
+            $instanceProperty->setValue(null, null);
         });
 
         describe('get()', function (): void {

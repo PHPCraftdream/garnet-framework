@@ -271,7 +271,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Spec {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
         $prop->setAccessible(true);
-        $prop->setValue([]);
+        $prop->setValue(null, []);
     }
 
     function setupAttachmentsTable(): TestImAttachments {
@@ -282,7 +282,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Spec {
         $itemsProp->setAccessible(true);
 
         $inst = (new ReflectionClass(TestImAttachments::class))->newInstanceWithoutConstructor();
-        $itemsProp->setValue([TestImAttachments::class => $inst]);
+        $itemsProp->setValue(null, [TestImAttachments::class => $inst]);
 
         return $inst;
     }

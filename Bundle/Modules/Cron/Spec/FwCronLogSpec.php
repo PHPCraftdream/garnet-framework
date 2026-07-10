@@ -66,7 +66,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Cron\Spec {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
         $prop->setAccessible(true);
-        $prop->setValue([]);
+        $prop->setValue(null, []);
     }
 
     function setupCronTable(): TestCronLog {
@@ -77,7 +77,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Cron\Spec {
         $itemsProp->setAccessible(true);
 
         $inst = (new ReflectionClass(TestCronLog::class))->newInstanceWithoutConstructor();
-        $itemsProp->setValue([TestCronLog::class => $inst]);
+        $itemsProp->setValue(null, [TestCronLog::class => $inst]);
 
         return $inst;
     }

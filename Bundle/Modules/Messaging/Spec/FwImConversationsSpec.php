@@ -295,7 +295,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Spec {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
         $prop->setAccessible(true);
-        $prop->setValue([]);
+        $prop->setValue(null, []);
     }
 
     function setupImConversationsTable(): TestImConversations {
@@ -306,7 +306,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Spec {
         $itemsProp->setAccessible(true);
 
         $inst = (new ReflectionClass(TestImConversations::class))->newInstanceWithoutConstructor();
-        $itemsProp->setValue([TestImConversations::class => $inst]);
+        $itemsProp->setValue(null, [TestImConversations::class => $inst]);
 
         return $inst;
     }
