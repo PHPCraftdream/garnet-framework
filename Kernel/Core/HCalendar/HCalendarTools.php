@@ -11,16 +11,18 @@ namespace PHPCraftdream\Garnet\Kernel\Core\HCalendar {
         public static function getHYearInfo(int $year): array {
             if (!isset(static::$yearEdges[$year])) {
                 $startJd = jewishtojd(1, 1, $year);
-                // Month 13 (Adar II) only exists in leap years, so asking
-                // jewishtojd() for "13/29" unconditionally relies on however
-                // it happens to clamp an out-of-range month in a non-leap
-                // year — found to differ across PHP versions (correct on
-                // 8.1/8.2, degenerate on 8.3). The last day of year N is
-                // always exactly one day before the first day of year N+1,
-                // which sidesteps the question of whether month 13 exists
-                // at all.
-                $endJd = jewishtojd(1, 1, $year + 1) - 1;
-                $length = ($endJd - $startJd) + 1;
+                // Year length via HCalendarGauss's pure-arithmetic formula,
+                // not PHP's jewishtojd(). Two prior attempts derived it from
+                // JD subtraction (jewishtojd(13, 29, $year), then
+                // jewishtojd(1, 1, $year + 1) - 1) — both rely on however
+                // the bundled calendar extension happens to compute or
+                // clamp month/day lookups, which was found to differ
+                // between PHP 8.1/8.2 and 8.3 for some sampled years,
+                // producing a degenerate length. The Gauss formula has no
+                // such dependency — it's the same reference implementation
+                // this class's own HCalendarSpec.php cross-checks against.
+                $length = HCalendarGauss::getHYearLength($year);
+                $endJd = $startJd + $length - 1;
                 $isLeap = $length > 355;
 
                 static::$yearEdges[$year] = [$startJd, $endJd, $length, $isLeap];
