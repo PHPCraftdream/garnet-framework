@@ -11,7 +11,15 @@ namespace PHPCraftdream\Garnet\Kernel\Core\HCalendar {
         public static function getHYearInfo(int $year): array {
             if (!isset(static::$yearEdges[$year])) {
                 $startJd = jewishtojd(1, 1, $year);
-                $endJd = jewishtojd(13, 29, $year);
+                // Month 13 (Adar II) only exists in leap years, so asking
+                // jewishtojd() for "13/29" unconditionally relies on however
+                // it happens to clamp an out-of-range month in a non-leap
+                // year — found to differ across PHP versions (correct on
+                // 8.1/8.2, degenerate on 8.3). The last day of year N is
+                // always exactly one day before the first day of year N+1,
+                // which sidesteps the question of whether month 13 exists
+                // at all.
+                $endJd = jewishtojd(1, 1, $year + 1) - 1;
                 $length = ($endJd - $startJd) + 1;
                 $isLeap = $length > 355;
 
