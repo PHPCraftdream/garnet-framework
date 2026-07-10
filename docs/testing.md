@@ -1,10 +1,17 @@
 # Testing
 
 The framework ships [kahlan](https://kahlan.github.io/) spec files with
-2657 passing expectations (1942 kernel + 715 bundle), covering
-`Kernel/` and `Bundle/`. This guide covers
-how to run them, how to write a new one, and where the line sits between
+2657 passing expectations (1848 DB-free kernel + 94 kernel integration +
+715 bundle), covering `Kernel/` and `Bundle/`. This guide covers how to
+run them, how to write a new one, and where the line sits between
 framework-level unit specs and application-level e2e tests.
+
+`*IntegrationSpec.php` files under `Kernel/` deliberately touch a real
+database — they live next to the Kernel classes they test (this
+project's "spec sits beside its source" convention) rather than under
+`Bundle/`, and run via `composer test:kernel-integration` against the
+same MySQL as the bundle suite. Everything else under `Kernel/` is
+DB-free (`composer test:kernel`).
 
 ## Contents
 
@@ -19,18 +26,28 @@ framework-level unit specs and application-level e2e tests.
 ## Running the suite
 
 ```bash
-composer test           # kernel + bundle specs
-composer test:kernel    # Kernel/ only
-composer test:bundle    # Bundle/ only
+composer test                    # kernel + kernel-integration + bundle
+composer test:kernel              # Kernel/, DB-free
+composer test:kernel-integration  # Kernel/*IntegrationSpec.php only, needs MySQL
+composer test:bundle              # Bundle/ only, needs MySQL
 ```
 
 These map directly to the scripts in `composer.json`:
 
 ```json
-"test": ["@test:kernel", "@test:bundle"],
-"test:kernel": "php vendor/bin/kahlan --spec=Kernel --pattern=*Spec.php",
-"test:bundle": "php vendor/bin/kahlan --spec=Bundle --pattern=*Spec.php"
+"test": ["@test:kernel", "@test:kernel-integration", "@test:bundle"],
+"test:kernel": "php tooling/scripts/test-kernel.php",
+"test:kernel-integration": "php vendor/bin/kahlan --spec=Kernel --grep=*IntegrationSpec.php",
+"test:bundle": "php vendor/bin/kahlan --spec=Bundle --grep=*Spec.php"
 ```
+
+`test:kernel` runs through a small wrapper
+([`tooling/scripts/test-kernel.php`](../tooling/scripts/test-kernel.php))
+instead of calling kahlan directly, because it needs to set
+`GARNET_SKIP_INTEGRATION_SPECS=1` — composer scripts can't portably do
+that with POSIX `VAR=value command` syntax (works under CI's bash,
+breaks on native Windows). `kahlan-config.php` reads that flag to
+exclude `*IntegrationSpec.php` from the DB-free run.
 
 `composer ci` runs `cs:check`, `phpstan`, then `test` — the same sequence CI
 runs on every push. See [Dev workflow](dev-workflow.md) for developing the
