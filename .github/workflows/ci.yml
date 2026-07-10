@@ -312,35 +312,28 @@ jobs:
         working-directory: ${{ runner.temp }}/CiApp
         run: php garnet build
 
-      # TEMPORARY: same isDevDir() probe as before, but run from INSIDE
-      # CiApp — through the composer path-repo symlink — since the earlier
-      # probe (run from the framework checkout directly) came back true but
-      # the app still 500s. Something differs once Env is loaded via the
-      # symlinked vendor/phpcraftdream/garnet-framework path.
-      - name: Debug isDevDir() from inside CiApp
+      # TEMPORARY: Env::isDevDir() alone is confirmed true (both from the
+      # framework checkout directly and from inside CiApp through the
+      # composer path-repo symlink — verified via earlier throwaway probes,
+      # now removed). run_web.php actually gates dev-mode on
+      # `$globalParams->isDev() && Env::isDevDir()`, so the remaining
+      # unknown is what $globalParams->isDev() (isLocalhost() + isPhpServer()
+      # against the REAL request's $_SERVER, seen only inside a live
+      # php -S worker request through the Node proxy) evaluates to. Patch a
+      # one-line debug dump into the scaffolded app's own run_web.php so the
+      # first real request writes the actual values to a file we can inspect.
+      - name: Patch run_web.php with a temporary isDev debug dump
         working-directory: ${{ runner.temp }}/CiApp
         run: |
           php -r '
-          require "vendor/autoload.php";
-          use PHPCraftdream\Garnet\Kernel\Core\Env\Env;
-          $r = new ReflectionClass(Env::class);
-          $envFile = $r->getFileName();
-          echo "Env.php resolved path: $envFile" . PHP_EOL;
-          echo "__DIR__ equivalent: " . dirname($envFile) . PHP_EOL;
-          $dirItems = explode(DIRECTORY_SEPARATOR, dirname($envFile));
-          $dirStr = "";
-          $dirs = [];
-          foreach ($dirItems as $item) {
-              $dirStr .= $item . DIRECTORY_SEPARATOR;
-              $dirs[] = $dirStr;
-          }
-          $dirs = array_reverse($dirs);
-          $dirs = array_slice($dirs, 0, 6);
-          foreach ($dirs as $dir) {
-              $files = glob($dir . "/\.*");
-              echo "$dir => " . ($files === false ? "GLOB FALSE" : implode(", ", array_map("basename", $files))) . PHP_EOL;
-          }
-          var_dump(Env::isDevDir());
+          $file = "run_web.php";
+          $content = file_get_contents($file);
+          $needle = "\$isDev = \$globalParams->isDev() && Env::isDevDir();";
+          $inject = $needle . "\nfile_put_contents(\"/tmp/isdev-debug.txt\", json_encode([\"isDev\" => \$isDev, \"globalIsDev\" => \$globalParams->isDev(), \"envIsDevDir\" => Env::isDevDir(), \"isLocalhost\" => \$globalParams->isLocalhost(), \"isPhpServer\" => \$globalParams->isPhpServer(), \"SERVER_NAME\" => \$_SERVER[\"SERVER_NAME\"] ?? null, \"SERVER_SOFTWARE\" => \$_SERVER[\"SERVER_SOFTWARE\"] ?? null, \"HTTP_HOST\" => \$_SERVER[\"HTTP_HOST\"] ?? null, \"GARNET_DEV\" => \$_SERVER[\"GARNET_DEV\"] ?? null], JSON_PRETTY_PRINT));";
+          if (!str_contains($content, $needle)) { fwrite(STDERR, "needle not found — run_web.php template changed?\n"); exit(1); }
+          $content = str_replace($needle, $inject, $content);
+          file_put_contents($file, $content);
+          echo "Patched.\n";
           '
 
       # Serve + test in ONE step. A background process started in a separate
@@ -385,9 +378,13 @@ jobs:
             curl -v http://localhost:8001/ 2>&1 >&2 || true
             echo "--- PHP error log (if any) ---" >&2
             find WorkDir -iname "*.log" -exec sh -c 'echo "== {} =="; cat "{}"' \; 2>/dev/null || true
+            echo "--- isDev debug dump (if any) ---" >&2
+            cat /tmp/isdev-debug.txt >&2 || true
             kill "$SERVER_PID" 2>/dev/null || true
             exit 1
           fi
+          echo "--- isDev debug dump (if any) ---"
+          cat /tmp/isdev-debug.txt || true
           echo "Server is up — running Playwright."
           npm --prefix Tests test -- \
             specs/smoke.spec.ts \
