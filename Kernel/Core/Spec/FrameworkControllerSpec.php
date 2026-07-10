@@ -26,6 +26,96 @@ describe('FrameworkController', function (): void {
     // re-registered after every spec because beforeEach wipes Twig instances.
     $frameworkTwigDir = realpath(__DIR__ . '/../../../Bundle/TwigTemplates') ?: __DIR__ . '/../../../Bundle/TwigTemplates';
 
+    // The beforeEach below wipes several global singletons (IniConfig,
+    // Twig, Logger, RuntimeParams) to isolate this file's own tests from
+    // whatever real .ini paths/instances TestsInit/init.php set up at
+    // bootstrap — but nothing restored them afterward, so every OTHER spec
+    // file that ran later in kahlan's single shared process (e.g. anything
+    // alphabetically after Kernel/Core/) saw permanently empty
+    // IniConfig::$initParams, surfacing as spurious "Env not found: ENV_DB"
+    // failures far away from here. Snapshot once and restore once so the
+    // reset stays contained to this file.
+    $realIniConfigParams = null;
+    $realIniConfigItems = null;
+    $realTwigInstances = null;
+    $realLoggerLoggers = null;
+    $realLoggerParams = null;
+    $realRuntimeParamsInstance = null;
+
+    beforeAll(function () use (
+        &$realIniConfigParams,
+        &$realIniConfigItems,
+        &$realTwigInstances,
+        &$realLoggerLoggers,
+        &$realLoggerParams,
+        &$realRuntimeParamsInstance
+    ): void {
+        $reflection = new ReflectionClass(IniConfig::class);
+        $property = $reflection->getProperty('initParams');
+        $property->setAccessible(true);
+        $realIniConfigParams = $property->getValue();
+
+        $property = $reflection->getProperty('items');
+        $property->setAccessible(true);
+        $realIniConfigItems = $property->getValue();
+
+        $reflection = new ReflectionClass(Twig::class);
+        $property = $reflection->getProperty('instances');
+        $property->setAccessible(true);
+        $realTwigInstances = $property->getValue();
+
+        $reflection = new ReflectionClass(Logger::class);
+        $property = $reflection->getProperty('loggers');
+        $property->setAccessible(true);
+        $realLoggerLoggers = $property->getValue();
+
+        $property = $reflection->getProperty('params');
+        $property->setAccessible(true);
+        $realLoggerParams = $property->getValue();
+
+        $reflection = new ReflectionClass(\PHPCraftdream\Garnet\Kernel\Core\Tools\RuntimeParams::class);
+        $property = $reflection->getProperty('instance');
+        $property->setAccessible(true);
+        $realRuntimeParamsInstance = $property->getValue();
+    });
+
+    afterAll(function () use (
+        &$realIniConfigParams,
+        &$realIniConfigItems,
+        &$realTwigInstances,
+        &$realLoggerLoggers,
+        &$realLoggerParams,
+        &$realRuntimeParamsInstance
+    ): void {
+        $reflection = new ReflectionClass(IniConfig::class);
+        $property = $reflection->getProperty('initParams');
+        $property->setAccessible(true);
+        $property->setValue($realIniConfigParams);
+
+        $property = $reflection->getProperty('items');
+        $property->setAccessible(true);
+        $property->setValue($realIniConfigItems);
+
+        $reflection = new ReflectionClass(Twig::class);
+        $property = $reflection->getProperty('instances');
+        $property->setAccessible(true);
+        $property->setValue($realTwigInstances);
+
+        $reflection = new ReflectionClass(Logger::class);
+        $property = $reflection->getProperty('loggers');
+        $property->setAccessible(true);
+        $property->setValue($realLoggerLoggers);
+
+        $property = $reflection->getProperty('params');
+        $property->setAccessible(true);
+        $property->setValue($realLoggerParams);
+
+        $reflection = new ReflectionClass(\PHPCraftdream\Garnet\Kernel\Core\Tools\RuntimeParams::class);
+        $property = $reflection->getProperty('instance');
+        $property->setAccessible(true);
+        $property->setValue($realRuntimeParamsInstance);
+    });
+
     beforeEach(function () use ($frameworkTwigDir): void {
         // Reset all singletons that the controller touches, so each test
         // starts from a clean slate.

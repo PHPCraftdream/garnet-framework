@@ -20,6 +20,41 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig\Spec {
     }
 
     describe('IniConfig', function (): void {
+        // Several nested `beforeEach` blocks below reset IniConfig's static
+        // `initParams`/`items` to test define()/get()/db()/app()/email() in
+        // isolation from whatever real .ini paths TestsInit/init.php defined
+        // at bootstrap. None of them restored the original values, so once
+        // this file's specs ran, every OTHER spec file that ran afterward
+        // (in kahlan's single shared process) saw a permanently wiped
+        // ENV_DB/ENV_APP/ENV_EMAIL — surfacing as spurious "Env not found"
+        // failures in unrelated specs (e.g. AccountSpec.php) depending on
+        // file load order. Snapshot once here and restore once after this
+        // file's own specs finish, so the reset stays contained to this file.
+        $realInitParams = null;
+        $realItems = null;
+
+        beforeAll(function () use (&$realInitParams, &$realItems): void {
+            $reflection = new ReflectionClass(IniConfig::class);
+            $initParamsProp = $reflection->getProperty('initParams');
+            $initParamsProp->setAccessible(true);
+            $realInitParams = $initParamsProp->getValue();
+
+            $itemsProp = $reflection->getProperty('items');
+            $itemsProp->setAccessible(true);
+            $realItems = $itemsProp->getValue();
+        });
+
+        afterAll(function () use (&$realInitParams, &$realItems): void {
+            $reflection = new ReflectionClass(IniConfig::class);
+            $initParamsProp = $reflection->getProperty('initParams');
+            $initParamsProp->setAccessible(true);
+            $initParamsProp->setValue($realInitParams);
+
+            $itemsProp = $reflection->getProperty('items');
+            $itemsProp->setAccessible(true);
+            $itemsProp->setValue($realItems);
+        });
+
         describe('Constants', function (): void {
             it('has ENV_APP constant', function (): void {
                 expect(IniConfig::ENV_APP)->toBe('ENV_APP');
