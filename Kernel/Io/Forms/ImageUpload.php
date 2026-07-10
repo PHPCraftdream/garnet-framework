@@ -40,7 +40,15 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Forms {
             }
 
             if (!is_dir($dir)) {
-                mkdir($dir, 0o775, true);
+                // Suppressed: an unwritable/invalid path (e.g. permission
+                // denied) is an expected, handled failure mode here — the
+                // is_dir() check right below reports it via $this->error,
+                // not a warning. Without @, the raw E_WARNING escapes to
+                // whatever error handler is installed (kahlan's strict
+                // mode turns it into a fatal test failure; production
+                // logs would get needless noise for a case we already
+                // handle).
+                @mkdir($dir, 0o775, true);
             }
 
             if (!is_dir($dir)) {

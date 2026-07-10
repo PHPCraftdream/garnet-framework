@@ -13,8 +13,15 @@ describe('FsTools', function (): void {
         });
 
         it('normalizes and trims path separators', function (): void {
+            // makeFilePath() normalizes BOTH '/' and '\' to DIRECTORY_SEPARATOR
+            // — on Windows that means no '/' survives, but on Linux
+            // DIRECTORY_SEPARATOR IS '/', so asserting "no '/' at all" only
+            // ever held on Windows. Assert against the OTHER separator
+            // instead, which is wrong on every OS.
+            $wrongSeparator = DIRECTORY_SEPARATOR === '/' ? '\\' : '/';
+
             $result = FsTools::makeFilePath(['path/to', 'file\\name']);
-            expect($result)->not->toContain('/');
+            expect($result)->not->toContain($wrongSeparator);
             expect($result)->toContain(DIRECTORY_SEPARATOR);
 
             $result = FsTools::makeFilePath(['path/', 'to\\', 'file']);
