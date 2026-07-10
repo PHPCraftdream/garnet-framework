@@ -312,6 +312,37 @@ jobs:
         working-directory: ${{ runner.temp }}/CiApp
         run: php garnet build
 
+      # TEMPORARY: same isDevDir() probe as before, but run from INSIDE
+      # CiApp — through the composer path-repo symlink — since the earlier
+      # probe (run from the framework checkout directly) came back true but
+      # the app still 500s. Something differs once Env is loaded via the
+      # symlinked vendor/phpcraftdream/garnet-framework path.
+      - name: Debug isDevDir() from inside CiApp
+        working-directory: ${{ runner.temp }}/CiApp
+        run: |
+          php -r '
+          require "vendor/autoload.php";
+          use PHPCraftdream\Garnet\Kernel\Core\Env\Env;
+          $r = new ReflectionClass(Env::class);
+          $envFile = $r->getFileName();
+          echo "Env.php resolved path: $envFile" . PHP_EOL;
+          echo "__DIR__ equivalent: " . dirname($envFile) . PHP_EOL;
+          $dirItems = explode(DIRECTORY_SEPARATOR, dirname($envFile));
+          $dirStr = "";
+          $dirs = [];
+          foreach ($dirItems as $item) {
+              $dirStr .= $item . DIRECTORY_SEPARATOR;
+              $dirs[] = $dirStr;
+          }
+          $dirs = array_reverse($dirs);
+          $dirs = array_slice($dirs, 0, 6);
+          foreach ($dirs as $dir) {
+              $files = glob($dir . "/\.*");
+              echo "$dir => " . ($files === false ? "GLOB FALSE" : implode(", ", array_map("basename", $files))) . PHP_EOL;
+          }
+          var_dump(Env::isDevDir());
+          '
+
       # Serve + test in ONE step. A background process started in a separate
       # step does not survive into the next one on GitHub-hosted runners, so
       # the server, the readiness wait, and the Playwright run must share a
