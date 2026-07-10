@@ -120,6 +120,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
          * @throws DbException
          */
         public function selectCount(SelectInterface $query): int {
+            $query->resetCols();
             $query->cols(["count(*) as '__cnt__'"]);
 
             $pdo = $this->getPDO();

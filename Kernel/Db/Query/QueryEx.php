@@ -92,6 +92,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
          * @throws DbException
          */
         public function selectCountAsync(SelectInterface $query, callable $callback = null): IDbMySQLiLink {
+            $query->resetCols();
             $query->cols(["count(*) as '__cnt__'"]);
             [$sql, $values] = $this->getSqlItems($query);
 
@@ -104,6 +105,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
          * @throws DbException
          */
         public function selectCount(SelectInterface $query): int {
+            $query->resetCols();
             $query->cols(["count(*) as '__cnt__'"]);
             [$sql, $values] = $this->getSqlItems($query);
             $rows = $this->dbPool->query($sql, $values);
