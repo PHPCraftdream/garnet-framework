@@ -94,7 +94,11 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Twig {
             $serverName = (string)($_SERVER['SERVER_NAME'] ?? '');
             $serverSoft = (string)($_SERVER['SERVER_SOFTWARE'] ?? '');
             $isLocalhost = $serverName === 'localhost' || $serverName === '127.0.0.1' || $serverName === '0.0.0.0';
-            $isPhpServer = $serverSoft !== '' && str_starts_with($serverSoft, 'PHP ');
+            // PHP's built-in server reports "PHP/8.3.32 (Development Server)"
+            // (slash-separated) in practice, not "PHP 8.3.32 ..." — accept
+            // both since the exact wording isn't documented as stable.
+            $isPhpServer = $serverSoft !== ''
+                && (str_starts_with($serverSoft, 'PHP/') || str_starts_with($serverSoft, 'PHP '));
 
             return $isLocalhost && $isPhpServer;
         }

@@ -209,6 +209,13 @@ describe('GlobalReqParams', function (): void {
             expect($params->isPhpServer())->toBe(true);
         });
 
+        it('returns true for the real PHP built-in server SERVER_SOFTWARE format', function (): void {
+            // The actual value PHP's built-in server sets (verified against a
+            // real `php -S` process), slash-separated rather than space-separated.
+            $params = GlobalReqParams::from(['SERVER_SOFTWARE' => 'PHP/8.3.32 (Development Server)'], [], [], [], []);
+            expect($params->isPhpServer())->toBe(true);
+        });
+
         it('returns false for apache', function (): void {
             $params = GlobalReqParams::from(['SERVER_SOFTWARE' => 'Apache/2.4.41'], [], [], [], []);
             expect($params->isPhpServer())->toBe(false);
