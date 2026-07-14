@@ -44,7 +44,7 @@
     "ext-intl": "Required for locale-aware formatting (NumberFormatter, IntlDateFormatter, etc.); not used by the framework core but recommended for i18n applications"
   },
   "require-dev": {
-    "kahlan/kahlan": "^5.2",
+    "kahlan/kahlan": "^6.1",
     "janmarek/mockista": "^1.1",
     "mockery/mockery": "^1.6",
     "phpstan/phpstan": "2.1.38",
