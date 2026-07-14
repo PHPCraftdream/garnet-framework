@@ -35,11 +35,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: vendor
-          key: composer-${{ matrix.php }}-${{ hashFiles('composer.lock') }}
+          key: composer-${{ matrix.php }}-${{ hashFiles('composer.json') }}
           restore-keys: composer-${{ matrix.php }}-
 
       - name: Install dependencies
-        run: composer install --no-progress --prefer-dist --no-interaction
+        run: composer update --no-progress --prefer-dist --no-interaction
 
       - name: Code style (php-cs-fixer)
         run: composer cs:check
@@ -71,10 +71,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: vendor
-          key: composer-${{ matrix.php }}-${{ hashFiles('composer.lock') }}
+          key: composer-${{ matrix.php }}-${{ hashFiles('composer.json') }}
 
       - name: Install dependencies
-        run: composer install --no-progress --prefer-dist --no-interaction
+        run: composer update --no-progress --prefer-dist --no-interaction
 
       - name: Kernel specs
         run: composer test:kernel
@@ -121,10 +121,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: vendor
-          key: composer-${{ matrix.php }}-${{ hashFiles('composer.lock') }}
+          key: composer-${{ matrix.php }}-${{ hashFiles('composer.json') }}
 
       - name: Install dependencies
-        run: composer install --no-progress --prefer-dist --no-interaction
+        run: composer update --no-progress --prefer-dist --no-interaction
 
       - name: Wait for MySQL
         run: |

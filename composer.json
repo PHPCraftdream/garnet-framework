@@ -23,7 +23,7 @@
   "require": {
     "php": "^8.1",
     "aura/cli": "^2.2",
-    "aura/sql": "^3.0",
+    "aura/sql": "^5.0 || ^6.0",
     "aura/sqlquery": "^3.0",
     "ext-json": "*",
     "ext-mbstring": "*",

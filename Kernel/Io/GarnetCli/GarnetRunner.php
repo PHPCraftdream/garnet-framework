@@ -70,6 +70,7 @@ class GarnetRunner {
 
         if (!defined('GARNET_VERSION')) {
             $version = 'dev';
+
             try {
                 if (InstalledVersions::isInstalled('phpcraftdream/garnet-framework')) {
                     $version = InstalledVersions::getPrettyVersion('phpcraftdream/garnet-framework') ?? 'dev';
