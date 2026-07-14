@@ -14,7 +14,7 @@ namespace PHPCraftdream\Garnet\Kernel\Core\Env {
                 && \Composer\InstalledVersions::isInstalled('phpcraftdream/garnet-framework')
             ) {
                 $root = \Composer\InstalledVersions::getRootPackage();
-                $isRoot = ($root['name'] ?? '') === 'phpcraftdream/garnet-framework';
+                $isRoot = $root['name'] === 'phpcraftdream/garnet-framework';
 
                 if (!$isRoot) {
                     $installPath = \Composer\InstalledVersions::getInstallPath('phpcraftdream/garnet-framework');
