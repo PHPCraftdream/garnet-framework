@@ -162,12 +162,14 @@ class GarnetAppCommand {
             echo 'Copied template.' . PHP_EOL;
         }
 
-        // 2. Rewire composer.json's path repository to point at the actual
-        //    framework checkout, relative to the new app dir. The template
-        //    ships with `../../Framework` which only works when the app is
-        //    placed under Apps/<Name>; an arbitrary target needs the right
-        //    relative path computed here.
-        self::wireComposerPathRepo($destDir, $quiet);
+        // 2. Wire composer.json's framework dependency for the environment
+        //    we're actually running in: a dev checkout keeps the path
+        //    repository (rewritten to the real relative path), while an
+        //    installed Packagist release drops `repositories` entirely and
+        //    pins a version constraint instead — otherwise the generated
+        //    app would forever depend on the bootstrap install's vendor/
+        //    path and break the moment that directory is removed.
+        self::configureFrameworkDependency($destDir, $quiet);
 
         // 3. Drop an .env so the local `garnet` wrapper resolves APP_NAME
         //    without the developer having to remember to copy .env.example.
@@ -289,28 +291,82 @@ class GarnetAppCommand {
     }
 
     /**
-     * Rewrite composer.json's path-repo URL so a relative `../../Framework`
-     * (the template default) becomes the right relative path from this
-     * specific target dir to the framework checkout.
+     * Wire the new app's `phpcraftdream/garnet-framework` dependency for
+     * whichever environment this CLI is currently running in:
+     *
+     *  - Dev checkout (monorepo, or `garnet-framework` required via a path
+     *    repository / dev branch): rewrite the template's path-repo URL to
+     *    the real relative path from the new app dir to the framework
+     *    checkout, keeping `@dev`. This is the existing scaffold behaviour.
+     *  - Installed Packagist release (a real tagged version, e.g. `0.1.0`):
+     *    drop the `repositories` entry entirely and pin `require` to a
+     *    caret constraint on the installed version, so the generated app
+     *    resolves the framework from Packagist and stays valid after the
+     *    bootstrap install directory is deleted.
      */
-    private static function wireComposerPathRepo(string $destDir, bool $quiet): void {
+    private static function configureFrameworkDependency(string $destDir, bool $quiet): void {
         $composerFile = $destDir . DIRECTORY_SEPARATOR . 'composer.json';
 
         if (!file_exists($composerFile)) {
             return;
         }
 
-        $frameworkDir = GarnetRunner::$frameworkDir !== ''
-            ? GarnetRunner::$frameworkDir
-            : GARNET_ROOT;
-
-        $relPath = self::relativePath($destDir, $frameworkDir);
         $json = json_decode(file_get_contents($composerFile), true);
 
         if (!is_array($json)) {
             return;
         }
 
+        $releaseVersion = self::installedReleaseVersion();
+
+        if ($releaseVersion === null) {
+            self::wireDevPathRepo($json, $destDir, $quiet);
+        } else {
+            self::wireReleaseDependency($json, $releaseVersion, $quiet);
+        }
+
+        file_put_contents(
+            $composerFile,
+            json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n",
+        );
+    }
+
+    /**
+     * Returns the installed framework's version string when it's a real
+     * tagged release (e.g. "0.1.0"), or null when we're in a dev checkout
+     * (monorepo, path-repo, or a `dev-*`/branch-alias install) — in which
+     * case the caller should wire a path repository instead.
+     */
+    private static function installedReleaseVersion(): ?string {
+        if (self::isLegacyMonorepo() || !class_exists(\Composer\InstalledVersions::class)
+            || !\Composer\InstalledVersions::isInstalled('phpcraftdream/garnet-framework')) {
+            return null;
+        }
+
+        $version = \Composer\InstalledVersions::getVersion('phpcraftdream/garnet-framework');
+
+        if ($version === null || str_starts_with($version, 'dev-') || str_contains($version, '-dev')) {
+            return null;
+        }
+
+        return $version;
+    }
+
+    /**
+     * A monorepo dev checkout has `Framework/` sitting next to `Apps/` on
+     * disk (see GarnetRunner's legacy-mode detection); an installed package
+     * never does.
+     */
+    private static function isLegacyMonorepo(): bool {
+        return is_dir(GARNET_ROOT . DIRECTORY_SEPARATOR . 'Framework' . DIRECTORY_SEPARATOR . 'FrontBuilder');
+    }
+
+    private static function wireDevPathRepo(array &$json, string $destDir, bool $quiet): void {
+        $frameworkDir = GarnetRunner::$frameworkDir !== ''
+            ? GarnetRunner::$frameworkDir
+            : GARNET_ROOT;
+
+        $relPath = self::relativePath($destDir, $frameworkDir);
         $touched = false;
 
         if (isset($json['repositories']) && is_array($json['repositories'])) {
@@ -322,15 +378,22 @@ class GarnetAppCommand {
             }
         }
 
-        if ($touched) {
-            file_put_contents(
-                $composerFile,
-                json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n",
-            );
+        if ($touched && !$quiet) {
+            echo "Wired composer path-repo → {$relPath}" . PHP_EOL;
+        }
+    }
 
-            if (!$quiet) {
-                echo "Wired composer path-repo → {$relPath}" . PHP_EOL;
-            }
+    private static function wireReleaseDependency(array &$json, string $version, bool $quiet): void {
+        unset($json['repositories']);
+
+        $constraint = '^' . $version;
+
+        if (isset($json['require']['phpcraftdream/garnet-framework'])) {
+            $json['require']['phpcraftdream/garnet-framework'] = $constraint;
+        }
+
+        if (!$quiet) {
+            echo "Pinned phpcraftdream/garnet-framework: {$constraint} (Packagist release, no path repository)" . PHP_EOL;
         }
     }
 

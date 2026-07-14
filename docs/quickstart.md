@@ -12,7 +12,7 @@ Create and run a new Garnet application — zero manual configuration.
 ## Install the framework
 
 Cloning + `composer install` is the whole setup. `composer install` runs a
-bundled post-install hook (`php garnet setup`) that installs the FrontBuilder
+bundled post-install hook (`php bin/garnet setup`) that installs the FrontBuilder
 node toolchain and links `node_modules` at the framework root — so rspack,
 tsgo and oxlint work immediately, with no extra steps.
 
@@ -22,20 +22,21 @@ cd garnet-framework
 composer install            # composer deps + npm + node_modules junction
 ```
 
-> Re-run the installer any time with **`php garnet setup`**. It is idempotent
+> Re-run the installer any time with **`php bin/garnet setup`**. It is idempotent
 > (already-installed steps are a no-op) and degrades gracefully when npm is
 > absent (the PHP half still completes). If you cloned before installing
-> Node.js, just run `php garnet setup` once Node is on your PATH.
+> Node.js, just run `php bin/garnet setup` once Node is on your PATH.
 
 ## Scaffold an app
 
 ```bash
-php garnet app:create MyApp
-cd ../Apps/MyApp
+php bin/garnet app:create MyApp
+cd MyApp
 ```
 
-The app name must be a valid PHP identifier (`^[A-Za-z_][A-Za-z0-9_]+$`) —
-`MyApp` or `my_app`, **not** `my-app`.
+The app name must start with an uppercase letter and use PascalCase
+(`^[A-Z][A-Za-z0-9_]+$`) — e.g. `MyApp`, `DemoShop`, **not** `my_app` or
+`my-app`.
 
 `app:create` does everything for you:
 
@@ -44,7 +45,7 @@ The app name must be a valid PHP identifier (`^[A-Za-z_][A-Za-z0-9_]+$`) —
    drive, absolute across drives so Windows multi-drive setups work),
 3. writes `.env` (`APP_NAME`) and runs `composer install`,
 4. that `composer install` fires the app's own post-install hook
-   (`php garnet setup`) — installing the app's node deps and Playwright, so
+   (`php bin/garnet setup`) — installing the app's node deps and Playwright, so
    the new app is born with vendor, `node_modules`, e2e and a working build.
 
 Keep each app in its own git repository.

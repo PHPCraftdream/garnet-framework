@@ -170,6 +170,25 @@ class GarnetSetupCommand {
             self::skipped('playwright install' . ($o['nodeSuppressed'] ? ' (GARNET_SKIP_NODE_SETUP=1)' : ''));
         }
 
+        // Framework's FrontBuilder needs its own node_modules so `garnet build`
+        // (which runs rspack from FrontBuilder/) can resolve npm packages.
+        // When garnet-framework is a composer dependency the post-install hook
+        // never fires for it, so we do it here.
+        if ($doNpm) {
+            $frontDir = $frameworkDir . DS . 'FrontBuilder';
+            self::step('npm install (framework FrontBuilder)', static fn (): int => self::runIn($frontDir, 'npm install'), true);
+        } else {
+            self::skipped('npm install (framework FrontBuilder)' . ($o['nodeSuppressed'] ? ' (GARNET_SKIP_NODE_SETUP=1)' : ''));
+        }
+
+        $doJunction = !$o['skipJunction'] && !$o['nodeSuppressed'];
+
+        if ($doJunction) {
+            self::linkNodeModules($frameworkDir, $o['isWindows']);
+        } else {
+            self::skipped('node_modules junction (framework)' . ($o['nodeSuppressed'] ? ' (GARNET_SKIP_NODE_SETUP=1)' : ''));
+        }
+
         echo PHP_EOL . "\033[32m  [OK] App ready.\033[0m" . PHP_EOL;
         echo "  Next: \033[36mphp garnet build\033[0m then \033[36mphp garnet serve\033[0m" . PHP_EOL;
 

@@ -5,13 +5,12 @@ Thank you for taking the time to disclose responsibly.
 ## Reporting a vulnerability
 
 If you believe you've found a security issue in Garnet Framework, please
-**do not** open a public GitHub issue. Instead, email the maintainers
-privately so we can investigate and ship a fix before the details are public.
+**do not** open a public GitHub issue. Instead, report it through
+GitHub's Private Security Advisories so we can investigate and ship a
+fix before the details are public.
 
-- **Contact:** open a private security advisory on GitHub
-  ([Security → Advisories → "Report a vulnerability"](https://github.com/PHPCraftdream/garnet-framework/security/advisories/new)),
-  or email `security@phpcraftdream.dev` (placeholder — update when the
-  domain is live).
+- **Contact:** [Report a vulnerability](https://github.com/PHPCraftdream/garnet-framework/security/advisories/new)
+  via GitHub Security → Advisories → "Report a vulnerability".
 
 Please include:
 

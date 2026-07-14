@@ -9,7 +9,7 @@
    ```
 3. Run the dev server (requires an app directory):
    ```bash
-   php garnet serve
+   php bin/garnet serve
    ```
 
 ## Code Style
@@ -23,7 +23,7 @@
 
 ## Static Analysis
 
-PHPStan at max level:
+PHPStan at level 5:
 
 ```bash
 composer phpstan
@@ -39,7 +39,7 @@ vendor/bin/kahlan --config=kahlan-config.php
 
 ## Pull Request Flow
 
-1. Create a feature branch from `main`.
+1. Create a feature branch from `master`.
 2. Make your changes; ensure `composer ci` passes (cs:check + phpstan).
 3. New code must include tests (Kahlan specs).
 4. Open a PR with a clear description of the change and its motivation.

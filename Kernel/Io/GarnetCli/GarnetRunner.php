@@ -69,7 +69,15 @@ class GarnetRunner {
         }
 
         if (!defined('GARNET_VERSION')) {
-            define('GARNET_VERSION', '1.0.0');
+            $version = 'dev';
+            try {
+                if (InstalledVersions::isInstalled('phpcraftdream/garnet-framework')) {
+                    $version = InstalledVersions::getPrettyVersion('phpcraftdream/garnet-framework') ?? 'dev';
+                }
+            } catch (Throwable) {
+                // Composer runtime unavailable (e.g. dev checkout without vendor/)
+            }
+            define('GARNET_VERSION', $version);
         }
 
         // GARNET_APP_DIR is set by the caller (the local `garnet` wrapper in
@@ -250,7 +258,7 @@ class GarnetRunner {
     public static function showHelp(): void {
         $appName = GarnetEnv::readAppName();
         $appLabel = $appName ?: '(none)';
-        $version = defined('GARNET_VERSION') ? GARNET_VERSION : '1.0.0';
+        $version = defined('GARNET_VERSION') ? GARNET_VERSION : 'dev';
 
         echo <<<HELP
 

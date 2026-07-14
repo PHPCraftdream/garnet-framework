@@ -27,6 +27,8 @@
     "aura/sqlquery": "^3.0",
     "ext-json": "*",
     "ext-mbstring": "*",
+    "ext-fileinfo": "*",
+    "ext-mysqli": "*",
     "ext-pdo": "*",
     "guzzlehttp/psr7": "^2.4",
     "psr/http-factory": "^1.0",
@@ -37,6 +39,9 @@
     "psr/clock": "^1.0",
     "league/commonmark": "^2.4",
     "mobiledetect/mobiledetectlib": "^4.9"
+  },
+  "suggest": {
+    "ext-intl": "Required for locale-aware formatting (NumberFormatter, IntlDateFormatter, etc.); not used by the framework core but recommended for i18n applications"
   },
   "require-dev": {
     "kahlan/kahlan": "^5.2",

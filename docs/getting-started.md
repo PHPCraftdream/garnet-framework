@@ -19,7 +19,7 @@ production you front the app with whatever web server you already run
 ## Installing the Framework
 
 Clone and `composer install` — that is the entire setup. A bundled
-post-install hook runs `php garnet setup`, which installs the FrontBuilder
+post-install hook runs `php bin/garnet setup`, which installs the FrontBuilder
 node toolchain and links `node_modules` at the framework root, so rspack /
 tsgo / oxlint work out of the box:
 
@@ -29,7 +29,7 @@ cd garnet-framework
 composer install            # PHP deps + npm + node_modules junction
 ```
 
-`php garnet setup` is the explicit, idempotent installer behind that hook —
+`php bin/garnet setup` is the explicit, idempotent installer behind that hook —
 run it any time to (re)install. It degrades gracefully when npm is missing
 (the PHP half still completes; finish the node half later with the same
 command once Node.js is on your PATH).
@@ -40,7 +40,7 @@ Apps are scaffolded from the template that ships inside the framework
 (`Templates/Application/`) by the framework's own CLI:
 
 ```bash
-php garnet app:create MyApp
+php bin/garnet app:create MyApp
 ```
 
 This copies the skeleton, substitutes the app name, wires the composer
@@ -57,7 +57,7 @@ its own repository.
 ## App Structure
 
 ```
-my-app/
+MyApp/
 ├── garnet                  # CLI entry point (thin wrapper)
 ├── composer.json           # requires phpcraftdream/garnet-framework
 ├── MyApp.php              # App class (extends BaseAppInit)

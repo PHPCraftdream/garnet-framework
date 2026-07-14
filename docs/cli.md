@@ -1,7 +1,9 @@
 # Garnet CLI
 
-Single entry point — the `garnet` script in the repo root. Invoke as
-`php garnet <command> [args]`. The CLI serves one application at a
+Single entry point — the `bin/garnet` script in the framework repo
+(or the app-local `garnet` wrapper inside a scaffolded app). Invoke as
+`php bin/garnet <command> [args]` from the framework, or `php garnet
+<command> [args]` from within an app. The CLI serves one application at a
 time (the **active** one); switch with `app:use`.
 
 ## Contents
@@ -24,10 +26,10 @@ time (the **active** one); switch with `app:use`.
 ### Active app
 
 ```bash
-php garnet app           # show current
-php garnet app:list      # everything under Apps/
-php garnet app:use Name  # switch + run prepare
-php garnet app:create Name  # scaffold a new one from the template
+php bin/garnet app           # show current
+php bin/garnet app:list      # everything under Apps/
+php bin/garnet app:use Name  # switch + run prepare
+php bin/garnet app:create Name  # scaffold a new one from the template
 ```
 
 The active app's name lives in `Framework/.active-app`. Every other

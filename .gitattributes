@@ -1,0 +1,44 @@
+# Auto-detect text files and normalise line endings to LF
+* text=auto eol=lf
+
+# ---- Dist archive: exclude dev-only paths (export-ignore) ----
+
+# Tests
+/tests/                 export-ignore
+/TestsInit/             export-ignore
+/kahlan-config.php      export-ignore
+
+# Static analysis
+/phpstan.neon           export-ignore
+/phpstan-bootstrap.php  export-ignore
+/phpstan-stubs/         export-ignore
+
+# Code style
+/.php-cs-fixer.php      export-ignore
+/.php-cs-fixer.cache    export-ignore
+
+# Linting (JS)
+/.oxlintrc.json         export-ignore
+
+# CI / GitHub
+/.github/               export-ignore
+
+# Dev tooling (keep tooling/server/ — needed at runtime by garnet serve)
+/tooling/mcp/           export-ignore
+/tooling/scripts/       export-ignore
+/.crush/                export-ignore
+
+# Docs (dev-oriented, not needed at runtime)
+/docs/                  export-ignore
+/AGENTS.md              export-ignore
+
+# Community / meta (not needed in vendor/)
+/CONTRIBUTING.md        export-ignore
+/CODE_OF_CONDUCT.md     export-ignore
+/SECURITY.md            export-ignore
+
+# Node (should already be gitignored, but just in case)
+/node_modules/          export-ignore
+
+# Composer vendor (same)
+/vendor/                export-ignore

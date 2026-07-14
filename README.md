@@ -44,8 +44,8 @@ cd garnet-framework && composer install
 
 # 2. Scaffold an app from the bundled template. It's born ready —
 #    vendor, node deps, Playwright and a working build, zero manual config.
-php garnet app:create MyApp
-cd ../Apps/MyApp
+php bin/garnet app:create MyApp
+cd MyApp
 
 # 3. Build assets and run it (port 8001).
 php garnet build
@@ -53,7 +53,7 @@ php garnet serve
 ```
 
 That's the whole quickstart — no separate frontend install step. Re-run the
-installer any time with `php garnet setup`. The rest of this README explains
+installer any time with `php bin/garnet setup`. The rest of this README explains
 what you just installed and where to go next.
 
 ---
@@ -114,7 +114,7 @@ composer require phpcraftdream/garnet-framework
 ```
 
 You typically don't `require` Garnet directly — you create an app from
-the bundled template (`php garnet app:create MyApp`), which pins the
+the bundled template (`php bin/garnet app:create MyApp`), which pins the
 dependency and wires the composer path-repo for you.
 
 ### Requirements
@@ -136,7 +136,7 @@ Once `app:create` finishes you have a working app that:
   rebuilds on save.
 
 ```
-my-app/
+MyApp/
 ├── garnet              # local CLI wrapper
 ├── composer.json
 ├── package.json

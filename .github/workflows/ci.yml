@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ['8.1', '8.2', '8.3']
+        php: ['8.1', '8.2', '8.3', '8.4', '8.5']
     steps:
       - uses: actions/checkout@v4
 
@@ -55,7 +55,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ['8.1', '8.2', '8.3']
+        php: ['8.1', '8.2', '8.3', '8.4', '8.5']
     steps:
       - uses: actions/checkout@v4
 
@@ -87,7 +87,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ['8.1', '8.2', '8.3']
+        php: ['8.1', '8.2', '8.3', '8.4', '8.5']
     services:
       mysql:
         image: mysql:8.0
@@ -339,3 +339,77 @@ jobs:
           status=$?
           kill "$SERVER_PID" 2>/dev/null || true
           exit $status
+
+  dependency-install:
+    name: Dependency install — app:create from vendor (no symlink)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: garnet-framework
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, json, pdo, mysqli, intl
+          coverage: none
+          tools: composer:v2
+
+      # Create a blank Composer project that pulls garnet-framework as a
+      # normal dependency — NOT a symlinked path repo.  symlink:false makes
+      # Composer physically copy the files into vendor/, which is the closest
+      # approximation of a real Packagist install without network access.
+      - name: Create consumer project
+        run: |
+          mkdir -p "${{ runner.temp }}/consumer"
+          cd "${{ runner.temp }}/consumer"
+          composer init \
+            --name=test/consumer \
+            --description="CI consumer project" \
+            --stability=dev \
+            --no-interaction
+          composer config repositories.local \
+            '{"type":"path","url":"'"$GITHUB_WORKSPACE/garnet-framework"'","options":{"symlink":false}}'
+          composer config minimum-stability dev
+          composer config prefer-stable true
+
+      - name: Install garnet-framework as dependency
+        working-directory: ${{ runner.temp }}/consumer
+        run: |
+          GARNET_SKIP_NODE_SETUP=1 composer require phpcraftdream/garnet-framework:@dev --no-interaction --no-progress
+
+      - name: Mark checkout as dev directory
+        run: mkdir -p "$GITHUB_WORKSPACE/garnet-framework/.vscode"
+
+      # Scaffold an app via the vendor-installed CLI (not the checkout).
+      - name: Scaffold TestApp via vendor/bin/garnet
+        working-directory: ${{ runner.temp }}/consumer
+        run: |
+          GARNET_SKIP_NODE_SETUP=1 php vendor/bin/garnet app:create TestApp --target="${{ runner.temp }}/TestApp"
+
+      # Remove the original checkout to prove TestApp is self-contained.
+      - name: Remove framework checkout (prove independence)
+        run: rm -rf "$GITHUB_WORKSPACE/garnet-framework"
+
+      # Re-install TestApp deps — must succeed without the bootstrap checkout.
+      - name: composer install in TestApp (no bootstrap)
+        working-directory: ${{ runner.temp }}/TestApp
+        run: GARNET_SKIP_NODE_SETUP=1 composer install --no-progress --no-interaction
+
+      - name: Setup TestApp frontend
+        working-directory: ${{ runner.temp }}/TestApp
+        run: php garnet setup --skip-composer --skip-playwright
+
+      - name: Build TestApp
+        working-directory: ${{ runner.temp }}/TestApp
+        run: php garnet build
+
+      - name: Verify built assets
+        working-directory: ${{ runner.temp }}/TestApp
+        run: php garnet build:check
