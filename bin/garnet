@@ -36,8 +36,18 @@ while ($dir !== dirname($dir)) {
 }
 
 if ($autoload === null) {
-    // No app context — load the framework's own autoload.
-    $autoload = __DIR__ . '/../vendor/autoload.php';
+    // No app context — load the framework's own autoload. Two layouts are
+    // possible: a monorepo checkout (bin/ sits at the repo root, sibling to
+    // vendor/) or an installed Composer dependency (bin/ sits at
+    // vendor/phpcraftdream/garnet-framework/bin/, three levels below the
+    // consuming project's vendor/).
+    foreach (['/../vendor/autoload.php', '/../../../autoload.php'] as $rel) {
+        $candidate = __DIR__ . $rel;
+        if (file_exists($candidate)) {
+            $autoload = $candidate;
+            break;
+        }
+    }
 }
 
 require_once $autoload;
