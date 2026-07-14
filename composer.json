@@ -6,7 +6,7 @@
   "keywords": ["framework", "php", "web", "router", "mysql", "async"],
   "homepage": "https://github.com/PHPCraftdream/garnet-framework",
   "authors": [
-    {"name": "PHPCraftdream", "homepage": "https://github.com/PHPCraftdream"}
+    {"name": "PHPCraftdream", "email": "phpcraftdream@gmail.com", "homepage": "https://github.com/PHPCraftdream"}
   ],
   "support": {
     "issues": "https://github.com/PHPCraftdream/garnet-framework/issues",
