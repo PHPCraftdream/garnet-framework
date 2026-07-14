@@ -24,7 +24,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Cookies {
          */
         public function __construct(array $cookies = []) {
             foreach ($cookies as $cookie) {
-                $this->cookies[$cookie->getName()] = $cookie;
+                $this->cookies[(string)$cookie->getName()] = $cookie;
             }
         }
 
@@ -56,7 +56,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Cookies {
         }
 
         public function add(ICookie $cookie): ICookies {
-            $this->cookies[$cookie->getName()] = $cookie;
+            $this->cookies[(string)$cookie->getName()] = $cookie;
 
             return $this;
         }
@@ -147,7 +147,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Cookies {
                 $cookie->parse($cookieStr);
                 $cookie->startObserveChanges();
 
-                $this->cookies[$cookie->getName()] = $cookie;
+                $this->cookies[(string)$cookie->getName()] = $cookie;
             }
 
             return $this;
