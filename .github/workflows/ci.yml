@@ -137,7 +137,9 @@ jobs:
           echo "MySQL never came up"; exit 1
 
       - name: Bundle specs
-        # TestsInit/TestConfig/db.ini already targets host=localhost,
+        # TestsInit/TestConfig/db.ini targets host=127.0.0.1 (not
+        # "localhost" — PHP/mysqli treats literal "localhost" as a Unix
+        # socket request, which fails against Docker service containers),
         # port=3306, user=test, password=test, dbname=test — matches the
         # service container exactly, so no config override is needed.
         run: composer test:bundle
