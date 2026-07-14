@@ -161,7 +161,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
          * @return IDbMySQLiLink
          * @throws DbException
          */
-        public function queryAsync(string $sql, array $args = [], callable $callBack = null): IDbMySQLiLink {
+        public function queryAsync(string $sql, array $args = [], ?callable $callBack = null): IDbMySQLiLink {
             $newSql = empty($args) ? $sql : QueryTools::buildSql($sql, $args);
 
             return $this->getLink()->queryAsync($newSql, $callBack);

@@ -34,9 +34,9 @@ namespace PHPCraftdream\Garnet\Kernel\Interfaces\Cookies {
 
         public function getSameSite(): string;
 
-        public function setName(string $name = null): ICookie;
+        public function setName(?string $name = null): ICookie;
 
-        public function setValue(string $value = null): ICookie;
+        public function setValue(?string $value = null): ICookie;
 
         public function setSameSiteStrict(): ICookie;
 

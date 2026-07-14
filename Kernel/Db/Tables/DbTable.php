@@ -54,7 +54,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
          * @throws DbException
          * @throws IniConfigException
          */
-        public function dropTableAsync(callable $callback = null): void {
+        public function dropTableAsync(?callable $callback = null): void {
             $this->getQueryEx()->exAsync("DROP TABLE IF EXISTS `{$this->getTableName()}`;", [], $callback);
         }
 
@@ -190,7 +190,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
          * @throws Exception
          * @throws IniConfigException
          */
-        public function getCountAsync(callable $queryCallback = null, callable $callback = null): void {
+        public function getCountAsync(?callable $queryCallback = null, ?callable $callback = null): void {
             $query = $this->newSelect();
 
             if ($queryCallback) {
@@ -207,7 +207,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
          * @throws IniConfigException
          * @throws Exception
          */
-        public function getCount(callable $queryCallback = null): int {
+        public function getCount(?callable $queryCallback = null): int {
             $query = $this->newSelect();
 
             if ($queryCallback) {
@@ -226,7 +226,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
          * @throws Exception
          * @throws IniConfigException
          */
-        public function existsByIdAsync(string|int $id, callable $callback = null): void {
+        public function existsByIdAsync(string|int $id, ?callable $callback = null): void {
             $this->getCountAsync(
                 function (SelectInterface $query) use ($id): void {
                     $pk = $this->getPrimaryKey();
@@ -264,7 +264,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
          * @throws Exception
          * @throws IniConfigException
          */
-        public function selectAllAsync(Closure $queryCallback = null, callable $callback = null): IDbMySQLiLink {
+        public function selectAllAsync(?Closure $queryCallback = null, ?callable $callback = null): IDbMySQLiLink {
             $query = $this->newSelect();
 
             if (is_callable($queryCallback)) {
@@ -281,7 +281,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
          * @throws IniConfigException
          * @throws Exception
          */
-        public function selectAll(Closure $queryCallback = null): array {
+        public function selectAll(?Closure $queryCallback = null): array {
             $query = $this->newSelect();
 
             if (is_callable($queryCallback)) {
@@ -302,7 +302,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
          * @throws Exception
          * @throws IniConfigException
          */
-        public function selectPageAsync(int $page, Closure $queryCallback = null, callable $callback = null): IDbMySQLiLink {
+        public function selectPageAsync(int $page, ?Closure $queryCallback = null, ?callable $callback = null): IDbMySQLiLink {
             $query = $this->newSelect();
             $count = $this->getCount($queryCallback);
             $pageSize = $this->getPageSize();
@@ -331,7 +331,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
          * @throws Exception
          * @throws IniConfigException
          */
-        public function selectPage(int $page, Closure $queryCallback = null): PageData {
+        public function selectPage(int $page, ?Closure $queryCallback = null): PageData {
             $query = $this->newSelect();
             $count = $this->getCount($queryCallback);
             $pageSize = $this->getPageSize();
@@ -365,8 +365,8 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
         public function selectByFieldAsync(
             string $field,
             int|string|array $value,
-            Closure $queryCallback = null,
-            callable $callback = null
+            ?Closure $queryCallback = null,
+            ?callable $callback = null
         ): IDbMySQLiLink {
             $query = $this->newSelect();
 
@@ -392,7 +392,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
          * @throws Exception
          * @throws IniConfigException
          */
-        public function selectByField(string $field, int|string|array $value, Closure $queryCallback = null): array {
+        public function selectByField(string $field, int|string|array $value, ?Closure $queryCallback = null): array {
             $query = $this->newSelect();
 
             if (is_array($value)) {
@@ -419,7 +419,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
         public function simpleSelectByFieldAsync(
             string $field,
             int|float|string $value,
-            callable $callback = null,
+            ?callable $callback = null,
         ): IDbMySQLiLink {
             $where = QueryTools::fieldVal($field, $value);
             $sql = "SELECT * FROM `{$this->getTableName()}` WHERE {$where};";
@@ -458,8 +458,8 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
         public function selectOneByFieldAsync(
             string $field,
             int|string|array $value,
-            Closure $queryCallback = null,
-            callable $callback = null,
+            ?Closure $queryCallback = null,
+            ?callable $callback = null,
         ): IDbMySQLiLink {
             return $this->selectByFieldAsync($field, $value, $queryCallback, fn ($rows) => $callback($rows[0] ?? null));
         }
@@ -473,7 +473,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
          * @throws Exception
          * @throws IniConfigException
          */
-        public function selectOneByField(string $field, int|string|array $value, Closure $queryCallback = null): ?array {
+        public function selectOneByField(string $field, int|string|array $value, ?Closure $queryCallback = null): ?array {
             $result = $this->selectByField($field, $value, $queryCallback);
 
             return $result[0] ?? null;
@@ -490,7 +490,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
         public function simpleSelectOneByFieldAsync(
             string $field,
             int|float|string $value,
-            callable $callback = null,
+            ?callable $callback = null,
         ): IDbMySQLiLink {
             $where = QueryTools::fieldVal($field, $value);
             $sql = "SELECT * FROM `{$this->getTableName()}` WHERE {$where};";
@@ -527,8 +527,8 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
          */
         public function selectByIdsAsync(
             int|string|array $ids,
-            Closure $queryCallback = null,
-            callable $callback = null
+            ?Closure $queryCallback = null,
+            ?callable $callback = null
         ): IDbMySQLiLink {
             $pk = $this->getPrimaryKey();
             $query = $this->newSelect();
@@ -554,7 +554,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
          * @throws Exception
          * @throws IniConfigException
          */
-        public function selectByIds(int|string|array $ids, Closure $queryCallback = null): array {
+        public function selectByIds(int|string|array $ids, ?Closure $queryCallback = null): array {
             $pk = $this->getPrimaryKey();
             $query = $this->newSelect();
 
@@ -582,7 +582,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
          * @throws Exception
          * @throws IniConfigException
          */
-        public function selectByIdAsync(int|string $id, Closure $queryCallback = null, callable $callback = null): IDbMySQLiLink {
+        public function selectByIdAsync(int|string $id, ?Closure $queryCallback = null, ?callable $callback = null): IDbMySQLiLink {
             $where = function (SelectInterface $query) use ($id, $queryCallback): void {
                 $pk = $this->getPrimaryKey();
                 $query->where("`{$pk}` = ?", [$id]);
@@ -604,7 +604,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
          * @throws Exception
          * @throws IniConfigException
          */
-        public function selectById(int|string $id, Closure $queryCallback = null): ?array {
+        public function selectById(int|string $id, ?Closure $queryCallback = null): ?array {
             $where = function (SelectInterface $query) use ($id, $queryCallback): void {
                 $pk = $this->getPrimaryKey();
                 $query->where("`{$pk}` = ?", [$id]);
@@ -631,7 +631,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
          * @throws Exception
          * @throws IniConfigException
          */
-        public function insertAsync(array $data, Closure $queryCallback = null, callable $callback = null): IDbMySQLiLink {
+        public function insertAsync(array $data, ?Closure $queryCallback = null, ?callable $callback = null): IDbMySQLiLink {
             $query = $this->newInsert();
             $query->cols($data);
 
@@ -650,7 +650,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
          * @throws Exception
          * @throws IniConfigException
          */
-        public function insert(array $data, Closure $queryCallback = null): false|string {
+        public function insert(array $data, ?Closure $queryCallback = null): false|string {
             $query = $this->newInsert();
             $query->cols($data);
 
@@ -671,7 +671,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
          * @throws DbException
          * @throws IniConfigException
          */
-        public function insertBatchAsync(array $queryData, string $onConflict = null, callable $callback = null): IDbMySQLiLink {
+        public function insertBatchAsync(array $queryData, ?string $onConflict = null, ?callable $callback = null): IDbMySQLiLink {
             [$sql, $params] = QueryTools::makeInsertBatchIndexed(
                 $this->getTableName(),
                 $queryData,
@@ -689,7 +689,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
          * @throws DbException
          * @throws IniConfigException
          */
-        public function insertBatch(array $queryData, string $onConflict = null): bool {
+        public function insertBatch(array $queryData, ?string $onConflict = null): bool {
             [$sql, $params] = QueryTools::makeInsertBatchIndexed(
                 $this->getTableName(),
                 $queryData,
@@ -711,7 +711,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
          * @throws Exception
          * @throws IniConfigException
          */
-        public function updateByAsync(array $updateData, Closure $queryCallback, callable $callback = null): IDbMySQLiLink {
+        public function updateByAsync(array $updateData, Closure $queryCallback, ?callable $callback = null): IDbMySQLiLink {
             $query = $this->newUpdate();
 
             $query->cols($updateData);
@@ -748,7 +748,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
          * @throws Exception
          * @throws IniConfigException
          */
-        public function updateByIdAsync(array $updateData, int|string|array $id, callable $callback = null): IDbMySQLiLink {
+        public function updateByIdAsync(array $updateData, int|string|array $id, ?callable $callback = null): IDbMySQLiLink {
             $pk = $this->getPrimaryKey();
             $query = $this->newUpdate();
             $query->cols($updateData);
@@ -800,7 +800,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
             array $updateData,
             string $field,
             int|string|array $value,
-            callable $callback = null
+            ?callable $callback = null
         ): IDbMySQLiLink {
             $query = $this->newUpdate();
             $query->cols($updateData);
@@ -846,7 +846,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
          * @throws Exception
          * @throws IniConfigException
          */
-        public function deleteByAsync(Closure $queryCallback, callable $callback = null): IDbMySQLiLink {
+        public function deleteByAsync(Closure $queryCallback, ?callable $callback = null): IDbMySQLiLink {
             $query = $this->newDelete();
             $queryCallback($query);
 
@@ -877,7 +877,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
          * @throws Exception
          * @throws IniConfigException
          */
-        public function deleteByIdAsync(int|string|array $id, callable $callback = null): IDbMySQLiLink {
+        public function deleteByIdAsync(int|string|array $id, ?callable $callback = null): IDbMySQLiLink {
             $pk = $this->getPrimaryKey();
             $query = $this->newDelete();
 
@@ -921,7 +921,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
          * @throws Exception
          * @throws IniConfigException
          */
-        public function deleteByFieldAsync(string $field, int|string|array $value, callable $callback = null): IDbMySQLiLink {
+        public function deleteByFieldAsync(string $field, int|string|array $value, ?callable $callback = null): IDbMySQLiLink {
             $query = $this->newDelete();
 
             if (is_array($value)) {

@@ -45,7 +45,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Controllers {
             ];
         }
 
-        public static function getAccounts(callable $selectCallback = null): array {
+        public static function getAccounts(?callable $selectCallback = null): array {
             $config = static::getEntityConfig();
 
             $accounts = Account::getAccounts(

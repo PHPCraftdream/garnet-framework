@@ -30,7 +30,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Spec {
 
         private int $nextId = 1;
 
-        public function insert(array $data, Closure $queryCallback = null): false|string {
+        public function insert(array $data, ?Closure $queryCallback = null): false|string {
             $this->insertCalls[] = $data;
             $id = (string)$this->nextId++;
             $data['id'] = $id;
@@ -39,7 +39,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Spec {
             return $id;
         }
 
-        public function selectAll(Closure $queryCallback = null): array {
+        public function selectAll(?Closure $queryCallback = null): array {
             return array_values($this->rows);
         }
 
@@ -73,7 +73,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Spec {
 
         private int $nextId = 1;
 
-        public function insert(array $data, Closure $queryCallback = null): false|string {
+        public function insert(array $data, ?Closure $queryCallback = null): false|string {
             $this->insertCalls[] = $data;
             $id = (string)$this->nextId++;
             $data['id'] = $id;
@@ -82,7 +82,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Spec {
             return $id;
         }
 
-        public function updateByField(array $updateData, string $field, mixed $value, callable $callback = null): bool {
+        public function updateByField(array $updateData, string $field, mixed $value, ?callable $callback = null): bool {
             $this->updateCalls[] = ['data' => $updateData, 'field' => $field, 'value' => $value];
 
             foreach ($this->rows as &$row) {
@@ -104,7 +104,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Spec {
             return null;
         }
 
-        public function selectAll(Closure $queryCallback = null): array {
+        public function selectAll(?Closure $queryCallback = null): array {
             return array_values($this->rows);
         }
     }

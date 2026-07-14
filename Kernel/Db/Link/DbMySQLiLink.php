@@ -42,7 +42,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
             return $this->id;
         }
 
-        public function queryAsync(string $sql, callable $callBack = null): IDbMySQLiLink {
+        public function queryAsync(string $sql, ?callable $callBack = null): IDbMySQLiLink {
             if ($this->busy) {
                 throw new DbException('Link is busy');
             }

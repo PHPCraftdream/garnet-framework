@@ -233,7 +233,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Account {
          * @param string|null $default
          * @return string|null
          */
-        public function readParam(string $name, string $default = null): ?string {
+        public function readParam(string $name, ?string $default = null): ?string {
             return array_key_exists($name, $this->params) ? (string)$this->params[$name] : $default;
         }
 
@@ -260,7 +260,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Account {
          * @param string|null $default
          * @return string|null
          */
-        public function readData(string $name, string $default = null): ?string {
+        public function readData(string $name, ?string $default = null): ?string {
             return array_key_exists($name, $this->data) ? $this->data[$name] : $default;
         }
 
@@ -519,7 +519,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Account {
             }
         }
 
-        public static function getAccounts(callable $selectCallback = null, array $accountDataFields = null): array {
+        public static function getAccounts(?callable $selectCallback = null, ?array $accountDataFields = null): array {
             $closure = is_callable($selectCallback) ? $selectCallback(...) : (function (SelectInterface $select): void {
                 $select->orderBy(['id desc']);
             })(...);

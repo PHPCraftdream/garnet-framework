@@ -34,7 +34,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages\Spec {
 
         private int $nextId = 1;
 
-        public function insert(array $data, Closure $queryCallback = null): false|string {
+        public function insert(array $data, ?Closure $queryCallback = null): false|string {
             $id = (string)$this->nextId++;
             $data['id'] = $id;
             $this->rows[$id] = $data;
@@ -42,7 +42,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages\Spec {
             return $id;
         }
 
-        public function updateById(array $updateData, int|string|array $id, callable $callback = null): bool {
+        public function updateById(array $updateData, int|string|array $id, ?callable $callback = null): bool {
             $id = (string)$id;
 
             if (isset($this->rows[$id])) {
@@ -52,7 +52,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages\Spec {
             return true;
         }
 
-        public function selectOneByField(string $field, mixed $value, Closure $queryCallback = null): ?array {
+        public function selectOneByField(string $field, mixed $value, ?Closure $queryCallback = null): ?array {
             foreach ($this->rows as $row) {
                 if ((string)($row[$field] ?? '') === (string)$value) {
                     return $row;
@@ -62,11 +62,11 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages\Spec {
             return null;
         }
 
-        public function selectAll(Closure $queryCallback = null): array {
+        public function selectAll(?Closure $queryCallback = null): array {
             return array_values($this->rows);
         }
 
-        public function deleteByField(string $field, mixed $value, Closure $queryCallback = null): bool {
+        public function deleteByField(string $field, mixed $value, ?Closure $queryCallback = null): bool {
             foreach ($this->rows as $key => $row) {
                 if ((string)($row[$field] ?? '') === (string)$value) {
                     unset($this->rows[$key]);
@@ -90,7 +90,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages\Spec {
 
         private int $nextId = 100;
 
-        public function insert(array $data, Closure $queryCallback = null): false|string {
+        public function insert(array $data, ?Closure $queryCallback = null): false|string {
             $id = (string)$this->nextId++;
             $data['id'] = $id;
             $this->rows[$id] = $data;
@@ -98,7 +98,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages\Spec {
             return $id;
         }
 
-        public function updateById(array $updateData, int|string|array $id, callable $callback = null): bool {
+        public function updateById(array $updateData, int|string|array $id, ?callable $callback = null): bool {
             $id = (string)$id;
 
             if (isset($this->rows[$id])) {
@@ -108,7 +108,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages\Spec {
             return true;
         }
 
-        public function selectOneByField(string $field, mixed $value, Closure $queryCallback = null): ?array {
+        public function selectOneByField(string $field, mixed $value, ?Closure $queryCallback = null): ?array {
             foreach ($this->rows as $row) {
                 if ((string)($row[$field] ?? '') === (string)$value) {
                     return $row;
@@ -118,11 +118,11 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages\Spec {
             return null;
         }
 
-        public function selectAll(Closure $queryCallback = null): array {
+        public function selectAll(?Closure $queryCallback = null): array {
             return array_values($this->rows);
         }
 
-        public function deleteByField(string $field, mixed $value, Closure $queryCallback = null): bool {
+        public function deleteByField(string $field, mixed $value, ?Closure $queryCallback = null): bool {
             foreach ($this->rows as $key => $row) {
                 if ((string)($row[$field] ?? '') === (string)$value) {
                     unset($this->rows[$key]);
@@ -146,7 +146,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages\Spec {
 
         private int $nextId = 200;
 
-        public function insert(array $data, Closure $queryCallback = null): false|string {
+        public function insert(array $data, ?Closure $queryCallback = null): false|string {
             $id = (string)$this->nextId++;
             $data['id'] = $id;
             $this->rows[$id] = $data;
@@ -154,7 +154,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages\Spec {
             return $id;
         }
 
-        public function updateById(array $updateData, int|string|array $id, callable $callback = null): bool {
+        public function updateById(array $updateData, int|string|array $id, ?callable $callback = null): bool {
             $id = (string)$id;
 
             if (isset($this->rows[$id])) {
@@ -164,7 +164,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages\Spec {
             return true;
         }
 
-        public function selectOneByField(string $field, mixed $value, Closure $queryCallback = null): ?array {
+        public function selectOneByField(string $field, mixed $value, ?Closure $queryCallback = null): ?array {
             foreach ($this->rows as $row) {
                 if ((string)($row[$field] ?? '') === (string)$value) {
                     return $row;
@@ -174,11 +174,11 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages\Spec {
             return null;
         }
 
-        public function selectAll(Closure $queryCallback = null): array {
+        public function selectAll(?Closure $queryCallback = null): array {
             return array_values($this->rows);
         }
 
-        public function deleteByField(string $field, mixed $value, Closure $queryCallback = null): bool {
+        public function deleteByField(string $field, mixed $value, ?Closure $queryCallback = null): bool {
             foreach ($this->rows as $key => $row) {
                 if ((string)($row[$field] ?? '') === (string)$value) {
                     unset($this->rows[$key]);

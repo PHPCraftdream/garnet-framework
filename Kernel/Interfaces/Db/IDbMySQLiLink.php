@@ -11,7 +11,7 @@ interface IDbMySQLiLink {
 
     public function isBusy(): bool;
 
-    public function queryAsync(string $sql, callable $callBack = null): IDbMySQLiLink;
+    public function queryAsync(string $sql, ?callable $callBack = null): IDbMySQLiLink;
 
     public function query(string $sql, array $params = []): array|int|string|bool;
 

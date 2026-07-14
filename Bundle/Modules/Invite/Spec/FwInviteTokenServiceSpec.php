@@ -31,7 +31,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Invite\Spec {
 
         private int $nextId = 1;
 
-        public function insert(array $data, Closure $queryCallback = null): false|string {
+        public function insert(array $data, ?Closure $queryCallback = null): false|string {
             $this->insertCalls[] = $data;
             $id = (string)$this->nextId++;
             $data['id'] = $id;
@@ -40,7 +40,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Invite\Spec {
             return $id;
         }
 
-        public function updateById(array $updateData, int|string|array $id, callable $callback = null): bool {
+        public function updateById(array $updateData, int|string|array $id, ?callable $callback = null): bool {
             $id = (string)$id;
             $this->updateCalls[] = ['data' => $updateData, 'id' => $id];
 
@@ -51,11 +51,11 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Invite\Spec {
             return true;
         }
 
-        public function selectById(int|string $id, Closure $queryCallback = null): ?array {
+        public function selectById(int|string $id, ?Closure $queryCallback = null): ?array {
             return $this->rows[(string)$id] ?? null;
         }
 
-        public function selectAll(Closure $queryCallback = null): array {
+        public function selectAll(?Closure $queryCallback = null): array {
             return array_values($this->rows);
         }
 
@@ -85,7 +85,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Invite\Spec {
 
         private int $nextId = 1;
 
-        public function insert(array $data, Closure $queryCallback = null): false|string {
+        public function insert(array $data, ?Closure $queryCallback = null): false|string {
             $this->insertCalls[] = $data;
 
             return (string)$this->nextId++;
@@ -113,7 +113,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Invite\Spec {
             return false;
         }
 
-        public function queryAsync(string $sql, callable $callBack = null): IDbMySQLiLink {
+        public function queryAsync(string $sql, ?callable $callBack = null): IDbMySQLiLink {
             return $this;
         }
 

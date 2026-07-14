@@ -13,7 +13,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router {
          */
         public static function internalError(
             string $text = 'Internal server error',
-            ResponseInterface $response = null
+            ?ResponseInterface $response = null
         ): ResponseInterface {
             $response ??= new Response();
 
@@ -30,7 +30,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router {
          */
         public static function notFound(
             string $text = 'Not found',
-            ResponseInterface $response = null
+            ?ResponseInterface $response = null
         ): ResponseInterface {
             $response ??= new Response();
 
@@ -45,7 +45,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router {
          * @param ResponseInterface|null $response
          * @return ResponseInterface
          */
-        public static function ok(string $text, ResponseInterface $response = null): ResponseInterface {
+        public static function ok(string $text, ?ResponseInterface $response = null): ResponseInterface {
             $response ??= new Response();
 
             $response = $response
@@ -64,7 +64,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router {
          * @param int $status
          * @return ResponseInterface
          */
-        public static function JSON(mixed $item = null, ResponseInterface $response = null, int $status = 200): ResponseInterface {
+        public static function JSON(mixed $item = null, ?ResponseInterface $response = null, int $status = 200): ResponseInterface {
             $response ??= new Response();
             $newResponse = $response
                 ->withStatus($status, CodesTool::getReasonByCode($status))

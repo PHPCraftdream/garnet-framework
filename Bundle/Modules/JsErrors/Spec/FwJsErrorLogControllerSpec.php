@@ -29,7 +29,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\JsErrors\Spec {
 
         private int $nextId = 1;
 
-        public function insert(array $data, Closure $queryCallback = null): false|string {
+        public function insert(array $data, ?Closure $queryCallback = null): false|string {
             $this->insertCalls[] = $data;
             $id = (string)$this->nextId++;
             $data['id'] = $id;
@@ -38,7 +38,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\JsErrors\Spec {
             return $id;
         }
 
-        public function updateById(array $updateData, int|string|array $id, callable $callback = null): bool {
+        public function updateById(array $updateData, int|string|array $id, ?callable $callback = null): bool {
             $id = (string)$id;
             $this->updateCalls[] = ['data' => $updateData, 'id' => $id];
 
@@ -49,7 +49,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\JsErrors\Spec {
             return true;
         }
 
-        public function selectOneByField(string $field, mixed $value, Closure $queryCallback = null): ?array {
+        public function selectOneByField(string $field, mixed $value, ?Closure $queryCallback = null): ?array {
             foreach ($this->rows as $row) {
                 if ($row[$field] === $value) {
                     return $row;

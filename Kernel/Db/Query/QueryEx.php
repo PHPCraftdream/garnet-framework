@@ -45,7 +45,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
          * @return IDbMySQLiLink
          * @throws DbException
          */
-        protected function processQueryAsync(QueryInterface $query, callable $callback = null): IDbMySQLiLink {
+        protected function processQueryAsync(QueryInterface $query, ?callable $callback = null): IDbMySQLiLink {
             [$sql, $values] = $this->getSqlItems($query);
 
             return $this->dbPool->queryAsync($sql, $values, $callback);
@@ -70,7 +70,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
          * @return IDbMySQLiLink
          * @throws DbException
          */
-        public function exSelectAsync(SelectInterface $query, callable $callback = null): IDbMySQLiLink {
+        public function exSelectAsync(SelectInterface $query, ?callable $callback = null): IDbMySQLiLink {
             return $this->processQueryAsync($query, $callback);
         }
 
@@ -91,7 +91,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
          * @return IDbMySQLiLink
          * @throws DbException
          */
-        public function selectCountAsync(SelectInterface $query, callable $callback = null): IDbMySQLiLink {
+        public function selectCountAsync(SelectInterface $query, ?callable $callback = null): IDbMySQLiLink {
             $query->resetCols();
             $query->cols(["count(*) as '__cnt__'"]);
             [$sql, $values] = $this->getSqlItems($query);
@@ -121,7 +121,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
          * @return IDbMySQLiLink
          * @throws DbException
          */
-        public function exInsertAsync(InsertInterface $query, callable $callback = null): IDbMySQLiLink {
+        public function exInsertAsync(InsertInterface $query, ?callable $callback = null): IDbMySQLiLink {
             return $this->processQueryAsync($query, $callback);
         }
 
@@ -144,7 +144,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
          * @return IDbMySQLiLink
          * @throws DbException
          */
-        public function exUpdateAsync(UpdateInterface $query, callable $callback = null): IDbMySQLiLink {
+        public function exUpdateAsync(UpdateInterface $query, ?callable $callback = null): IDbMySQLiLink {
             return $this->processQueryAsync($query, $callback);
         }
 
@@ -165,7 +165,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
          * @return IDbMySQLiLink
          * @throws DbException
          */
-        public function exDeleteAsync(DeleteInterface $query, callable $callback = null): IDbMySQLiLink {
+        public function exDeleteAsync(DeleteInterface $query, ?callable $callback = null): IDbMySQLiLink {
             return $this->processQueryAsync($query, $callback);
         }
 
@@ -187,7 +187,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
          * @return IDbMySQLiLink
          * @throws DbException
          */
-        public function exAsync(string $sql, array $values = [], callable $callback = null): IDbMySQLiLink {
+        public function exAsync(string $sql, array $values = [], ?callable $callback = null): IDbMySQLiLink {
             return $this->dbPool->queryAsync($sql, $values, $callback);
         }
 
@@ -209,7 +209,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
          * @return IDbMySQLiLink
          * @throws DbException
          */
-        public function exInsertIgnoreAsync(InsertInterface $query, callable $callback = null): IDbMySQLiLink {
+        public function exInsertIgnoreAsync(InsertInterface $query, ?callable $callback = null): IDbMySQLiLink {
             $values = $query->getBindValues();
             $sql = $query->getStatement();
 
@@ -243,7 +243,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
          * @return IDbMySQLiLink
          * @throws DbException
          */
-        public function exFetchAsync(string $sql, array $values = [], callable $callback = null): IDbMySQLiLink {
+        public function exFetchAsync(string $sql, array $values = [], ?callable $callback = null): IDbMySQLiLink {
             [$sql, $values] = QueryTools::patchArgsIndexed($sql, $values);
 
             return $this->dbPool->queryAsync($sql, $values, $callback);

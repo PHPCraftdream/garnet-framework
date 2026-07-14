@@ -49,7 +49,7 @@ describe('BaseEntity Integration', function (): void {
             return $item;
         }
 
-        public function getFieldsInfo(array $fields = null): array {
+        public function getFieldsInfo(?array $fields = null): array {
             $result = [
                 'id' => [
                     'name' => 'ID',

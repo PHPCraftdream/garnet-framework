@@ -38,7 +38,7 @@ describe('Account', function (): void {
 
         $dbAccountMock = Mockery::mock(DbAccount::class)->shouldIgnoreMissing();
         $dbAccountMock->shouldReceive('simpleSelectOneByFieldAsync')
-            ->andReturnUsing(function (string $field, $value, callable $callback = null) use ($mockLink): IDbMySQLiLink {
+            ->andReturnUsing(function (string $field, $value, ?callable $callback = null) use ($mockLink): IDbMySQLiLink {
                 if ($callback) {
                     $callback(null);
                 }
@@ -53,7 +53,7 @@ describe('Account', function (): void {
         // that as a safe no-op).
         $dbAccountDataMock = Mockery::mock(DbAccountData::class)->shouldIgnoreMissing();
         $dbAccountDataMock->shouldReceive('simpleSelectByFieldAsync')
-            ->andReturnUsing(function (string $field, $value, callable $callback = null) use ($mockLink): IDbMySQLiLink {
+            ->andReturnUsing(function (string $field, $value, ?callable $callback = null) use ($mockLink): IDbMySQLiLink {
                 if ($callback) {
                     $callback([]);
                 }

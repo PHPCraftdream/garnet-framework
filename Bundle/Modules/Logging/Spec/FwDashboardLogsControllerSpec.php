@@ -24,14 +24,14 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\LogsController {
 
         public array $rows = [];
 
-        public function insert(array $data, Closure $queryCallback = null): false|string {
+        public function insert(array $data, ?Closure $queryCallback = null): false|string {
             $data['id'] = (string)(count($this->rows) + 1);
             $this->rows[] = $data;
 
             return $data['id'];
         }
 
-        public function selectAll(Closure $queryCallback = null): array {
+        public function selectAll(?Closure $queryCallback = null): array {
             return array_values($this->rows);
         }
 

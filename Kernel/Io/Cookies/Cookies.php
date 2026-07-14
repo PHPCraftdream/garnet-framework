@@ -118,7 +118,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Cookies {
             return $this;
         }
 
-        protected function newCookie(string $name = null): ICookie {
+        protected function newCookie(?string $name = null): ICookie {
             return new Cookie($name);
         }
 

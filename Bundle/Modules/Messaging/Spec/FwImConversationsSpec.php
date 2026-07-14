@@ -27,7 +27,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Spec {
 
         // -- DbTable instance methods used by static calls via static::get() ----
 
-        public function insert(array $data, Closure $queryCallback = null): false|string {
+        public function insert(array $data, ?Closure $queryCallback = null): false|string {
             $this->insertCalls[] = $data;
             $id = (string)$this->nextId++;
             $data['id'] = $id;
@@ -36,7 +36,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Spec {
             return $id;
         }
 
-        public function selectOneByField(string $field, mixed $value, Closure $queryCallback = null): ?array {
+        public function selectOneByField(string $field, mixed $value, ?Closure $queryCallback = null): ?array {
             foreach ($this->rows as $row) {
                 if (isset($row[$field]) && (string)$row[$field] === (string)$value) {
                     return $row;
@@ -48,7 +48,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Spec {
 
         // Override selectAll so that findOrCreate's closure receives our fake
         // object implementing SelectInterface (via adapter pattern).
-        public function selectAll(Closure $queryCallback = null): array {
+        public function selectAll(?Closure $queryCallback = null): array {
             if ($queryCallback === null) {
                 return array_values($this->rows);
             }

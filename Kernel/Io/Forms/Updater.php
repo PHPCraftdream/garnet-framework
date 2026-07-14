@@ -93,7 +93,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Forms {
             return [[$obj, $call], $argsAdd];
         }
 
-        public function validateByFieldsInfo(array $fieldsInfo, callable $filter = null): void {
+        public function validateByFieldsInfo(array $fieldsInfo, ?callable $filter = null): void {
             foreach ($fieldsInfo as $name => $info) {
                 $data = $this->saveData[$name] ?? null;
 

@@ -27,7 +27,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Spec {
 
         private int $nextId = 1;
 
-        public function insert(array $data, Closure $queryCallback = null): false|string {
+        public function insert(array $data, ?Closure $queryCallback = null): false|string {
             $id = (string)$this->nextId++;
             $data['id'] = $id;
             $this->rows[$id] = $data;
@@ -35,7 +35,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Spec {
             return $id;
         }
 
-        public function selectOneByField(string $field, mixed $value, Closure $queryCallback = null): ?array {
+        public function selectOneByField(string $field, mixed $value, ?Closure $queryCallback = null): ?array {
             foreach ($this->rows as $row) {
                 if ((string)($row[$field] ?? null) === (string)$value) {
                     return $row;
@@ -45,15 +45,15 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Spec {
             return null;
         }
 
-        public function selectAll(Closure $queryCallback = null): array {
+        public function selectAll(?Closure $queryCallback = null): array {
             return array_values($this->rows);
         }
 
-        public function selectByField(string $field, mixed $value, Closure $queryCallback = null): array {
+        public function selectByField(string $field, mixed $value, ?Closure $queryCallback = null): array {
             return array_values(array_filter($this->rows, fn ($r) => (string)($r[$field] ?? null) === (string)$value));
         }
 
-        public function updateByField(array $data, string $field, mixed $value, Closure $queryCallback = null): bool {
+        public function updateByField(array $data, string $field, mixed $value, ?Closure $queryCallback = null): bool {
             foreach ($this->rows as &$row) {
                 if ((string)($row[$field] ?? null) === (string)$value) {
                     $row = array_merge($row, $data);
@@ -95,7 +95,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Spec {
 
         private int $nextId = 1;
 
-        public function insert(array $data, Closure $queryCallback = null): false|string {
+        public function insert(array $data, ?Closure $queryCallback = null): false|string {
             $this->insertCalls[] = $data;
             $id = (string)$this->nextId++;
             $data['id'] = $id;
@@ -104,7 +104,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Spec {
             return $id;
         }
 
-        public function selectOneByField(string $field, mixed $value, Closure $queryCallback = null): ?array {
+        public function selectOneByField(string $field, mixed $value, ?Closure $queryCallback = null): ?array {
             foreach ($this->rows as $row) {
                 if ((string)($row[$field] ?? null) === (string)$value) {
                     return $row;
@@ -114,7 +114,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Spec {
             return null;
         }
 
-        public function selectAll(Closure $queryCallback = null): array {
+        public function selectAll(?Closure $queryCallback = null): array {
             return array_values($this->rows);
         }
     }
@@ -130,7 +130,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Spec {
 
         private int $nextId = 1;
 
-        public function insert(array $data, Closure $queryCallback = null): false|string {
+        public function insert(array $data, ?Closure $queryCallback = null): false|string {
             $id = (string)$this->nextId++;
             $data['id'] = $id;
             $this->rows[$id] = $data;
@@ -138,7 +138,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Spec {
             return $id;
         }
 
-        public function selectOneByField(string $field, mixed $value, Closure $queryCallback = null): ?array {
+        public function selectOneByField(string $field, mixed $value, ?Closure $queryCallback = null): ?array {
             foreach ($this->rows as $row) {
                 if ((string)($row[$field] ?? null) === (string)$value) {
                     return $row;
@@ -148,7 +148,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Spec {
             return null;
         }
 
-        public function selectAll(Closure $queryCallback = null): array {
+        public function selectAll(?Closure $queryCallback = null): array {
             return array_values($this->rows);
         }
 
@@ -192,7 +192,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Spec {
 
         private int $nextId = 1;
 
-        public function insert(array $data, Closure $queryCallback = null): false|string {
+        public function insert(array $data, ?Closure $queryCallback = null): false|string {
             $this->insertCalls[] = $data;
             $id = (string)$this->nextId++;
             $data['id'] = $id;
@@ -201,7 +201,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Spec {
             return $id;
         }
 
-        public function selectAll(Closure $queryCallback = null): array {
+        public function selectAll(?Closure $queryCallback = null): array {
             return array_values($this->rows);
         }
     }

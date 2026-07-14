@@ -26,7 +26,7 @@ interface IDbPool {
      * @return IDbMySQLiLink
      * @throws DbException
      */
-    public function queryAsync(string $sql, array $args = [], callable $callBack = null): IDbMySQLiLink;
+    public function queryAsync(string $sql, array $args = [], ?callable $callBack = null): IDbMySQLiLink;
 
     /**
      * @param string $sql

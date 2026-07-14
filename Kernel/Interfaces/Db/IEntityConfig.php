@@ -10,7 +10,7 @@ interface IEntityConfig {
 
     public function idField(): string;
 
-    public function getFieldsInfo(array $fields = null): array;
+    public function getFieldsInfo(?array $fields = null): array;
 
     public function getGridInfo(): array;
 

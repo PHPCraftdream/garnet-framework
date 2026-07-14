@@ -69,7 +69,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Account {
             return $item;
         }
 
-        public function getFieldsInfo(array $fields = null): array {
+        public function getFieldsInfo(?array $fields = null): array {
             $account = Account::fromSession();
             $tf = FwI18n::getInstance();
 

@@ -26,7 +26,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\Mail {
 
         private int $nextId = 1;
 
-        public function insert(array $data, Closure $queryCallback = null): false|string {
+        public function insert(array $data, ?Closure $queryCallback = null): false|string {
             $this->insertCalls[] = $data;
             $id = (string)$this->nextId++;
             $data['id'] = $id;
@@ -49,7 +49,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\Mail {
 
         private int $nextId = 1;
 
-        public function insert(array $data, Closure $queryCallback = null): false|string {
+        public function insert(array $data, ?Closure $queryCallback = null): false|string {
             $this->insertCalls[] = $data;
             $id = (string)$this->nextId++;
             $data['id'] = $id;
@@ -58,7 +58,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\Mail {
             return $id;
         }
 
-        public function selectAll(Closure $queryCallback = null): array {
+        public function selectAll(?Closure $queryCallback = null): array {
             return array_values($this->rows);
         }
 

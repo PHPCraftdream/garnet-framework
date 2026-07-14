@@ -10,11 +10,11 @@ namespace PHPCraftdream\Garnet\Kernel\Interfaces {
 
         public function getData(): array;
 
-        public function readParam(string $name, string $default = null): ?string;
+        public function readParam(string $name, ?string $default = null): ?string;
 
         public function readParams(array $names): array;
 
-        public function readData(string $name, string $default = null): ?string;
+        public function readData(string $name, ?string $default = null): ?string;
 
         public function readDataParams(array $names): array;
 

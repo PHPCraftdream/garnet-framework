@@ -244,7 +244,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Spec {
 
         private int $nextId = 1;
 
-        public function insert(array $data, Closure $queryCallback = null): false|string {
+        public function insert(array $data, ?Closure $queryCallback = null): false|string {
             $id = (string)$this->nextId++;
             $data['id'] = $id;
             $this->rows[$id] = $data;
@@ -252,7 +252,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Spec {
             return $id;
         }
 
-        public function selectAll(Closure $queryCallback = null): array {
+        public function selectAll(?Closure $queryCallback = null): array {
             if ($queryCallback === null) {
                 return array_values($this->rows);
             }

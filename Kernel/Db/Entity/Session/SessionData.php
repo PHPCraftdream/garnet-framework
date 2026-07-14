@@ -19,7 +19,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session {
             return static::$instance;
         }
 
-        public function getDataAsync(string $sessionName, callable $callback = null): IDbMySQLiLink {
+        public function getDataAsync(string $sessionName, ?callable $callback = null): IDbMySQLiLink {
             $sessionTable = SessionTable::get();
 
             $onSelectSession = function ($sessionRow) use ($callback): void {
@@ -68,7 +68,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session {
             return $sessionTable->simpleSelectOneByFieldAsync('name', $sessionName, callback: $onSelectSession);
         }
 
-        public function touchSessionAsync(string $sessionValue, callable $callback = null): void {
+        public function touchSessionAsync(string $sessionValue, ?callable $callback = null): void {
             [$sql, $params] = QueryTools::makeInsertBatchNamed(
                 SessionTable::get()->getTableName(),
                 [['name' => $sessionValue, 'lastUsage' => time()]],
@@ -79,7 +79,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session {
             $queryEx->exAsync($sql, $params, $callback);
         }
 
-        public function flush(string $sessionValue, int|null $sessionId, array $data, callable $callback = null): void {
+        public function flush(string $sessionValue, int|null $sessionId, array $data, ?callable $callback = null): void {
             // The outer $sessionId is the caller's authoritative id (null on
             // first flush of a brand-new session, an int on every later one).
             // The inner closure receives a value derived from mysqli's

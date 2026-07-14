@@ -54,7 +54,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\BaseEntity {
             ];
         }
 
-        public function filterKeys(array $src, array $keys = null): array {
+        public function filterKeys(array $src, ?array $keys = null): array {
             if (empty($keys)) {
                 return $src;
             }

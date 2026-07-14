@@ -13,7 +13,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\BaseEntity {
             return $this->saveOne($postData, $fields, $saveFiles);
         }
 
-        public function getFieldsInfo(array $fields = null): array {
+        public function getFieldsInfo(?array $fields = null): array {
             return [];
         }
 

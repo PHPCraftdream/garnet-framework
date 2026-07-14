@@ -97,13 +97,13 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Spec {
             return $this->sameSite;
         }
 
-        public function setName(string $name = null): ICookie {
+        public function setName(?string $name = null): ICookie {
             $this->name = $name;
 
             return $this;
         }
 
-        public function setValue(string $value = null): ICookie {
+        public function setValue(?string $value = null): ICookie {
             $this->value = $value;
 
             return $this;

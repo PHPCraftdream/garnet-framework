@@ -27,7 +27,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query\Spec {
             return $this->busy;
         }
 
-        public function queryAsync(string $sql, callable $callBack = null): IDbMySQLiLink {
+        public function queryAsync(string $sql, ?callable $callBack = null): IDbMySQLiLink {
             $this->asyncCalls[] = [$sql, $callBack];
 
             return $this;
@@ -66,7 +66,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query\Spec {
             throw new RuntimeException('Not implemented in mock');
         }
 
-        public function queryAsync(string $sql, array $args = [], callable $callBack = null): IDbMySQLiLink {
+        public function queryAsync(string $sql, array $args = [], ?callable $callBack = null): IDbMySQLiLink {
             $this->queryCalls[] = ['async', $sql, $args, $callBack];
             $this->currentLink = new MockDbLink();
             $this->currentLink->queryAsync($sql, $callBack);

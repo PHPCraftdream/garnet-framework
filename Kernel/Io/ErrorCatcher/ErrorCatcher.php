@@ -76,7 +76,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\ErrorCatcher {
          * @return void
          * @throws ErrorException
          */
-        public static function init(callable $errorCallBack = null): void {
+        public static function init(?callable $errorCallBack = null): void {
             if ($errorCallBack) {
                 static::$errorCallBack = $errorCallBack(...);
             }

@@ -28,7 +28,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Cookies {
 
         protected ?bool $httpOnly = false;
 
-        public function __construct(string $name = null, string $value = null) {
+        public function __construct(?string $name = null, ?string $value = null) {
             $this->name = $name;
             $this->value = $value;
         }
@@ -102,14 +102,14 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Cookies {
             return !!$this->httpOnly;
         }
 
-        public function setName(string $name = null): ICookie {
+        public function setName(?string $name = null): ICookie {
             $this->isChanged = true;
             $this->name = $name;
 
             return $this;
         }
 
-        public function setValue(string $value = null): ICookie {
+        public function setValue(?string $value = null): ICookie {
             $this->isChanged = true;
             $this->value = $value;
 

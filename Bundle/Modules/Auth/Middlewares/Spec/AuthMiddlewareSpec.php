@@ -76,13 +76,13 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\Spec {
             return 'Lax';
         }
 
-        public function setName(string $name = null): ICookie {
+        public function setName(?string $name = null): ICookie {
             $this->name = $name;
 
             return $this;
         }
 
-        public function setValue(string $value = null): ICookie {
+        public function setValue(?string $value = null): ICookie {
             $this->value = $value;
             $this->changed = true;
 

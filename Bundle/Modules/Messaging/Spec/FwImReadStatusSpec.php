@@ -358,7 +358,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Spec {
 
         private int $nextId = 1;
 
-        public function insert(array $data, Closure $queryCallback = null): false|string {
+        public function insert(array $data, ?Closure $queryCallback = null): false|string {
             $this->insertCalls[] = $data;
             $id = (string)$this->nextId++;
             $data['id'] = $id;
@@ -380,7 +380,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Spec {
             return true;
         }
 
-        public function selectAll(Closure $queryCallback = null): array {
+        public function selectAll(?Closure $queryCallback = null): array {
             if ($queryCallback === null) {
                 return array_values($this->rows);
             }
@@ -400,7 +400,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Spec {
 
         public array $rows = [];
 
-        public function selectAll(Closure $queryCallback = null): array {
+        public function selectAll(?Closure $queryCallback = null): array {
             if ($queryCallback === null) {
                 return array_values($this->rows);
             }
@@ -420,7 +420,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Spec {
 
         public array $rows = [];
 
-        public function selectAll(Closure $queryCallback = null): array {
+        public function selectAll(?Closure $queryCallback = null): array {
             if ($queryCallback === null) {
                 return array_values($this->rows);
             }
