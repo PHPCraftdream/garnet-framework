@@ -7,6 +7,9 @@
 **/dist/**
 # Vendored ThirdParty packages ship pre-built dist/ artifacts — keep them.
 !**/ThirdParty/**/dist/**
+# Admin panel frontend assets must ship with the package so that
+# composer-installed apps can serve /__garnet/ without a local build.
+!Kernel/Io/GarnetCli/Admin/dist/**
 **/WorkDir/**
 **/WorkDir/ConfigDev/*
 !**/WorkDir/ConfigDev/.keep
