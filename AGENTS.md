@@ -134,6 +134,8 @@ name or an extension point.
 - `docs/cli.md` — every CLI command.
 - `docs/database.md` — DbPool, DbTable, async patterns.
 - `docs/frontend.md` — React islands, codegen, asset bridge.
+- `docs/deploy.md` — host layout, `bundle`/`deploy:diff`/`deploy`, migrations, case studies.
+- `docs/ssh.md` — `ssh.ini` config, `ssh*` commands, identity key vs. inline, troubleshooting.
 - `docs/i18n.md` — i18n keys, `%s` interpolation rules.
 - `docs/dev-workflow.md` — develop framework + app side by side with a path repo.
 - `docs/quickstart.md` — scaffold a new app from the template.
