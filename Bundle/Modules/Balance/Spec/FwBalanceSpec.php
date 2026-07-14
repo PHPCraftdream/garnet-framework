@@ -2,10 +2,10 @@
 
 namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Spec {
     use Closure;
-    use LogicException;
     use PHPCraftdream\Garnet\Bundle\Modules\Balance\Controllers\FwBalanceAdminController;
     use PHPCraftdream\Garnet\Bundle\Modules\Balance\Tables\FwAccountBalance;
     use PHPCraftdream\Garnet\Bundle\Modules\Balance\Tables\FwBalanceLedger;
+    use PHPCraftdream\Garnet\Kernel\Db\Query\QueryEx;
     use PHPCraftdream\Garnet\Kernel\Db\Tables\DbTable;
     use ReflectionClass;
 
@@ -16,14 +16,11 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Spec {
     class TestBalanceLedger extends FwBalanceLedger {
         protected string $tableName = 'fw_balance_ledger_test';
 
-        public static function init(): \PHPCraftdream\Garnet\Kernel\Interfaces\Db\ITableBuilderDriver {
-            throw new LogicException('init() must not be called in tests');
-        }
-
         protected static function balanceTable(): FwAccountBalance {
             return TestAccountBalance::get();
         }
 
+        /** In-memory rows for unit-level tests (getBalance, addEntry field checks). */
         public array $rows = [];
 
         public array $insertCalls = [];
@@ -57,14 +54,16 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Spec {
     class TestAccountBalance extends FwAccountBalance {
         protected string $tableName = 'fw_account_balance_test';
 
-        public static function init(): \PHPCraftdream\Garnet\Kernel\Interfaces\Db\ITableBuilderDriver {
-            throw new LogicException('init() must not be called in tests');
-        }
-
         protected static function ledgerTable(): FwBalanceLedger {
             return TestBalanceLedger::get();
         }
 
+        /** No-op: unit-level tests must not hit the real DB via recalculate(). */
+        public static function recalculate(int $accountId): void {
+            // intentionally empty — DB-backed tests use DbTestAccountBalance
+        }
+
+        /** In-memory rows for unit-level tests (getBalance, addEntry field checks). */
         public array $rows = [];
 
         public array $insertCalls = [];
@@ -106,6 +105,26 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Spec {
 
         public function selectAll(?Closure $queryCallback = null): array {
             return array_values($this->rows);
+        }
+    }
+
+    // ---------------------------------------------------------------------------
+    // DB-backed test subclasses (real MySQL tables for recalculate() tests)
+    // ---------------------------------------------------------------------------
+
+    class DbTestBalanceLedger extends FwBalanceLedger {
+        protected string $tableName = 'fw_balance_ledger_test';
+
+        protected static function balanceTable(): FwAccountBalance {
+            return DbTestAccountBalance::get();
+        }
+    }
+
+    class DbTestAccountBalance extends FwAccountBalance {
+        protected string $tableName = 'fw_account_balance_test';
+
+        protected static function ledgerTable(): FwBalanceLedger {
+            return DbTestBalanceLedger::get();
         }
     }
 
@@ -165,6 +184,73 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Spec {
         return [$ledgerObj, $balanceObj];
     }
 
+    function setupDbBalanceTables(): void {
+        resetDbTableSingletons();
+
+        $dbRef = new ReflectionClass(DbTable::class);
+        $itemsProp = $dbRef->getProperty('items');
+
+        $ledgerRef = new ReflectionClass(DbTestBalanceLedger::class);
+        $balanceRef = new ReflectionClass(DbTestAccountBalance::class);
+
+        $ledgerObj = $ledgerRef->newInstanceWithoutConstructor();
+        $balanceObj = $balanceRef->newInstanceWithoutConstructor();
+
+        $itemsProp->setValue(null, [
+            DbTestBalanceLedger::class => $ledgerObj,
+            DbTestAccountBalance::class => $balanceObj,
+        ]);
+
+        $ledgerName = DbTestBalanceLedger::get()->getTableName();
+        $balanceName = DbTestAccountBalance::get()->getTableName();
+
+        QueryEx::get()->ex("DROP TABLE IF EXISTS `{$balanceName}`", []);
+        QueryEx::get()->ex("DROP TABLE IF EXISTS `{$ledgerName}`", []);
+
+        QueryEx::get()->ex("
+            CREATE TABLE `{$ledgerName}` (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                account_id INT(11) NOT NULL,
+                is_credit TINYINT(1) NOT NULL DEFAULT 0,
+                amount INT(11) NOT NULL DEFAULT 0,
+                entry_type ENUM('top_up','booking_invoice','booking_payment','booking_refund','manual'),
+                ref_type VARCHAR(50) NULL,
+                ref_id INT(11) NULL,
+                note VARCHAR(255) NULL,
+                created_at INT(11) NOT NULL DEFAULT 0,
+                INDEX account_id (account_id),
+                INDEX ref (ref_type, ref_id)
+            ) ENGINE=InnoDB COLLATE=utf8mb4_unicode_ci
+        ", []);
+
+        QueryEx::get()->ex("
+            CREATE TABLE `{$balanceName}` (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                account_id INT(11) NOT NULL,
+                balance INT(11) NOT NULL DEFAULT 0,
+                updated_at INT(11) NOT NULL DEFAULT 0,
+                UNIQUE KEY account_id (account_id)
+            ) ENGINE=InnoDB COLLATE=utf8mb4_unicode_ci
+        ", []);
+    }
+
+    function teardownDbBalanceTables(): void {
+        $ledgerName = DbTestBalanceLedger::get()->getTableName();
+        $balanceName = DbTestAccountBalance::get()->getTableName();
+
+        QueryEx::get()->ex("DROP TABLE IF EXISTS `{$balanceName}`", []);
+        QueryEx::get()->ex("DROP TABLE IF EXISTS `{$ledgerName}`", []);
+        resetDbTableSingletons();
+    }
+
+    function truncateDbBalanceTables(): void {
+        $ledgerName = DbTestBalanceLedger::get()->getTableName();
+        $balanceName = DbTestAccountBalance::get()->getTableName();
+
+        QueryEx::get()->ex("TRUNCATE TABLE `{$ledgerName}`", []);
+        QueryEx::get()->ex("TRUNCATE TABLE `{$balanceName}`", []);
+    }
+
     // ---------------------------------------------------------------------------
     // Specs
     // ---------------------------------------------------------------------------
@@ -208,64 +294,102 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Spec {
         });
 
         // -----------------------------------------------------------------------
-        describe('recalculate()', function (): void {
+        describe('recalculate() [real DB]', function (): void {
+            beforeAll(function (): void {
+                setupDbBalanceTables();
+            });
+
+            afterAll(function (): void {
+                teardownDbBalanceTables();
+            });
+
             beforeEach(function (): void {
-                [$this->ledger, $this->balance] = setupBalanceTables();
+                truncateDbBalanceTables();
             });
 
-            it('inserts a new balance row when none exists yet', function (): void {
-                $this->ledger->rows['1'] = [
-                    'id' => '1', 'account_id' => 1,
-                    'is_credit' => 1, 'amount' => 300, 'entry_type' => 'top_up',
-                    'ref_type' => null, 'ref_id' => null, 'note' => null, 'created_at' => time(),
-                ];
+            it('inserts a new balance row when none exists yet (INSERT branch)', function (): void {
+                DbTestBalanceLedger::get()->insert([
+                    'account_id' => 1, 'is_credit' => 1, 'amount' => 300,
+                    'entry_type' => 'top_up', 'ref_type' => null, 'ref_id' => null,
+                    'note' => null, 'created_at' => time(),
+                ]);
 
-                // Override selectAll on ledger to handle the SUM-like query for recalculate
-                // The real recalculate calls ledgerTable()->selectAll with a SUM col reset.
-                // Our TestBalanceLedger::selectAll returns all rows; recalculate expects
-                // the first row to have a 'bal' key. We seed a pre-aggregated row:
-                $this->ledger->rows = [
-                    '1' => ['bal' => 300],
-                ];
+                DbTestAccountBalance::recalculate(1);
 
-                TestAccountBalance::recalculate(1);
-
-                expect(count($this->balance->insertCalls))->toBeGreaterThan(0);
-                expect($this->balance->insertCalls[0]['balance'])->toBe(300);
-                expect($this->balance->insertCalls[0]['account_id'])->toBe(1);
+                expect(DbTestAccountBalance::getBalance(1))->toBe(300);
             });
 
-            it('updates existing balance row instead of inserting when row exists', function (): void {
-                $this->balance->rows['1'] = ['id' => '1', 'account_id' => 1, 'balance' => 100, 'updated_at' => 0];
-                $this->ledger->rows = [
-                    '1' => ['bal' => 450],
-                ];
+            it('updates existing balance row on re-recalculate (UPDATE branch)', function (): void {
+                DbTestBalanceLedger::get()->insert([
+                    'account_id' => 1, 'is_credit' => 1, 'amount' => 100,
+                    'entry_type' => 'top_up', 'ref_type' => null, 'ref_id' => null,
+                    'note' => null, 'created_at' => time(),
+                ]);
+                DbTestAccountBalance::recalculate(1);
+                expect(DbTestAccountBalance::getBalance(1))->toBe(100);
 
-                TestAccountBalance::recalculate(1);
+                // Add another ledger entry and recalculate again
+                DbTestBalanceLedger::get()->insert([
+                    'account_id' => 1, 'is_credit' => 1, 'amount' => 350,
+                    'entry_type' => 'top_up', 'ref_type' => null, 'ref_id' => null,
+                    'note' => null, 'created_at' => time(),
+                ]);
+                DbTestAccountBalance::recalculate(1);
 
-                expect(count($this->balance->updateCalls))->toBeGreaterThan(0);
-                expect($this->balance->updateCalls[0]['data']['balance'])->toBe(450);
-                expect(count($this->balance->insertCalls))->toBe(0);
+                expect(DbTestAccountBalance::getBalance(1))->toBe(450);
             });
 
-            it('sets balance to 0 when ledger is empty (bal is null)', function (): void {
-                $this->ledger->rows = [
-                    '1' => ['bal' => null],
-                ];
+            it('sets balance to 0 when ledger has no entries for account (COALESCE branch)', function (): void {
+                DbTestAccountBalance::recalculate(99);
 
-                TestAccountBalance::recalculate(99);
-
-                expect($this->balance->insertCalls[0]['balance'])->toBe(0);
+                expect(DbTestAccountBalance::getBalance(99))->toBe(0);
             });
 
             it('sets updated_at to approximately now', function (): void {
-                $this->ledger->rows = ['1' => ['bal' => 50]];
                 $before = time();
-                TestAccountBalance::recalculate(3);
+                DbTestAccountBalance::recalculate(3);
                 $after = time();
-                $updatedAt = $this->balance->insertCalls[0]['updated_at'];
-                expect($updatedAt)->toBeGreaterThan($before - 1);
-                expect($updatedAt)->toBeLessThan($after + 1);
+
+                $row = DbTestAccountBalance::get()->selectOneByField('account_id', 3);
+                expect($row)->not->toBeNull();
+                expect((int)$row['updated_at'])->toBeGreaterThan($before - 1);
+                expect((int)$row['updated_at'])->toBeLessThan($after + 1);
+            });
+
+            it('correctly handles mix of credits and debits', function (): void {
+                DbTestBalanceLedger::get()->insert([
+                    'account_id' => 5, 'is_credit' => 1, 'amount' => 1000,
+                    'entry_type' => 'top_up', 'ref_type' => null, 'ref_id' => null,
+                    'note' => null, 'created_at' => time(),
+                ]);
+                DbTestBalanceLedger::get()->insert([
+                    'account_id' => 5, 'is_credit' => 0, 'amount' => 250,
+                    'entry_type' => 'booking_payment', 'ref_type' => null, 'ref_id' => null,
+                    'note' => null, 'created_at' => time(),
+                ]);
+
+                DbTestAccountBalance::recalculate(5);
+
+                expect(DbTestAccountBalance::getBalance(5))->toBe(750);
+            });
+
+            it('each recalculate derives from full ledger state (atomicity)', function (): void {
+                DbTestBalanceLedger::get()->insert([
+                    'account_id' => 10, 'is_credit' => 1, 'amount' => 200,
+                    'entry_type' => 'top_up', 'ref_type' => null, 'ref_id' => null,
+                    'note' => null, 'created_at' => time(),
+                ]);
+                DbTestBalanceLedger::get()->insert([
+                    'account_id' => 10, 'is_credit' => 1, 'amount' => 300,
+                    'entry_type' => 'manual', 'ref_type' => null, 'ref_id' => null,
+                    'note' => null, 'created_at' => time(),
+                ]);
+
+                // Two sequential recalculates -- both must see the full ledger
+                DbTestAccountBalance::recalculate(10);
+                DbTestAccountBalance::recalculate(10);
+
+                expect(DbTestAccountBalance::getBalance(10))->toBe(500);
             });
         });
     });
@@ -348,12 +472,17 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Spec {
                 expect($createdAt)->toBeLessThan($after + 1);
             });
 
-            it('triggers balance recalculation after inserting the entry', function (): void {
-                // Seed a pre-aggregated row for ledger's selectAll (used by recalculate)
-                $this->ledger->rows = ['agg' => ['bal' => 0]];
-                TestBalanceLedger::addEntry(1, true, 200, 'top_up');
-                // recalculate inserts a balance row because none existed
-                expect(count($this->balance->insertCalls))->toBeGreaterThan(0);
+            it('triggers balance recalculation after inserting the entry [real DB]', function (): void {
+                setupDbBalanceTables();
+
+                try {
+                    truncateDbBalanceTables();
+                    DbTestBalanceLedger::addEntry(1, true, 200, 'top_up');
+
+                    expect(DbTestAccountBalance::getBalance(1))->toBe(200);
+                } finally {
+                    teardownDbBalanceTables();
+                }
             });
         });
 

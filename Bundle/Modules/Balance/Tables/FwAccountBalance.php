@@ -1,6 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Tables {
+    use PHPCraftdream\Garnet\Kernel\Db\Query\QueryEx;
     use PHPCraftdream\Garnet\Kernel\Db\Tables\DbTable;
     use PHPCraftdream\Garnet\Kernel\Db\Tables\DbTableBuilderFactory;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Db\ITableBuilderDriver;
@@ -23,29 +24,36 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Tables {
             ;
         }
 
+        /**
+         * Recompute the cached balance from the append-only ledger and
+         * upsert it in a SINGLE atomic statement (INSERT … SELECT … ON
+         * DUPLICATE KEY UPDATE) rather than a separate read-then-write.
+         *
+         * Two `recalculate()` calls for the same account can otherwise
+         * interleave: whichever UPDATE commits last wins, even if its own
+         * SELECT ran before the other call's ledger INSERT committed — a
+         * classic lost-update race that silently drops an entry from the
+         * cached balance until the next recalculate(). A single INSERT ON
+         * DUPLICATE KEY UPDATE is executed atomically by MySQL (the unique
+         * key on account_id serialises concurrent statements for the same
+         * row), so the ledger SUM and the cache write can no longer be torn
+         * apart by a concurrent call.
+         */
         public static function recalculate(int $accountId): void {
-            $rows = static::ledgerTable()->selectAll(function ($q) use ($accountId): void {
-                $q->resetCols();
-                $q->cols(['SUM(CASE WHEN is_credit = 1 THEN amount ELSE -amount END) AS bal']);
-                $q->where('account_id = ?', [$accountId]);
-            });
-            $balance = (int)($rows[0]['bal'] ?? 0);
-
+            $ledgerTable = static::ledgerTable()->getTableName();
+            $balanceTable = static::get()->getTableName();
             $now = time();
-            $existing = static::get()->selectOneByField('account_id', $accountId);
 
-            if ($existing) {
-                static::get()->updateByField(
-                    ['balance' => $balance, 'updated_at' => $now],
-                    'account_id', $accountId,
-                );
-            } else {
-                static::get()->insert([
-                    'account_id' => $accountId,
-                    'balance' => $balance,
-                    'updated_at' => $now,
-                ]);
-            }
+            QueryEx::get()->ex(
+                "INSERT INTO `{$balanceTable}` (account_id, balance, updated_at)
+                 VALUES (?, (
+                     SELECT COALESCE(SUM(CASE WHEN is_credit = 1 THEN amount ELSE -amount END), 0)
+                     FROM `{$ledgerTable}`
+                     WHERE account_id = ?
+                 ), ?)
+                 ON DUPLICATE KEY UPDATE balance = VALUES(balance), updated_at = VALUES(updated_at)",
+                [$accountId, $accountId, $now],
+            );
         }
 
         public static function getBalance(int $accountId): int {
