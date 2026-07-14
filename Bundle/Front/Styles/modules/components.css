@@ -2013,7 +2013,7 @@ body:has(#show--menu:checked) {
 }
 /* Page footer with the configured support/contact email. */
 .app-footer {
-  @apply flex items-center justify-center gap-1.5 flex-wrap px-4 py-3 text-xs text-muted border-t border-subtle;
+  @apply flex items-center justify-center gap-1.5 flex-wrap px-4 py-3 text-xs text-muted border-t border-subtle mt-auto shrink-0;
 }
 .app-footer-email {
   @apply text-accent hover:underline;
@@ -2318,7 +2318,7 @@ body:has(#show--menu:checked) {
 /* Static pages footer (footer snippet). Frosted-glass fill is supplied by
    the shared glass-skin chrome rule (glass.css) to match the admin chrome. */
 .sp-footer {
-  @apply border-t border-subtle mt-8 pt-6 pb-4 px-4;
+  @apply border-t border-subtle mt-auto pt-6 pb-4 px-4;
 }
 .sp-footer-inner { @apply max-w-5xl mx-auto; }
 .sp-footer-cols { @apply grid gap-8 mb-4; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }

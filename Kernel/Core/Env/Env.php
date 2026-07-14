@@ -9,11 +9,30 @@ namespace PHPCraftdream\Garnet\Kernel\Core\Env {
             return php_sapi_name() === 'cli';
         }
 
+        private static function resolveAnchorDir(): string {
+            if (class_exists(\Composer\InstalledVersions::class)
+                && \Composer\InstalledVersions::isInstalled('phpcraftdream/garnet-framework')
+            ) {
+                $root = \Composer\InstalledVersions::getRootPackage();
+                $isRoot = ($root['name'] ?? '') === 'phpcraftdream/garnet-framework';
+
+                if (!$isRoot) {
+                    $installPath = \Composer\InstalledVersions::getInstallPath('phpcraftdream/garnet-framework');
+
+                    if ($installPath !== null) {
+                        return dirname($installPath, 3);
+                    }
+                }
+            }
+
+            return __DIR__;
+        }
+
         /**
          * @return bool
          */
         public static function isDevDir(): bool {
-            $dirItems = explode(DIRECTORY_SEPARATOR, __DIR__);
+            $dirItems = explode(DIRECTORY_SEPARATOR, self::resolveAnchorDir());
             $dirStr = '';
             $dirs = [];
 
