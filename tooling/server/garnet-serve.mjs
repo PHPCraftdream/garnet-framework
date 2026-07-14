@@ -264,10 +264,12 @@ server.on('clientError', (err, socket) => {
 	if (socket.writable) socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
 });
 
-server.listen(PORT, '0.0.0.0', () => {
+const HOST = 'localhost';
+
+server.listen(PORT, HOST, () => {
 	const end = BASE_PORT + WORKERS - 1;
 	console.log(
-		`Serving via Node :${PORT} → pool of ${WORKERS} \`php -S\` workers ` +
+		`Serving via Node http://${HOST}:${PORT} → pool of ${WORKERS} \`php -S\` workers ` +
 		`[${BASE_PORT}..${end}] (opcache on)${DEBUG ? ' (debug)' : ''}`,
 	);
 	console.log(`Static root: ${PUBLIC_DIR}`);
