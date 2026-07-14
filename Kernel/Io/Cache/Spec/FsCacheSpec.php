@@ -14,11 +14,9 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Cache\Spec {
 
             $reflection = new ReflectionClass(FsCache::class);
             $cacheInfoProp = $reflection->getProperty('cacheInfo');
-            $cacheInfoProp->setAccessible(true);
             $cacheInfoProp->setValue(null, []);
 
             $fileInfoProp = $reflection->getProperty('fileInfo');
-            $fileInfoProp->setAccessible(true);
             $fileInfoProp->setValue(null, []);
         });
 
@@ -38,11 +36,9 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Cache\Spec {
 
             $reflection = new ReflectionClass(FsCache::class);
             $cacheInfoProp = $reflection->getProperty('cacheInfo');
-            $cacheInfoProp->setAccessible(true);
             $cacheInfoProp->setValue(null, []);
 
             $fileInfoProp = $reflection->getProperty('fileInfo');
-            $fileInfoProp->setAccessible(true);
             $fileInfoProp->setValue(null, []);
         });
 
@@ -111,7 +107,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Cache\Spec {
 
                 $reflection = new ReflectionClass(FsCache::class);
                 $fileInfoProp = $reflection->getProperty('fileInfo');
-                $fileInfoProp->setAccessible(true);
                 $fileInfo = $fileInfoProp->getValue(null);
 
                 expect($fileInfo['test.js'])->toBeAnInstanceOf(FileCache::class);
@@ -124,7 +119,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Cache\Spec {
 
                 $reflection = new ReflectionClass(FsCache::class);
                 $fileInfoProp = $reflection->getProperty('fileInfo');
-                $fileInfoProp->setAccessible(true);
                 $fileInfo = $fileInfoProp->getValue(null);
 
                 expect(isset($fileInfo['test/test.js']))->toBe(true);
@@ -181,13 +175,11 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Cache\Spec {
 
                 $reflection = new ReflectionClass(FsCache::class);
                 $fileInfoProp = $reflection->getProperty('fileInfo');
-                $fileInfoProp->setAccessible(true);
                 $fileInfo = $fileInfoProp->getValue(null);
                 $fileCache = $fileInfo[$this->testFileName];
 
                 $fileCacheReflection = new ReflectionClass(FileCache::class);
                 $builderProp = $fileCacheReflection->getProperty('cacheBuilder');
-                $builderProp->setAccessible(true);
                 $builderProp->setValue($fileCache, fn (): string => $modifiedContent);
 
                 $result = $this->cache->getActualFile($this->testFileName);
@@ -276,13 +268,11 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Cache\Spec {
 
                 $reflection = new ReflectionClass(FsCache::class);
                 $fileInfoProp = $reflection->getProperty('fileInfo');
-                $fileInfoProp->setAccessible(true);
                 $fileInfo = $fileInfoProp->getValue(null);
                 $fileCache = $fileInfo[$this->testFileName];
 
                 $fileCacheReflection = new ReflectionClass(FileCache::class);
                 $builderProp = $fileCacheReflection->getProperty('cacheBuilder');
-                $builderProp->setAccessible(true);
                 $builderProp->setValue($fileCache, fn (): string => $modifiedContent);
 
                 $this->cache->refreshFile($this->testFileName);
@@ -300,13 +290,11 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Cache\Spec {
 
                 $reflection = new ReflectionClass(FsCache::class);
                 $fileInfoProp = $reflection->getProperty('fileInfo');
-                $fileInfoProp->setAccessible(true);
                 $fileInfo = $fileInfoProp->getValue(null);
                 $fileCache = $fileInfo[$this->testFileName];
 
                 $fileCacheReflection = new ReflectionClass(FileCache::class);
                 $builderProp = $fileCacheReflection->getProperty('cacheBuilder');
-                $builderProp->setAccessible(true);
                 $builderProp->setValue($fileCache, fn (): string => $modifiedContent);
 
                 $this->cache->refreshFile($this->testFileName);

@@ -84,13 +84,11 @@ describe('Session Integration', function (): void {
             $sessionTable = SessionTable::get();
             $tableReflection = new ReflectionClass($sessionTable);
             $tableProp = $tableReflection->getProperty('tableName');
-            $tableProp->setAccessible(true);
             $tableProp->setValue($sessionTable, 'test_session');
 
             $sessionDataTable = SessionDataTable::get();
             $dataTableReflection = new ReflectionClass($sessionDataTable);
             $dataTableProp = $dataTableReflection->getProperty('tableName');
-            $dataTableProp->setAccessible(true);
             $dataTableProp->setValue($sessionDataTable, 'test_session_data');
 
             $dbAvailable = true;
@@ -115,13 +113,10 @@ describe('Session Integration', function (): void {
             $session = Session::get(false);
             $reflection = new ReflectionClass($session);
             $prop = $reflection->getProperty('sessionValue');
-            $prop->setAccessible(true);
             $prop->setValue($session, 'test_session_' . rand(1000, 9999));
             $prop = $reflection->getProperty('sessionData');
-            $prop->setAccessible(true);
             $prop->setValue($session, []);
             $prop = $reflection->getProperty('changedValues');
-            $prop->setAccessible(true);
             $prop->setValue($session, []);
         });
 
@@ -226,10 +221,8 @@ describe('Session Integration', function (): void {
             $session = Session::get(false);
             $reflection = new ReflectionClass($session);
             $prop = $reflection->getProperty('sessionValue');
-            $prop->setAccessible(true);
             $prop->setValue($session, 'test_session_' . rand(1000, 9999));
             $prop = $reflection->getProperty('sessionData');
-            $prop->setAccessible(true);
             $prop->setValue($session, []);
         });
 
@@ -280,7 +273,6 @@ describe('Session Integration', function (): void {
             // Should be in changedValues
             $reflection = new ReflectionClass($session);
             $prop = $reflection->getProperty('changedValues');
-            $prop->setAccessible(true);
             $changedValues = $prop->getValue($session);
             expect(isset($changedValues['test_param']))->toBe(true);
 
@@ -289,13 +281,11 @@ describe('Session Integration', function (): void {
 
             // Should not be in changedValues anymore
             $prop = $reflection->getProperty('changedValues');
-            $prop->setAccessible(true);
             $changedValues = $prop->getValue($session);
             expect(isset($changedValues['test_param']))->toBe(false);
 
             // Should be in unsetValues
             $prop = $reflection->getProperty('unsetValues');
-            $prop->setAccessible(true);
             $unsetValues = $prop->getValue($session);
             expect(isset($unsetValues['test_param']))->toBe(true);
         });
@@ -338,10 +328,8 @@ describe('Session Integration', function (): void {
             $session = Session::get(false);
             $reflection = new ReflectionClass($session);
             $prop = $reflection->getProperty('sessionValue');
-            $prop->setAccessible(true);
             $prop->setValue($session, 'test_session_' . rand(1000, 9999));
             $prop = $reflection->getProperty('sessionData');
-            $prop->setAccessible(true);
             $prop->setValue($session, []);
         });
 
@@ -403,10 +391,8 @@ describe('Session Integration', function (): void {
             $session = Session::get(false);
             $reflection = new ReflectionClass($session);
             $prop = $reflection->getProperty('sessionValue');
-            $prop->setAccessible(true);
             $prop->setValue($session, 'test_session_' . rand(1000, 9999));
             $prop = $reflection->getProperty('sessionData');
-            $prop->setAccessible(true);
             $prop->setValue($session, []);
         });
 
@@ -464,11 +450,9 @@ describe('Session Integration', function (): void {
             $session = Session::get(false);
             $reflection = new ReflectionClass($session);
             $prop = $reflection->getProperty('sessionValue');
-            $prop->setAccessible(true);
             $sessionValue = 'test_session_' . rand(1000, 9999);
             $prop->setValue($session, $sessionValue);
             $prop = $reflection->getProperty('sessionData');
-            $prop->setAccessible(true);
             $prop->setValue($session, []);
         });
 
@@ -504,7 +488,6 @@ describe('Session Integration', function (): void {
             $link = $pool->newLink();
             $reflection = new ReflectionClass($session);
             $prop = $reflection->getProperty('sessionValue');
-            $prop->setAccessible(true);
             $sessionValue = $prop->getValue($session);
 
             $sql = 'SELECT * FROM dbtest_test_session WHERE name = ?';
@@ -539,7 +522,6 @@ describe('Session Integration', function (): void {
             $link = $pool->newLink();
             $reflection = new ReflectionClass($session);
             $prop = $reflection->getProperty('sessionValue');
-            $prop->setAccessible(true);
             $sessionValue = $prop->getValue($session);
 
             $sql = 'SELECT * FROM dbtest_test_session WHERE name = ?';
@@ -557,12 +539,10 @@ describe('Session Integration', function (): void {
 
             // Set sessionValue to match existing session
             $prop = $reflectionClass->getProperty('sessionValue');
-            $prop->setAccessible(true);
             $prop->setValue($newSession, $sessionValue);
 
             // Set sessionId to match existing session
             $prop = $reflectionClass->getProperty('sessionId');
-            $prop->setAccessible(true);
             $prop->setValue($newSession, $sessionId);
 
             // Load data from database (simulate what happens when session is loaded)
@@ -576,7 +556,6 @@ describe('Session Integration', function (): void {
 
             // Set sessionData to match what's in database
             $prop = $reflectionClass->getProperty('sessionData');
-            $prop->setAccessible(true);
             $prop->setValue($newSession, $loadedData);
 
             // Unset value

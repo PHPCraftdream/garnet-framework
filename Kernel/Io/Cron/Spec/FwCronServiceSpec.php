@@ -40,7 +40,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Cron\Spec {
             // don't leak into each other.
             $rc = new ReflectionClass(FwCronService::class);
             $prop = $rc->getProperty('tasks');
-            $prop->setAccessible(true);
             $prop->setValue(null, []);
 
             TestCronService::$registered = [];
@@ -69,12 +68,10 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Cron\Spec {
             // Access the underlying Handle's resource via reflection
             $rc = new ReflectionClass($stdio);
             $stdoutHandle = $rc->getProperty('stdout');
-            $stdoutHandle->setAccessible(true);
             $handle = $stdoutHandle->getValue($stdio);
 
             $rh = new ReflectionClass($handle);
             $rp = $rh->getProperty('resource');
-            $rp->setAccessible(true);
             $resource = $rp->getValue($handle);
 
             rewind($resource);

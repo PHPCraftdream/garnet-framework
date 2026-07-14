@@ -15,7 +15,6 @@ function makeAccountWithParams(array $params): Account {
     $account = $ref->newInstanceWithoutConstructor();
 
     $p = $ref->getProperty('params');
-    $p->setAccessible(true);
     $p->setValue($account, $params);
 
     return $account;

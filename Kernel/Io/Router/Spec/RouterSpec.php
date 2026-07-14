@@ -47,7 +47,6 @@ describe('Router', function (): void {
 
             $reflection = new ReflectionClass($router);
             $property = $reflection->getProperty('routes');
-            $property->setAccessible(true);
 
             $routes = $property->getValue($router);
 
@@ -63,7 +62,6 @@ describe('Router', function (): void {
 
             $reflection = new ReflectionClass($router);
             $property = $reflection->getProperty('routes');
-            $property->setAccessible(true);
 
             $routes = $property->getValue($router);
 
@@ -79,7 +77,6 @@ describe('Router', function (): void {
 
             $reflection = new ReflectionClass($router);
             $property = $reflection->getProperty('routes');
-            $property->setAccessible(true);
 
             $routes = $property->getValue($router);
 
@@ -95,7 +92,6 @@ describe('Router', function (): void {
 
             $reflection = new ReflectionClass($router);
             $property = $reflection->getProperty('routes');
-            $property->setAccessible(true);
 
             $routes = $property->getValue($router);
 

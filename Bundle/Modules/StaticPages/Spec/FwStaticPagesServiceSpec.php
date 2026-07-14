@@ -242,7 +242,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages\Spec {
     function makeTestInstances(): array {
         $dbRef = new ReflectionClass(DbTable::class);
         $itemsProp = $dbRef->getProperty('items');
-        $itemsProp->setAccessible(true);
 
         $pagesObj = (new ReflectionClass(TestStaticPages::class))->newInstanceWithoutConstructor();
         $blocksObj = (new ReflectionClass(TestStaticPageBlocks::class))->newInstanceWithoutConstructor();
@@ -366,7 +365,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages\Spec {
             function distributeToRows(int $total, int $rows): array {
                 $ref = new ReflectionClass(TestStaticPagesService::class);
                 $m = $ref->getMethod('distributeToRows');
-                $m->setAccessible(true);
 
                 return $m->invoke(null, $total, $rows);
             }

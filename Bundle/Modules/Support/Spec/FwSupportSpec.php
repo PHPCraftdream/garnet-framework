@@ -330,7 +330,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Spec {
     function resetDbTableSingletons(): void {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
-        $prop->setAccessible(true);
         $prop->setValue(null, []);
     }
 
@@ -339,7 +338,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Spec {
 
         $dbRef = new ReflectionClass(DbTable::class);
         $itemsProp = $dbRef->getProperty('items');
-        $itemsProp->setAccessible(true);
 
         $ticketsObj = (new ReflectionClass(TestSupportTickets::class))->newInstanceWithoutConstructor();
         $messagesObj = (new ReflectionClass(TestSupportMessages::class))->newInstanceWithoutConstructor();

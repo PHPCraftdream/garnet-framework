@@ -185,14 +185,12 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\JsErrors\Spec {
     function resetJsErrorsSingletons(): void {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
-        $prop->setAccessible(true);
         $prop->setValue(null, []);
     }
 
     function resetControllerState(): void {
         $ref = new ReflectionClass(FwJsErrorLogController::class);
         $prop = $ref->getProperty('tableClass');
-        $prop->setAccessible(true);
         $prop->setValue(null, null);
     }
 
@@ -202,7 +200,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\JsErrors\Spec {
 
         $dbRef = new ReflectionClass(DbTable::class);
         $itemsProp = $dbRef->getProperty('items');
-        $itemsProp->setAccessible(true);
 
         $inst = (new ReflectionClass(TestJsErrors::class))->newInstanceWithoutConstructor();
         $itemsProp->setValue(null, [TestJsErrors::class => $inst]);

@@ -328,7 +328,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\News\Spec {
     function resetNewsDbTableSingletons(): void {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
-        $prop->setAccessible(true);
         $prop->setValue(null, []);
     }
 

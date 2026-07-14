@@ -73,11 +73,9 @@ describe('Session CSRF lifecycle', function (): void {
         $session = $ref->newInstanceWithoutConstructor();
 
         $cookiesProp = $ref->getProperty('cookies');
-        $cookiesProp->setAccessible(true);
         $cookiesProp->setValue($session, $cookies);
 
         $readProp = $ref->getProperty('read');
-        $readProp->setAccessible(true);
         $readProp->setValue($session, true);
 
         return $session;
@@ -89,7 +87,6 @@ describe('Session CSRF lifecycle', function (): void {
         // Reset static singleton so each test is isolated
         $ref = new ReflectionClass(Session::class);
         $inst = $ref->getProperty('instance');
-        $inst->setAccessible(true);
         $inst->setValue(null, null);
     });
 
@@ -323,7 +320,6 @@ describe('Session CSRF lifecycle', function (): void {
             [$session] = buildSession('');
             $ref = new ReflectionClass($session);
             $prop = $ref->getProperty('csrfToken');
-            $prop->setAccessible(true);
             expect($prop->getValue($session))->toBe('');
         });
 
@@ -332,7 +328,6 @@ describe('Session CSRF lifecycle', function (): void {
             $token = $session->touchCSRF();
             $ref = new ReflectionClass($session);
             $prop = $ref->getProperty('csrfToken');
-            $prop->setAccessible(true);
             expect($prop->getValue($session))->toBe($token);
         });
 
@@ -342,7 +337,6 @@ describe('Session CSRF lifecycle', function (): void {
             $session->peekCSRF();
             $ref = new ReflectionClass($session);
             $prop = $ref->getProperty('csrfToken');
-            $prop->setAccessible(true);
             expect($prop->getValue($session))->toBe($existingToken);
         });
 
@@ -351,7 +345,6 @@ describe('Session CSRF lifecycle', function (): void {
             $session->peekCSRF();
             $ref = new ReflectionClass($session);
             $prop = $ref->getProperty('csrfToken');
-            $prop->setAccessible(true);
             expect($prop->getValue($session))->toBe('');
         });
     });

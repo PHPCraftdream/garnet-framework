@@ -8,12 +8,9 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig {
             it('throws exception when base_url is empty string', function (): void {
                 $reflection = new ReflectionClass(AppConfig::class);
                 $constructor = $reflection->getConstructor();
-                $constructor->setAccessible(true);
 
                 $mock = $reflection->newInstanceWithoutConstructor();
-                $reflection->getProperty('ready')->setAccessible(true);
                 $reflection->getProperty('ready')->setValue($mock, true);
-                $reflection->getProperty('data')->setAccessible(true);
                 $reflection->getProperty('data')->setValue($mock, ['base_url' => '']);
 
                 $expect = expect(function () use ($mock): void {
@@ -26,12 +23,9 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig {
             it('throws exception when base_url is not set', function (): void {
                 $reflection = new ReflectionClass(AppConfig::class);
                 $constructor = $reflection->getConstructor();
-                $constructor->setAccessible(true);
 
                 $mock = $reflection->newInstanceWithoutConstructor();
-                $reflection->getProperty('ready')->setAccessible(true);
                 $reflection->getProperty('ready')->setValue($mock, true);
-                $reflection->getProperty('data')->setAccessible(true);
                 $reflection->getProperty('data')->setValue($mock, []);
 
                 $expect = expect(function () use ($mock): void {
@@ -45,9 +39,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig {
                 $reflection = new ReflectionClass(AppConfig::class);
 
                 $mock = $reflection->newInstanceWithoutConstructor();
-                $reflection->getProperty('ready')->setAccessible(true);
                 $reflection->getProperty('ready')->setValue($mock, true);
-                $reflection->getProperty('data')->setAccessible(true);
                 $reflection->getProperty('data')->setValue($mock, ['base_url' => 'http://example.com/']);
 
                 $url = $mock->baseUrl();
@@ -58,9 +50,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig {
                 $reflection = new ReflectionClass(AppConfig::class);
 
                 $mock = $reflection->newInstanceWithoutConstructor();
-                $reflection->getProperty('ready')->setAccessible(true);
                 $reflection->getProperty('ready')->setValue($mock, true);
-                $reflection->getProperty('data')->setAccessible(true);
                 $reflection->getProperty('data')->setValue($mock, ['base_url' => 'http://example.com///']);
 
                 $url = $mock->baseUrl();
@@ -71,9 +61,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig {
                 $reflection = new ReflectionClass(AppConfig::class);
 
                 $mock = $reflection->newInstanceWithoutConstructor();
-                $reflection->getProperty('ready')->setAccessible(true);
                 $reflection->getProperty('ready')->setValue($mock, true);
-                $reflection->getProperty('data')->setAccessible(true);
                 $reflection->getProperty('data')->setValue($mock, ['base_url' => 'http://example.com']);
 
                 $url = $mock->baseUrl();
@@ -84,9 +72,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig {
                 $reflection = new ReflectionClass(AppConfig::class);
 
                 $mock = $reflection->newInstanceWithoutConstructor();
-                $reflection->getProperty('ready')->setAccessible(true);
                 $reflection->getProperty('ready')->setValue($mock, true);
-                $reflection->getProperty('data')->setAccessible(true);
                 $reflection->getProperty('data')->setValue($mock, ['base_url' => 'http://example.com/app/']);
 
                 $url = $mock->baseUrl();
@@ -97,9 +83,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig {
                 $reflection = new ReflectionClass(AppConfig::class);
 
                 $mock = $reflection->newInstanceWithoutConstructor();
-                $reflection->getProperty('ready')->setAccessible(true);
                 $reflection->getProperty('ready')->setValue($mock, true);
-                $reflection->getProperty('data')->setAccessible(true);
                 $reflection->getProperty('data')->setValue($mock, ['base_url' => 'http://localhost:8080/']);
 
                 $url = $mock->baseUrl();

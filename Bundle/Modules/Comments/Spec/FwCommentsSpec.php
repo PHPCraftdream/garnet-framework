@@ -79,7 +79,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Comments\Spec {
     function resetCommentsSingletons(): void {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
-        $prop->setAccessible(true);
         $prop->setValue(null, []);
     }
 
@@ -88,7 +87,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Comments\Spec {
 
         $dbRef = new ReflectionClass(DbTable::class);
         $itemsProp = $dbRef->getProperty('items');
-        $itemsProp->setAccessible(true);
 
         $inst = (new ReflectionClass(TestCommentsQueried::class))->newInstanceWithoutConstructor();
         $itemsProp->setValue(null, [TestCommentsQueried::class => $inst]);
@@ -120,7 +118,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Comments\Spec {
                 $inst = (new ReflectionClass(TestCommentsQueried::class))->newInstanceWithoutConstructor();
                 $ref = new ReflectionClass(FwComments::class);
                 $prop = $ref->getProperty('primaryKey');
-                $prop->setAccessible(true);
                 expect($prop->getValue($inst))->toBe('id');
             });
         });

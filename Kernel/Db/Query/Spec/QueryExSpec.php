@@ -96,13 +96,11 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query\Spec {
             // Reset static instance
             $reflection = new ReflectionClass(QueryEx::class);
             $prop = $reflection->getProperty('instance');
-            $prop->setAccessible(true);
             $prop->setValue(null, null);
 
             // Reset DbPool static
             $reflectionPool = new ReflectionClass(DbPool::class);
             $propPool = $reflectionPool->getProperty('instance');
-            $propPool->setAccessible(true);
             $propPool->setValue(null, null);
         });
 

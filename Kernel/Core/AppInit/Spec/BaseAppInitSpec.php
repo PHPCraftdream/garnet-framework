@@ -83,7 +83,6 @@ namespace PHPCraftdream\Garnet\Kernel\Core\AppInit\Spec {
 
             $reflection = new ReflectionClass(BaseAppInit::class);
             $instanceProp = $reflection->getProperty('instance');
-            $instanceProp->setAccessible(true);
             $instanceProp->setValue(null, null);
         });
 
@@ -106,7 +105,6 @@ namespace PHPCraftdream\Garnet\Kernel\Core\AppInit\Spec {
 
             $reflection = new ReflectionClass(BaseAppInit::class);
             $instanceProp = $reflection->getProperty('instance');
-            $instanceProp->setAccessible(true);
             $instanceProp->setValue(null, null);
         });
 
@@ -223,7 +221,6 @@ namespace PHPCraftdream\Garnet\Kernel\Core\AppInit\Spec {
             xit('throws exception when publicDirInit is not set', function (): void {
                 $reflection = new ReflectionClass(BaseAppInit::class);
                 $publicDirInitProp = $reflection->getProperty('publicDirInit');
-                $publicDirInitProp->setAccessible(true);
                 $publicDirInitProp->setValue(null, null);
 
                 expect(function (): void {
@@ -258,7 +255,6 @@ namespace PHPCraftdream\Garnet\Kernel\Core\AppInit\Spec {
             it('returns null when no instance created', function (): void {
                 $reflection = new ReflectionClass(BaseAppInit::class);
                 $instanceProp = $reflection->getProperty('instance');
-                $instanceProp->setAccessible(true);
                 $instanceProp->setValue(null, null);
 
                 expect(BaseAppInit::getInstance())->toBe(null);
@@ -289,7 +285,6 @@ namespace PHPCraftdream\Garnet\Kernel\Core\AppInit\Spec {
 
                 $reflection = new ReflectionClass($app);
                 $bundlesProp = $reflection->getProperty('bundles');
-                $bundlesProp->setAccessible(true);
                 $bundles = $bundlesProp->getValue($app);
 
                 expect(array_key_exists($bundle->bundleName, $bundles))->toBe(true);

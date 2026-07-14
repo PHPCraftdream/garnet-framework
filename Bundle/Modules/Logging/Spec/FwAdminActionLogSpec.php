@@ -50,7 +50,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec {
     function resetDbTableSingletonsAal(): void {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
-        $prop->setAccessible(true);
         $prop->setValue(null, []);
     }
 
@@ -59,7 +58,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec {
         $inst = (new ReflectionClass(TestAdminActionLog::class))->newInstanceWithoutConstructor();
         $ref = new ReflectionClass(DbTable::class);
         $items = $ref->getProperty('items');
-        $items->setAccessible(true);
         $items->setValue(null, [TestAdminActionLog::class => $inst]);
 
         return $inst;

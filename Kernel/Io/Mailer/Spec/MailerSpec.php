@@ -13,17 +13,14 @@ describe('Mailer', function (): void {
         // Reset the static instance between tests
         $reflection = new ReflectionClass(Mailer::class);
         $property = $reflection->getProperty('instance');
-        $property->setAccessible(true);
         $property->setValue(null, null);
 
         // Reset IniConfig between tests
         $reflection = new ReflectionClass(IniConfig::class);
         $property = $reflection->getProperty('initParams');
-        $property->setAccessible(true);
         $property->setValue(null, []);
 
         $property = $reflection->getProperty('items');
-        $property->setAccessible(true);
         $property->setValue(null, []);
     });
 
@@ -144,17 +141,14 @@ verify_peer=0
             // Reset the instance before each sendHtmlMail test
             $reflection = new ReflectionClass(Mailer::class);
             $property = $reflection->getProperty('instance');
-            $property->setAccessible(true);
             $property->setValue(null, null);
 
             // Reset IniConfig
             $reflection = new ReflectionClass(IniConfig::class);
             $property = $reflection->getProperty('initParams');
-            $property->setAccessible(true);
             $property->setValue(null, []);
 
             $property = $reflection->getProperty('items');
-            $property->setAccessible(true);
             $property->setValue(null, []);
         });
 

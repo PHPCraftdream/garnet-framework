@@ -10,7 +10,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Migration\Spec {
         beforeEach(function (): void {
             $reflection = new ReflectionClass(Migration::class);
             $instanceProperty = $reflection->getProperty('instance');
-            $instanceProperty->setAccessible(true);
             $instanceProperty->setValue(null, null);
         });
 
@@ -42,7 +41,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Migration\Spec {
 
                 $reflection = new ReflectionClass($migration);
                 $currentVersionProperty = $reflection->getProperty('currentVersion');
-                $currentVersionProperty->setAccessible(true);
                 $currentVersionProperty->setValue($migration, 5);
 
                 $version = $migration->getCurrentVersion();
@@ -57,7 +55,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Migration\Spec {
 
                 $reflection = new ReflectionClass($migration);
                 $migrationClassesProperty = $reflection->getProperty('migrationClasses');
-                $migrationClassesProperty->setAccessible(true);
                 $migrationClasses = $migrationClassesProperty->getValue($migration);
 
                 expect($migrationClasses)->toBe([]);
@@ -68,7 +65,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Migration\Spec {
 
                 $reflection = new ReflectionClass($migration);
                 $migrationClassesProperty = $reflection->getProperty('migrationClasses');
-                $migrationClassesProperty->setAccessible(true);
                 $migrationClassesProperty->setValue($migration, [2 => 'TestClass']);
 
                 $migrationClasses = $migrationClassesProperty->getValue($migration);

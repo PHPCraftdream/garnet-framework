@@ -11,11 +11,9 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Logs\Spec {
         beforeEach(function (): void {
             $reflection = new ReflectionClass(Logger::class);
             $paramsProperty = $reflection->getProperty('params');
-            $paramsProperty->setAccessible(true);
             $paramsProperty->setValue(null, []);
 
             $loggersProperty = $reflection->getProperty('loggers');
-            $loggersProperty->setAccessible(true);
             $loggersProperty->setValue(null, []);
         });
 
@@ -51,7 +49,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Logs\Spec {
 
                 $reflection = new ReflectionClass(Logger::class);
                 $paramsProperty = $reflection->getProperty('params');
-                $paramsProperty->setAccessible(true);
                 $params = $paramsProperty->getValue();
 
                 expect(array_key_exists('test_logger', $params))->toBe(true);
@@ -75,7 +72,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Logs\Spec {
 
                 $reflection = new ReflectionClass(Logger::class);
                 $paramsProperty = $reflection->getProperty('params');
-                $paramsProperty->setAccessible(true);
                 $params = $paramsProperty->getValue();
 
                 expect($params['test_logger'])->toBe($logDir);
@@ -97,7 +93,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Logs\Spec {
 
                 $reflection = new ReflectionClass($logger);
                 $nameProperty = $reflection->getProperty('name');
-                $nameProperty->setAccessible(true);
                 expect($nameProperty->getValue($logger))->toBe('test_logger');
             });
 

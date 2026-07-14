@@ -81,7 +81,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\Mailer {
     function resetDbTableSingletonsMailer(): void {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
-        $prop->setAccessible(true);
         $prop->setValue(null, []);
     }
 
@@ -89,11 +88,9 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\Mailer {
         $ref = new ReflectionClass(IniConfig::class);
 
         $initParams = $ref->getProperty('initParams');
-        $initParams->setAccessible(true);
         $initParams->setValue(null, []);
 
         $items = $ref->getProperty('items');
-        $items->setAccessible(true);
         $items->setValue(null, []);
     }
 
@@ -111,7 +108,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\Mailer {
         $inst = (new ReflectionClass(MailerSpecMailLog::class))->newInstanceWithoutConstructor();
         $ref = new ReflectionClass(DbTable::class);
         $items = $ref->getProperty('items');
-        $items->setAccessible(true);
         $items->setValue(null, [MailerSpecMailLog::class => $inst]);
 
         return $inst;

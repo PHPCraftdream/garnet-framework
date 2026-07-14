@@ -36,22 +36,18 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig\Spec {
         beforeAll(function () use (&$realInitParams, &$realItems): void {
             $reflection = new ReflectionClass(IniConfig::class);
             $initParamsProp = $reflection->getProperty('initParams');
-            $initParamsProp->setAccessible(true);
             $realInitParams = $initParamsProp->getValue();
 
             $itemsProp = $reflection->getProperty('items');
-            $itemsProp->setAccessible(true);
             $realItems = $itemsProp->getValue();
         });
 
         afterAll(function () use (&$realInitParams, &$realItems): void {
             $reflection = new ReflectionClass(IniConfig::class);
             $initParamsProp = $reflection->getProperty('initParams');
-            $initParamsProp->setAccessible(true);
             $initParamsProp->setValue(null, $realInitParams);
 
             $itemsProp = $reflection->getProperty('items');
-            $itemsProp->setAccessible(true);
             $itemsProp->setValue(null, $realItems);
         });
 
@@ -74,11 +70,9 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig\Spec {
                 // Reset static properties
                 $reflection = new ReflectionClass(IniConfig::class);
                 $initParamsProp = $reflection->getProperty('initParams');
-                $initParamsProp->setAccessible(true);
                 $initParamsProp->setValue(null, []);
 
                 $itemsProp = $reflection->getProperty('items');
-                $itemsProp->setAccessible(true);
                 $itemsProp->setValue(null, []);
             });
 
@@ -90,7 +84,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig\Spec {
 
                 $reflection = new ReflectionClass(IniConfig::class);
                 $initParamsProp = $reflection->getProperty('initParams');
-                $initParamsProp->setAccessible(true);
                 $params = $initParamsProp->getValue();
 
                 expect($params['TEST_ENV'])->toBe($testFile);
@@ -103,7 +96,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig\Spec {
             beforeEach(function (): void {
                 $reflection = new ReflectionClass(IniConfig::class);
                 $initParamsProp = $reflection->getProperty('initParams');
-                $initParamsProp->setAccessible(true);
                 $initParamsProp->setValue(null, []);
             });
 
@@ -115,7 +107,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig\Spec {
 
                 $reflection = new ReflectionClass(IniConfig::class);
                 $initParamsProp = $reflection->getProperty('initParams');
-                $initParamsProp->setAccessible(true);
                 $params = $initParamsProp->getValue();
 
                 expect($params[IniConfig::ENV_APP])->toBe($testFile);
@@ -128,11 +119,9 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig\Spec {
             beforeEach(function (): void {
                 $reflection = new ReflectionClass(IniConfig::class);
                 $initParamsProp = $reflection->getProperty('initParams');
-                $initParamsProp->setAccessible(true);
                 $initParamsProp->setValue(null, []);
 
                 $itemsProp = $reflection->getProperty('items');
-                $itemsProp->setAccessible(true);
                 $itemsProp->setValue(null, []);
             });
 
@@ -177,7 +166,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig\Spec {
 
                 $reflection = new ReflectionClass($config);
                 $dataProp = $reflection->getProperty('data');
-                $dataProp->setAccessible(true);
 
                 expect($dataProp->getValue($config))->toBe([]);
             });
@@ -188,7 +176,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig\Spec {
 
                 $reflection = new ReflectionClass($config);
                 $readyProp = $reflection->getProperty('ready');
-                $readyProp->setAccessible(true);
 
                 expect($readyProp->getValue($config))->toBe(false);
             });
@@ -443,7 +430,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig\Spec {
             beforeEach(function (): void {
                 $reflection = new ReflectionClass(IniConfig::class);
                 $initParamsProp = $reflection->getProperty('initParams');
-                $initParamsProp->setAccessible(true);
                 $initParamsProp->setValue(null, []);
             });
 
@@ -455,7 +441,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig\Spec {
 
                 $reflection = new ReflectionClass(IniConfig::class);
                 $initParamsProp = $reflection->getProperty('initParams');
-                $initParamsProp->setAccessible(true);
                 $params = $initParamsProp->getValue();
 
                 expect($params[IniConfig::ENV_DB])->toBe($testFile);
@@ -468,11 +453,9 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig\Spec {
             beforeEach(function (): void {
                 $reflection = new ReflectionClass(IniConfig::class);
                 $initParamsProp = $reflection->getProperty('initParams');
-                $initParamsProp->setAccessible(true);
                 $initParamsProp->setValue(null, []);
 
                 $itemsProp = $reflection->getProperty('items');
-                $itemsProp->setAccessible(true);
                 $itemsProp->setValue(null, []);
             });
 
@@ -501,7 +484,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig\Spec {
             beforeEach(function (): void {
                 $reflection = new ReflectionClass(IniConfig::class);
                 $initParamsProp = $reflection->getProperty('initParams');
-                $initParamsProp->setAccessible(true);
                 $initParamsProp->setValue(null, []);
             });
 
@@ -513,7 +495,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig\Spec {
 
                 $reflection = new ReflectionClass(IniConfig::class);
                 $initParamsProp = $reflection->getProperty('initParams');
-                $initParamsProp->setAccessible(true);
                 $params = $initParamsProp->getValue();
 
                 expect($params[IniConfig::ENV_EMAIL])->toBe($testFile);
@@ -526,11 +507,9 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig\Spec {
             beforeEach(function (): void {
                 $reflection = new ReflectionClass(IniConfig::class);
                 $initParamsProp = $reflection->getProperty('initParams');
-                $initParamsProp->setAccessible(true);
                 $initParamsProp->setValue(null, []);
 
                 $itemsProp = $reflection->getProperty('items');
-                $itemsProp->setAccessible(true);
                 $itemsProp->setValue(null, []);
             });
 
@@ -559,11 +538,9 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig\Spec {
             beforeEach(function (): void {
                 $reflection = new ReflectionClass(IniConfig::class);
                 $initParamsProp = $reflection->getProperty('initParams');
-                $initParamsProp->setAccessible(true);
                 $initParamsProp->setValue(null, []);
 
                 $itemsProp = $reflection->getProperty('items');
-                $itemsProp->setAccessible(true);
                 $itemsProp->setValue(null, []);
             });
 
@@ -607,11 +584,9 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IniConfig\Spec {
             beforeEach(function (): void {
                 $reflection = new ReflectionClass(IniConfig::class);
                 $initParamsProp = $reflection->getProperty('initParams');
-                $initParamsProp->setAccessible(true);
                 $initParamsProp->setValue(null, []);
 
                 $itemsProp = $reflection->getProperty('items');
-                $itemsProp->setAccessible(true);
                 $itemsProp->setValue(null, []);
             });
 

@@ -122,7 +122,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
         describe('::normalizeFiles (private — via reflection)', function (): void {
             beforeEach(function (): void {
                 $this->fn = new ReflectionMethod(FileUploadManager::class, 'normalizeFiles');
-                $this->fn->setAccessible(true);
             });
 
             it('returns empty array when name key is missing', function (): void {

@@ -35,7 +35,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
     describe('Garnet command helpers (cross-class)', function (): void {
         $invoke = function (string $class, string $method, array $args) {
             $m = new ReflectionMethod($class, $method);
-            $m->setAccessible(true);
 
             return $m->invokeArgs(null, $args);
         };

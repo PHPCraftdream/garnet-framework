@@ -19,7 +19,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Migration\Spec {
             it('sets a new migration class', function (): void {
                 $reflection = new ReflectionClass(CMDMigration::class);
                 $migrationClassProp = $reflection->getProperty('migrationClass');
-                $migrationClassProp->setAccessible(true);
 
                 // Create a mock migration class that implements IMigration
                 $mockMigrationClass = 'MockMigration_' . uniqid();
@@ -54,7 +53,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Migration\Spec {
             it('has defined commands array', function (): void {
                 $reflection = new ReflectionClass(CMDMigration::class);
                 $commandsProp = $reflection->getProperty('commands');
-                $commandsProp->setAccessible(true);
                 $commands = $commandsProp->getValue(null);
 
                 expect($commands)->toBeA('array');
@@ -67,7 +65,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Migration\Spec {
             it('has correct command descriptions', function (): void {
                 $reflection = new ReflectionClass(CMDMigration::class);
                 $commandsProp = $reflection->getProperty('commands');
-                $commandsProp->setAccessible(true);
                 $commands = $commandsProp->getValue(null);
 
                 expect($commands['init'])->toBe('Init the migration tracker table');

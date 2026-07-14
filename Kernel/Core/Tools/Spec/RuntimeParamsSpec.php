@@ -7,7 +7,6 @@ describe('RuntimeParams', function (): void {
         // Reset singleton instance before each test
         $reflection = new ReflectionClass(RuntimeParams::class);
         $instanceProp = $reflection->getProperty('instance');
-        $instanceProp->setAccessible(true);
         $instanceProp->setValue(null, null);
     });
 

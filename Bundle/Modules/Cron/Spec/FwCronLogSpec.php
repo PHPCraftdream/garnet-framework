@@ -65,7 +65,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Cron\Spec {
     function resetCronSingletons(): void {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
-        $prop->setAccessible(true);
         $prop->setValue(null, []);
     }
 
@@ -74,7 +73,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Cron\Spec {
 
         $dbRef = new ReflectionClass(DbTable::class);
         $itemsProp = $dbRef->getProperty('items');
-        $itemsProp->setAccessible(true);
 
         $inst = (new ReflectionClass(TestCronLog::class))->newInstanceWithoutConstructor();
         $itemsProp->setValue(null, [TestCronLog::class => $inst]);
@@ -141,7 +139,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Cron\Spec {
                 $inst = (new ReflectionClass(TestCronLog::class))->newInstanceWithoutConstructor();
                 $ref = new ReflectionClass(FwCronLog::class);
                 $prop = $ref->getProperty('primaryKey');
-                $prop->setAccessible(true);
                 expect($prop->getValue($inst))->toBe('id');
             });
         });

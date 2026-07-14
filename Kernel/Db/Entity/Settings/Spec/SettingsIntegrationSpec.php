@@ -61,7 +61,6 @@ describe('Settings Integration', function (): void {
             $settingsTable = SettingsTable::get();
             $tableReflection = new ReflectionClass($settingsTable);
             $tableProp = $tableReflection->getProperty('tableName');
-            $tableProp->setAccessible(true);
             $tableProp->setValue($settingsTable, 'test_settings');
 
             $dbAvailable = true;
@@ -85,22 +84,16 @@ describe('Settings Integration', function (): void {
             $settings = Settings::get();
             $reflection = new ReflectionClass($settings);
             $prop = $reflection->getProperty('read');
-            $prop->setAccessible(true);
             $prop->setValue($settings, false);
             $prop = $reflection->getProperty('data');
-            $prop->setAccessible(true);
             $prop->setValue($settings, []);
             $prop = $reflection->getProperty('changed');
-            $prop->setAccessible(true);
             $prop->setValue($settings, false);
             $prop = $reflection->getProperty('changedData');
-            $prop->setAccessible(true);
             $prop->setValue($settings, []);
             $prop = $reflection->getProperty('unsetData');
-            $prop->setAccessible(true);
             $prop->setValue($settings, []);
             $prop = $reflection->getProperty('originalData');
-            $prop->setAccessible(true);
             $prop->setValue($settings, []);
         });
 
@@ -179,7 +172,6 @@ describe('Settings Integration', function (): void {
 
             $reflection = new ReflectionClass($settings);
             $prop = $reflection->getProperty('changedData');
-            $prop->setAccessible(true);
             $changedData = $prop->getValue($settings);
 
             // Should not be in changedData since value didn't change
@@ -213,22 +205,16 @@ describe('Settings Integration', function (): void {
             $settings = Settings::get();
             $reflection = new ReflectionClass($settings);
             $prop = $reflection->getProperty('read');
-            $prop->setAccessible(true);
             $prop->setValue($settings, false);
             $prop = $reflection->getProperty('data');
-            $prop->setAccessible(true);
             $prop->setValue($settings, []);
             $prop = $reflection->getProperty('changed');
-            $prop->setAccessible(true);
             $prop->setValue($settings, false);
             $prop = $reflection->getProperty('changedData');
-            $prop->setAccessible(true);
             $prop->setValue($settings, []);
             $prop = $reflection->getProperty('unsetData');
-            $prop->setAccessible(true);
             $prop->setValue($settings, []);
             $prop = $reflection->getProperty('originalData');
-            $prop->setAccessible(true);
             $prop->setValue($settings, []);
         });
 
@@ -278,7 +264,6 @@ describe('Settings Integration', function (): void {
             // Should be in changedData
             $reflection = new ReflectionClass($settings);
             $prop = $reflection->getProperty('changedData');
-            $prop->setAccessible(true);
             $changedData = $prop->getValue($settings);
             expect(isset($changedData['test_param']))->toBe(true);
 
@@ -287,13 +272,11 @@ describe('Settings Integration', function (): void {
 
             // Should not be in changedData anymore
             $prop = $reflection->getProperty('changedData');
-            $prop->setAccessible(true);
             $changedData = $prop->getValue($settings);
             expect(isset($changedData['test_param']))->toBe(false);
 
             // Should be in unsetData
             $prop = $reflection->getProperty('unsetData');
-            $prop->setAccessible(true);
             $unsetData = $prop->getValue($settings);
             expect(isset($unsetData['test_param']))->toBe(true);
         });
@@ -308,7 +291,6 @@ describe('Settings Integration', function (): void {
 
             $reflection = new ReflectionClass($settings);
             $prop = $reflection->getProperty('changed');
-            $prop->setAccessible(true);
 
             // Should be changed
             expect($prop->getValue($settings))->toBe(true);
@@ -336,22 +318,16 @@ describe('Settings Integration', function (): void {
             $settings = Settings::get();
             $reflection = new ReflectionClass($settings);
             $prop = $reflection->getProperty('read');
-            $prop->setAccessible(true);
             $prop->setValue($settings, false);
             $prop = $reflection->getProperty('data');
-            $prop->setAccessible(true);
             $prop->setValue($settings, []);
             $prop = $reflection->getProperty('changed');
-            $prop->setAccessible(true);
             $prop->setValue($settings, false);
             $prop = $reflection->getProperty('changedData');
-            $prop->setAccessible(true);
             $prop->setValue($settings, []);
             $prop = $reflection->getProperty('unsetData');
-            $prop->setAccessible(true);
             $prop->setValue($settings, []);
             $prop = $reflection->getProperty('originalData');
-            $prop->setAccessible(true);
             $prop->setValue($settings, []);
         });
 
@@ -436,7 +412,6 @@ describe('Settings Integration', function (): void {
             $settings = Settings::get();
             $reflection = new ReflectionClass($settings);
             $prop = $reflection->getProperty('read');
-            $prop->setAccessible(true);
             $prop->setValue($settings, false);
 
             // Read from database
@@ -462,7 +437,6 @@ describe('Settings Integration', function (): void {
             $settings = Settings::get();
             $reflection = new ReflectionClass($settings);
             $prop = $reflection->getProperty('read');
-            $prop->setAccessible(true);
             $prop->setValue($settings, false);
 
             $settings->read();
@@ -493,10 +467,8 @@ describe('Settings Integration', function (): void {
             $settings = Settings::get();
             $reflection = new ReflectionClass($settings);
             $prop = $reflection->getProperty('read');
-            $prop->setAccessible(true);
             $prop->setValue($settings, false);
             $prop = $reflection->getProperty('data');
-            $prop->setAccessible(true);
             $prop->setValue($settings, []);
         });
 
@@ -550,7 +522,6 @@ describe('Settings Integration', function (): void {
             $settings = Settings::get();
             $reflection = new ReflectionClass($settings);
             $prop = $reflection->getProperty('read');
-            $prop->setAccessible(true);
             $prop->setValue($settings, false);
 
             $settings->read();

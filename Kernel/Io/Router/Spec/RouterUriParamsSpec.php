@@ -260,7 +260,6 @@ describe('RouterUriParams', function (): void {
             RouterUriParams::setRoutePrefix('');
             $reflection = new ReflectionClass(RouterUriParams::class);
             $prop = $reflection->getProperty('noPrefixPaths');
-            $prop->setAccessible(true);
             $prop->setValue(null, []);
         });
 

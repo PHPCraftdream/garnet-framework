@@ -242,7 +242,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Spec {
             // Reset static instance
             $reflection = new ReflectionClass(Session::class);
             $prop = $reflection->getProperty('instance');
-            $prop->setAccessible(true);
             $prop->setValue(null, null);
         });
 
@@ -281,7 +280,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Spec {
                     // If anything fails, manually set the read flag for testing
                     $reflection = new ReflectionClass($session);
                     $prop = $reflection->getProperty('read');
-                    $prop->setAccessible(true);
                     $prop->setValue($session, true);
                 }
 
@@ -307,7 +305,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Spec {
                     // If anything fails, manually set the read flag for testing
                     $reflection = new ReflectionClass($session);
                     $prop = $reflection->getProperty('read');
-                    $prop->setAccessible(true);
                     $prop->setValue($session, true);
                 }
 
@@ -333,12 +330,10 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Spec {
                 // Access cookies property via reflection
                 $reflection = new ReflectionClass($session);
                 $prop = $reflection->getProperty('cookies');
-                $prop->setAccessible(true);
                 $prop->setValue($session, $mockCookies);
 
                 $reflection2 = new ReflectionClass($session);
                 $prop2 = $reflection2->getProperty('changedCookies');
-                $prop2->setAccessible(true);
                 $prop2->setValue($session, true);
 
                 $result = $session->patchResponse($mockResponse);
@@ -355,7 +350,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Spec {
                 $mockCookies = new MockCookies();
                 $reflection = new ReflectionClass($session);
                 $prop = $reflection->getProperty('cookies');
-                $prop->setAccessible(true);
                 $prop->setValue($session, $mockCookies);
             });
 
@@ -409,7 +403,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Spec {
                 $mockCookies = new MockCookies();
                 $reflection = new ReflectionClass($session);
                 $prop = $reflection->getProperty('cookies');
-                $prop->setAccessible(true);
                 $prop->setValue($session, $mockCookies);
             });
 
@@ -450,7 +443,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Spec {
                 $mockCookies = new MockCookies();
                 $reflection = new ReflectionClass($session);
                 $prop = $reflection->getProperty('cookies');
-                $prop->setAccessible(true);
                 $prop->setValue($session, $mockCookies);
             });
 
@@ -480,7 +472,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Spec {
                 $mockCookies = new MockCookies();
                 $reflection = new ReflectionClass($session);
                 $prop = $reflection->getProperty('cookies');
-                $prop->setAccessible(true);
                 $prop->setValue($session, $mockCookies);
             });
 
@@ -519,7 +510,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Spec {
 
                 $reflection = new ReflectionClass($session);
                 $prop = $reflection->getProperty('cookies');
-                $prop->setAccessible(true);
                 $prop->setValue($session, $mockCookies);
 
                 $session->flush();
@@ -533,13 +523,11 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Spec {
 
                 $reflection = new ReflectionClass($session);
                 $prop = $reflection->getProperty('cookies');
-                $prop->setAccessible(true);
                 $prop->setValue($session, $mockCookies);
 
                 // Set session value but no changes
                 $reflection2 = new ReflectionClass($session);
                 $prop2 = $reflection2->getProperty('sessionValue');
-                $prop2->setAccessible(true);
                 $prop2->setValue($session, 'test_value');
 
                 $session->flush();

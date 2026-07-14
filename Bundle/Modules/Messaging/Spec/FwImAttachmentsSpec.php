@@ -270,7 +270,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Spec {
     function resetAttachmentsDbSingletons(): void {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
-        $prop->setAccessible(true);
         $prop->setValue(null, []);
     }
 
@@ -279,7 +278,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Spec {
 
         $dbRef = new ReflectionClass(DbTable::class);
         $itemsProp = $dbRef->getProperty('items');
-        $itemsProp->setAccessible(true);
 
         $inst = (new ReflectionClass(TestImAttachments::class))->newInstanceWithoutConstructor();
         $itemsProp->setValue(null, [TestImAttachments::class => $inst]);

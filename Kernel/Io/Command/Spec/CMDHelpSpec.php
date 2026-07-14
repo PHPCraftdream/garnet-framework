@@ -7,14 +7,12 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Command {
         beforeEach(function (): void {
             $reflection = new ReflectionClass(CommandClasses::class);
             $property = $reflection->getProperty('classes');
-            $property->setAccessible(true);
             $property->setValue(null, []);
         });
 
         afterEach(function (): void {
             $reflection = new ReflectionClass(CommandClasses::class);
             $property = $reflection->getProperty('classes');
-            $property->setAccessible(true);
             $property->setValue(null, []);
         });
 

@@ -106,7 +106,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\MailLogCtrl {
     function resetDbTableSingletonsMailCtrl(): void {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
-        $prop->setAccessible(true);
         $prop->setValue(null, []);
     }
 
@@ -115,7 +114,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\MailLogCtrl {
         $inst = (new ReflectionClass(MailCtrlSpecMailLog::class))->newInstanceWithoutConstructor();
         $ref = new ReflectionClass(DbTable::class);
         $items = $ref->getProperty('items');
-        $items->setAccessible(true);
         $items->setValue(null, [MailCtrlSpecMailLog::class => $inst]);
 
         return $inst;
@@ -124,7 +122,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\MailLogCtrl {
     function callMailFetchLogs(int $limit = 200): array {
         $ref = new ReflectionClass(TestMailLogController::class);
         $method = $ref->getMethod('fetchLogs');
-        $method->setAccessible(true);
 
         return $method->invoke(null, $limit);
     }

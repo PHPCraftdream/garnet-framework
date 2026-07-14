@@ -49,11 +49,9 @@ describe('DbM2M', function (): void {
         // Reset IniConfig static state
         $reflection = new ReflectionClass(\PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig::class);
         $itemsProp = $reflection->getProperty('items');
-        $itemsProp->setAccessible(true);
         $itemsProp->setValue(null, []);
 
         $initParamsProp = $reflection->getProperty('initParams');
-        $initParamsProp->setAccessible(true);
         $initParamsProp->setValue(null, []);
 
         // Set up IniConfig to avoid prefix

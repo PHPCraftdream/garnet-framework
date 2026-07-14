@@ -44,7 +44,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link\Spec {
             // Reset static instance
             $reflection = new ReflectionClass(DbPool::class);
             $prop = $reflection->getProperty('instance');
-            $prop->setAccessible(true);
             $prop->setValue(null, null);
         });
 
@@ -75,7 +74,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link\Spec {
                 // Inject mock links via reflection
                 $reflection = new ReflectionClass($pool);
                 $linksProp = $reflection->getProperty('links');
-                $linksProp->setAccessible(true);
 
                 $linksProp->setValue($pool, [new MockDbLink(), new MockDbLink()]);
 
@@ -94,7 +92,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link\Spec {
                 // Inject mock links
                 $reflection = new ReflectionClass($pool);
                 $linksProp = $reflection->getProperty('links');
-                $linksProp->setAccessible(true);
                 $linksProp->setValue($pool, [$link1, $link2, $link3]);
 
                 $pool->poll();
@@ -126,7 +123,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link\Spec {
                 // Inject mock links
                 $reflection = new ReflectionClass($pool);
                 $linksProp = $reflection->getProperty('links');
-                $linksProp->setAccessible(true);
                 $linksProp->setValue($pool, [$link1, $link2]);
 
                 expect(function () use ($pool): void {
@@ -162,7 +158,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link\Spec {
                 // Inject mock link
                 $reflection = new ReflectionClass($pool);
                 $linksProp = $reflection->getProperty('links');
-                $linksProp->setAccessible(true);
                 $linksProp->setValue($pool, [$link]);
 
                 $pool->pollFinishAll();

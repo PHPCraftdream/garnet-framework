@@ -16,11 +16,9 @@ function makeAuthConfig(array $config): AuthConfig {
     $instance = $ref->newInstanceWithoutConstructor();
 
     $configProp = $ref->getProperty('config');
-    $configProp->setAccessible(true);
     $configProp->setValue($instance, $config);
 
     $instanceProp = $ref->getProperty('instance');
-    $instanceProp->setAccessible(true);
     $instanceProp->setValue(null, $instance);
 
     return $instance;
@@ -30,7 +28,6 @@ describe('AuthConfig', function (): void {
     beforeEach(function (): void {
         $ref = new ReflectionClass(AuthConfig::class);
         $prop = $ref->getProperty('instance');
-        $prop->setAccessible(true);
         $prop->setValue(null, null);
     });
 

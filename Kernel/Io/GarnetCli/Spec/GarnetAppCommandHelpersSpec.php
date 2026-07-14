@@ -28,7 +28,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
     describe('GarnetAppCommand helpers', function (): void {
         $invoke = function (string $method, array $args) {
             $m = new ReflectionMethod(GarnetAppCommand::class, $method);
-            $m->setAccessible(true);
 
             return $m->invokeArgs(null, $args);
         };

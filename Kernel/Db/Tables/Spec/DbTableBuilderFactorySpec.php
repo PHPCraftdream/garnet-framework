@@ -47,11 +47,9 @@ password = pass
         // Reset IniConfig static properties
         $reflection = new ReflectionClass(IniConfig::class);
         $initParamsProp = $reflection->getProperty('initParams');
-        $initParamsProp->setAccessible(true);
         $initParamsProp->setValue(null, []);
 
         $itemsProp = $reflection->getProperty('items');
-        $itemsProp->setAccessible(true);
         $itemsProp->setValue(null, []);
 
         // Define DB config
@@ -73,7 +71,6 @@ password = pass
 
             $reflection = new ReflectionClass(IniConfig::class);
             $itemsProp = $reflection->getProperty('items');
-            $itemsProp->setAccessible(true);
             $items = $itemsProp->getValue();
 
             $config = $items['ENV_DB'];
@@ -91,7 +88,6 @@ password = pass
 
             $reflection = new ReflectionClass(IniConfig::class);
             $itemsProp = $reflection->getProperty('items');
-            $itemsProp->setAccessible(true);
             $items = $itemsProp->getValue();
 
             $config = $items['ENV_DB'];

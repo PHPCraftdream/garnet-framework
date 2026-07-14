@@ -8,15 +8,12 @@ describe('BenchmarkLog', function (): void {
         $reflection = new ReflectionClass(BenchmarkLog::class);
 
         $startProp = $reflection->getProperty('start');
-        $startProp->setAccessible(true);
         $startProp->setValue(null, 0.0);
 
         $lastProp = $reflection->getProperty('last');
-        $lastProp->setAccessible(true);
         $lastProp->setValue(null, 0.0);
 
         $itemsProp = $reflection->getProperty('items');
-        $itemsProp->setAccessible(true);
         $itemsProp->setValue(null, []);
     });
 
@@ -26,7 +23,6 @@ describe('BenchmarkLog', function (): void {
 
             $reflection = new ReflectionClass(BenchmarkLog::class);
             $itemsProp = $reflection->getProperty('items');
-            $itemsProp->setAccessible(true);
             $items = $itemsProp->getValue();
 
             expect(count($items))->toBe(1);
@@ -38,7 +34,6 @@ describe('BenchmarkLog', function (): void {
 
             $reflection = new ReflectionClass(BenchmarkLog::class);
             $startProp = $reflection->getProperty('start');
-            $startProp->setAccessible(true);
             $start = $startProp->getValue();
 
             expect($start)->toBeGreaterThan(0);
@@ -54,7 +49,6 @@ describe('BenchmarkLog', function (): void {
 
             $reflection = new ReflectionClass(BenchmarkLog::class);
             $itemsProp = $reflection->getProperty('items');
-            $itemsProp->setAccessible(true);
             $items = $itemsProp->getValue();
 
             expect(count($items))->toBe(2);
@@ -70,7 +64,6 @@ describe('BenchmarkLog', function (): void {
 
             $reflection = new ReflectionClass(BenchmarkLog::class);
             $itemsProp = $reflection->getProperty('items');
-            $itemsProp->setAccessible(true);
             $items = $itemsProp->getValue();
 
             expect(count($items))->toBe(4);

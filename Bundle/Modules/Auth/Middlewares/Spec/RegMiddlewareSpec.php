@@ -26,7 +26,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\Spec {
     function callProtected(string $class, string $method, array $args = []): mixed {
         $ref = new ReflectionClass($class);
         $m = $ref->getMethod($method);
-        $m->setAccessible(true);
 
         return $m->invoke(null, ...$args);
     }

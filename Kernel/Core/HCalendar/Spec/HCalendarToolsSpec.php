@@ -7,7 +7,6 @@ describe('HCalendarTools', function (): void {
         // Reset static cache
         $reflection = new ReflectionClass(HCalendarTools::class);
         $yearEdgesProp = $reflection->getProperty('yearEdges');
-        $yearEdgesProp->setAccessible(true);
         $yearEdgesProp->setValue(null, []);
     });
 

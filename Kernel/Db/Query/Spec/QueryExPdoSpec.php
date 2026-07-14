@@ -72,7 +72,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query\Spec {
             // Reset static instance
             $reflection = new ReflectionClass(Query\QueryExPdo::class);
             $prop = $reflection->getProperty('instance');
-            $prop->setAccessible(true);
             $prop->setValue(null, null);
         });
 

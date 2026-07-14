@@ -142,7 +142,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Spec {
     function resetDbTableSingletons(): void {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
-        $prop->setAccessible(true);
         $prop->setValue(null, []);
     }
 
@@ -151,7 +150,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Spec {
 
         $dbRef = new ReflectionClass(DbTable::class);
         $itemsProp = $dbRef->getProperty('items');
-        $itemsProp->setAccessible(true);
 
         $ledgerRef = new ReflectionClass(TestBalanceLedger::class);
         $balanceRef = new ReflectionClass(TestAccountBalance::class);
@@ -365,7 +363,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Spec {
                 // Access via reflection since entryTypeEnum is protected
                 $ref = new ReflectionClass(TestBalanceLedger::class);
                 $method = $ref->getMethod('entryTypeEnum');
-                $method->setAccessible(true);
                 $enum = $method->invoke(null);
                 expect($enum)->toContain('top_up');
             });
@@ -373,7 +370,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Spec {
             it('includes booking_refund in enum definition', function (): void {
                 $ref = new ReflectionClass(TestBalanceLedger::class);
                 $method = $ref->getMethod('entryTypeEnum');
-                $method->setAccessible(true);
                 $enum = $method->invoke(null);
                 expect($enum)->toContain('booking_refund');
             });
@@ -381,7 +377,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Spec {
             it('includes manual in enum definition', function (): void {
                 $ref = new ReflectionClass(TestBalanceLedger::class);
                 $method = $ref->getMethod('entryTypeEnum');
-                $method->setAccessible(true);
                 $enum = $method->invoke(null);
                 expect($enum)->toContain('manual');
             });
@@ -397,7 +392,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Spec {
                 // resolveRole is protected, access via reflection
                 $this->ref = new ReflectionClass(TestBalanceAdminController::class);
                 $this->method = $this->ref->getMethod('resolveRole');
-                $this->method->setAccessible(true);
             });
 
             it('returns "admin" when IS_ADMIN flag is set', function (): void {

@@ -322,7 +322,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\Spec {
                 // Reset Session singleton
                 $reflection = new ReflectionClass('PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Session');
                 $prop = $reflection->getProperty('instance');
-                $prop->setAccessible(true);
                 $prop->setValue(null, null);
 
                 // Create a new Session instance without constructor
@@ -333,23 +332,18 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\Spec {
                 $mockCookies = new MockCookies();
 
                 $cookiesProp = $sessionReflection->getProperty('cookies');
-                $cookiesProp->setAccessible(true);
                 $cookiesProp->setValue($sessionInstance, $mockCookies);
 
                 $csrfTokenProp = $sessionReflection->getProperty('csrfToken');
-                $csrfTokenProp->setAccessible(true);
                 $csrfTokenProp->setValue($sessionInstance, '');
 
                 $sessionDataProp = $sessionReflection->getProperty('sessionData');
-                $sessionDataProp->setAccessible(true);
                 $sessionDataProp->setValue($sessionInstance, []);
 
                 $changedValuesProp = $sessionReflection->getProperty('changedValues');
-                $changedValuesProp->setAccessible(true);
                 $changedValuesProp->setValue($sessionInstance, []);
 
                 $unsetValuesProp = $sessionReflection->getProperty('unsetValues');
-                $unsetValuesProp->setAccessible(true);
                 $unsetValuesProp->setValue($sessionInstance, []);
 
                 // Set the singleton instance
@@ -376,7 +370,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\Spec {
                 $reflection = new ReflectionClass('PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Session');
                 $sessionInstance = $reflection->getProperty('instance')->getValue(null);
                 $csrfProp = $reflection->getProperty('csrfToken');
-                $csrfProp->setAccessible(true);
                 $csrfProp->setValue($sessionInstance, 'session_token');
 
                 $result = AuthMiddleware::checkCSRF($mockGlobals);
@@ -400,7 +393,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\Spec {
                 $reflection = new ReflectionClass('PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Session');
                 $sessionInstance = $reflection->getProperty('instance')->getValue(null);
                 $csrfProp = $reflection->getProperty('csrfToken');
-                $csrfProp->setAccessible(true);
                 $csrfProp->setValue($sessionInstance, 'matching_token');
 
                 $result = AuthMiddleware::checkCSRF($mockGlobals);
@@ -415,7 +407,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\Spec {
                 $reflection = new ReflectionClass('PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Session');
                 $sessionInstance = $reflection->getProperty('instance')->getValue(null);
                 $csrfProp = $reflection->getProperty('csrfToken');
-                $csrfProp->setAccessible(true);
                 $csrfProp->setValue($sessionInstance, 'session_token');
 
                 $result = AuthMiddleware::checkCSRF($mockGlobals);

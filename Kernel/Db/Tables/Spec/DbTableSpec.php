@@ -37,7 +37,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables\Spec {
                 // Reset static items
                 $reflection = new ReflectionClass(DbTable::class);
                 $itemsProp = $reflection->getProperty('items');
-                $itemsProp->setAccessible(true);
                 $itemsProp->setValue(null, []);
             });
 
@@ -58,7 +57,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables\Spec {
             it('stores instances in static items array', function (): void {
                 $reflection = new ReflectionClass(DbTable::class);
                 $itemsProp = $reflection->getProperty('items');
-                $itemsProp->setAccessible(true);
 
                 MockDbTable::get();
 
@@ -118,7 +116,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables\Spec {
                 $table = MockDbTable::get();
                 $reflection = new ReflectionClass($table);
                 $prefixProp = $reflection->getProperty('prefix');
-                $prefixProp->setAccessible(true);
 
                 expect($prefixProp->getValue($table))->toBeNull();
             });
@@ -127,7 +124,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables\Spec {
                 $table = MockDbTable::get();
                 $reflection = new ReflectionClass($table);
                 $defaultSelectProp = $reflection->getProperty('defaultSelect');
-                $defaultSelectProp->setAccessible(true);
 
                 expect($defaultSelectProp->getValue($table))->toBe(['*']);
             });
@@ -136,7 +132,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables\Spec {
                 $table = MockDbTable::get();
                 $reflection = new ReflectionClass($table);
                 $defaultPageSizeProp = $reflection->getProperty('defaultPageSize');
-                $defaultPageSizeProp->setAccessible(true);
 
                 expect($defaultPageSizeProp->getValue($table))->toBe(10);
             });
@@ -147,7 +142,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables\Spec {
                 $table = MockDbTable::get();
                 $reflection = new ReflectionClass($table);
                 $primaryKeyProp = $reflection->getProperty('primaryKey');
-                $primaryKeyProp->setAccessible(true);
                 $primaryKeyProp->setValue($table, 'new_id');
 
                 expect($table->getPrimaryKey())->toBe('new_id');
@@ -161,7 +155,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables\Spec {
 
                 $reflection = new ReflectionClass($table);
                 $prefixProp = $reflection->getProperty('prefix');
-                $prefixProp->setAccessible(true);
 
                 expect($prefixProp->getValue($table))->toBe('custom');
             });
@@ -172,7 +165,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables\Spec {
 
                 $reflection = new ReflectionClass($table);
                 $prefixProp = $reflection->getProperty('prefix');
-                $prefixProp->setAccessible(true);
 
                 expect($prefixProp->getValue($table))->toBeNull();
             });

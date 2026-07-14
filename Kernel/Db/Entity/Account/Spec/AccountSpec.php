@@ -15,11 +15,9 @@ describe('Account', function (): void {
         // Reset static properties between tests
         $reflection = new ReflectionClass(Account::class);
         $property = $reflection->getProperty('items');
-        $property->setAccessible(true);
         $property->setValue(null, []);
 
         $property = $reflection->getProperty('sessionAccount');
-        $property->setAccessible(true);
         $property->setValue(null, null);
 
         // Account::get() eagerly performs a real async DB read even just to
@@ -63,7 +61,6 @@ describe('Account', function (): void {
 
         $dbTableReflection = new ReflectionClass(DbTable::class);
         $itemsProp = $dbTableReflection->getProperty('items');
-        $itemsProp->setAccessible(true);
         $items = $itemsProp->getValue();
         $items[DbAccount::class] = $dbAccountMock;
         $items[DbAccountData::class] = $dbAccountDataMock;
@@ -75,7 +72,6 @@ describe('Account', function (): void {
 
         $dbTableReflection = new ReflectionClass(DbTable::class);
         $itemsProp = $dbTableReflection->getProperty('items');
-        $itemsProp->setAccessible(true);
         $items = $itemsProp->getValue();
         unset($items[DbAccount::class], $items[DbAccountData::class]);
 
@@ -88,7 +84,6 @@ describe('Account', function (): void {
 
             $reflection = new ReflectionClass($account);
             $property = $reflection->getProperty('id');
-            $property->setAccessible(true);
 
             expect($property->getValue($account))->toBe(123);
         });
@@ -98,12 +93,10 @@ describe('Account', function (): void {
 
             $reflection = new ReflectionClass($account);
             $property = $reflection->getProperty('login');
-            $property->setAccessible(true);
 
             expect($property->getValue($account))->toBe('test@example.com');
 
             $property = $reflection->getProperty('id');
-            $property->setAccessible(true);
 
             expect($property->getValue($account))->toBe(0);
         });
@@ -135,7 +128,6 @@ describe('Account', function (): void {
 
             $reflection = new ReflectionClass($account);
             $property = $reflection->getProperty('params');
-            $property->setAccessible(true);
             $property->setValue($account, ['name' => 'John']);
 
             expect($account->readParam('name'))->toBe('John');
@@ -162,7 +154,6 @@ describe('Account', function (): void {
 
             $reflection = new ReflectionClass($account);
             $property = $reflection->getProperty('params');
-            $property->setAccessible(true);
             $property->setValue($account, ['name' => 'John', 'email' => 'john@example.com']);
 
             $result = $account->readParams(['name', 'email', 'phone']);
@@ -183,7 +174,6 @@ describe('Account', function (): void {
 
             $reflection = new ReflectionClass($account);
             $property = $reflection->getProperty('data');
-            $property->setAccessible(true);
             $property->setValue($account, ['phone' => '+1234567890']);
 
             expect($account->readData('phone'))->toBe('+1234567890');
@@ -196,7 +186,6 @@ describe('Account', function (): void {
 
             $reflection = new ReflectionClass($account);
             $property = $reflection->getProperty('data');
-            $property->setAccessible(true);
             $property->setValue($account, ['phone' => '+1234567890', 'address' => 'Street 1']);
 
             $result = $account->readDataParams(['phone', 'address', 'bio']);
@@ -215,7 +204,6 @@ describe('Account', function (): void {
 
             $reflection = new ReflectionClass($account);
             $property = $reflection->getProperty('setParams');
-            $property->setAccessible(true);
 
             expect($property->getValue($account))->toBe(['name' => 'John']);
         });
@@ -225,13 +213,11 @@ describe('Account', function (): void {
 
             $reflection = new ReflectionClass($account);
             $property = $reflection->getProperty('params');
-            $property->setAccessible(true);
             $property->setValue($account, ['name' => 'John']);
 
             $account->setParam('name', 'John');
 
             $property = $reflection->getProperty('setParams');
-            $property->setAccessible(true);
 
             expect($property->getValue($account))->toBe([]);
         });
@@ -248,7 +234,6 @@ describe('Account', function (): void {
 
             $reflection = new ReflectionClass($account);
             $property = $reflection->getProperty('setParams');
-            $property->setAccessible(true);
 
             expect($property->getValue($account))->toBe([
                 'name' => 'John',
@@ -267,7 +252,6 @@ describe('Account', function (): void {
 
             $reflection = new ReflectionClass($account);
             $property = $reflection->getProperty('setData');
-            $property->setAccessible(true);
 
             expect($property->getValue($account))->toBe(['phone' => '+1234567890']);
         });
@@ -277,7 +261,6 @@ describe('Account', function (): void {
 
             $reflection = new ReflectionClass($account);
             $property = $reflection->getProperty('unsetData');
-            $property->setAccessible(true);
             $property->setValue($account, ['phone' => true]);
 
             $account->setData('phone', '+1234567890');
@@ -292,7 +275,6 @@ describe('Account', function (): void {
 
             $reflection = new ReflectionClass($account);
             $property = $reflection->getProperty('data');
-            $property->setAccessible(true);
             $property->setValue($account, ['phone' => '+1234567890']);
 
             $account->unsetData('phone');
@@ -300,7 +282,6 @@ describe('Account', function (): void {
             expect($account->readData('phone'))->toBeNull();
 
             $property = $reflection->getProperty('unsetData');
-            $property->setAccessible(true);
 
             expect($property->getValue($account))->toBe(['phone' => true]);
         });
@@ -310,7 +291,6 @@ describe('Account', function (): void {
 
             $reflection = new ReflectionClass($account);
             $property = $reflection->getProperty('setData');
-            $property->setAccessible(true);
             $property->setValue($account, ['phone' => '+1234567890']);
 
             $account->unsetData('phone');
@@ -325,13 +305,11 @@ describe('Account', function (): void {
 
             $reflection = new ReflectionClass($account);
             $property = $reflection->getProperty('data');
-            $property->setAccessible(true);
             $property->setValue($account, ['phone' => '1', 'address' => '1']);
 
             $account->setBoolDataArr(['phone' => '0', 'address' => '0']);
 
             $property = $reflection->getProperty('unsetData');
-            $property->setAccessible(true);
 
             expect($property->getValue($account))->toBe(['phone' => true, 'address' => true]);
         });
@@ -341,13 +319,11 @@ describe('Account', function (): void {
 
             $reflection = new ReflectionClass($account);
             $property = $reflection->getProperty('data');
-            $property->setAccessible(true);
             $property->setValue($account, ['phone' => '1']);
 
             $account->setBoolDataArr(['phone' => '1']);
 
             $property = $reflection->getProperty('setData');
-            $property->setAccessible(true);
 
             expect($property->getValue($account))->toBe([]);
         });
@@ -370,7 +346,6 @@ describe('Account', function (): void {
 
             $reflection = new ReflectionClass($account);
             $property = $reflection->getProperty('data');
-            $property->setAccessible(true);
             $property->setValue($account, ['phone' => '+1234567890', 'address' => 'Street 1']);
 
             $account->unsetDataArr(['phone', 'address']);
@@ -379,7 +354,6 @@ describe('Account', function (): void {
             expect($account->readData('address'))->toBeNull();
 
             $property = $reflection->getProperty('unsetData');
-            $property->setAccessible(true);
 
             expect($property->getValue($account))->toBe(['phone' => true, 'address' => true]);
         });
@@ -394,7 +368,6 @@ describe('Account', function (): void {
 
             $reflection = new ReflectionClass($account);
             $property = $reflection->getProperty('setData');
-            $property->setAccessible(true);
 
             expect($property->getValue($account)[Account::IS_ADMIN])->toBe(1);
         });
@@ -408,7 +381,6 @@ describe('Account', function (): void {
 
             $reflection = new ReflectionClass($account);
             $property = $reflection->getProperty('setData');
-            $property->setAccessible(true);
 
             expect($property->getValue($account)[Account::IS_ADMIN])->toBe(0);
         });
@@ -456,7 +428,6 @@ describe('Account', function (): void {
 
             $reflection = new ReflectionClass($account);
             $property = $reflection->getProperty('data');
-            $property->setAccessible(true);
             $property->setValue($account, [
                 Account::IS_ADMIN => 1,
                 Account::IS_MODERATOR => 1,
@@ -475,7 +446,6 @@ describe('Account', function (): void {
 
             $reflection = new ReflectionClass($account);
             $property = $reflection->getProperty('data');
-            $property->setAccessible(true);
             $property->setValue($account, [
                 Account::IS_ADMIN => 0,
                 Account::IS_MODERATOR => 0,
@@ -496,7 +466,6 @@ describe('Account', function (): void {
 
             $reflection = new ReflectionClass($account);
             $property = $reflection->getProperty('params');
-            $property->setAccessible(true);
             $property->setValue($account, ['name' => 'John', 'email' => 'john@example.com']);
 
             expect($account->getParams())->toBe(['name' => 'John', 'email' => 'john@example.com']);
@@ -509,7 +478,6 @@ describe('Account', function (): void {
 
             $reflection = new ReflectionClass($account);
             $property = $reflection->getProperty('data');
-            $property->setAccessible(true);
             $property->setValue($account, ['phone' => '+1234567890', 'address' => 'Street 1']);
 
             expect($account->getData())->toBe(['phone' => '+1234567890', 'address' => 'Street 1']);
@@ -528,7 +496,6 @@ describe('Account', function (): void {
 
             $reflection = new ReflectionClass($account);
             $property = $reflection->getProperty('params');
-            $property->setAccessible(true);
             $property->setValue($account, ['id' => '123']);
 
             expect($account->id())->toBe(123);
@@ -541,7 +508,6 @@ describe('Account', function (): void {
 
             $reflection = new ReflectionClass($account);
             $property = $reflection->getProperty('readDataAsyncLinks');
-            $property->setAccessible(true);
 
             expect($property->getValue($account))->toBe([]);
         });

@@ -8,7 +8,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Settings\Spec {
         beforeEach(function (): void {
             $reflection = new ReflectionClass(Settings::class);
             $instanceProperty = $reflection->getProperty('instance');
-            $instanceProperty->setAccessible(true);
             $instanceProperty->setValue(null, null);
         });
 
@@ -28,27 +27,21 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Settings\Spec {
                 $reflection = new ReflectionClass($settings);
 
                 $dataProperty = $reflection->getProperty('data');
-                $dataProperty->setAccessible(true);
                 $dataProperty->setValue($settings, []);
 
                 $readProperty = $reflection->getProperty('read');
-                $readProperty->setAccessible(true);
                 $readProperty->setValue($settings, true);
 
                 $changedProperty = $reflection->getProperty('changed');
-                $changedProperty->setAccessible(true);
                 $changedProperty->setValue($settings, false);
 
                 $changedDataProperty = $reflection->getProperty('changedData');
-                $changedDataProperty->setAccessible(true);
                 $changedDataProperty->setValue($settings, []);
 
                 $unsetDataProperty = $reflection->getProperty('unsetData');
-                $unsetDataProperty->setAccessible(true);
                 $unsetDataProperty->setValue($settings, []);
 
                 $originalDataProperty = $reflection->getProperty('originalData');
-                $originalDataProperty->setAccessible(true);
                 $originalDataProperty->setValue($settings, []);
             });
 
@@ -73,7 +66,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Settings\Spec {
 
                 $reflection = new ReflectionClass($settings);
                 $dataProperty = $reflection->getProperty('data');
-                $dataProperty->setAccessible(true);
                 $dataProperty->setValue($settings, ['test_param' => 'test_value']);
 
                 $value = $settings->getValue('test_param');
@@ -89,27 +81,21 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Settings\Spec {
                 $reflection = new ReflectionClass($settings);
 
                 $dataProperty = $reflection->getProperty('data');
-                $dataProperty->setAccessible(true);
                 $dataProperty->setValue($settings, []);
 
                 $readProperty = $reflection->getProperty('read');
-                $readProperty->setAccessible(true);
                 $readProperty->setValue($settings, true);
 
                 $changedProperty = $reflection->getProperty('changed');
-                $changedProperty->setAccessible(true);
                 $changedProperty->setValue($settings, false);
 
                 $changedDataProperty = $reflection->getProperty('changedData');
-                $changedDataProperty->setAccessible(true);
                 $changedDataProperty->setValue($settings, []);
 
                 $unsetDataProperty = $reflection->getProperty('unsetData');
-                $unsetDataProperty->setAccessible(true);
                 $unsetDataProperty->setValue($settings, []);
 
                 $originalDataProperty = $reflection->getProperty('originalData');
-                $originalDataProperty->setAccessible(true);
                 $originalDataProperty->setValue($settings, []);
             });
 
@@ -128,7 +114,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Settings\Spec {
 
                 $reflection = new ReflectionClass($settings);
                 $changedProperty = $reflection->getProperty('changed');
-                $changedProperty->setAccessible(true);
 
                 $settings->setValue('test_param', 'test_value');
                 $changedValue1 = $changedProperty->getValue($settings);
@@ -145,7 +130,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Settings\Spec {
 
                 $reflection = new ReflectionClass($settings);
                 $changedProperty = $reflection->getProperty('changed');
-                $changedProperty->setAccessible(true);
 
                 $settings->setValue('test_param', 'initial_value');
 
@@ -157,7 +141,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Settings\Spec {
 
                 $reflection = new ReflectionClass($settings);
                 $changedDataProperty = $reflection->getProperty('changedData');
-                $changedDataProperty->setAccessible(true);
 
                 $settings->setValue('test_param', 'test_value');
 
@@ -172,27 +155,21 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Settings\Spec {
                 $reflection = new ReflectionClass($settings);
 
                 $dataProperty = $reflection->getProperty('data');
-                $dataProperty->setAccessible(true);
                 $dataProperty->setValue($settings, []);
 
                 $readProperty = $reflection->getProperty('read');
-                $readProperty->setAccessible(true);
                 $readProperty->setValue($settings, true);
 
                 $changedProperty = $reflection->getProperty('changed');
-                $changedProperty->setAccessible(true);
                 $changedProperty->setValue($settings, false);
 
                 $changedDataProperty = $reflection->getProperty('changedData');
-                $changedDataProperty->setAccessible(true);
                 $changedDataProperty->setValue($settings, []);
 
                 $unsetDataProperty = $reflection->getProperty('unsetData');
-                $unsetDataProperty->setAccessible(true);
                 $unsetDataProperty->setValue($settings, []);
 
                 $originalDataProperty = $reflection->getProperty('originalData');
-                $originalDataProperty->setAccessible(true);
                 $originalDataProperty->setValue($settings, []);
             });
 
@@ -201,7 +178,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Settings\Spec {
 
                 $reflection = new ReflectionClass($settings);
                 $dataProperty = $reflection->getProperty('data');
-                $dataProperty->setAccessible(true);
                 $dataProperty->setValue($settings, ['test_param' => 'test_value']);
 
                 $settings->unsetValue('test_param');
@@ -215,11 +191,9 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Settings\Spec {
 
                 $reflection = new ReflectionClass($settings);
                 $dataProperty = $reflection->getProperty('data');
-                $dataProperty->setAccessible(true);
                 $dataProperty->setValue($settings, []);
 
                 $unsetDataProperty = $reflection->getProperty('unsetData');
-                $unsetDataProperty->setAccessible(true);
 
                 $settings->unsetValue('nonexistent');
 
@@ -231,7 +205,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Settings\Spec {
 
                 $reflection = new ReflectionClass($settings);
                 $changedProperty = $reflection->getProperty('changed');
-                $changedProperty->setAccessible(true);
 
                 $settings->setValue('test_param', 'test_value');
                 $settings->unsetValue('test_param');
@@ -244,11 +217,9 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Settings\Spec {
 
                 $reflection = new ReflectionClass($settings);
                 $dataProperty = $reflection->getProperty('data');
-                $dataProperty->setAccessible(true);
                 $dataProperty->setValue($settings, ['test_param' => 'test_value']);
 
                 $unsetDataProperty = $reflection->getProperty('unsetData');
-                $unsetDataProperty->setAccessible(true);
 
                 $settings->unsetValue('test_param');
 
@@ -263,27 +234,21 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Settings\Spec {
                 $reflection = new ReflectionClass($settings);
 
                 $dataProperty = $reflection->getProperty('data');
-                $dataProperty->setAccessible(true);
                 $dataProperty->setValue($settings, []);
 
                 $readProperty = $reflection->getProperty('read');
-                $readProperty->setAccessible(true);
                 $readProperty->setValue($settings, true);
 
                 $changedProperty = $reflection->getProperty('changed');
-                $changedProperty->setAccessible(true);
                 $changedProperty->setValue($settings, false);
 
                 $changedDataProperty = $reflection->getProperty('changedData');
-                $changedDataProperty->setAccessible(true);
                 $changedDataProperty->setValue($settings, []);
 
                 $unsetDataProperty = $reflection->getProperty('unsetData');
-                $unsetDataProperty->setAccessible(true);
                 $unsetDataProperty->setValue($settings, []);
 
                 $originalDataProperty = $reflection->getProperty('originalData');
-                $originalDataProperty->setAccessible(true);
                 $originalDataProperty->setValue($settings, []);
             });
 
@@ -292,7 +257,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Settings\Spec {
 
                 $reflection = new ReflectionClass($settings);
                 $dataProperty = $reflection->getProperty('data');
-                $dataProperty->setAccessible(true);
                 $dataProperty->setValue($settings, ['param1' => 'value1', 'param2' => 'value2']);
 
                 $data = $settings->getAllData();

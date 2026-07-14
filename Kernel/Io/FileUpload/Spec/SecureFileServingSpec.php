@@ -134,7 +134,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
         describe('::isInlineSafe (via reflection)', function (): void {
             beforeEach(function (): void {
                 $this->fn = new ReflectionMethod(SecureFileServing::class, 'isInlineSafe');
-                $this->fn->setAccessible(true);
             });
 
             it('returns true for image types', function (): void {
@@ -162,7 +161,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
         describe('::sanitizeFilename (via reflection)', function (): void {
             beforeEach(function (): void {
                 $this->fn = new ReflectionMethod(SecureFileServing::class, 'sanitizeFilename');
-                $this->fn->setAccessible(true);
             });
 
             it('preserves ordinary filenames', function (): void {

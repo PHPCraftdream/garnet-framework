@@ -75,7 +75,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\Mail {
     function resetDbTableSingletonsMailLog(): void {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
-        $prop->setAccessible(true);
         $prop->setValue(null, []);
     }
 
@@ -84,7 +83,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\Mail {
         $inst = (new ReflectionClass(TestMailLog::class))->newInstanceWithoutConstructor();
         $ref = new ReflectionClass(DbTable::class);
         $items = $ref->getProperty('items');
-        $items->setAccessible(true);
         $items->setValue(null, [TestMailLog::class => $inst]);
 
         return $inst;
@@ -199,7 +197,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\Mail {
             $inst = (new ReflectionClass(TestMailLogRecipients::class))->newInstanceWithoutConstructor();
             $ref = new ReflectionClass(DbTable::class);
             $items = $ref->getProperty('items');
-            $items->setAccessible(true);
             $items->setValue(null, [TestMailLogRecipients::class => $inst]);
             $this->table = $inst;
         });

@@ -86,13 +86,11 @@ describe('Account Integration', function (): void {
             $dbAccount = DbAccount::get();
             $tableReflection = new ReflectionClass($dbAccount);
             $tableProp = $tableReflection->getProperty('tableName');
-            $tableProp->setAccessible(true);
             $tableProp->setValue($dbAccount, 'test_accounts');
 
             $dbAccountData = DbAccountData::get();
             $dataTableReflection = new ReflectionClass($dbAccountData);
             $dataTableProp = $dataTableReflection->getProperty('tableName');
-            $dataTableProp->setAccessible(true);
             $dataTableProp->setValue($dbAccountData, 'test_accounts_data');
 
             $dbAvailable = true;
@@ -116,20 +114,17 @@ describe('Account Integration', function (): void {
             // Reset Account static items
             $reflection = new ReflectionClass(Account::class);
             $prop = $reflection->getProperty('items');
-            $prop->setAccessible(true);
             $prop->setValue(null, []);
 
             // Change table names in DbAccount and DbAccountData to use test tables
             $dbAccount = DbAccount::get();
             $tableReflection = new ReflectionClass($dbAccount);
             $tableProp = $tableReflection->getProperty('tableName');
-            $tableProp->setAccessible(true);
             $tableProp->setValue($dbAccount, 'test_accounts');
 
             $dbAccountData = DbAccountData::get();
             $dataTableReflection = new ReflectionClass($dbAccountData);
             $dataTableProp = $dataTableReflection->getProperty('tableName');
-            $dataTableProp->setAccessible(true);
             $dataTableProp->setValue($dbAccountData, 'test_accounts_data');
         });
 
@@ -147,7 +142,6 @@ describe('Account Integration', function (): void {
             // Reset Account static items
             $reflection = new ReflectionClass(Account::class);
             $prop = $reflection->getProperty('items');
-            $prop->setAccessible(true);
             $prop->setValue(null, []);
         });
 
@@ -248,7 +242,6 @@ describe('Account Integration', function (): void {
             // Reset Account static items
             $reflection = new ReflectionClass(Account::class);
             $prop = $reflection->getProperty('items');
-            $prop->setAccessible(true);
             $prop->setValue(null, []);
         });
 
@@ -266,7 +259,6 @@ describe('Account Integration', function (): void {
             // Reset Account static items
             $reflection = new ReflectionClass(Account::class);
             $prop = $reflection->getProperty('items');
-            $prop->setAccessible(true);
             $prop->setValue(null, []);
         });
 
@@ -394,7 +386,6 @@ describe('Account Integration', function (): void {
             // Reset Account static items
             $reflection = new ReflectionClass(Account::class);
             $prop = $reflection->getProperty('items');
-            $prop->setAccessible(true);
             $prop->setValue(null, []);
         });
 
@@ -412,7 +403,6 @@ describe('Account Integration', function (): void {
             // Reset Account static items
             $reflection = new ReflectionClass(Account::class);
             $prop = $reflection->getProperty('items');
-            $prop->setAccessible(true);
             $prop->setValue(null, []);
         });
 
@@ -562,7 +552,6 @@ describe('Account Integration', function (): void {
             // Reset Account static items
             $reflection = new ReflectionClass(Account::class);
             $prop = $reflection->getProperty('items');
-            $prop->setAccessible(true);
             $prop->setValue(null, []);
         });
 
@@ -580,7 +569,6 @@ describe('Account Integration', function (): void {
             // Reset Account static items
             $reflection = new ReflectionClass(Account::class);
             $prop = $reflection->getProperty('items');
-            $prop->setAccessible(true);
             $prop->setValue(null, []);
         });
 

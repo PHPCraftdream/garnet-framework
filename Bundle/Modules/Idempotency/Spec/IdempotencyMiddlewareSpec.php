@@ -91,7 +91,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Idempotency\Spec {
     function resetDbTableSingletons(): void {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
-        $prop->setAccessible(true);
         $prop->setValue(null, []);
     }
 
@@ -99,11 +98,9 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Idempotency\Spec {
         $ref = new ReflectionClass(IdempotencyMiddleware::class);
 
         $tc = $ref->getProperty('tableClass');
-        $tc->setAccessible(true);
         $tc->setValue(null, null);
 
         $ri = $ref->getProperty('rowId');
-        $ri->setAccessible(true);
         $ri->setValue(null, null);
     }
 
@@ -118,7 +115,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Idempotency\Spec {
 
         $dbRef = new ReflectionClass(DbTable::class);
         $itemsProp = $dbRef->getProperty('items');
-        $itemsProp->setAccessible(true);
 
         $tableObj = (new ReflectionClass(TestIdempotencyKeys::class))
             ->newInstanceWithoutConstructor();

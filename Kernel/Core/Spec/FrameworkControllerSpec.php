@@ -52,30 +52,24 @@ describe('FrameworkController', function (): void {
     ): void {
         $reflection = new ReflectionClass(IniConfig::class);
         $property = $reflection->getProperty('initParams');
-        $property->setAccessible(true);
         $realIniConfigParams = $property->getValue();
 
         $property = $reflection->getProperty('items');
-        $property->setAccessible(true);
         $realIniConfigItems = $property->getValue();
 
         $reflection = new ReflectionClass(Twig::class);
         $property = $reflection->getProperty('instances');
-        $property->setAccessible(true);
         $realTwigInstances = $property->getValue();
 
         $reflection = new ReflectionClass(Logger::class);
         $property = $reflection->getProperty('loggers');
-        $property->setAccessible(true);
         $realLoggerLoggers = $property->getValue();
 
         $property = $reflection->getProperty('params');
-        $property->setAccessible(true);
         $realLoggerParams = $property->getValue();
 
         $reflection = new ReflectionClass(\PHPCraftdream\Garnet\Kernel\Core\Tools\RuntimeParams::class);
         $property = $reflection->getProperty('instance');
-        $property->setAccessible(true);
         $realRuntimeParamsInstance = $property->getValue();
     });
 
@@ -89,30 +83,24 @@ describe('FrameworkController', function (): void {
     ): void {
         $reflection = new ReflectionClass(IniConfig::class);
         $property = $reflection->getProperty('initParams');
-        $property->setAccessible(true);
         $property->setValue(null, $realIniConfigParams);
 
         $property = $reflection->getProperty('items');
-        $property->setAccessible(true);
         $property->setValue(null, $realIniConfigItems);
 
         $reflection = new ReflectionClass(Twig::class);
         $property = $reflection->getProperty('instances');
-        $property->setAccessible(true);
         $property->setValue(null, $realTwigInstances);
 
         $reflection = new ReflectionClass(Logger::class);
         $property = $reflection->getProperty('loggers');
-        $property->setAccessible(true);
         $property->setValue(null, $realLoggerLoggers);
 
         $property = $reflection->getProperty('params');
-        $property->setAccessible(true);
         $property->setValue(null, $realLoggerParams);
 
         $reflection = new ReflectionClass(\PHPCraftdream\Garnet\Kernel\Core\Tools\RuntimeParams::class);
         $property = $reflection->getProperty('instance');
-        $property->setAccessible(true);
         $property->setValue(null, $realRuntimeParamsInstance);
     });
 
@@ -121,16 +109,13 @@ describe('FrameworkController', function (): void {
         // starts from a clean slate.
         $reflection = new ReflectionClass(IniConfig::class);
         $property = $reflection->getProperty('initParams');
-        $property->setAccessible(true);
         $property->setValue(null, []);
 
         $property = $reflection->getProperty('items');
-        $property->setAccessible(true);
         $property->setValue(null, []);
 
         $reflection = new ReflectionClass(Twig::class);
         $property = $reflection->getProperty('instances');
-        $property->setAccessible(true);
 
         try {
             $property->setValue(null, []);
@@ -139,7 +124,6 @@ describe('FrameworkController', function (): void {
 
         $reflection = new ReflectionClass(Logger::class);
         $property = $reflection->getProperty('loggers');
-        $property->setAccessible(true);
 
         try {
             $property->setValue(null, []);
@@ -147,7 +131,6 @@ describe('FrameworkController', function (): void {
         }
 
         $property = $reflection->getProperty('params');
-        $property->setAccessible(true);
 
         try {
             $property->setValue(null, []);
@@ -156,7 +139,6 @@ describe('FrameworkController', function (): void {
 
         $reflection = new ReflectionClass(\PHPCraftdream\Garnet\Kernel\Core\Tools\RuntimeParams::class);
         $property = $reflection->getProperty('instance');
-        $property->setAccessible(true);
 
         try {
             $property->setValue(null, null);
@@ -268,7 +250,6 @@ description=Test Description
             // catch branch in makeErrorPage().
             $reflection = new ReflectionClass(IniConfig::class);
             $property = $reflection->getProperty('items');
-            $property->setAccessible(true);
             $property->setValue(null, []);
 
             TestFrameworkController::setAppIniNamespace('NON_EXISTENT_NAMESPACE');

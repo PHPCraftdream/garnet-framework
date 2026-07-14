@@ -11,11 +11,9 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Forms\Spec {
 
                 $reflection = new ReflectionClass($imgUpload);
                 $imgSrcPathProp = $reflection->getProperty('imgSrcPath');
-                $imgSrcPathProp->setAccessible(true);
                 $imgSrcPathValue = $imgSrcPathProp->getValue($imgUpload);
 
                 $fileNameProp = $reflection->getProperty('fileName');
-                $fileNameProp->setAccessible(true);
                 $fileNameValue = $fileNameProp->getValue($imgUpload);
 
                 expect($imgSrcPathValue)->toBe('/tmp/test.jpg');
@@ -28,7 +26,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Forms\Spec {
 
                 $reflection = new ReflectionClass($imgUpload);
                 $imgSrcPathProp = $reflection->getProperty('imgSrcPath');
-                $imgSrcPathProp->setAccessible(true);
                 $imgSrcPathValue = $imgSrcPathProp->getValue($imgUpload);
 
                 expect($imgSrcPathValue)->toBeNull();
@@ -40,11 +37,9 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Forms\Spec {
                 $imgUpload = new ImageUpload(null, '');
                 $reflection = new ReflectionClass($imgUpload);
                 $saveFormatProp = $reflection->getProperty('saveFormat');
-                $saveFormatProp->setAccessible(true);
                 $saveFormatProp->setValue($imgUpload, IMAGETYPE_GIF);
 
                 $method = $reflection->getMethod('getExt');
-                $method->setAccessible(true);
                 $ext = $method->invoke($imgUpload);
 
                 expect($ext)->toBe('gif');
@@ -54,11 +49,9 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Forms\Spec {
                 $imgUpload = new ImageUpload(null, '');
                 $reflection = new ReflectionClass($imgUpload);
                 $saveFormatProp = $reflection->getProperty('saveFormat');
-                $saveFormatProp->setAccessible(true);
                 $saveFormatProp->setValue($imgUpload, IMAGETYPE_JPEG);
 
                 $method = $reflection->getMethod('getExt');
-                $method->setAccessible(true);
                 $ext = $method->invoke($imgUpload);
 
                 expect($ext)->toBe('jpg');
@@ -68,11 +61,9 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Forms\Spec {
                 $imgUpload = new ImageUpload(null, '');
                 $reflection = new ReflectionClass($imgUpload);
                 $saveFormatProp = $reflection->getProperty('saveFormat');
-                $saveFormatProp->setAccessible(true);
                 $saveFormatProp->setValue($imgUpload, IMAGETYPE_WEBP);
 
                 $method = $reflection->getMethod('getExt');
-                $method->setAccessible(true);
                 $ext = $method->invoke($imgUpload);
 
                 expect($ext)->toBe('webp');
@@ -82,11 +73,9 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Forms\Spec {
                 $imgUpload = new ImageUpload(null, '');
                 $reflection = new ReflectionClass($imgUpload);
                 $saveFormatProp = $reflection->getProperty('saveFormat');
-                $saveFormatProp->setAccessible(true);
                 $saveFormatProp->setValue($imgUpload, IMAGETYPE_PNG);
 
                 $method = $reflection->getMethod('getExt');
-                $method->setAccessible(true);
                 $ext = $method->invoke($imgUpload);
 
                 expect($ext)->toBe('png');
@@ -96,11 +85,9 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Forms\Spec {
                 $imgUpload = new ImageUpload(null, '');
                 $reflection = new ReflectionClass($imgUpload);
                 $saveFormatProp = $reflection->getProperty('saveFormat');
-                $saveFormatProp->setAccessible(true);
                 $saveFormatProp->setValue($imgUpload, IMAGETYPE_BMP);
 
                 $method = $reflection->getMethod('getExt');
-                $method->setAccessible(true);
                 $ext = $method->invoke($imgUpload);
 
                 expect($ext)->toBe('bmp');
@@ -110,11 +97,9 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Forms\Spec {
                 $imgUpload = new ImageUpload(null, '');
                 $reflection = new ReflectionClass($imgUpload);
                 $saveFormatProp = $reflection->getProperty('saveFormat');
-                $saveFormatProp->setAccessible(true);
                 $saveFormatProp->setValue($imgUpload, 999);
 
                 $method = $reflection->getMethod('getExt');
-                $method->setAccessible(true);
                 $ext = $method->invoke($imgUpload);
 
                 expect($ext)->toBe('jpg');
@@ -128,7 +113,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Forms\Spec {
 
                 $reflection = new ReflectionClass($imgUpload);
                 $qualityProp = $reflection->getProperty('quality');
-                $qualityProp->setAccessible(true);
                 $quality = $qualityProp->getValue($imgUpload);
 
                 expect($quality)->toBe(75);
@@ -142,7 +126,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Forms\Spec {
 
                 $reflection = new ReflectionClass($imgUpload);
                 $saveFormatProp = $reflection->getProperty('saveFormat');
-                $saveFormatProp->setAccessible(true);
                 $saveFormat = $saveFormatProp->getValue($imgUpload);
 
                 expect($saveFormat)->toBe(IMAGETYPE_JPEG);
@@ -164,7 +147,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Forms\Spec {
                 $imgUpload = new ImageUpload(null, '');
                 $reflection = new ReflectionClass($imgUpload);
                 $qualityProp = $reflection->getProperty('quality');
-                $qualityProp->setAccessible(true);
                 $quality = $qualityProp->getValue($imgUpload);
 
                 expect($quality)->toBe(90);
@@ -174,7 +156,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Forms\Spec {
                 $imgUpload = new ImageUpload(null, '');
                 $reflection = new ReflectionClass($imgUpload);
                 $saveFormatProp = $reflection->getProperty('saveFormat');
-                $saveFormatProp->setAccessible(true);
                 $saveFormat = $saveFormatProp->getValue($imgUpload);
 
                 expect($saveFormat)->toBe(IMAGETYPE_PNG);
@@ -190,7 +171,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Forms\Spec {
 
                 $reflection = new ReflectionClass($imgUpload);
                 $method = $reflection->getMethod('touchDir');
-                $method->setAccessible(true);
 
                 $method->invoke($imgUpload, $testDir);
 
@@ -204,7 +184,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Forms\Spec {
 
                 $reflection = new ReflectionClass($imgUpload);
                 $method = $reflection->getMethod('touchDir');
-                $method->setAccessible(true);
 
                 $method->invoke($imgUpload, $testDir);
 
@@ -227,7 +206,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Forms\Spec {
 
                 $reflection = new ReflectionClass($imgUpload);
                 $method = $reflection->getMethod('touchDir');
-                $method->setAccessible(true);
 
                 $method->invoke($imgUpload, $testDir);
 
@@ -244,7 +222,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Forms\Spec {
 
                 $reflection = new ReflectionClass($imgUpload);
                 $method = $reflection->getMethod('saveSizedToLongSide');
-                $method->setAccessible(true);
 
                 $result = $method->invoke($imgUpload, sys_get_temp_dir(), 0);
 
@@ -256,7 +233,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Forms\Spec {
 
                 $reflection = new ReflectionClass($imgUpload);
                 $method = $reflection->getMethod('saveSizedToLongSide');
-                $method->setAccessible(true);
 
                 $result = $method->invoke($imgUpload, sys_get_temp_dir(), 0);
 
@@ -271,7 +247,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Forms\Spec {
 
                 $reflection = new ReflectionClass($imgUpload);
                 $method = $reflection->getMethod('saveWidthCropped');
-                $method->setAccessible(true);
 
                 $crop = new \PHPCraftdream\Garnet\Kernel\Io\Forms\ImageCrop(0, 0, 100, 100);
 
@@ -285,7 +260,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Forms\Spec {
 
                 $reflection = new ReflectionClass($imgUpload);
                 $method = $reflection->getMethod('saveWidthCropped');
-                $method->setAccessible(true);
 
                 $crop = new \PHPCraftdream\Garnet\Kernel\Io\Forms\ImageCrop(0, 0, 100, 100);
 

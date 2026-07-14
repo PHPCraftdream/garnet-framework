@@ -42,11 +42,9 @@ describe('GarnetI18n', function (): void {
         // Reset static state
         $reflection = new ReflectionClass(Logger::class);
         $paramsProp = $reflection->getProperty('params');
-        $paramsProp->setAccessible(true);
         $paramsProp->setValue(null, []);
 
         $loggersProp = $reflection->getProperty('loggers');
-        $loggersProp->setAccessible(true);
         $loggersProp->setValue(null, []);
 
         TestGarnetI18n::resetInstance();

@@ -9,7 +9,6 @@ namespace PHPCraftdream\Garnet\Bundle\Middlewares\Spec {
             beforeEach(function (): void {
                 $ref = new ReflectionClass(MaintenanceMiddleware::class);
                 $this->method = $ref->getMethod('parseAllowedIps');
-                $this->method->setAccessible(true);
             });
 
             it('returns empty array for empty string', function (): void {
@@ -58,7 +57,6 @@ namespace PHPCraftdream\Garnet\Bundle\Middlewares\Spec {
             beforeEach(function (): void {
                 $ref = new ReflectionClass(MaintenanceMiddleware::class);
                 $this->method = $ref->getMethod('getClientIp');
-                $this->method->setAccessible(true);
             });
 
             it('returns REMOTE_ADDR when no X-Forwarded-For', function (): void {

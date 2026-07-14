@@ -396,14 +396,12 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\RequestLog {
         it('requestsPageUrl() appends /~page to the page URL', function (): void {
             $ref = new ReflectionClass(TestRequestLogController::class);
             $m = $ref->getMethod('requestsPageUrl');
-            $m->setAccessible(true);
             expect($m->invoke(null))->toBe('/admin/logs/~page');
         });
 
         it('errorsPageUrl() appends /~errorsPage to the page URL', function (): void {
             $ref = new ReflectionClass(TestRequestLogController::class);
             $m = $ref->getMethod('errorsPageUrl');
-            $m->setAccessible(true);
             expect($m->invoke(null))->toBe('/admin/logs/~errorsPage');
         });
     });

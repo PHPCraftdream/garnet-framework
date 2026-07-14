@@ -82,7 +82,6 @@ namespace PHPCraftdream\Garnet\Kernel\Core\AppInit\Spec {
 
             $reflection = new ReflectionClass(BaseBundleInit::class);
             $instanceProp = $reflection->getProperty('instance');
-            $instanceProp->setAccessible(true);
             $instanceProp->setValue(null, null);
         });
 
@@ -105,7 +104,6 @@ namespace PHPCraftdream\Garnet\Kernel\Core\AppInit\Spec {
 
             $reflection = new ReflectionClass(BaseBundleInit::class);
             $instanceProp = $reflection->getProperty('instance');
-            $instanceProp->setAccessible(true);
             $instanceProp->setValue(null, null);
         });
 
@@ -169,7 +167,6 @@ namespace PHPCraftdream\Garnet\Kernel\Core\AppInit\Spec {
             it('throws exception when instance not found', function (): void {
                 $reflection = new ReflectionClass(BaseBundleInit::class);
                 $instanceProp = $reflection->getProperty('instance');
-                $instanceProp->setAccessible(true);
                 $instanceProp->setValue(null, null);
 
                 expect(function (): void {

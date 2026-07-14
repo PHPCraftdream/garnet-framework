@@ -99,7 +99,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
         describe('::humanBytes (via reflection — pure helper)', function (): void {
             beforeEach(function (): void {
                 $this->fn = new ReflectionMethod(GarnetBundleCommand::class, 'humanBytes');
-                $this->fn->setAccessible(true);
             });
 
             it('formats sub-KB as bytes', function (): void {
@@ -129,7 +128,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
         describe('::renderSharedIndex (via reflection)', function (): void {
             beforeEach(function (): void {
                 $this->fn = new ReflectionMethod(GarnetBundleCommand::class, 'renderSharedIndex');
-                $this->fn->setAccessible(true);
             });
 
             it('produces a runnable PHP snippet that reads .env from __DIR__', function (): void {

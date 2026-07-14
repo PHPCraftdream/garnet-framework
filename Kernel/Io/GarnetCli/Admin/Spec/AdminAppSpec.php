@@ -86,7 +86,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Admin\Spec {
         describe('::isAuthenticated (private — via reflection)', function (): void {
             beforeEach(function (): void {
                 $this->fn = new ReflectionMethod(AdminApp::class, 'isAuthenticated');
-                $this->fn->setAccessible(true);
             });
 
             it('returns false when no cookie is set', function (): void {

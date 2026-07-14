@@ -89,7 +89,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\LogsController {
     function resetDbTableSingletonsCtrl(): void {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
-        $prop->setAccessible(true);
         $prop->setValue(null, []);
     }
 
@@ -98,7 +97,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\LogsController {
         $inst = (new ReflectionClass(CtrlSpecActionLog::class))->newInstanceWithoutConstructor();
         $ref = new ReflectionClass(DbTable::class);
         $items = $ref->getProperty('items');
-        $items->setAccessible(true);
         $items->setValue(null, [CtrlSpecActionLog::class => $inst]);
 
         return $inst;
@@ -109,7 +107,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\LogsController {
         // We access via Reflection since it is protected static
         $ref = new ReflectionClass(TestLogsController::class);
         $method = $ref->getMethod('fetchLogs');
-        $method->setAccessible(true);
 
         return $method->invoke(null, $limit);
     }
@@ -123,7 +120,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\LogsController {
             $account = [Account::IS_ADMIN => 1, Account::IS_OWNER => 0, Account::IS_MODERATOR => 0, 'type' => 'user'];
             $ref = new ReflectionClass(TestLogsController::class);
             $m = $ref->getMethod('resolveRole');
-            $m->setAccessible(true);
             expect($m->invoke(null, $account))->toBe('admin');
         });
 
@@ -131,7 +127,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\LogsController {
             $account = [Account::IS_ADMIN => 0, Account::IS_OWNER => 1, Account::IS_MODERATOR => 0, 'type' => 'user'];
             $ref = new ReflectionClass(TestLogsController::class);
             $m = $ref->getMethod('resolveRole');
-            $m->setAccessible(true);
             expect($m->invoke(null, $account))->toBe('owner');
         });
 
@@ -139,7 +134,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\LogsController {
             $account = [Account::IS_ADMIN => 0, Account::IS_OWNER => 0, Account::IS_MODERATOR => 1, 'type' => 'user'];
             $ref = new ReflectionClass(TestLogsController::class);
             $m = $ref->getMethod('resolveRole');
-            $m->setAccessible(true);
             expect($m->invoke(null, $account))->toBe('moderator');
         });
 
@@ -147,7 +141,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\LogsController {
             $account = [Account::IS_ADMIN => 0, Account::IS_OWNER => 0, Account::IS_MODERATOR => 0, 'type' => 'expert'];
             $ref = new ReflectionClass(TestLogsController::class);
             $m = $ref->getMethod('resolveRole');
-            $m->setAccessible(true);
             expect($m->invoke(null, $account))->toBe('expert');
         });
 
@@ -155,7 +148,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\LogsController {
             $account = [];
             $ref = new ReflectionClass(TestLogsController::class);
             $m = $ref->getMethod('resolveRole');
-            $m->setAccessible(true);
             expect($m->invoke(null, $account))->toBe('user');
         });
 
@@ -163,7 +155,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\LogsController {
             $account = [Account::IS_ADMIN => 1, Account::IS_OWNER => 1, Account::IS_MODERATOR => 1, 'type' => 'user'];
             $ref = new ReflectionClass(TestLogsController::class);
             $m = $ref->getMethod('resolveRole');
-            $m->setAccessible(true);
             expect($m->invoke(null, $account))->toBe('admin');
         });
     });

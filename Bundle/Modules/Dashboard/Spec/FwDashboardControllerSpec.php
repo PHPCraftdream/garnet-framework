@@ -101,28 +101,24 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Dashboard\Spec {
             it('isModerator() returns false for guest', function (): void {
                 $ref = new ReflectionClass(GuestDashboardController::class);
                 $method = $ref->getMethod('isModerator');
-                $method->setAccessible(true);
                 expect($method->invoke(null))->toBe(false);
             });
 
             it('isOwner() returns false for guest', function (): void {
                 $ref = new ReflectionClass(GuestDashboardController::class);
                 $method = $ref->getMethod('isOwner');
-                $method->setAccessible(true);
                 expect($method->invoke(null))->toBe(false);
             });
 
             it('getSideMenu() returns empty array', function (): void {
                 $ref = new ReflectionClass(GuestDashboardController::class);
                 $method = $ref->getMethod('getSideMenu');
-                $method->setAccessible(true);
                 expect($method->invoke(null, '/admin/'))->toBe([]);
             });
 
             it('getMainMenu() returns empty array', function (): void {
                 $ref = new ReflectionClass(GuestDashboardController::class);
                 $method = $ref->getMethod('getMainMenu');
-                $method->setAccessible(true);
                 expect($method->invoke(null, '/'))->toBe([]);
             });
         });
@@ -132,21 +128,18 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Dashboard\Spec {
             it('isModerator() returns true for admin', function (): void {
                 $ref = new ReflectionClass(AdminDashboardController::class);
                 $method = $ref->getMethod('isModerator');
-                $method->setAccessible(true);
                 expect($method->invoke(null))->toBe(true);
             });
 
             it('isOwner() returns true for admin', function (): void {
                 $ref = new ReflectionClass(AdminDashboardController::class);
                 $method = $ref->getMethod('isOwner');
-                $method->setAccessible(true);
                 expect($method->invoke(null))->toBe(true);
             });
 
             it('getSideMenu() returns non-empty array of items', function (): void {
                 $ref = new ReflectionClass(AdminDashboardController::class);
                 $method = $ref->getMethod('getSideMenu');
-                $method->setAccessible(true);
                 $menu = $method->invoke(null, '/admin/users/');
                 expect(count($menu))->toBeGreaterThan(0);
             });
@@ -154,7 +147,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Dashboard\Spec {
             it('getSideMenu() marks current url as active', function (): void {
                 $ref = new ReflectionClass(AdminDashboardController::class);
                 $method = $ref->getMethod('getSideMenu');
-                $method->setAccessible(true);
                 $menu = $method->invoke(null, '/admin/users/');
                 $usersItem = array_values(array_filter($menu, fn ($i) => $i['url'] === '/admin/users/'))[0] ?? null;
                 expect($usersItem)->not->toBeNull();
@@ -164,7 +156,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Dashboard\Spec {
             it('getSideMenu() does not mark other items as active', function (): void {
                 $ref = new ReflectionClass(AdminDashboardController::class);
                 $method = $ref->getMethod('getSideMenu');
-                $method->setAccessible(true);
                 $menu = $method->invoke(null, '/admin/users/');
 
                 foreach ($menu as $item) {
@@ -177,7 +168,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Dashboard\Spec {
             it('getMainMenu() returns array items with url keys', function (): void {
                 $ref = new ReflectionClass(AdminDashboardController::class);
                 $method = $ref->getMethod('getMainMenu');
-                $method->setAccessible(true);
                 $menu = $method->invoke(null, '/');
                 expect(count($menu))->toBeGreaterThan(0);
 

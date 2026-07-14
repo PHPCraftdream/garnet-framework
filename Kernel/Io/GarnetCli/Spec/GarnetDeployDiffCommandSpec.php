@@ -23,7 +23,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
         // Convenience reflector for the private static helpers we test.
         $invoke = function (string $method, array $args) {
             $m = new ReflectionMethod(GarnetDeployDiffCommand::class, $method);
-            $m->setAccessible(true);
 
             return $m->invokeArgs(null, $args);
         };

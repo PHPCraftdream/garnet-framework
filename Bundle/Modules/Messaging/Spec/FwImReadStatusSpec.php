@@ -438,7 +438,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Spec {
     function resetReadStatusSingletons(): void {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
-        $prop->setAccessible(true);
         $prop->setValue(null, []);
     }
 
@@ -447,7 +446,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Spec {
 
         $dbRef = new ReflectionClass(DbTable::class);
         $itemsProp = $dbRef->getProperty('items');
-        $itemsProp->setAccessible(true);
 
         $rsInst = (new ReflectionClass(TestImReadStatus2::class))->newInstanceWithoutConstructor();
         $convInst = (new ReflectionClass(TestReadConversations2::class))->newInstanceWithoutConstructor();

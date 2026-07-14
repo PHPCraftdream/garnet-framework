@@ -11,7 +11,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\Spec {
     function callEmailProtected(string $method, array $args = []): mixed {
         $ref = new ReflectionClass(EmailAuthMiddleware::class);
         $m = $ref->getMethod($method);
-        $m->setAccessible(true);
 
         return $m->invoke(null, ...$args);
     }
@@ -122,7 +121,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\Spec {
 
                 // Reset singleton
                 $instanceProp = $sessionRef->getProperty('instance');
-                $instanceProp->setAccessible(true);
                 $instanceProp->setValue(null, null);
 
                 $sessionInstance = $sessionRef->newInstanceWithoutConstructor();
@@ -134,7 +132,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\Spec {
                 foreach (['cookies' => $mockCookies, 'csrfToken' => $csrfToken,
                     'sessionData' => [], 'changedValues' => [], 'unsetValues' => []] as $name => $val) {
                     $p = $sessionRef->getProperty($name);
-                    $p->setAccessible(true);
                     $p->setValue($sessionInstance, $val);
                 }
 
@@ -184,21 +181,18 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\Spec {
             it('$authCodeLen default is 8', function (): void {
                 $ref = new ReflectionClass(EmailAuthMiddleware::class);
                 $p = $ref->getProperty('authCodeLen');
-                $p->setAccessible(true);
                 expect($p->getValue(null))->toBe(8);
             });
 
             it('$codeInputTries default is 3', function (): void {
                 $ref = new ReflectionClass(EmailAuthMiddleware::class);
                 $p = $ref->getProperty('codeInputTries');
-                $p->setAccessible(true);
                 expect($p->getValue(null))->toBe(3);
             });
 
             it('$codeSecondsTTL default is 300', function (): void {
                 $ref = new ReflectionClass(EmailAuthMiddleware::class);
                 $p = $ref->getProperty('codeSecondsTTL');
-                $p->setAccessible(true);
                 expect($p->getValue(null))->toBe(300);
             });
         });

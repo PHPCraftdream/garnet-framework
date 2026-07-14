@@ -103,7 +103,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Email\Spec {
     function resetDbTableSingletons(): void {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
-        $prop->setAccessible(true);
         $prop->setValue(null, []);
     }
 
@@ -114,11 +113,9 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Email\Spec {
         $ref = new ReflectionClass(FwEmailQueueService::class);
 
         $q = $ref->getProperty('queueTable');
-        $q->setAccessible(true);
         $q->setValue(null, null);
 
         $a = $ref->getProperty('attemptsTable');
-        $a->setAccessible(true);
         $a->setValue(null, null);
     }
 
@@ -134,7 +131,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Email\Spec {
         // Register singletons in DbTable::$items so ::get() returns them
         $dbRef = new ReflectionClass(DbTable::class);
         $itemsProp = $dbRef->getProperty('items');
-        $itemsProp->setAccessible(true);
 
         $queueInst = new ReflectionClass(TestEmailQueue::class);
         $attemptsInst = new ReflectionClass(TestEmailAttempts::class);
@@ -165,11 +161,9 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Email\Spec {
         $ref = new ReflectionClass(IniConfig::class);
 
         $initParams = $ref->getProperty('initParams');
-        $initParams->setAccessible(true);
         $initParams->setValue(null, []);
 
         $items = $ref->getProperty('items');
-        $items->setAccessible(true);
         $items->setValue(null, []);
 
         IniConfig::defineAppIni($file);
@@ -192,7 +186,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Email\Spec {
 
             foreach (['initParams', 'items'] as $name) {
                 $p = $ref->getProperty($name);
-                $p->setAccessible(true);
                 $p->setValue(null, []);
             }
             $cfg = __DIR__ . '/../../../../TestsInit/TestConfig/';
@@ -350,7 +343,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Email\Spec {
                 $this->queue->rows['1']['recipient_email'] = 'user@local.test';
                 $ref = new ReflectionClass(IniConfig::class);
                 $items = $ref->getProperty('items');
-                $items->setAccessible(true);
                 $cfg = $items->getValue();
                 // Patch env to dev
                 unlink($this->iniFile);

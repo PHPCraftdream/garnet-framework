@@ -7,11 +7,9 @@ describe('IoTools', function (): void {
         // Reset static benchmark state
         $reflection = new ReflectionClass(IoTools::class);
         $benchmarkProp = $reflection->getProperty('benchmark');
-        $benchmarkProp->setAccessible(true);
         $benchmarkProp->setValue(null, null);
 
         $benchmarkArrProp = $reflection->getProperty('benchmarkArr');
-        $benchmarkArrProp->setAccessible(true);
         $benchmarkArrProp->setValue(null, []);
     });
 

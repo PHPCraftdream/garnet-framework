@@ -16,11 +16,9 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\SystemSettings\Spec {
         $ref = new ReflectionClass(IniConfig::class);
 
         $initParams = $ref->getProperty('initParams');
-        $initParams->setAccessible(true);
         $initParams->setValue(null, []);
 
         $items = $ref->getProperty('items');
-        $items->setAccessible(true);
         $items->setValue(null, []);
     }
 

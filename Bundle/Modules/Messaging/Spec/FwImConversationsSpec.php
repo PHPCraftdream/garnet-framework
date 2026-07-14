@@ -294,7 +294,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Spec {
     function resetImDbSingletons(): void {
         $ref = new ReflectionClass(DbTable::class);
         $prop = $ref->getProperty('items');
-        $prop->setAccessible(true);
         $prop->setValue(null, []);
     }
 
@@ -303,7 +302,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Spec {
 
         $dbRef = new ReflectionClass(DbTable::class);
         $itemsProp = $dbRef->getProperty('items');
-        $itemsProp->setAccessible(true);
 
         $inst = (new ReflectionClass(TestImConversations::class))->newInstanceWithoutConstructor();
         $itemsProp->setValue(null, [TestImConversations::class => $inst]);

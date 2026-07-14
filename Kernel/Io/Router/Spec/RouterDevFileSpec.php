@@ -183,7 +183,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router\Spec {
                 $router = new RouterDevFile();
                 $reflection = new ReflectionClass($router);
                 $method = $reflection->getMethod('getRouteDirAndFile');
-                $method->setAccessible(true);
 
                 [$dir, $file] = $method->invoke(null, 'test.html');
 
@@ -195,7 +194,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router\Spec {
                 $router = new RouterDevFile();
                 $reflection = new ReflectionClass($router);
                 $method = $reflection->getMethod('getRouteDirAndFile');
-                $method->setAccessible(true);
 
                 [$dir, $file] = $method->invoke(null, 'assets/test.html');
 
@@ -207,7 +205,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router\Spec {
                 $router = new RouterDevFile();
                 $reflection = new ReflectionClass($router);
                 $method = $reflection->getMethod('getRouteDirAndFile');
-                $method->setAccessible(true);
 
                 [$dir, $file] = $method->invoke(null, '');
 
@@ -219,7 +216,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router\Spec {
                 $router = new RouterDevFile();
                 $reflection = new ReflectionClass($router);
                 $method = $reflection->getMethod('getRouteDirAndFile');
-                $method->setAccessible(true);
 
                 [$dir, $file] = $method->invoke(null, 'assets');
 
@@ -231,7 +227,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router\Spec {
                 $router = new RouterDevFile();
                 $reflection = new ReflectionClass($router);
                 $method = $reflection->getMethod('getRouteDirAndFile');
-                $method->setAccessible(true);
 
                 [$dir, $file] = $method->invoke(null, 'assets\\test.html');
 
@@ -250,7 +245,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router\Spec {
             it('returns file path for valid file in default dir', function (): void {
                 $reflection = new ReflectionClass($this->router);
                 $method = $reflection->getMethod('tryFileByDir');
-                $method->setAccessible(true);
 
                 $result = $method->invoke($this->router, '', 'test.html');
 
@@ -262,7 +256,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router\Spec {
             it('returns file path for valid file in named dir', function (): void {
                 $reflection = new ReflectionClass($this->router);
                 $method = $reflection->getMethod('tryFileByDir');
-                $method->setAccessible(true);
 
                 $result = $method->invoke($this->router, 'assets', 'test.html');
 
@@ -274,7 +267,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router\Spec {
             it('returns null for non-existent directory', function (): void {
                 $reflection = new ReflectionClass($this->router);
                 $method = $reflection->getMethod('tryFileByDir');
-                $method->setAccessible(true);
 
                 $result = $method->invoke($this->router, 'nonexistent', 'test.html');
 
@@ -284,7 +276,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router\Spec {
             it('returns null for .php files', function (): void {
                 $reflection = new ReflectionClass($this->router);
                 $method = $reflection->getMethod('tryFileByDir');
-                $method->setAccessible(true);
 
                 $result = $method->invoke($this->router, '', 'test.php');
 
@@ -294,7 +285,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router\Spec {
             it('returns index.html for empty filename', function (): void {
                 $reflection = new ReflectionClass($this->router);
                 $method = $reflection->getMethod('tryFileByDir');
-                $method->setAccessible(true);
 
                 $result = $method->invoke($this->router, '', '');
 
@@ -305,7 +295,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router\Spec {
             it('returns null for non-existent file', function (): void {
                 $reflection = new ReflectionClass($this->router);
                 $method = $reflection->getMethod('tryFileByDir');
-                $method->setAccessible(true);
 
                 $result = $method->invoke($this->router, '', 'nonexistent.html');
 

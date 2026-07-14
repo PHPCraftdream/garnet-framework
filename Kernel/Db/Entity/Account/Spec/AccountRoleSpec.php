@@ -28,7 +28,6 @@ describe('Account role flags', function (): void {
 
         foreach ($props as $name => $default) {
             $prop = $ref->getProperty($name);
-            $prop->setAccessible(true);
             $prop->setValue($account, $default);
         }
 
@@ -65,7 +64,6 @@ describe('Account role flags', function (): void {
 
             $ref = new ReflectionClass($account);
             $prop = $ref->getProperty('setData');
-            $prop->setAccessible(true);
             $dirty = $prop->getValue($account);
             expect($dirty[Account::IS_ADMIN])->toBe(1);
         });
@@ -255,7 +253,6 @@ describe('Account role flags', function (): void {
 
             $ref = new ReflectionClass($account);
             $prop = $ref->getProperty('setData');
-            $prop->setAccessible(true);
             $dirty = $prop->getValue($account);
 
             expect($dirty[Account::IS_ADMIN])->toBe(1);
@@ -267,7 +264,6 @@ describe('Account role flags', function (): void {
 
             $ref = new ReflectionClass($account);
             $prop = $ref->getProperty('setData');
-            $prop->setAccessible(true);
             $dirty = $prop->getValue($account);
 
             expect($dirty[Account::IS_ADMIN])->toBe(0);
@@ -279,7 +275,6 @@ describe('Account role flags', function (): void {
 
             $ref = new ReflectionClass($account);
             $prop = $ref->getProperty('setData');
-            $prop->setAccessible(true);
             $dirty = $prop->getValue($account);
 
             expect($dirty[Account::IS_MODERATOR])->toBe(1);
@@ -291,7 +286,6 @@ describe('Account role flags', function (): void {
 
             $ref = new ReflectionClass($account);
             $prop = $ref->getProperty('setData');
-            $prop->setAccessible(true);
             $dirty = $prop->getValue($account);
 
             expect($dirty[Account::IS_OWNER])->toBe(1);
@@ -303,7 +297,6 @@ describe('Account role flags', function (): void {
 
             $ref = new ReflectionClass($account);
             $prop = $ref->getProperty('setData');
-            $prop->setAccessible(true);
             $dirty = $prop->getValue($account);
 
             expect($dirty[Account::IS_APPROVED])->toBe(1);
@@ -315,7 +308,6 @@ describe('Account role flags', function (): void {
 
             $ref = new ReflectionClass($account);
             $prop = $ref->getProperty('setData');
-            $prop->setAccessible(true);
             $dirty = $prop->getValue($account);
 
             expect($dirty[Account::IS_DISABLED])->toBe(1);
@@ -330,7 +322,6 @@ describe('Account role flags', function (): void {
             $account = makeAccount();
             $ref = new ReflectionClass($account);
             $prop = $ref->getProperty('data');
-            $prop->setAccessible(true);
             $prop->setValue($account, [Account::IS_ADMIN => '1']);
             expect($account->isAdmin())->toBe(true);
         });
@@ -339,7 +330,6 @@ describe('Account role flags', function (): void {
             $account = makeAccount();
             $ref = new ReflectionClass($account);
             $prop = $ref->getProperty('data');
-            $prop->setAccessible(true);
             $prop->setValue($account, [Account::IS_ADMIN => '0']);
             expect($account->isAdmin())->toBe(false);
         });
@@ -353,7 +343,6 @@ describe('Account role flags', function (): void {
             $account = makeAccount();
             $ref = new ReflectionClass($account);
             $prop = $ref->getProperty('data');
-            $prop->setAccessible(true);
             $prop->setValue($account, [Account::IS_MODERATOR => 1]);
             expect($account->isModerator())->toBe(true);
         });
@@ -362,7 +351,6 @@ describe('Account role flags', function (): void {
             $account = makeAccount();
             $ref = new ReflectionClass($account);
             $prop = $ref->getProperty('data');
-            $prop->setAccessible(true);
             $prop->setValue($account, [Account::IS_OWNER => 1]);
             expect($account->isOwner())->toBe(true);
         });
@@ -371,7 +359,6 @@ describe('Account role flags', function (): void {
             $account = makeAccount();
             $ref = new ReflectionClass($account);
             $prop = $ref->getProperty('data');
-            $prop->setAccessible(true);
             $prop->setValue($account, [Account::IS_APPROVED => 1]);
             expect($account->isApproved())->toBe(true);
         });
@@ -380,7 +367,6 @@ describe('Account role flags', function (): void {
             $account = makeAccount();
             $ref = new ReflectionClass($account);
             $prop = $ref->getProperty('data');
-            $prop->setAccessible(true);
             $prop->setValue($account, [Account::IS_DISABLED => 1]);
             expect($account->isDisabled())->toBe(true);
         });

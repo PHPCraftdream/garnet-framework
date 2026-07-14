@@ -13,7 +13,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IoRun\Spec {
             it('returns the same response when it is already a ResponseInterface', function (): void {
                 $reflection = new ReflectionClass(IoRunWeb::class);
                 $method = $reflection->getMethod('normalizeResponse');
-                $method->setAccessible(true);
 
                 $mockResponse = Double::instance(['implements' => ResponseInterface::class]);
 
@@ -25,7 +24,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IoRun\Spec {
             it('creates a new response from a string', function (): void {
                 $reflection = new ReflectionClass(IoRunWeb::class);
                 $method = $reflection->getMethod('normalizeResponse');
-                $method->setAccessible(true);
 
                 $result = $method->invoke(null, 'test content');
 
@@ -35,7 +33,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IoRun\Spec {
             it('creates a new response from null', function (): void {
                 $reflection = new ReflectionClass(IoRunWeb::class);
                 $method = $reflection->getMethod('normalizeResponse');
-                $method->setAccessible(true);
 
                 $result = $method->invoke(null, null);
 
@@ -56,7 +53,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IoRun\Spec {
 
                 $reflection = new ReflectionClass(IoRunWeb::class);
                 $method = $reflection->getMethod('clearBuffer');
-                $method->setAccessible(true);
 
                 $method->invoke(null);
 
@@ -69,7 +65,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IoRun\Spec {
 
                 $reflection = new ReflectionClass(IoRunWeb::class);
                 $method = $reflection->getMethod('clearBuffer');
-                $method->setAccessible(true);
 
                 expect(function () use ($method): void {
                     $method->invoke(null);
@@ -86,7 +81,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IoRun\Spec {
 
                 $reflection = new ReflectionClass(IoRunWeb::class);
                 $method = $reflection->getMethod('logExceptionAndGet');
-                $method->setAccessible(true);
 
                 $result = $method->invoke(null, $exception, 'test_log');
 
@@ -99,7 +93,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IoRun\Spec {
 
                 $reflection = new ReflectionClass(IoRunWeb::class);
                 $method = $reflection->getMethod('logExceptionAndGet');
-                $method->setAccessible(true);
 
                 // Even if logging fails, it should still return the message
                 expect(function () use ($method, $exception): void {
@@ -121,7 +114,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IoRun\Spec {
 
                 $reflection = new ReflectionClass(IoRunWeb::class);
                 $method = $reflection->getMethod('checkOutputBufferIsEmpty');
-                $method->setAccessible(true);
 
                 expect(function () use ($method): void {
                     $method->invoke(null);
@@ -136,7 +128,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IoRun\Spec {
 
                 $reflection = new ReflectionClass(IoRunWeb::class);
                 $method = $reflection->getMethod('checkOutputBufferIsEmpty');
-                $method->setAccessible(true);
 
                 expect(function () use ($method): void {
                     $method->invoke(null);
@@ -151,7 +142,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IoRun\Spec {
 
                 $reflection = new ReflectionClass(IoRunWeb::class);
                 $method = $reflection->getMethod('checkOutputBufferIsEmpty');
-                $method->setAccessible(true);
 
                 try {
                     $method->invoke(null);
@@ -168,7 +158,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IoRun\Spec {
             it('has defined error log environment', function (): void {
                 $reflection = new ReflectionClass(IoRunWeb::class);
                 $errorLogEnvProp = $reflection->getProperty('errorLogEnv');
-                $errorLogEnvProp->setAccessible(true);
                 $errorLogEnv = $errorLogEnvProp->getValue(null);
 
                 expect($errorLogEnv)->toBeA('string');

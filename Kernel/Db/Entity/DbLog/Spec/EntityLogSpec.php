@@ -11,7 +11,6 @@ describe('EntityLog', function (): void {
         // Reset static items
         $reflection = new ReflectionClass(EntityLog::class);
         $property = $reflection->getProperty('items');
-        $property->setAccessible(true);
         $property->setValue(null, []);
     });
 

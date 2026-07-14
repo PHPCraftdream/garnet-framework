@@ -50,7 +50,6 @@ describe('BaseController', function (): void {
             // Set to POST
             $reflection = new ReflectionClass($globals);
             $property = $reflection->getProperty('server');
-            $property->setAccessible(true);
             $server = $property->getValue($globals);
             $server['REQUEST_METHOD'] = 'POST';
             $property->setValue($globals, $server);
@@ -86,7 +85,6 @@ describe('BaseController', function (): void {
             // Set to POST
             $reflection = new ReflectionClass($globals);
             $property = $reflection->getProperty('server');
-            $property->setAccessible(true);
             $server = $property->getValue($globals);
             $server['REQUEST_METHOD'] = 'POST';
             $property->setValue($globals, $server);
@@ -105,7 +103,6 @@ describe('BaseController', function (): void {
             // Set to POST
             $reflection = new ReflectionClass($globals);
             $property = $reflection->getProperty('server');
-            $property->setAccessible(true);
             $server = $property->getValue($globals);
             $server['REQUEST_METHOD'] = 'POST';
             $property->setValue($globals, $server);
@@ -124,7 +121,6 @@ describe('BaseController', function (): void {
             // Set to POST
             $reflection = new ReflectionClass($globals);
             $property = $reflection->getProperty('server');
-            $property->setAccessible(true);
             $server = $property->getValue($globals);
             $server['REQUEST_METHOD'] = 'POST';
             $property->setValue($globals, $server);
