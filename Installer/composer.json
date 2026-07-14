@@ -1,0 +1,23 @@
+{
+    "name": "phpcraftdream/garnet-installer",
+    "description": "One-shot installer that scaffolds a new Garnet framework application",
+    "type": "library",
+    "license": ["MIT", "Apache-2.0"],
+    "homepage": "https://github.com/PHPCraftdream/garnet-framework",
+    "authors": [
+        {"name": "PHPCraftdream", "homepage": "https://github.com/PHPCraftdream"}
+    ],
+    "support": {
+        "issues": "https://github.com/PHPCraftdream/garnet-framework/issues",
+        "source": "https://github.com/PHPCraftdream/garnet-framework"
+    },
+    "bin": ["bin/garnet-new"],
+    "require": {
+        "php": "^8.1"
+    },
+    "config": {
+        "preferred-install": {
+            "*": "dist"
+        }
+    }
+}
