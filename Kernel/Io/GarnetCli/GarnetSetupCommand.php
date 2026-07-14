@@ -170,6 +170,18 @@ class GarnetSetupCommand {
             self::skipped('playwright install' . ($o['nodeSuppressed'] ? ' (GARNET_SKIP_NODE_SETUP=1)' : ''));
         }
 
+        // MCP servers (browser, mysql) each have their own package.json.
+        // Without npm install the MCP server processes cannot start.
+        if ($doNpm) {
+            $mcpBrowserDir = $frameworkDir . DS . 'tooling' . DS . 'mcp' . DS . 'browser';
+            self::step('npm install (mcp/browser)', static fn (): int => self::runIn($mcpBrowserDir, 'npm install'), true);
+
+            $mcpMysqlDir = $frameworkDir . DS . 'tooling' . DS . 'mcp' . DS . 'mysql';
+            self::step('npm install (mcp/mysql)', static fn (): int => self::runIn($mcpMysqlDir, 'npm install'), true);
+        } else {
+            self::skipped('npm install (mcp servers)' . ($o['nodeSuppressed'] ? ' (GARNET_SKIP_NODE_SETUP=1)' : ''));
+        }
+
         // Framework's FrontBuilder needs its own node_modules so `garnet build`
         // (which runs rspack from FrontBuilder/) can resolve npm packages.
         // When garnet-framework is a composer dependency the post-install hook

@@ -23,8 +23,7 @@
 # CI / GitHub
 /.github/               export-ignore
 
-# Dev tooling (keep tooling/server/ — needed at runtime by garnet serve)
-/tooling/mcp/           export-ignore
+# Dev tooling (keep tooling/server/ and tooling/mcp/ — needed at runtime)
 /tooling/scripts/       export-ignore
 /.crush/                export-ignore
 
