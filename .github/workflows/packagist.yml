@@ -1,0 +1,28 @@
+name: Packagist
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+
+jobs:
+  submit-or-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Register or update package on Packagist
+        run: |
+          curl -sS -X POST \
+            -H "content-type: application/json" \
+            "https://packagist.org/api/create-package?username=${{ vars.PACKAGIST_USERNAME }}&apiToken=${{ secrets.PACKAGIST_TOKEN }}" \
+            -d '{"repository":"https://github.com/PHPCraftdream/garnet-framework"}' \
+            -o response.json -w "HTTP %{http_code}\n"
+          cat response.json
+
+      - name: Trigger update (idempotent, keeps dev-master fresh)
+        run: |
+          curl -sS -X POST \
+            -H "content-type: application/json" \
+            "https://packagist.org/api/update-package?username=${{ vars.PACKAGIST_USERNAME }}&apiToken=${{ secrets.PACKAGIST_TOKEN }}" \
+            -d '{"repository":{"url":"https://github.com/PHPCraftdream/garnet-framework"}}' \
+            -o update.json -w "HTTP %{http_code}\n"
+          cat update.json
