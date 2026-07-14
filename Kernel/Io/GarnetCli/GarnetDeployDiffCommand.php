@@ -38,6 +38,133 @@ final class GarnetDeployDiffCommand {
     /** Remote marker file: last sha known to be deployed. Relative to runtime_dir. */
     private const DEPLOY_SHA_FILE = 'WorkDir/.deploy-sha';
 
+    /**
+     * Whether we're running in vendor (Composer-package) mode as opposed to
+     * legacy monorepo mode. In vendor mode the framework lives inside
+     * vendor/phpcraftdream/garnet-framework and app files live directly under
+     * GarnetRunner::$appDir (no Apps/<Name>/ prefix). In legacy mode both
+     * framework and apps live under one common GARNET_ROOT with Framework/
+     * and Apps/<Name>/ prefixes.
+     */
+    private static function isVendorMode(): bool {
+        if (GarnetRunner::$frameworkDir === '') {
+            return false; // anchors not initialised — assume legacy
+        }
+        $frameworkDir = str_replace('\\', '/', GarnetRunner::$frameworkDir);
+        $legacyFw = str_replace('\\', '/', GARNET_ROOT . DIRECTORY_SEPARATOR . 'Framework');
+
+        return $frameworkDir !== $legacyFw;
+    }
+
+    /**
+     * Resolve the git-repository root directory. In legacy mode this is
+     * GARNET_ROOT (the monorepo root where .git lives). In vendor mode
+     * this is GarnetRunner::$appDir (the app root where .git lives).
+     */
+    private static function gitRepoRoot(): string {
+        if (self::isVendorMode()) {
+            return GarnetRunner::$appDir;
+        }
+
+        return GARNET_ROOT;
+    }
+
+    /**
+     * Convert a git-diff relative path to an absolute filesystem path.
+     *
+     * In legacy mode git paths are relative to GARNET_ROOT (e.g.
+     * "Framework/Kernel/Foo.php", "Apps/MyApp/Bar.php").
+     *
+     * In vendor mode git paths are relative to GarnetRunner::$appDir (e.g.
+     * "vendor/phpcraftdream/garnet-framework/Kernel/Foo.php",
+     * "Public/index.php", "Foreground/Bar.php").
+     */
+    private static function gitPathToAbs(string $gitRelPath): string {
+        return self::gitRepoRoot() . DS . str_replace('/', DS, $gitRelPath);
+    }
+
+    /**
+     * Categorise an absolute filesystem path into a deploy bucket.
+     *
+     * Works in both legacy and vendor modes by comparing the absolute path
+     * against the real framework and app directories on disk.
+     *
+     * @return ?array{bucket: string, rel_remote: string}
+     */
+    private static function categorizeAbsPath(string $absPath): ?array {
+        $norm = str_replace('\\', '/', $absPath);
+        $rawFw = GarnetRunner::$frameworkDir;
+        $rawApp = GarnetRunner::$appDir;
+
+        // Guard: if the anchors are not set, can't categorise by absolute path
+        if ($rawFw === '' && $rawApp === '') {
+            return null;
+        }
+
+        $fwDir = $rawFw !== '' ? rtrim(str_replace('\\', '/', $rawFw), '/') . '/' : '';
+        $appDir = $rawApp !== '' ? rtrim(str_replace('\\', '/', $rawApp), '/') . '/' : '';
+
+        // Framework files
+        if ($fwDir !== '' && str_starts_with($norm, $fwDir)) {
+            return ['bucket' => 'framework', 'rel_remote' => substr($norm, strlen($fwDir))];
+        }
+
+        // App sub-directories (order: most specific first)
+        if ($appDir !== '' && str_starts_with($norm, $appDir)) {
+            $relToApp = substr($norm, strlen($appDir));
+
+            if (str_starts_with($relToApp, 'WorkDir/')) {
+                return ['bucket' => 'runtime', 'rel_remote' => $relToApp];
+            }
+
+            if (str_starts_with($relToApp, 'Public/')) {
+                return ['bucket' => 'public', 'rel_remote' => substr($relToApp, strlen('Public/'))];
+            }
+
+            if (str_starts_with($relToApp, 'Tests/')) {
+                return ['bucket' => 'skip', 'rel_remote' => ''];
+            }
+
+            return ['bucket' => 'app', 'rel_remote' => $relToApp];
+        }
+
+        return null;
+    }
+
+    /**
+     * Compute the repo-relative prefix that framework files have in git
+     * diff output. In legacy mode this is "Framework/". In vendor mode
+     * this is the path from appDir to frameworkDir (e.g.
+     * "vendor/phpcraftdream/garnet-framework/").
+     */
+    private static function frameworkGitPrefix(): string {
+        if (!self::isVendorMode()) {
+            return 'Framework/';
+        }
+        $appDir = rtrim(str_replace('\\', '/', GarnetRunner::$appDir), '/') . '/';
+        $fwDir = rtrim(str_replace('\\', '/', GarnetRunner::$frameworkDir), '/') . '/';
+
+        if (str_starts_with($fwDir, $appDir)) {
+            return substr($fwDir, strlen($appDir));
+        }
+
+        // Framework outside app dir — shouldn't happen normally
+        return 'vendor/phpcraftdream/garnet-framework/';
+    }
+
+    /**
+     * Compute the repo-relative prefix that app files have in git diff
+     * output. In legacy mode this is "Apps/<AppName>/". In vendor mode
+     * app files have no prefix (they're at the repo root).
+     */
+    private static function appGitPrefix(string $appName): string {
+        if (!self::isVendorMode()) {
+            return "Apps/{$appName}/";
+        }
+
+        return '';
+    }
+
     public static function run(array $args): void {
         // sub-command dispatch
         $sub = $args[0] ?? '';
@@ -178,7 +305,7 @@ final class GarnetDeployDiffCommand {
 
         if ($rebrandNeeded) {
             $pairs = PublicPathRebrander::rewritePairs($appName, $publicName);
-            $shadowDir = GARNET_ROOT . DS . 'dist' . DS . 'deploy-diff-shadow';
+            $shadowDir = self::shadowDir();
 
             // Wipe & recreate for idempotency
             if (is_dir($shadowDir)) {
@@ -232,11 +359,18 @@ final class GarnetDeployDiffCommand {
                     continue;
                 }
 
-                // Normalise to forward slashes — on Windows DS='\\' but
-                // bucket prefixes ('Apps/<App>/' / 'Framework/') use '/'.
-                // Without this normalisation the str_starts_with() guard
-                // below silently fails and Gen.php is never shipped.
-                $relRepo = str_replace('\\', '/', substr($absPath, strlen(GARNET_ROOT . DS)));
+                // Categorise via absolute path
+                $catResult = self::categorizeAbsPath($absPath);
+
+                if ($catResult === null || ($catResult['bucket'] !== 'app' && $catResult['bucket'] !== 'framework')) {
+                    continue;
+                }
+                $bucket = $catResult['bucket'];
+                $relRemoteDir = $catResult['rel_remote'];
+
+                // Build a repo-relative path for display/shadow
+                $repoRoot = self::gitRepoRoot();
+                $relRepo = str_replace('\\', '/', substr($absPath, strlen($repoRoot . DS)));
 
                 // Rewrite into shadow
                 $shadowAbs = $shadowDir . DS . str_replace('/', DS, $relRepo);
@@ -250,30 +384,14 @@ final class GarnetDeployDiffCommand {
                 $rewritten = PublicPathRebrander::rewriteContent($orig, $pairs);
                 file_put_contents($shadowAbs, $rewritten);
 
-                // Categorise: app-level vs framework-level
-                $appPrefix = "Apps/{$appName}/";
-                $fwPrefix = 'Framework/';
-                $relRemoteDir = '';
-                $bucket = '';
-
-                if (str_starts_with($relRepo, $appPrefix)) {
-                    $bucket = 'app';
-                    $relRemoteDir = substr($relRepo, strlen($appPrefix));
-                } elseif (str_starts_with($relRepo, $fwPrefix)) {
-                    $bucket = 'framework';
-                    $relRemoteDir = substr($relRepo, strlen($fwPrefix));
-                }
-
-                if ($bucket !== '') {
-                    $cat[$bucket][] = [
-                        'status' => 'M',
-                        'path' => $relRepo,
-                        'old' => null,
-                        'rel_remote' => $relRemoteDir,
-                        'local_abs' => $shadowAbs,
-                    ];
-                    $rebrandedGen++;
-                }
+                $cat[$bucket][] = [
+                    'status' => 'M',
+                    'path' => $relRepo,
+                    'old' => null,
+                    'rel_remote' => $relRemoteDir,
+                    'local_abs' => $shadowAbs,
+                ];
+                $rebrandedGen++;
             }
 
             echo "  rebrand: rewrote {$rebrandedDocroot} docroot file(s) + {$rebrandedGen} *Gen.php to /assets/{$publicName}/\n";
@@ -442,7 +560,8 @@ final class GarnetDeployDiffCommand {
 
         // Validate every path exists locally
         $paths = array_values(array_unique($opts['files']));
-        $root = GARNET_ROOT . DS;
+        $repoRoot = self::gitRepoRoot();
+        $root = $repoRoot . DS;
         $missing = [];
 
         foreach ($paths as $rel) {
@@ -457,13 +576,14 @@ final class GarnetDeployDiffCommand {
             self::fail('file(s) not found in working tree: ' . implode(', ', $missing));
         }
 
-        // Auto-include Gen.php when any Apps/<App>/Public/ file is in scope
-        $publicPrefix = "Apps/{$appName}/Public/";
-        $publicPrefixLow = 'Apps/' . strtolower($appName) . '/Public/';
+        // Auto-include Gen.php when any public file is in scope
         $hasPublicFile = false;
 
         foreach ($paths as $p) {
-            if (str_starts_with($p, $publicPrefix) || str_starts_with($p, $publicPrefixLow)) {
+            $abs = $root . str_replace('/', DS, $p);
+            $cat0 = self::categorizeAbsPath($abs);
+
+            if ($cat0 !== null && $cat0['bucket'] === 'public') {
                 $hasPublicFile = true;
 
                 break;
@@ -492,10 +612,16 @@ final class GarnetDeployDiffCommand {
         $cat = ['framework' => [], 'app' => [], 'runtime' => [], 'public' => [], 'skip' => []];
 
         foreach ($paths as $rel) {
-            $resolved = self::categorizeSinglePath($rel, $appName);
+            $abs = $root . str_replace('/', DS, $rel);
+            $resolved = self::categorizeAbsPath($abs);
 
             if ($resolved === null) {
-                self::fail("path out of scope: {$rel} — must be under Framework/, Apps/{$appName}/, or Apps/{$appName}/Public/");
+                // Fallback: try categorizeSinglePath for legacy compat
+                $resolved = self::categorizeSinglePath($rel, $appName);
+            }
+
+            if ($resolved === null) {
+                self::fail("path out of scope: {$rel} — must be under the framework or app directory");
             }
             $cat[$resolved['bucket']][] = [
                 'status' => 'M',
@@ -514,7 +640,7 @@ final class GarnetDeployDiffCommand {
 
         if ($rebrandNeeded) {
             $pairs = PublicPathRebrander::rewritePairs($appName, $publicName);
-            $shadowDir = GARNET_ROOT . DS . 'dist' . DS . 'deploy-diff-shadow';
+            $shadowDir = self::shadowDir();
 
             if (is_dir($shadowDir)) {
                 self::rmrfShadow($shadowDir);
@@ -539,7 +665,7 @@ final class GarnetDeployDiffCommand {
                     }
                     // Files that don't need rebrand: planBatches() will fall
                     // back to $row['path'] when local_abs is absent, and
-                    // SshClient::put resolves it relative to CWD = GARNET_ROOT.
+                    // SshClient::put resolves it relative to CWD.
                 }
             }
 
@@ -647,10 +773,36 @@ final class GarnetDeployDiffCommand {
     }
 
     /**
+     * Shadow directory for rebranded files. Uses GARNET_ROOT (which is
+     * the framework dir in vendor mode — fine, this is a temp build
+     * artefact, not an app file).
+     */
+    private static function shadowDir(): string {
+        return GARNET_ROOT . DS . 'dist' . DS . 'deploy-diff-shadow';
+    }
+
+    /**
      * Categorise a single repo-relative path into its bucket.
      * Returns ['bucket' => string, 'rel_remote' => string] or null.
+     *
+     * Works in both legacy mode (paths like "Framework/...",
+     * "Apps/<App>/...") and vendor mode (paths like
+     * "vendor/phpcraftdream/garnet-framework/...", "Public/...",
+     * "Foreground/...", "WorkDir/...").
      */
     private static function categorizeSinglePath(string $path, string $appName): ?array {
+        // Primary: resolve to absolute path and use categorizeAbsPath
+        // (only when GarnetRunner anchors are initialised)
+        if (GarnetRunner::$frameworkDir !== '' || GarnetRunner::$appDir !== '') {
+            $abs = self::gitPathToAbs($path);
+            $result = self::categorizeAbsPath($abs);
+
+            if ($result !== null) {
+                return $result;
+            }
+        }
+
+        // Legacy fallback for hardcoded prefixes
         if (str_starts_with($path, 'Framework/')) {
             return ['bucket' => 'framework', 'rel_remote' => substr($path, strlen('Framework/'))];
         }
@@ -660,7 +812,6 @@ final class GarnetDeployDiffCommand {
         $pubPrefix = "{$appPrefix}Public/";
         $testPrefix = "{$appPrefix}Tests/";
 
-        // Order: most-specific first → runtime → public → tests (skip) → fallback app
         if (str_starts_with($path, $wdPrefix)) {
             return ['bucket' => 'runtime', 'rel_remote' => 'WorkDir/' . substr($path, strlen($wdPrefix))];
         }
@@ -733,10 +884,12 @@ final class GarnetDeployDiffCommand {
         $cat = ['framework' => [], 'app' => [], 'runtime' => [], 'public' => [], 'skip' => []];
 
         // Every file is an 'A' row (pre is empty)
+        $publicGitPrefix = self::appGitPrefix($appName) . 'Public/';
+
         foreach ($after as $rel => $sig) {
             $cat['public'][] = [
                 'status' => 'A',
-                'path' => 'Apps/' . self::getAppName() . '/Public/' . $rel,
+                'path' => $publicGitPrefix . $rel,
                 'old' => null,
                 'rel_remote' => $rel,
                 'local_abs' => $assetsDir . DS . str_replace('/', DS, $rel),
@@ -753,7 +906,7 @@ final class GarnetDeployDiffCommand {
 
         if ($rebrandNeeded) {
             $pairs = PublicPathRebrander::rewritePairs($appName, $publicName);
-            $shadowDir = GARNET_ROOT . DS . 'dist' . DS . 'deploy-diff-shadow';
+            $shadowDir = self::shadowDir();
 
             if (is_dir($shadowDir)) {
                 self::rmrfShadow($shadowDir);
@@ -777,77 +930,12 @@ final class GarnetDeployDiffCommand {
             }
 
             // Inject the four *Gen.php files
-            $genFiles = PublicPathRebrander::genFiles($appName);
-
-            foreach ($genFiles as $absPath) {
-                if (!is_file($absPath)) {
-                    continue;
-                }
-
-                $relRepo = str_replace('\\', '/', substr($absPath, strlen(GARNET_ROOT . DS)));
-
-                $shadowAbs = self::rebrandFileToShadow($absPath, $relRepo, $pairs, $shadowDir);
-
-                $appPrefix = "Apps/{$appName}/";
-                $fwPrefix = 'Framework/';
-                $relRemoteDir = '';
-                $bucket = '';
-
-                if (str_starts_with($relRepo, $appPrefix)) {
-                    $bucket = 'app';
-                    $relRemoteDir = substr($relRepo, strlen($appPrefix));
-                } elseif (str_starts_with($relRepo, $fwPrefix)) {
-                    $bucket = 'framework';
-                    $relRemoteDir = substr($relRepo, strlen($fwPrefix));
-                }
-
-                if ($bucket !== '') {
-                    $cat[$bucket][] = [
-                        'status' => 'M',
-                        'path' => $relRepo,
-                        'old' => null,
-                        'rel_remote' => $relRemoteDir,
-                        'local_abs' => $shadowAbs,
-                    ];
-                    $rebrandedGen++;
-                }
-            }
+            self::injectGenFiles($cat, $appName, $rebrandedGen, $pairs, $shadowDir);
 
             echo "  rebrand: rewrote {$rebrandedDocroot} docroot file(s) + {$rebrandedGen} *Gen.php to /assets/{$publicName}/\n";
         } else {
             // Still include Gen.php even without rebrand
-            $genFiles = PublicPathRebrander::genFiles($appName);
-
-            foreach ($genFiles as $absPath) {
-                if (!is_file($absPath)) {
-                    continue;
-                }
-
-                $relRepo = str_replace('\\', '/', substr($absPath, strlen(GARNET_ROOT . DS)));
-
-                $appPrefix = "Apps/{$appName}/";
-                $fwPrefix = 'Framework/';
-                $bucket = '';
-                $relRemoteDir = '';
-
-                if (str_starts_with($relRepo, $appPrefix)) {
-                    $bucket = 'app';
-                    $relRemoteDir = substr($relRepo, strlen($appPrefix));
-                } elseif (str_starts_with($relRepo, $fwPrefix)) {
-                    $bucket = 'framework';
-                    $relRemoteDir = substr($relRepo, strlen($fwPrefix));
-                }
-
-                if ($bucket !== '') {
-                    $cat[$bucket][] = [
-                        'status' => 'M',
-                        'path' => $relRepo,
-                        'old' => null,
-                        'rel_remote' => $relRemoteDir,
-                        'local_abs' => $absPath,
-                    ];
-                }
-            }
+            self::injectGenFiles($cat, $appName, $rebrandedGen);
         }
 
         // Safety limit
@@ -931,6 +1019,54 @@ final class GarnetDeployDiffCommand {
         exit(0);
     }
 
+    /**
+     * Inject the 4 *Gen.php files into the categorised set.
+     *
+     * When $pairs and $shadowDir are given the files are rebranded into
+     * the shadow directory. Otherwise they're added as-is.
+     */
+    private static function injectGenFiles(
+        array &$cat,
+        string $appName,
+        int &$genCount,
+        ?array $pairs = null,
+        ?string $shadowDir = null,
+    ): void {
+        $genFiles = PublicPathRebrander::genFiles($appName);
+        $repoRoot = self::gitRepoRoot();
+
+        foreach ($genFiles as $absPath) {
+            if (!is_file($absPath)) {
+                continue;
+            }
+
+            $catResult = self::categorizeAbsPath($absPath);
+
+            if ($catResult === null || ($catResult['bucket'] !== 'app' && $catResult['bucket'] !== 'framework')) {
+                continue;
+            }
+
+            $bucket = $catResult['bucket'];
+            $relRemoteDir = $catResult['rel_remote'];
+            $relRepo = str_replace('\\', '/', substr($absPath, strlen($repoRoot . DS)));
+
+            $localAbs = $absPath;
+
+            if ($pairs !== null && $shadowDir !== null) {
+                $localAbs = self::rebrandFileToShadow($absPath, $relRepo, $pairs, $shadowDir);
+                $genCount++;
+            }
+
+            $cat[$bucket][] = [
+                'status' => 'M',
+                'path' => $relRepo,
+                'old' => null,
+                'rel_remote' => $relRemoteDir,
+                'local_abs' => $localAbs,
+            ];
+        }
+    }
+
     /** Whether a file's content needs public-path rebranding. */
     private static function needsRebrand(string $path): bool {
         if (str_ends_with($path, 'Gen.php')) {
@@ -954,8 +1090,6 @@ final class GarnetDeployDiffCommand {
      */
     private static function rewritePerAppIndexShim(array &$cat, string $appName, string $runtimeDir): int {
         $targetRel = 'index.php';
-        $appPublicPrefix = "Apps/{$appName}/Public/";
-        $appPublicPrefixLow = 'Apps/' . strtolower($appName) . '/Public/';
         $count = 0;
 
         foreach ($cat['public'] as $i => $row) {
@@ -967,8 +1101,14 @@ final class GarnetDeployDiffCommand {
                 continue;
             }
 
-            // Verify this is Apps/<App>/Public/index.php, not a nested one
+            // Verify this is the root public index.php, not a nested one.
+            // In legacy mode path is "Apps/<App>/Public/index.php",
+            // in vendor mode it's "Public/index.php".
             $path = $row['path'];
+            $appPublicPrefix = self::appGitPrefix($appName) . 'Public/';
+            $appPublicPrefixLow = self::isVendorMode()
+                ? 'Public/'
+                : 'Apps/' . strtolower($appName) . '/Public/';
 
             if ($path !== $appPublicPrefix . $targetRel
                 && $path !== $appPublicPrefixLow . $targetRel
@@ -976,7 +1116,7 @@ final class GarnetDeployDiffCommand {
                 continue;
             }
 
-            $shadowDir = GARNET_ROOT . DS . 'dist' . DS . 'deploy-diff-shadow';
+            $shadowDir = self::shadowDir();
 
             if (!is_dir($shadowDir)) {
                 @mkdir($shadowDir, 0o755, true);
@@ -1124,8 +1264,11 @@ final class GarnetDeployDiffCommand {
      * current dispatcher untouched.
      */
     private static function syncRemoteRuntimeGarnet(SshClient $ssh, array $layout, string $appName): void {
+        $garnetBin = self::isVendorMode()
+            ? GarnetRunner::$appDir . DIRECTORY_SEPARATOR . 'garnet'
+            : GARNET_ROOT . DIRECTORY_SEPARATOR . 'garnet';
         $contents = GarnetBundleCommand::renderRuntimeGarnet(
-            GARNET_ROOT . DIRECTORY_SEPARATOR . 'garnet',
+            $garnetBin,
             (string)$layout['app_dir'],
             $appName,
             (string)$layout['framework_dir'],
@@ -1788,16 +1931,19 @@ final class GarnetDeployDiffCommand {
      * regenerate the TS translation modules).
      */
     private static function hasFrontendSourceChanges(array $diff, string $appName): bool {
-        $appPrefix = "Apps/{$appName}/";
+        $fwPrefix = self::frameworkGitPrefix();
+        $appPrefix = self::appGitPrefix($appName);
 
         foreach ($diff as $row) {
             $p = $row['path'];
 
-            if (str_starts_with($p, 'FrontBuilder/')) {
+            // FrontBuilder/ lives inside the framework dir
+            if (str_starts_with($p, $fwPrefix . 'FrontBuilder/') || str_starts_with($p, 'FrontBuilder/')) {
                 return true;
             }
 
-            if (str_starts_with($p, 'Framework/Bundle/Front/')) {
+            // Framework/Bundle/Front/ — shared islands
+            if (str_starts_with($p, $fwPrefix . 'Bundle/Front/')) {
                 return true;
             }
 
@@ -1854,13 +2000,14 @@ final class GarnetDeployDiffCommand {
     /** Convert before/after snapshots into deploy:diff row shape. */
     private static function publicDeltaRows(array $before, array $after, string $assetsDir): array {
         $rows = [];
+        $publicGitPrefix = self::appGitPrefix(self::getAppName()) . 'Public/';
 
         // Added or modified
         foreach ($after as $rel => $sig) {
             if (!isset($before[$rel]) || $before[$rel] !== $sig) {
                 $rows[] = [
                     'status' => isset($before[$rel]) ? 'M' : 'A',
-                    'path' => 'Apps/' . self::getAppName() . '/Public/' . $rel,
+                    'path' => $publicGitPrefix . $rel,
                     'old' => null,
                     'rel_remote' => $rel,
                     'local_abs' => $assetsDir . DS . str_replace('/', DS, $rel),
@@ -1873,7 +2020,7 @@ final class GarnetDeployDiffCommand {
             if (!isset($after[$rel])) {
                 $rows[] = [
                     'status' => 'D',
-                    'path' => 'Apps/' . self::getAppName() . '/Public/' . $rel,
+                    'path' => $publicGitPrefix . $rel,
                     'old' => null,
                     'rel_remote' => $rel,
                     'local_abs' => $assetsDir . DS . str_replace('/', DS, $rel),
@@ -1886,7 +2033,11 @@ final class GarnetDeployDiffCommand {
 
     /** Invoke `php garnet build` synchronously. Throws on non-zero exit. */
     private static function runFrontendBuild(): void {
-        $cmd = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(GARNET_ROOT . DS . 'garnet') . ' build';
+        // In vendor mode the `garnet` wrapper lives in the app dir, not GARNET_ROOT
+        $garnetBin = self::isVendorMode()
+            ? GarnetRunner::$appDir . DS . 'garnet'
+            : GARNET_ROOT . DS . 'garnet';
+        $cmd = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($garnetBin) . ' build';
         passthru($cmd, $code);
 
         if ($code !== 0) {
@@ -1940,47 +2091,22 @@ final class GarnetDeployDiffCommand {
                 continue;
             }
 
-            // Framework/<rest>
-            if (str_starts_with($path, 'Framework/')) {
-                $rel = substr($path, strlen('Framework/'));
-                $out['framework'][] = ['status' => $status, 'path' => $path, 'old' => $row['old'], 'rel_remote' => $rel];
+            // Use absolute-path-based categorization (works in both modes)
+            $abs = self::gitPathToAbs($path);
+            $resolved = self::categorizeAbsPath($abs);
 
-                continue;
-            }
+            if ($resolved !== null) {
+                if ($resolved['bucket'] === 'skip') {
+                    $out['skip'][] = ['status' => $status, 'path' => $path, 'reason' => 'tests dir'];
 
-            // Apps/<AppName>/{WorkDir,Public,Tests}/<rest> — order matters:
-            // more-specific subtrees must be matched before the general
-            // app fallback, otherwise Public/* would land in <app_dir>/Public/
-            // and Tests/* would ship as production code.
-            $appPrefix = "Apps/{$appName}/";
-            $wdPrefix = "{$appPrefix}WorkDir/";
-            $pubPrefix = "{$appPrefix}Public/";
-            $testPrefix = "{$appPrefix}Tests/";
-
-            if (str_starts_with($path, $wdPrefix)) {
-                $rel = 'WorkDir/' . substr($path, strlen($wdPrefix));
-                $out['runtime'][] = ['status' => $status, 'path' => $path, 'old' => $row['old'], 'rel_remote' => $rel];
-
-                continue;
-            }
-
-            if (str_starts_with($path, $pubPrefix)) {
-                $rel = substr($path, strlen($pubPrefix));
-                $out['public'][] = ['status' => $status, 'path' => $path, 'old' => $row['old'], 'rel_remote' => $rel];
-
-                continue;
-            }
-
-            if (str_starts_with($path, $testPrefix)) {
-                $out['skip'][] = ['status' => $status, 'path' => $path, 'reason' => 'tests dir'];
-
-                continue;
-            }
-
-            // Apps/<AppName>/<rest>  → app (fallback)
-            if (str_starts_with($path, $appPrefix)) {
-                $rel = substr($path, strlen($appPrefix));
-                $out['app'][] = ['status' => $status, 'path' => $path, 'old' => $row['old'], 'rel_remote' => $rel];
+                    continue;
+                }
+                $out[$resolved['bucket']][] = [
+                    'status' => $status,
+                    'path' => $path,
+                    'old' => $row['old'],
+                    'rel_remote' => $resolved['rel_remote'],
+                ];
 
                 continue;
             }
@@ -2093,6 +2219,15 @@ final class GarnetDeployDiffCommand {
             return ['bucket' => 'runtime', 'rel' => '_shared_index.php'];
         }
 
+        // Use absolute-path-based categorization
+        $abs = self::gitPathToAbs($path);
+        $result = self::categorizeAbsPath($abs);
+
+        if ($result !== null && $result['bucket'] !== 'skip') {
+            return ['bucket' => $result['bucket'], 'rel' => $result['rel_remote']];
+        }
+
+        // Legacy fallback
         if (str_starts_with($path, 'Framework/')) {
             return ['bucket' => 'framework', 'rel' => substr($path, strlen('Framework/'))];
         }
