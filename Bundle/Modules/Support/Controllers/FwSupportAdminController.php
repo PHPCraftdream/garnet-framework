@@ -467,6 +467,23 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Controllers {
                 return ControllerTools::JSON(['error' => 'Invalid params'], status: 400);
             }
 
+            // Security audit M-02: assignee_id used to be trusted verbatim from
+            // POST with no check that it names a moderator/owner/admin (or an
+            // existing account at all). 0 stays a valid "unassign" sentinel;
+            // any positive id must resolve to one of fetchModerators().
+            if ($assigneeId !== 0) {
+                $isValidAssignee = false;
+                foreach (static::fetchModerators() as $moderator) {
+                    if ((int)($moderator['id'] ?? 0) === $assigneeId) {
+                        $isValidAssignee = true;
+                        break;
+                    }
+                }
+                if (!$isValidAssignee) {
+                    return ControllerTools::JSON(['error' => 'Invalid assignee'], status: 400);
+                }
+            }
+
             $ticketsTable = static::ticketsTable();
             $ticket = $ticketsTable->selectOneByField('id', $ticketId);
 
