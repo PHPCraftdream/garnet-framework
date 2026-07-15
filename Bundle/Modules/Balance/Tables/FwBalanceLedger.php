@@ -1,9 +1,11 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Tables {
+    use PHPCraftdream\Garnet\Kernel\Db\Link\CasUpdate;
     use PHPCraftdream\Garnet\Kernel\Db\Tables\DbTable;
     use PHPCraftdream\Garnet\Kernel\Db\Tables\DbTableBuilderFactory;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Db\ITableBuilderDriver;
+    use Throwable;
 
     abstract class FwBalanceLedger extends DbTable {
         protected string $primaryKey = 'id';
@@ -36,9 +38,23 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Tables {
                 ->addColumn(column: 'created_at', type: 'INT', length: '11', null: false, default: '0')
                 ->addIndex(indexName: 'account_id', indexes: ['account_id'])
                 ->addIndex(indexName: 'ref', indexes: ['ref_type', 'ref_id'])
+                ->addIndex(indexName: 'uq_idempotent', indexes: ['account_id', 'entry_type', 'ref_type', 'ref_id'], type: 'UNIQUE')
             ;
         }
 
+        /**
+         * Append a ledger entry. Idempotent when ref_type/ref_id are provided:
+         * a duplicate (account_id, entry_type, ref_type, ref_id) is silently
+         * ignored and balance is NOT re-recalculated (no-op).
+         *
+         * Race-safety: the UNIQUE INDEX `uq_idempotent` on the table guarantees
+         * atomicity — two concurrent INSERT attempts with the same key will result
+         * in exactly one row; the loser gets a duplicate-key error caught here.
+         *
+         * Entries without a ref (ref_type='' / ref_id=0 → stored as NULL) are
+         * never deduplicated because MySQL treats each NULL as distinct in
+         * unique indexes.
+         */
         public static function addEntry(
             int $accountId,
             bool $isCredit,
@@ -48,16 +64,25 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Tables {
             int $refId = 0,
             string $note = '',
         ): void {
-            static::get()->insert([
-                'account_id' => $accountId,
-                'is_credit' => $isCredit ? 1 : 0,
-                'amount' => $amount,
-                'entry_type' => $entryType,
-                'ref_type' => $refType ?: null,
-                'ref_id' => $refId ?: null,
-                'note' => $note ?: null,
-                'created_at' => time(),
-            ]);
+            try {
+                static::get()->insert([
+                    'account_id' => $accountId,
+                    'is_credit' => $isCredit ? 1 : 0,
+                    'amount' => $amount,
+                    'entry_type' => $entryType,
+                    'ref_type' => $refType ?: null,
+                    'ref_id' => $refId ?: null,
+                    'note' => $note ?: null,
+                    'created_at' => time(),
+                ]);
+            } catch (Throwable $e) {
+                if (CasUpdate::isDuplicateKeyError($e)) {
+                    // Idempotent no-op: entry with same (account_id, entry_type, ref_type, ref_id) already exists.
+                    return;
+                }
+
+                throw $e;
+            }
 
             static::balanceTable()::recalculate($accountId);
         }

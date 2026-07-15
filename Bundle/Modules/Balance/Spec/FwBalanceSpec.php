@@ -219,7 +219,8 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Spec {
                 note VARCHAR(255) NULL,
                 created_at INT(11) NOT NULL DEFAULT 0,
                 INDEX account_id (account_id),
-                INDEX ref (ref_type, ref_id)
+                INDEX ref (ref_type, ref_id),
+                UNIQUE INDEX uq_idempotent (account_id, entry_type, ref_type, ref_id)
             ) ENGINE=InnoDB COLLATE=utf8mb4_unicode_ci
         ", []);
 
@@ -483,6 +484,55 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Spec {
                 } finally {
                     teardownDbBalanceTables();
                 }
+            });
+        });
+
+        // -----------------------------------------------------------------------
+        describe('addEntry() idempotency [real DB]', function (): void {
+            beforeAll(function (): void {
+                setupDbBalanceTables();
+            });
+
+            afterAll(function (): void {
+                teardownDbBalanceTables();
+            });
+
+            beforeEach(function (): void {
+                truncateDbBalanceTables();
+            });
+
+            it('silently ignores a duplicate entry with the same (account_id, entry_type, ref_type, ref_id)', function (): void {
+                DbTestBalanceLedger::addEntry(1, true, 500, 'booking_payment', 'booking', 42, 'Payment #42');
+                DbTestBalanceLedger::addEntry(1, true, 500, 'booking_payment', 'booking', 42, 'Payment #42 retry');
+
+                $rows = DbTestBalanceLedger::get()->selectAll();
+                expect(count($rows))->toBe(1);
+                expect($rows[0]['note'])->toBe('Payment #42');
+            });
+
+            it('does not double-count balance on duplicate entry', function (): void {
+                DbTestBalanceLedger::addEntry(1, true, 300, 'top_up', 'payment', 10);
+                DbTestBalanceLedger::addEntry(1, true, 300, 'top_up', 'payment', 10);
+
+                expect(DbTestAccountBalance::getBalance(1))->toBe(300);
+            });
+
+            it('allows entries with different ref_id for the same account and type', function (): void {
+                DbTestBalanceLedger::addEntry(1, true, 100, 'booking_payment', 'booking', 1);
+                DbTestBalanceLedger::addEntry(1, true, 200, 'booking_payment', 'booking', 2);
+
+                $rows = DbTestBalanceLedger::get()->selectAll();
+                expect(count($rows))->toBe(2);
+                expect(DbTestAccountBalance::getBalance(1))->toBe(300);
+            });
+
+            it('allows multiple entries without ref (NULL ref_type/ref_id are not deduplicated)', function (): void {
+                DbTestBalanceLedger::addEntry(1, true, 100, 'top_up');
+                DbTestBalanceLedger::addEntry(1, true, 100, 'top_up');
+
+                $rows = DbTestBalanceLedger::get()->selectAll();
+                expect(count($rows))->toBe(2);
+                expect(DbTestAccountBalance::getBalance(1))->toBe(200);
             });
         });
 

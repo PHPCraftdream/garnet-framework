@@ -294,6 +294,10 @@ class GarnetBundleCommand {
             'TestsInit',
             'Migrations' . DS . 'WorkDir',
             '.idea',
+            '.vscode',
+            '.vs',
+            '.xcodeproj',
+            '.atom',
             '.git',
         ];
         $appExcludeFiles = [
@@ -339,7 +343,7 @@ class GarnetBundleCommand {
         $distFw = $distApp . DS . $frameworkDirName;
         @mkdir($distFw, 0o755, true);
 
-        $fwExcludes = ['.idea', '.git'];
+        $fwExcludes = ['.idea', '.vscode', '.vs', '.xcodeproj', '.atom', '.git'];
         $fwExcludeFiles = [
             'cm.bat', 'errors.log', 'kahlan-config.php', 'phpstan.neon',
             'php-cs-fixer.phar', 'phpstan.phar',
