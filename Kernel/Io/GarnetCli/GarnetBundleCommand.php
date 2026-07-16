@@ -343,7 +343,10 @@ class GarnetBundleCommand {
         $distFw = $distApp . DS . $frameworkDirName;
         @mkdir($distFw, 0o755, true);
 
-        $fwExcludes = ['.idea', '.vscode', '.vs', '.xcodeproj', '.atom', '.git'];
+        // Templates/ is the app:create scaffold (Templates/Application/) —
+        // a dev-only tool for generating new apps, never read at runtime by
+        // a deployed app. Shipping it just wastes space (tens of MB).
+        $fwExcludes = ['.idea', '.vscode', '.vs', '.xcodeproj', '.atom', '.git', 'Templates'];
         $fwExcludeFiles = [
             'cm.bat', 'errors.log', 'kahlan-config.php', 'phpstan.neon',
             'php-cs-fixer.phar', 'phpstan.phar',
@@ -1150,6 +1153,7 @@ if (!$_fw || !$_app) {
     exit(1);
 }
 putenv("GARNET_APP_DIR={$_app}");
+putenv("GARNET_FRAMEWORK_DIR={$_fw}");
 if ($_wd)  putenv("GARNET_WORKDIR_DIR={$_wd}");
 if ($_pub) putenv("GARNET_PUBLIC_DIR={$_pub}");
 $_run = $_app . '/run_web.php';

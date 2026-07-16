@@ -129,6 +129,10 @@ final class SshClient {
         if ($opts['verbose'] ?? false) {
             $cmd[] = '-v';
         }
+
+        if ($opts['recursive'] ?? false) {
+            $cmd[] = '-r';
+        }
         $cmd[] = $local;
         $cmd[] = "{$this->config->user}@{$this->config->host}:{$remote}";
 

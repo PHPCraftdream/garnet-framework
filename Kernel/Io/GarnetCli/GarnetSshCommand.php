@@ -10,7 +10,7 @@ use Throwable;
  *
  *   ssh [opts] <cmd>   Run a shell command on the remote host
  *   ssh:run            Alias for ssh
- *   ssh:put <l> [r]    Upload a file via scp
+ *   ssh:put <l> [r]    Upload a file (or dir, with -r / auto-detected) via scp
  *   ssh:get <r> [l]    Download a file via scp
  *   ssh:test           Smoke-test the connection (echo ok; pwd; whoami)
  *   ssh:help           Detailed help
@@ -89,6 +89,14 @@ class GarnetSshCommand {
         $local = $positional[0];
         $remote = $positional[1] ?? null;
         $opts = self::flagsToOpts($flags, true);
+
+        // Auto-detect: a directory always needs -r, whether or not the flag
+        // was passed — plain scp errors on directories otherwise ("not a
+        // regular file"), which is a confusing failure for something that's
+        // trivially detectable up front.
+        if ($flags['recursive'] || (is_dir($local) && !is_link($local))) {
+            $opts['recursive'] = true;
+        }
 
         if ($flags['dry_run']) {
             $argv = $client->buildPutArgv($local, $remote, $opts);
@@ -199,6 +207,7 @@ class GarnetSshCommand {
             'env' => [],
             'file' => '',
             'dry_run' => false,
+            'recursive' => false,
         ];
         $positional = [];
 
@@ -235,6 +244,12 @@ class GarnetSshCommand {
 
             if ($arg === '--dry-run') {
                 $flags['dry_run'] = true;
+
+                continue;
+            }
+
+            if ($arg === '--recursive' || $arg === '-r') {
+                $flags['recursive'] = true;
 
                 continue;
             }
@@ -368,7 +383,7 @@ class GarnetSshCommand {
 
   \033[1mSub-commands:\033[0m
     ssh / ssh:run  Run a shell command on the remote host.
-    ssh:put        Upload a local file via scp.
+    ssh:put        Upload a local file (or directory, with -r) via scp.
     ssh:get        Download a remote file via scp.
     ssh:test       Smoke-test connectivity (echo ok; pwd; whoami).
     ssh:help       Show this help.
@@ -389,6 +404,9 @@ class GarnetSshCommand {
     --env=K=V          Prepend: export K='V';  (repeatable)
     --file=PATH        Read the shell command from a local file
     --dry-run          Print the final argv without executing
+    --recursive, -r    ssh:put only: pass -r to scp for a directory upload.
+                       Auto-detected when <local> is a directory — you only
+                       need this flag if you want to force/document intent.
 
   \033[1mAuto-cd:\033[0m
     By default, ssh / ssh:run cd's into the deploy runtime directory
@@ -402,6 +420,7 @@ class GarnetSshCommand {
     php garnet ssh "make build" --cd-remote --env=NODE_ENV=production
     php garnet ssh:put dist/app.tar.gz
     php garnet ssh:put dist/app.tar.gz /srv/releases/app.tar.gz
+    php garnet ssh:put dist/IRabi/garnet-framework "garnet-framework-2026-05-21" --cd-remote
     php garnet ssh:get /srv/app/logs/error.log ./error.log
     php garnet ssh:test
     php garnet ssh "uptime" --dry-run
