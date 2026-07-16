@@ -473,12 +473,15 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Controllers {
             // any positive id must resolve to one of fetchModerators().
             if ($assigneeId !== 0) {
                 $isValidAssignee = false;
+
                 foreach (static::fetchModerators() as $moderator) {
                     if ((int)($moderator['id'] ?? 0) === $assigneeId) {
                         $isValidAssignee = true;
+
                         break;
                     }
                 }
+
                 if (!$isValidAssignee) {
                     return ControllerTools::JSON(['error' => 'Invalid assignee'], status: 400);
                 }
