@@ -43,6 +43,27 @@ export const Auth2Island: React.FC<Partial<IAuthData>> = (props) => {
 
     const [pendingHashCode, setPendingHashCode] = useState<string>(() => getCodeFromHash());
 
+    // A magic link only differs from the page already open by its #token
+    // fragment. Pasting it over an already-loaded tab (e.g. one already
+    // sitting on the code-entry screen) is a same-document navigation in
+    // most browsers — no reload, so this component never remounts and the
+    // initial getCodeFromHash() read above never sees the new token. Without
+    // this listener the auto-verify effect below never re-fires and sign-in
+    // silently never happens for that tab.
+    useEffect(() => {
+        const onHashChange = () => {
+            const code = getCodeFromHash();
+
+            if (code) {
+                setPendingHashCode(code);
+            }
+        };
+
+        window.addEventListener('hashchange', onHashChange);
+
+        return () => window.removeEventListener('hashchange', onHashChange);
+    }, []);
+
     // Magic-link auto-verify: a code captured from the email link's #token is
     // submitted automatically once the session is in a code-entry phase. In the
     // email phases it's held in state until the code is actually requested.
