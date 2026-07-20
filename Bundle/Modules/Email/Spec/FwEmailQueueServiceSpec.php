@@ -449,6 +449,29 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Email\Spec {
                 expect($nextAt)->toBeGreaterThan($before);
             });
 
+            it('integration: 1st failure schedules retry ~60s out (new exponential tier), not the old ~5s linear delay', function (): void {
+                $this->queue->rows['1'] = [
+                    'id' => '1',
+                    'recipient_email' => 'fail@example.com',
+                    'subject' => 'S',
+                    'body_html' => '<p/>',
+                    'status' => 'queued',
+                    'attempts' => 0,
+                    'max_attempts' => 3,
+                    'next_attempt_at' => time() - 1,
+                    'sent_at' => null,
+                ];
+
+                $before = time();
+                FwEmailQueueService::processQueue(10);
+                $after = time();
+                $nextAt = $this->queue->rows['1']['next_attempt_at'];
+
+                // Old linear formula would have produced ~ time()+5; new tier 1 is +60.
+                expect($nextAt)->toBeGreaterThan($before + 55);
+                expect($nextAt)->toBeLessThan($after + 61);
+            });
+
             it('sets next_attempt_at=null on final attempt (max reached)', function (): void {
                 $this->queue->rows['1'] = [
                     'id' => '1',
@@ -649,6 +672,17 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Email\Spec {
                 expect($result)->toBe(false);
             });
 
+            it('does not touch attempts for a row with status=sent', function (): void {
+                $this->queue->rows['5'] = [
+                    'id' => '5',
+                    'status' => 'sent',
+                    'attempts' => 3,
+                    'max_attempts' => 3,
+                ];
+                FwEmailQueueService::retry(5);
+                expect((int)$this->queue->rows['5']['attempts'])->toBe(3);
+            });
+
             it('returns true and sets status=queued for an error row', function (): void {
                 $this->queue->rows['7'] = [
                     'id' => '7',
@@ -683,6 +717,93 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Email\Spec {
                 $result = FwEmailQueueService::retry(8);
                 expect($result)->toBe(true);
                 expect($this->queue->rows['8']['status'])->toBe('queued');
+            });
+
+            it('resets attempts to 0 for a terminally-failed row (attempts == max_attempts)', function (): void {
+                $this->queue->rows['9'] = [
+                    'id' => '9',
+                    'status' => 'error',
+                    'attempts' => 3,
+                    'max_attempts' => 3,
+                    'next_attempt_at' => null,
+                ];
+                $result = FwEmailQueueService::retry(9);
+                expect($result)->toBe(true);
+                expect((int)$this->queue->rows['9']['attempts'])->toBe(0);
+                expect($this->queue->rows['9']['status'])->toBe('queued');
+            });
+
+            it('gives a terminally-retried row next_attempt_at in the past/present, not the future', function (): void {
+                $this->queue->rows['9'] = [
+                    'id' => '9',
+                    'status' => 'error',
+                    'attempts' => 3,
+                    'max_attempts' => 3,
+                    'next_attempt_at' => null,
+                ];
+                $before = time();
+                FwEmailQueueService::retry(9);
+                $nextAt = $this->queue->rows['9']['next_attempt_at'];
+                expect($nextAt)->not->toBeGreaterThan($before + 1);
+            });
+
+            it('a terminally-retried row becomes eligible again under selectAll() filtering (attempts < max_attempts)', function (): void {
+                $this->queue->rows['9'] = [
+                    'id' => '9',
+                    'status' => 'error',
+                    'attempts' => 3,
+                    'max_attempts' => 3,
+                    'next_attempt_at' => null,
+                    'recipient_email' => 'x@local.test',
+                    'subject' => 'S',
+                    'body_html' => '<p/>',
+                    'sent_at' => null,
+                ];
+                FwEmailQueueService::retry(9);
+                $eligible = $this->queue->selectAll();
+                $ids = array_column($eligible, 'id');
+                expect(in_array('9', $ids, true))->toBe(true);
+            });
+        });
+
+        // -----------------------------------------------------------------------
+        describe('backoffSeconds()', function (): void {
+            beforeEach(function (): void {
+                setupTables();
+                $this->iniFile = makeAppIni();
+            });
+
+            afterEach(function (): void {
+                unlink($this->iniFile);
+            });
+
+            function callBackoffSeconds(int $attemptNumber): int {
+                $ref = new ReflectionClass(FwEmailQueueService::class);
+                $method = $ref->getMethod('backoffSeconds');
+                $method->setAccessible(true);
+
+                return $method->invoke(null, $attemptNumber);
+            }
+
+            it('returns 60 seconds (1 minute) for the 1st failed attempt', function (): void {
+                expect(callBackoffSeconds(1))->toBe(60);
+            });
+
+            it('returns 600 seconds (10 minutes) for the 2nd failed attempt', function (): void {
+                expect(callBackoffSeconds(2))->toBe(600);
+            });
+
+            it('returns 3600 seconds (1 hour) for the 3rd failed attempt', function (): void {
+                expect(callBackoffSeconds(3))->toBe(3600);
+            });
+
+            it('returns 21600 seconds (6 hours) for the 4th failed attempt', function (): void {
+                expect(callBackoffSeconds(4))->toBe(21600);
+            });
+
+            it('holds the last tier (21600) for attempts beyond the configured tiers', function (): void {
+                expect(callBackoffSeconds(5))->toBe(21600);
+                expect(callBackoffSeconds(50))->toBe(21600);
             });
         });
 

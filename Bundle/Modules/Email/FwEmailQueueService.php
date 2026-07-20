@@ -20,6 +20,27 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Email {
      * keeps the test suite free of accidental SMTP traffic.
      */
     class FwEmailQueueService {
+        /**
+         * Exponential backoff tiers (in seconds) applied to failed send
+         * attempts, indexed by attempt number - 1 (tier 0 = 1st failure,
+         * tier 1 = 2nd failure, ...). Once the attempt number exceeds the
+         * number of tiers, the LAST tier is held for all further retries.
+         *
+         * Default ladder: 1 minute -> 10 minutes -> 1 hour -> 6 hours.
+         *
+         * Real SMTP outages (mail service restarts, transient provider
+         * overload) commonly last well over a minute; the previous linear
+         * 5/10/15-second backoff exhausted a typical max_attempts=3 budget
+         * in 15-30 seconds total, sending the message to a terminal
+         * dead-letter state long before the other side had a chance to
+         * recover. This tier list gives real-world outages a realistic
+         * window to clear before giving up.
+         *
+         * App-level subclasses may override this constant, or override
+         * backoffSeconds() entirely, to plug in their own retry strategy.
+         */
+        protected const BACKOFF_TIERS_SECONDS = [60, 600, 3600, 21600];
+
         /** @var class-string<FwEmailQueue>|null */
         private static ?string $queueTable = null;
 
@@ -146,7 +167,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Email {
                     $queue->updateById([
                         'status' => 'error',
                         'attempts' => $newAttempts,
-                        'next_attempt_at' => $isFinal ? null : time() + (5 * min($newAttempts, 10)),
+                        'next_attempt_at' => $isFinal ? null : time() + static::backoffSeconds($newAttempts),
                     ], $item['id']);
 
                     static::logAttempt((int)$item['id'], $newAttempts, 'error', $e->getMessage());
@@ -155,6 +176,31 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Email {
             }
 
             return $processed;
+        }
+
+        /**
+         * Computes the delay (in seconds) before the next send attempt
+         * following a failure, given the attempt number that just failed
+         * (1-based: 1 = first failure, 2 = second failure, ...).
+         *
+         * Default implementation walks BACKOFF_TIERS_SECONDS by tier index
+         * ($attemptNumber - 1); once $attemptNumber exceeds the number of
+         * configured tiers, the last (largest) tier is held indefinitely
+         * for all subsequent attempts, so retries never grow unbounded and
+         * never shrink back down.
+         *
+         * Protected + static (not private) so app-level subclasses can
+         * override this method - or just the BACKOFF_TIERS_SECONDS
+         * constant - to implement their own backoff strategy while reusing
+         * the rest of processQueue()'s retry bookkeeping, via late static
+         * binding (`static::backoffSeconds(...)`).
+         */
+        protected static function backoffSeconds(int $attemptNumber): int {
+            $tiers = static::BACKOFF_TIERS_SECONDS;
+            $index = min($attemptNumber, count($tiers)) - 1;
+            $index = max($index, 0);
+
+            return $tiers[$index];
         }
 
         private static function logAttempt(int $queueId, int $attemptNumber, string $status, ?string $errorMessage): void {
@@ -170,6 +216,19 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Email {
             }
         }
 
+        /**
+         * Re-queues a queue row for another send attempt, granting it a
+         * FULL new attempts budget rather than continuing the old counter:
+         * `attempts` is reset to 0 alongside `status => 'queued'` and
+         * `next_attempt_at => time()`. This is a deliberate choice - without
+         * it, a terminally-failed row (attempts == max_attempts) would be
+         * moved back to 'queued' but immediately ignored again by
+         * processQueue()'s `WHERE attempts < max_attempts` filter, leaving
+         * it stuck in 'queued' forever.
+         *
+         * Returns false if the row does not exist or has already been sent
+         * (status === 'sent'); does not touch `attempts` in either case.
+         */
         public static function retry(int $queueId): bool {
             $queue = static::queue();
             $item = $queue->selectById($queueId);
@@ -184,6 +243,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Email {
 
             $queue->updateById([
                 'status' => 'queued',
+                'attempts' => 0,
                 'next_attempt_at' => time(),
             ], $queueId);
 
