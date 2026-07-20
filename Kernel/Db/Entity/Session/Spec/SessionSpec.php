@@ -607,6 +607,30 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Spec {
                 expect($invokeIsSecure())->toBe(true);
             });
 
+            it('detects HTTPS from a multi-hop X-Forwarded-Proto list when the first element is https', function () use ($invokeIsSecure): void {
+                $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'https, http';
+
+                expect($invokeIsSecure())->toBe(true);
+            });
+
+            it('returns false from a multi-hop X-Forwarded-Proto list when the first element is not https', function () use ($invokeIsSecure): void {
+                $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'http, https';
+
+                expect($invokeIsSecure())->toBe(false);
+            });
+
+            it('trims whitespace around multi-hop X-Forwarded-Proto list elements', function () use ($invokeIsSecure): void {
+                $_SERVER['HTTP_X_FORWARDED_PROTO'] = ' https , http ';
+
+                expect($invokeIsSecure())->toBe(true);
+            });
+
+            it('matches the first element of a multi-hop X-Forwarded-Proto list case-insensitively', function () use ($invokeIsSecure): void {
+                $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'HTTPS, http';
+
+                expect($invokeIsSecure())->toBe(true);
+            });
+
             it('returns false when X-Forwarded-Proto: http explicitly signals plaintext', function () use ($invokeIsSecure): void {
                 $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'http';
 

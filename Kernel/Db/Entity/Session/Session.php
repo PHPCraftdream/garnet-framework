@@ -73,7 +73,12 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session {
          *      explicitly means "not HTTPS" and must not count.
          *   2. `X-Forwarded-Proto: https` — sent by reverse proxies / CDNs that
          *      terminate TLS in front of PHP without forwarding the `HTTPS`
-         *      FastCGI param, a very common panel/CDN configuration.
+         *      FastCGI param, a very common panel/CDN configuration. The
+         *      header may be a comma-separated list when the request passes
+         *      through multiple proxies (e.g. `"https, http"`); by de-facto
+         *      convention each hop appends its value to the right, so the
+         *      FIRST element reflects the protocol the client used to reach
+         *      the outermost proxy and is the one we must check.
          *   3. `X-Forwarded-Ssl: on` — the older equivalent of the above.
          *   4. `SERVER_PORT === '443'` — a last-resort heuristic.
          *
@@ -86,7 +91,9 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session {
          * so missed every behind-proxy deployment — omits `Secure` and would
          * let the cookie travel over HTTP if such a path ever existed. We
          * therefore bias towards detecting HTTPS and do not gate the proxy
-         * headers on a client-IP allowlist.
+         * headers on a client-IP allowlist — same asymmetric-risk reasoning
+         * as the single-value case, decided in a prior fix; parsing the
+         * multi-hop list does not change that trust model.
          */
         protected function isSecureRequest(): bool {
             $https = (string)($_SERVER['HTTPS'] ?? '');
@@ -95,9 +102,10 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session {
                 return true;
             }
 
-            $forwardedProto = strtolower((string)($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''));
+            $forwardedProtoHeader = (string)($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '');
+            $forwardedProtoFirst = strtolower(trim(explode(',', $forwardedProtoHeader)[0]));
 
-            if ($forwardedProto === 'https') {
+            if ($forwardedProtoFirst === 'https') {
                 return true;
             }
 
