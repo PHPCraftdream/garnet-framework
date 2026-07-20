@@ -535,5 +535,89 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Spec {
                 expect(true)->toBe(true);
             });
         });
+
+        describe('isSecureRequest()', function (): void {
+            // isSecureRequest() reads $_SERVER directly, so the specs drive the
+            // real superglobal rather than stubbing. Each case mutates only the
+            // keys below; they are snapshotted before and restored after so a
+            // result never depends on the order specs run in.
+            beforeEach(function (): void {
+                $this->serverSnapshot = [
+                    'HTTPS' => $_SERVER['HTTPS'] ?? null,
+                    'SERVER_PORT' => $_SERVER['SERVER_PORT'] ?? null,
+                    'HTTP_HOST' => $_SERVER['HTTP_HOST'] ?? null,
+                    'HTTP_X_FORWARDED_PROTO' => $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? null,
+                    'HTTP_X_FORWARDED_SSL' => $_SERVER['HTTP_X_FORWARDED_SSL'] ?? null,
+                ];
+
+                foreach (array_keys($this->serverSnapshot) as $key) {
+                    unset($_SERVER[$key]);
+                }
+            });
+
+            afterEach(function (): void {
+                foreach ($this->serverSnapshot as $key => $value) {
+                    if ($value === null) {
+                        unset($_SERVER[$key]);
+                    } else {
+                        $_SERVER[$key] = $value;
+                    }
+                }
+            });
+
+            // isSecureRequest() is protected and non-static: reach it through
+            // reflection. Session::get(false) builds a fresh singleton per case
+            // (the outer beforeEach resets the static instance).
+            $invokeIsSecure = function (): bool {
+                $session = Session::get(false);
+                $reflection = new ReflectionClass($session);
+                $method = $reflection->getMethod('isSecureRequest');
+
+                return (bool)$method->invoke($session);
+            };
+
+            it('treats HTTPS=on as secure (regression guard)', function () use ($invokeIsSecure): void {
+                $_SERVER['HTTPS'] = 'on';
+
+                expect($invokeIsSecure())->toBe(true);
+            });
+
+            it('returns false with no HTTPS signal on a non-443 port (regression guard)', function () use ($invokeIsSecure): void {
+                $_SERVER['SERVER_PORT'] = '80';
+                $_SERVER['HTTP_HOST'] = 'example.com';
+
+                expect($invokeIsSecure())->toBe(false);
+            });
+
+            it('detects HTTPS via X-Forwarded-Proto: https (the reverse-proxy/CDN case)', function () use ($invokeIsSecure): void {
+                $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'https';
+
+                expect($invokeIsSecure())->toBe(true);
+            });
+
+            it('matches X-Forwarded-Proto case-insensitively', function () use ($invokeIsSecure): void {
+                $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'HTTPS';
+
+                expect($invokeIsSecure())->toBe(true);
+            });
+
+            it('detects HTTPS via X-Forwarded-Ssl: on', function () use ($invokeIsSecure): void {
+                $_SERVER['HTTP_X_FORWARDED_SSL'] = 'on';
+
+                expect($invokeIsSecure())->toBe(true);
+            });
+
+            it('returns false when X-Forwarded-Proto: http explicitly signals plaintext', function () use ($invokeIsSecure): void {
+                $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'http';
+
+                expect($invokeIsSecure())->toBe(false);
+            });
+
+            it('detects HTTPS via SERVER_PORT=443 with no HTTPS/proxy signal (regression guard)', function () use ($invokeIsSecure): void {
+                $_SERVER['SERVER_PORT'] = '443';
+
+                expect($invokeIsSecure())->toBe(true);
+            });
+        });
     });
 }

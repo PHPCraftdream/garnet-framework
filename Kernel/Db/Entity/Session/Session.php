@@ -63,22 +63,54 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session {
 
         protected string $csrfToken = '';
 
+        /**
+         * Decide whether the current request reached PHP over a secure (TLS)
+         * channel, so that the session and CSRF cookies can be marked `Secure`.
+         *
+         * HTTPS is signalled by any of four sources, checked in order:
+         *   1. `$_SERVER['HTTPS']` — set directly by the PHP SAPI. The legacy
+         *      CGI value `'off'` (compared case-insensitively for robustness)
+         *      explicitly means "not HTTPS" and must not count.
+         *   2. `X-Forwarded-Proto: https` — sent by reverse proxies / CDNs that
+         *      terminate TLS in front of PHP without forwarding the `HTTPS`
+         *      FastCGI param, a very common panel/CDN configuration.
+         *   3. `X-Forwarded-Ssl: on` — the older equivalent of the above.
+         *   4. `SERVER_PORT === '443'` — a last-resort heuristic.
+         *
+         * Risk asymmetry — why no trusted-proxy IP allowlist: a false positive
+         * (deciding "HTTPS" when the hop to the client is actually plaintext)
+         * only marks a cookie `Secure`, and the browser itself refuses to send
+         * a `Secure` cookie over a genuinely non-TLS connection, so the worst
+         * outcome is a broken feature, never a leaked credential. The reverse
+         * error — the previous behaviour, which consulted only HTTPS/PORT and
+         * so missed every behind-proxy deployment — omits `Secure` and would
+         * let the cookie travel over HTTP if such a path ever existed. We
+         * therefore bias towards detecting HTTPS and do not gate the proxy
+         * headers on a client-IP allowlist.
+         */
         protected function isSecureRequest(): bool {
-            $https = $_SERVER['HTTPS'] ?? '';
-            $port = $_SERVER['SERVER_PORT'] ?? '';
-            $host = $_SERVER['HTTP_HOST'] ?? '';
+            $https = (string)($_SERVER['HTTPS'] ?? '');
 
-            if (!empty($https) && $https !== 'off') {
+            if ($https !== '' && strcasecmp($https, 'off') !== 0) {
                 return true;
             }
+
+            $forwardedProto = strtolower((string)($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''));
+
+            if ($forwardedProto === 'https') {
+                return true;
+            }
+
+            $forwardedSsl = strtolower((string)($_SERVER['HTTP_X_FORWARDED_SSL'] ?? ''));
+
+            if ($forwardedSsl === 'on') {
+                return true;
+            }
+
+            $port = (string)($_SERVER['SERVER_PORT'] ?? '');
 
             if ($port === '443') {
                 return true;
-            }
-
-            // Localhost is treated as secure context
-            if (str_contains($host, 'localhost') || str_contains($host, '127.0.0.1')) {
-                return false; // Allow non-secure for local dev
             }
 
             return false;
