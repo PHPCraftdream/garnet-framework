@@ -170,6 +170,11 @@ class GarnetRunner {
             $command === 'db' || str_starts_with($command, 'db:') => GarnetDbWipeCommand::run($command, $args),
             $command === 'ssh' || str_starts_with($command, 'ssh:') => GarnetSshCommand::run($command, $args),
             $command === 'deploy:diff' || $command === 'deploy:diff:help' => GarnetDeployDiffCommand::run($command === 'deploy:diff:help' ? ['help'] : $args),
+            $command === 'deploy:full' => (static function () use ($args): void {
+                GarnetDeployFullCommand::run($args);
+
+                exit(0);
+            })(),
             $command === 'cache' || str_starts_with($command, 'cache:') => (static function () use ($command, $args): void {
                 GarnetCacheCommand::run($command, $args);
 
@@ -287,6 +292,7 @@ class GarnetRunner {
     maintenance       Maintenance mode (on/off/status)
     maintenance:remote Drive the prod box's maintenance mode over SSH (on/off/status)
     deploy            Full deploy (maintenance -> migrate -> cache -> off)
+    deploy:full       Build + ship public/framework/app to an existing host in one call
     bundle            Build production deploy bundle (public + framework + app)
     uninstall         Remove a deployed bundle from host (bundle-only)
     config:init       Seed WorkDir/Config/ from ConfigExample (non-destructive)
