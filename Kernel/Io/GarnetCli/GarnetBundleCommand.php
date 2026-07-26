@@ -725,8 +725,19 @@ class GarnetBundleCommand {
     }
 
     private static function runRspackBuild(string $root): void {
-        putenv('COMMON_GARNET_WEB_DIR=' . $root . DS);
-        $frontDir = $root . DS . 'FrontBuilder';
+        // Mirrors GarnetBuildCommand::run() (the plain `php garnet build`
+        // path, already correct for both layouts and exercised constantly
+        // this session) rather than assuming $root itself has a FrontBuilder
+        // child — that's only true in the legacy monorepo. FrontBuilder
+        // lives inside the FRAMEWORK package in both layouts;
+        // COMMON_GARNET_WEB_DIR (where rspack.config.ts expects to find the
+        // local `garnet` CLI to spawn `php <dir>/garnet prepare`) is the app
+        // dir in app-mode, GARNET_ROOT in legacy mode. Found this the hard
+        // way: every earlier test in this session passed --skip-build,
+        // which never exercised this method at all.
+        $appDir = GarnetRunner::$appDir !== '' ? GarnetRunner::$appDir : $root;
+        putenv('COMMON_GARNET_WEB_DIR=' . $appDir . DS);
+        $frontDir = GarnetRunner::$frameworkDir . DS . 'FrontBuilder';
         $cwd = getcwd();
         chdir($frontDir);
         $cmd = 'npx cross-env NODE_ENV=production rspack build --config rspack.config.ts';
