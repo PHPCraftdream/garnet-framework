@@ -1264,7 +1264,8 @@ final class GarnetDeployDiffCommand {
      * current dispatcher untouched.
      */
     private static function syncRemoteRuntimeGarnet(SshClient $ssh, array $layout, string $appName): void {
-        $garnetBin = self::isVendorMode()
+        $isVendorMode = self::isVendorMode();
+        $garnetBin = $isVendorMode
             ? GarnetRunner::$appDir . DIRECTORY_SEPARATOR . 'garnet'
             : GARNET_ROOT . DIRECTORY_SEPARATOR . 'garnet';
         $contents = GarnetBundleCommand::renderRuntimeGarnet(
@@ -1272,6 +1273,7 @@ final class GarnetDeployDiffCommand {
             (string)$layout['app_dir'],
             $appName,
             (string)$layout['framework_dir'],
+            $isVendorMode,
         );
 
         if ($contents === null) {

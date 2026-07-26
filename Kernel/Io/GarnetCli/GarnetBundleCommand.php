@@ -60,29 +60,30 @@ use Throwable;
  */
 class GarnetBundleCommand {
     public static function run(array $args): void {
+        if (in_array('--help', $args, true) || in_array('-h', $args, true) || ($args[0] ?? '') === 'help') {
+            self::help();
+
+            return;
+        }
+
         $appName = GarnetEnv::requireAppName();
         $appNameLower = strtolower($appName);
 
         // `bundle` builds a self-contained deploy artifact by copying the
-        // monorepo's `Apps/<App>` + `Framework/` siblings. That tree only
-        // exists in the legacy monorepo; in the standalone app layout (an app
-        // with a composer-vendored framework) the sources are shaped
-        // differently and a naively-copied bundle would be subtly broken. Until
-        // app-mode bundling is reworked AND verified against a real deploy,
-        // fail fast with guidance instead of emitting a bad artifact —
-        // incremental deploys already work via `garnet deploy:diff`.
+        // app + framework sources into 4 sibling dirs (public/framework/app/
+        // runtime). Two source layouts exist:
+        //   - legacy monorepo: Apps/<App>/ + Framework/ under GARNET_ROOT.
+        //   - standalone app (composer-vendored framework): the app is its
+        //     own repo/root, and the framework lives inside its own
+        //     vendor/phpcraftdream/garnet-framework/ — already the exact
+        //     tree `php garnet build` (run from the app) writes the
+        //     asset-bridge *Gen.php files and hashed Public/assets/ into, so
+        //     sourcing the framework copy from there (not a separate
+        //     framework checkout) can never drift from what was actually
+        //     built, unlike a manual `ssh:put` of a pristine framework repo.
         $isAppMode = GarnetRunner::$appDir !== ''
             && str_replace('\\', '/', (string)realpath(GarnetRunner::$appDir))
                !== str_replace('\\', '/', (string)realpath(GarnetRunner::$frameworkDir));
-
-        if ($isAppMode) {
-            self::fail(
-                "`garnet bundle` is not supported in the standalone app layout yet.\n"
-                . "  Use `garnet deploy:diff` to push changes to an existing host.\n"
-                . "  (Full app-mode bundling is a tracked limitation: it needs a\n"
-                . '   structural rewrite plus real-deploy verification.)',
-            );
-        }
 
         // --__phar-relaunched is the recursion guard: when phar.readonly=1
         // we re-exec the whole command through `php -d phar.readonly=0`,
@@ -202,8 +203,13 @@ class GarnetBundleCommand {
         $distApp = $distRoot . DS . $appName;
 
         $publicSrc = GarnetEnv::getPublicDir($appName);
-        $appSrc = $root . DS . 'Apps' . DS . $appName;
-        $frameworkSrc = $root . DS . 'Framework';
+        // App-mode: the app IS its own root, and the framework lives inside
+        // the app's own vendor/ (composer-installed) — GarnetRunner already
+        // resolves both anchors correctly (it's how $isAppMode above was
+        // computed). Legacy mode keeps the Apps/<App> + Framework/ sibling
+        // layout under GARNET_ROOT.
+        $appSrc = $isAppMode ? GarnetRunner::$appDir : $root . DS . 'Apps' . DS . $appName;
+        $frameworkSrc = $isAppMode ? GarnetRunner::$frameworkDir : $root . DS . 'Framework';
 
         if (!is_dir($publicSrc)) {
             self::fail("Public dir not found: {$publicSrc}");
@@ -283,6 +289,12 @@ class GarnetBundleCommand {
         self::step('4/6', 'Copying app');
         $distAppApp = $distApp . DS . $appDirName;
         // WorkDir is entirely moved to the runtime dir — exclude it here.
+        // `dist` is excluded unconditionally: in app-mode GARNET_ROOT (and
+        // hence $distRoot, see above) resolves to the framework dir, which
+        // sits under this very app's own vendor/ — without this exclude a
+        // build recurses into its own not-yet-finished output and copies it
+        // into itself, growing without bound (hit this for real: a stray
+        // --skip-build run ballooned to 2.5GB before being killed).
         $appExcludes = [
             'WorkDir',
             'Public',
@@ -293,6 +305,7 @@ class GarnetBundleCommand {
             'Spec',
             'TestsInit',
             'Migrations' . DS . 'WorkDir',
+            'dist',
             '.idea',
             '.vscode',
             '.vs',
@@ -316,6 +329,14 @@ class GarnetBundleCommand {
 
         if ($noVendor) {
             $appExcludes[] = 'vendor';
+        } elseif ($isAppMode) {
+            // App-mode ships vendor/ by default (the app's OTHER composer
+            // deps, e.g. a real app's own libraries, aren't available any
+            // other way on a host with no composer) but the framework's own
+            // copy inside it is redundant — it's copied separately, fresh,
+            // as the framework-dir bucket below. Shipping both would waste
+            // space and, worse, risks the two drifting from each other.
+            $appExcludes[] = 'vendor' . DS . 'phpcraftdream' . DS . 'garnet-framework';
         }
 
         self::copyDir($appSrc, $distAppApp, $appExcludes, $appExcludeFiles);
@@ -336,6 +357,21 @@ class GarnetBundleCommand {
                 echo '  app autoload patched' . PHP_EOL;
             }
         }
+
+        // App-mode's run_cmd.php scaffold (Templates/Application/run_cmd.php,
+        // and every app:create'd app's own copy) hardcodes
+        // `IRabi::setPublicDirInit(__DIR__ . '/WorkDir/public/')` — a local-
+        // dev convenience stub, always an empty directory (public/ isn't
+        // meaningful for CLI commands like migrate/cron, only for web
+        // requests), that WorkDir is entirely excluded from this app-dir
+        // copy since the real WorkDir now lives in the runtime-dir sibling.
+        // getPublicDir()'s CLI fallback only kicks in when NOTHING was set
+        // at all; an explicitly-set-but-missing dir still throws. Recreate
+        // the empty stub here so `php garnet-runtime/garnet <cli-cmd>`
+        // boots without needing run_cmd.php rewritten.
+        if ($isAppMode) {
+            @mkdir($distAppApp . DS . 'WorkDir' . DS . 'public', 0o755, true);
+        }
         echo "  -> {$distAppApp}" . PHP_EOL . PHP_EOL;
 
         // 5. Copy framework
@@ -346,7 +382,17 @@ class GarnetBundleCommand {
         // Templates/ is the app:create scaffold (Templates/Application/) —
         // a dev-only tool for generating new apps, never read at runtime by
         // a deployed app. Shipping it just wastes space (tens of MB).
-        $fwExcludes = ['.idea', '.vscode', '.vs', '.xcodeproj', '.atom', '.git', 'Templates'];
+        // `dist` excluded for the same self-recursion reason as the app
+        // copy above — GARNET_ROOT (and $distRoot) lives inside the
+        // framework dir itself in app-mode. `FrontBuilder` (Node build
+        // tooling — not needed once Public/assets/ is already built and
+        // shipped, same exclusion documented for the manual redeploy path
+        // in docs/deploy.md) and `node_modules` (its own copy is an NTFS
+        // junction to FrontBuilder/node_modules, created by `garnet setup`
+        // — walking it made copy() choke with "cannot be a directory",
+        // and even if it worked it'd ship an unnecessary multi-hundred-MB
+        // tree) are excluded for the same reason.
+        $fwExcludes = ['.idea', '.vscode', '.vs', '.xcodeproj', '.atom', '.git', 'Templates', 'dist', 'FrontBuilder', 'node_modules'];
         $fwExcludeFiles = [
             'cm.bat', 'errors.log', 'kahlan-config.php', 'phpstan.neon',
             'php-cs-fixer.phar', 'phpstan.phar',
@@ -359,6 +405,55 @@ class GarnetBundleCommand {
 
         // Copy entries from Framework/ root, preserving structure
         self::copyDir($frameworkSrc, $distFw, $fwExcludes, $fwExcludeFiles);
+
+        // App-mode only: the composer-installed copy at vendor/phpcraftdream/
+        // garnet-framework has NO vendor/ of its own — Composer flattens a
+        // dependency's transitive deps (aura/*, twig/twig, guzzlehttp/*, …)
+        // into the CONSUMING app's shared vendor/, not a nested tree under
+        // the package. That's fine for local dev (autoload.php falls back to
+        // the app's own vendor/autoload.php, which really does have
+        // everything) but breaks the whole point of a separate framework-dir
+        // sibling: GARNET_FRAMEWORK_DIR signals "the framework's classes AND
+        // its own deps live here, independently upgradable" — the runtime
+        // dispatcher and autoload.php both require $frameworkDir/vendor/
+        // autoload.php to exist. Materialise it for real, in this disposable
+        // dist/ copy only (never touching the real installed copy) — the
+        // framework's own composer.json/composer.lock DO get shipped
+        // (composer never installs a nested vendor/, but it does copy the
+        // manifest files), so `composer install` here resolves the SAME
+        // pinned versions that the real install used elsewhere.
+        if ($isAppMode && !$noVendor && !is_dir($distFw . DS . 'vendor')) {
+            if (is_file($distFw . DS . 'composer.json')) {
+                self::step('5b', 'Materialising framework vendor/ (composer install --no-dev)');
+                $cwd = getcwd();
+                chdir($distFw);
+                // --no-scripts: the framework's own composer.json runs a
+                // post-install-cmd (`bin/garnet setup --skip-composer --soft`)
+                // meant for a REAL framework checkout — it tries to npm-install
+                // FrontBuilder (deliberately excluded from this dist copy) and
+                // wire an admin-panel node_modules junction, neither of which
+                // makes sense for a disposable copy whose only job here is to
+                // produce vendor/autoload.php.
+                passthru('composer install --no-dev --no-interaction --no-scripts --optimize-autoloader', $composerCode);
+                chdir($cwd);
+
+                if ($composerCode !== 0 || !is_dir($distFw . DS . 'vendor')) {
+                    self::fail(
+                        "Could not materialise the framework's own vendor/ in {$distFw}"
+                        . " (composer install exited {$composerCode}). The bundled"
+                        . ' framework-dir would be missing vendor/autoload.php and'
+                        . ' fail to boot. Fix composer availability/network access'
+                        . ' and re-run, or pass --no-vendor and provide dependencies'
+                        . ' another way.'
+                    );
+                }
+                echo PHP_EOL;
+            } else {
+                echo '  WARNING: no composer.json found in the framework copy —'
+                    . ' vendor/ could not be materialised; the bundle will NOT boot'
+                    . ' as-is.' . PHP_EOL . PHP_EOL;
+            }
+        }
         echo "  -> {$distFw}" . PHP_EOL . PHP_EOL;
 
         // 6. Assemble runtime directory
@@ -370,9 +465,12 @@ class GarnetBundleCommand {
         @mkdir($distRuntime, 0o755, true);
 
         // garnet CLI — lives in runtime dir; sets GARNET_ROOT to bundle root
-        // and points GARNET_APP_DIR at the actual app dir sibling.
-        $garnetSrc = $root . DS . 'garnet';
-        $contents = self::renderRuntimeGarnet($garnetSrc, $appDirName, $appName, $frameworkDirName);
+        // and points GARNET_APP_DIR at the actual app dir sibling. App-mode's
+        // own ./garnet lives at the app root (GarnetRunner::$appDir), not
+        // under GARNET_ROOT (which in app-mode is the framework dir — see
+        // the isAppMode computation above).
+        $garnetSrc = $isAppMode ? GarnetRunner::$appDir . DS . 'garnet' : $root . DS . 'garnet';
+        $contents = self::renderRuntimeGarnet($garnetSrc, $appDirName, $appName, $frameworkDirName, $isAppMode);
 
         if ($contents !== null) {
             file_put_contents($distRuntime . DS . 'garnet', $contents);
@@ -648,6 +746,24 @@ class GarnetBundleCommand {
 
         $excludeDirsAbs = array_map(fn ($e) => $src . DS . $e, $excludeDirs);
 
+        // Defence in depth against a destination that turns out to be nested
+        // inside its own source (e.g. app-mode's dist/ output landing inside
+        // vendor/phpcraftdream/garnet-framework/, which IS the framework
+        // copy's own source) — without this, the recursive iterator walks
+        // into the not-yet-finished output and copies it into itself,
+        // growing without bound rather than erroring. Caller-supplied
+        // excludes (e.g. 'dist' above) are the primary defence; this is the
+        // backstop for the case where a future caller forgets one. Plain
+        // string prefix check (not realpath) to stay consistent with how
+        // $path below is matched against $excludeDirsAbs — both are built
+        // from the same un-resolved $src string.
+        $normSrc = rtrim($src, '/\\');
+        $normDst = rtrim($dst, '/\\');
+
+        if ($normDst !== $normSrc && str_starts_with($normDst . DS, $normSrc . DS)) {
+            $excludeDirsAbs[] = $normDst;
+        }
+
         $iter = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($src, FilesystemIterator::SKIP_DOTS),
             RecursiveIteratorIterator::SELF_FIRST
@@ -684,7 +800,12 @@ class GarnetBundleCommand {
             $rel = substr($path, strlen($src) + 1);
             $target = $dst . DS . $rel;
 
-            if ($item->isDir()) {
+            // SplFileInfo::isDir() can disagree with the OS about NTFS
+            // junctions/reparse points (hit this for real: a node_modules
+            // junction reported isDir()=false here, then copy() below threw
+            // "cannot be a directory"). is_dir() is the native, reliable
+            // check — trust it over the cached SplFileInfo type.
+            if ($item->isDir() || is_dir($path)) {
                 if (!is_dir($target)) {
                     @mkdir($target, 0o755, true);
                 }
@@ -1088,29 +1209,161 @@ SH;
         exit(1);
     }
 
+    private static function help(): void {
+        echo <<<HELP
+
+  \033[1mphp garnet bundle [flags]\033[0m
+
+  \033[1mWHAT IT DOES\033[0m
+  ────────────────────────────────────────────────────────────────────────
+  Builds a self-contained, portable deploy artifact for the active app:
+  4 sibling directories (public / framework / app / runtime), each
+  path-agnostic (no hardcoded absolute paths, no dev-only files), ready
+  to drop onto a fresh host — first-time install, not an incremental
+  update (use \033[36mgarnet deploy:diff\033[0m for that once a host already
+  has a bundle on it).
+
+    dist/<AppName>/
+      ├── <public-dir>/     copy of Public/, index.php rewritten to boot
+      │                     via the runtime dir's _shared_index.php
+      ├── <framework-dir>/  framework Kernel/Bundle/vendor (+ generated
+      │                     *Gen.php asset-bridge files)
+      ├── <app-dir>/        app PHP classes + composer.json/lock (no
+      │                     WorkDir, no ./garnet, no .env)
+      └── <runtime-dir>/    garnet CLI dispatcher (path-rewritten),
+                            _shared_index.php, .env, WorkDir/ skeleton
+
+  Works for both source layouts:
+    - \033[1mlegacy monorepo\033[0m — Apps/<App>/ + Framework/ siblings under
+      GARNET_ROOT.
+    - \033[1mstandalone app\033[0m (composer-vendored framework, the layout
+      `app:create` scaffolds) — the app is its own root, framework lives
+      in vendor/phpcraftdream/garnet-framework/. The framework-dir copy
+      is sourced from there specifically (not a separate framework
+      checkout) so it can never disagree with what `php garnet build`
+      (run from this app) actually produced — the failure mode a manual
+      `ssh:put` of a pristine framework checkout is prone to (a stray
+      locally-built *Gen.php sitting in that checkout silently ships a
+      stale asset-bridge referencing hashes that no longer exist).
+
+  \033[1mFLAGS\033[0m
+  ────────────────────────────────────────────────────────────────────────
+    --skip-build             Skip the rspack production build (assumes
+                              Public/assets/ is already built).
+    --no-vendor               Don't copy any vendor/ directories — use
+                              when the host installs dependencies itself.
+                              Standalone-app mode: also drops the app's
+                              OTHER composer deps (e.g. a real app's own
+                              libraries), not just the framework's.
+    --with-config             Include WorkDir/Config/*.ini (real DB/SSH
+                              credentials) in the runtime tree. OFF by
+                              default — Config/ is server-owned state;
+                              re-bundling must not silently overwrite a
+                              live host's credentials. Only pass this for
+                              the very first bootstrap of a brand-new
+                              host, or after intentionally rotating creds
+                              locally and pushing them up.
+    --zip                     Also produce dist/<AppName>.tar.gz.
+    --flat-zip                Pack the archive without a wrapper dir
+                              (use with --zip) — `tar -xzf … -C ~/www`
+                              drops the 4 sibling dirs straight into the
+                              target instead of nesting them one level.
+    --keep-dir                Keep the unpacked dist/<AppName>/ tree
+                              after --zip / the default phar build
+                              succeeds (normally removed once the
+                              deliverable is on disk — useful when
+                              debugging the bundle layout).
+    --no-phar                 Skip phar generation. By default `bundle`
+                              produces a self-executing dist/<AppName>.phar
+                              — the end user runs `php <name>.phar` and
+                              picks which sibling dir(s) to extract
+                              (interactive picker, or --all / --public /
+                              --framework / --app / --runtime flags).
+    --public-dir=<name>       Rename the docroot folder (default: public).
+    --framework-dir=<name>    Rename the framework folder
+                              (default: garnet-framework).
+    --app-dir=<name>          Rename the app folder
+                              (default: garnet-app-<appname>).
+    --runtime-dir=<name>      Rename the runtime folder
+                              (default: garnet-runtime-<public-name>).
+    --public-name=<name>      Rebrand public URL paths: renames
+                              assets/<AppName>/ and upload/<AppName>/
+                              docroot subdirs to <name>, and rewrites the
+                              matching URL literals in *Gen.php + built
+                              JS/CSS/HTML/SVG files.
+
+  Folder-name flags fall back to \033[2mWorkDir/Config*/deploy.ini\033[0m
+  (public_dir / framework_dir / app_dir / runtime_dir / public_name) when
+  not passed on the CLI, then to the built-in defaults above.
+
+  \033[1mFIRST DEPLOY TO A FRESH HOST\033[0m
+  ────────────────────────────────────────────────────────────────────────
+    php garnet bundle --with-config          # first boot: push real creds too
+    php garnet ssh:put dist/<App>/<public-dir>    "<public-dir>"    --cd-remote
+    php garnet ssh:put dist/<App>/<framework-dir> "<framework-dir>" --cd-remote
+    php garnet ssh:put dist/<App>/<app-dir>       "<app-dir>"       --cd-remote
+    php garnet ssh:put dist/<App>/<runtime-dir>   "<runtime-dir>"   --cd-remote
+    # then, from inside <runtime-dir> on the host:
+    php garnet deploy                         # maintenance → backup → migrate → cache → off
+
+  Once a host has a bundle on it, prefer \033[36mgarnet deploy:diff\033[0m for
+  routine updates — it ships only the delta since the last deploy,
+  seconds instead of a full re-upload, and doesn't need the `--with-config`
+  question again.
+
+  --help / -h / help     this message
+HELP;
+        echo PHP_EOL;
+    }
+
     /**
      * Render the _shared_index.php that lives in the runtime folder.
      * Reads .env from its own directory to locate sibling bundle dirs,
      * then sets GARNET_APP_DIR + GARNET_WORKDIR_DIR and boots the app.
      */
     /**
-     * Rewrite the repo `garnet` CLI into the runtime-dir variant: GARNET_ROOT
-     * becomes the bundle root, GARNET_APP_DIR/NAME/WORKDIR/RUNTIME env vars are
-     * planted, and the framework autoload path points at the versioned
-     * framework dir. Single source of truth used by both `bundle` and
-     * `deploy:diff` (so the runtime dispatcher never drifts from the repo's
-     * routes). Returns null if the source file is missing.
+     * Rewrite the repo `garnet` CLI into the runtime-dir variant. Two source
+     * shapes exist, selected by `$isAppMode`:
+     *
+     * - Legacy monorepo `./garnet`: `define('GARNET_ROOT', __DIR__);` +
+     *   `require ... 'Framework' . DS . 'vendor' ...`. GARNET_ROOT becomes
+     *   the bundle root and GARNET_APP_DIR/NAME/WORKDIR/RUNTIME env vars are
+     *   planted relative to it.
+     * - Standalone app `./garnet` (composer-vendored framework): a much
+     *   thinner file — `require __DIR__ . '/vendor/autoload.php'` +
+     *   `GarnetRunner::main(__DIR__, $argv)`, both of which point at
+     *   wherever the runtime copy physically sits, which is WRONG once
+     *   moved into the runtime-dir sibling (its own vendor/autoload.php
+     *   doesn't have the framework's classes — that vendor/ is deliberately
+     *   NOT shipped there, only in the framework-dir sibling — and
+     *   GarnetRunner::main() needs the APP dir, not the runtime dir, as its
+     *   first argument). Silently leaving this content unmodified (the
+     *   legacy patterns simply don't match) produced a dispatcher that
+     *   failed its own boot check on every single app-mode deploy — caught
+     *   only because `deploy:diff`'s sync step already falls back to
+     *   keeping the previous dispatcher on a failed boot check, so it never
+     *   surfaced as a hard outage, just a dispatcher that silently never
+     *   updated.
+     *
+     * Single source of truth used by both `bundle` and `deploy:diff` (so the
+     * runtime dispatcher never drifts from the repo's routes). Returns null
+     * if the source file is missing.
      */
     public static function renderRuntimeGarnet(
         string $repoGarnetSrc,
         string $appDirName,
         string $appName,
-        string $frameworkDirName
+        string $frameworkDirName,
+        bool $isAppMode = false
     ): ?string {
         if (!is_file($repoGarnetSrc)) {
             return null;
         }
         $contents = (string)file_get_contents($repoGarnetSrc);
+
+        if ($isAppMode) {
+            return self::rewriteAppModeRuntimeGarnet($contents, $appDirName, $appName, $frameworkDirName);
+        }
 
         $contents = str_replace(
             "define('GARNET_ROOT', __DIR__);",
@@ -1125,6 +1378,71 @@ SH;
         $contents = str_replace(
             "GARNET_ROOT . DS . 'Framework' . DS . 'vendor' . DS . 'autoload.php'",
             "GARNET_ROOT . DS . '{$frameworkDirName}' . DS . 'vendor' . DS . 'autoload.php'",
+            $contents
+        );
+
+        return $contents;
+    }
+
+    /**
+     * Transform for the standalone-app `./garnet` shape — see the canonical
+     * scaffold at Templates/Application/garnet, which every `app:create`d
+     * app starts from verbatim:
+     *
+     *   require_once __DIR__ . '/vendor/autoload.php';
+     *   putenv('GARNET_APP_DIR=' . __DIR__);
+     *   \…\GarnetRunner::main(__DIR__, $argv);
+     *
+     * All three `__DIR__` uses assume the file runs from the app's own
+     * root — true for local dev, false once copied into the runtime-dir
+     * sibling: the runtime copy's own vendor/ deliberately does NOT carry
+     * the framework (that's the framework-dir sibling, kept separate so it
+     * can never drift from what the app actually built), and the app dir
+     * is a sibling, not `__DIR__` itself.
+     *
+     * Rewrites, in order:
+     *   1. autoload → load the FRAMEWORK sibling's vendor/autoload.php
+     *      (it has the Kernel/GarnetCli classes + the framework's own
+     *      deps), not the app's.
+     *   2. putenv → GARNET_APP_DIR/FRAMEWORK_DIR point at the sibling app/
+     *      framework dirs; GARNET_APP_NAME/WORKDIR_DIR/RUNTIME_DIR added to
+     *      match what the legacy transform plants (GARNET_FRAMEWORK_DIR is
+     *      the one app-mode needs that legacy mode doesn't — legacy always
+     *      resolves the framework relative to GARNET_ROOT, but app-mode's
+     *      whole premise is that the framework can live anywhere).
+     *   3. GarnetRunner::main()'s first argument → the sibling app dir,
+     *      not wherever this dispatcher physically sits.
+     *
+     * Falls back to returning $contents unmodified if the expected scaffold
+     * lines aren't found (e.g. a hand-edited `./garnet`) rather than
+     * guessing — callers should treat an unchanged-looking result as a sign
+     * to verify the runtime dispatcher by hand.
+     */
+    private static function rewriteAppModeRuntimeGarnet(
+        string $contents,
+        string $appDirName,
+        string $appName,
+        string $frameworkDirName
+    ): string {
+        $contents = str_replace(
+            "require_once __DIR__ . '/vendor/autoload.php';",
+            "require_once dirname(__DIR__) . '/{$frameworkDirName}/vendor/autoload.php';",
+            $contents
+        );
+
+        $contents = str_replace(
+            "putenv('GARNET_APP_DIR=' . __DIR__);",
+            "putenv('GARNET_APP_DIR=' . dirname(__DIR__) . DIRECTORY_SEPARATOR . '{$appDirName}');\n"
+            . "putenv('GARNET_FRAMEWORK_DIR=' . dirname(__DIR__) . DIRECTORY_SEPARATOR . '{$frameworkDirName}');\n"
+            . "putenv('GARNET_APP_NAME={$appName}');\n"
+            . "putenv('GARNET_WORKDIR_DIR=' . __DIR__ . DIRECTORY_SEPARATOR . 'WorkDir');\n"
+            . "putenv('GARNET_RUNTIME_DIR=' . __DIR__);",
+            $contents
+        );
+
+        $contents = str_replace(
+            'GarnetRunner::main(__DIR__, $argv);',
+            'GarnetRunner::main(dirname(__DIR__) . DIRECTORY_SEPARATOR . \'' . $appDirName . '\', $argv);',
             $contents
         );
 

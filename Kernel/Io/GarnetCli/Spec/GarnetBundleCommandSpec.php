@@ -96,6 +96,136 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
             });
         });
 
+        describe('::renderRuntimeGarnet (app-mode / standalone app)', function (): void {
+            beforeEach(function (): void {
+                $this->tempDir = sys_get_temp_dir() . DS . 'gtest_bundle_appmode_' . uniqid();
+                mkdir($this->tempDir, 0o777, true);
+
+                // Verbatim shape of Templates/Application/garnet — every
+                // app:create'd app starts from this exact content.
+                $this->garnetSrc = $this->tempDir . DS . 'garnet';
+                file_put_contents($this->garnetSrc,
+                    "#!/usr/bin/env php\n"
+                    . "<?php declare(strict_types=1);\n"
+                    . "require_once __DIR__ . '/vendor/autoload.php';\n"
+                    . "putenv('GARNET_APP_DIR=' . __DIR__);\n"
+                    . '\PHPCraftdream\Garnet\Kernel\Io\GarnetCli\GarnetRunner::main(__DIR__, $argv);' . "\n"
+                );
+            });
+
+            afterEach(function (): void {
+                if (is_dir($this->tempDir)) {
+                    array_map('unlink', glob($this->tempDir . DS . '*') ?: []);
+                    rmdir($this->tempDir);
+                }
+            });
+
+            it('redirects the autoload require to the framework sibling\'s vendor/autoload.php', function (): void {
+                $out = GarnetBundleCommand::renderRuntimeGarnet(
+                    $this->garnetSrc, 'garnet-app-myapp', 'MyApp', 'garnet-framework-2026-05-21', true
+                );
+
+                expect($out)->toContain(
+                    "require_once dirname(__DIR__) . '/garnet-framework-2026-05-21/vendor/autoload.php';"
+                );
+                expect($out)->not->toContain("require_once __DIR__ . '/vendor/autoload.php';");
+            });
+
+            it('plants GARNET_APP_DIR / GARNET_FRAMEWORK_DIR pointing at the sibling dirs', function (): void {
+                $out = GarnetBundleCommand::renderRuntimeGarnet(
+                    $this->garnetSrc, 'garnet-app-myapp', 'MyApp', 'garnet-framework-2026-05-21', true
+                );
+
+                expect($out)->toContain(
+                    "putenv('GARNET_APP_DIR=' . dirname(__DIR__) . DIRECTORY_SEPARATOR . 'garnet-app-myapp');"
+                );
+                expect($out)->toContain(
+                    "putenv('GARNET_FRAMEWORK_DIR=' . dirname(__DIR__) . DIRECTORY_SEPARATOR . 'garnet-framework-2026-05-21');"
+                );
+            });
+
+            it('plants GARNET_APP_NAME / WORKDIR / RUNTIME putenvs same as legacy mode', function (): void {
+                $out = GarnetBundleCommand::renderRuntimeGarnet(
+                    $this->garnetSrc, 'garnet-app-myapp', 'MyApp', 'garnet-framework-2026-05-21', true
+                );
+
+                expect($out)->toContain("putenv('GARNET_APP_NAME=MyApp');");
+                expect($out)->toContain("putenv('GARNET_WORKDIR_DIR=' . __DIR__ . DIRECTORY_SEPARATOR . 'WorkDir');");
+                expect($out)->toContain("putenv('GARNET_RUNTIME_DIR=' . __DIR__);");
+            });
+
+            it("rewrites GarnetRunner::main()'s first argument to the sibling app dir, not __DIR__", function (): void {
+                $out = GarnetBundleCommand::renderRuntimeGarnet(
+                    $this->garnetSrc, 'garnet-app-myapp', 'MyApp', 'garnet-framework-2026-05-21', true
+                );
+
+                expect($out)->toContain(
+                    "GarnetRunner::main(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'garnet-app-myapp', \$argv);"
+                );
+                expect($out)->not->toContain('GarnetRunner::main(__DIR__, $argv);');
+            });
+
+            it('defaults isAppMode to false — passing app-mode-shaped content through the legacy path is a silent no-op, not a crash', function (): void {
+                // Regression guard for the exact bug this whole app-mode
+                // branch was added to fix: before it existed, every
+                // deploy:diff run silently produced an unchanged (and
+                // therefore broken) runtime dispatcher for a standalone
+                // app, because the legacy str_replace patterns never
+                // matched this file's content — and nothing warned about
+                // it, `syncRemoteRuntimeGarnet()`'s boot check just fell
+                // back to keeping the previous dispatcher every time.
+                $out = GarnetBundleCommand::renderRuntimeGarnet(
+                    $this->garnetSrc, 'garnet-app-myapp', 'MyApp', 'garnet-framework-2026-05-21'
+                );
+
+                expect($out)->toContain("require_once __DIR__ . '/vendor/autoload.php';");
+                expect($out)->toContain('GarnetRunner::main(__DIR__, $argv);');
+            });
+        });
+
+        describe('::copyDir dist-recursion guard (via reflection)', function (): void {
+            beforeEach(function (): void {
+                $this->fn = new ReflectionMethod(GarnetBundleCommand::class, 'copyDir');
+                $this->tempDir = sys_get_temp_dir() . DS . 'gtest_bundle_recursion_' . uniqid();
+                mkdir($this->tempDir, 0o777, true);
+                file_put_contents($this->tempDir . DS . 'a.txt', 'hello');
+                file_put_contents($this->tempDir . DS . 'b.txt', 'world');
+            });
+
+            afterEach(function (): void {
+                if (is_dir($this->tempDir)) {
+                    $rmrf = function (string $dir) use (&$rmrf): void {
+                        foreach (glob($dir . DS . '*') ?: [] as $item) {
+                            is_dir($item) ? $rmrf($item) : unlink($item);
+                        }
+                        rmdir($dir);
+                    };
+                    $rmrf($this->tempDir);
+                }
+            });
+
+            it('terminates and does not nest the destination inside itself when dst is nested under src', function (): void {
+                // Regression guard for a real incident: app-mode's dist/
+                // output lands inside vendor/phpcraftdream/garnet-framework/
+                // (GARNET_ROOT resolves there), which IS the framework
+                // copy's own source — without this guard the recursive
+                // iterator walks into its own not-yet-finished output and
+                // copies it into itself, ballooning without bound (hit
+                // 2.5GB for real before being killed). This test would hang
+                // (or blow up) if the guard regressed.
+                $dst = $this->tempDir . DS . 'dist';
+
+                $this->fn->invoke(null, $this->tempDir, $dst);
+
+                expect(is_file($dst . DS . 'a.txt'))->toBe(true);
+                expect(is_file($dst . DS . 'b.txt'))->toBe(true);
+                // The critical assertion: dst must NOT contain a copy of
+                // itself (dist/dist/…) — that self-nesting is exactly what
+                // the unbounded growth looked like.
+                expect(is_dir($dst . DS . 'dist'))->toBe(false);
+            });
+        });
+
         describe('::humanBytes (via reflection — pure helper)', function (): void {
             beforeEach(function (): void {
                 $this->fn = new ReflectionMethod(GarnetBundleCommand::class, 'humanBytes');
