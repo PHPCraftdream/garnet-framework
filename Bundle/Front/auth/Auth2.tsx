@@ -143,7 +143,6 @@ export const Auth2Island: React.FC<Partial<IAuthData>> = (props) => {
     const inputParams = getInputParams(state);
     const hint = getHintParams(state);
     const button = getButtonParams(state);
-    const disabled = !!state?.isSendingRequest || !pdConsent || !csrfReady;
     const isEmailPhase = [
         EPhase.INPUT_EMAIL,
         EPhase.INPUT_EMAIL_AFTER_TIMEOUT,
@@ -151,6 +150,14 @@ export const Auth2Island: React.FC<Partial<IAuthData>> = (props) => {
         EPhase.INPUT_EMAIL_WRONG_VALUE,
         EPhase.INPUT_EMAIL_REQUEST_ERROR,
     ].includes(state?.phase);
+    // pdConsent/csrfReady only gate the email phase, where the consent
+    // checkboxes actually render — they're component-local state that
+    // resets on every fresh page load, so requiring them in the code
+    // phase too would permanently disable the submit button for anyone
+    // who lands directly on the code-entry screen (a fresh tab/device
+    // opening a magic link, or reloading after a failed auto-verify)
+    // without ever having ticked a checkbox they can't even see.
+    const disabled = !!state?.isSendingRequest || (isEmailPhase && (!pdConsent || !csrfReady));
 
     return (
         <div className="w-full m-auto" style={{maxWidth: '500px'}}>
@@ -158,7 +165,26 @@ export const Auth2Island: React.FC<Partial<IAuthData>> = (props) => {
                 <h1 className="text-lg font-normal grow" data-test-id="auth-title">{state.title || I18n.Auth()}</h1>
                 <CodeTimer value={state?.codeLifeTime} onTimeout={onTimeout} />
             </div>
-            <form className="input-form space-y-4" autoComplete="on" onSubmit={(e) => { e.preventDefault(); if (!disabled) buttonClick(); }}>
+            {state?.isSendingRequest && (
+                // Processing (manual submit, or the magic-link auto-verify
+                // effect firing with no user interaction at all): show a
+                // loader instead of leaving the page looking frozen while
+                // the request is in flight. The form below is hidden via
+                // CSS (not unmounted) rather than conditionally rendered —
+                // conditional rendering would tear down and later remount
+                // the <input>, wiping out any value handleRequestCode /
+                // handleCheckCode set on it imperatively via inputRef
+                // (e.g. preserving the typed email across a failed request).
+                <div className="flex items-center gap-2 py-4 text-muted" data-test-id="auth-loading">
+                    <span className="common-spinner" aria-hidden="true" />
+                    <span>{I18n.Auth_Verifying()}</span>
+                </div>
+            )}
+            <form
+                className={`input-form space-y-4${state?.isSendingRequest ? ' hidden' : ''}`}
+                autoComplete="on"
+                onSubmit={(e) => { e.preventDefault(); if (!disabled) buttonClick(); }}
+            >
                 <div>
                     <label className="form-label">{placeholder}</label>
                     <input
@@ -168,7 +194,6 @@ export const Auth2Island: React.FC<Partial<IAuthData>> = (props) => {
                         className="form-control auth2-input"
                         autoComplete={inputParams.autoComplete}
                         required
-                        disabled={!!state?.isSendingRequest}
                         ref={inputRef}
                         data-test-id="auth-login-input"
                     />

@@ -23,6 +23,11 @@ export const handleCheckCode = (setData: TSetAuthState, inputRef: TInputRef) => 
 
     promise.then((response) => {
         if (!isApiSuccess(response)) {
+            // A 2xx HTTP response whose JSON body is still an error shape
+            // (has `message`, `ok !== true`) — same "form frozen forever"
+            // risk as an uncaught rejection if isSendingRequest is left
+            // true here.
+            setData((state) => ({...state, isSendingRequest: false, phase: EPhase.INPUT_CODE_REQUEST_ERROR}));
             return;
         }
 
@@ -53,5 +58,21 @@ export const handleCheckCode = (setData: TSetAuthState, inputRef: TInputRef) => 
 
             return {...state, isSendingRequest: false, phase: EPhase.INPUT_CODE_FAIL, codeInputTries};
         });
-    })
+    }).catch((err: unknown) => {
+        // asyncJsonThen throws a RespError (network failure, CSRF not ready
+        // yet, 4xx/5xx, maintenance 503, ...) whenever the request itself
+        // never reaches the success/failure branches above. Without this
+        // catch, isSendingRequest never resets to false: the magic-link
+        // auto-verify path (Auth2Island's effect calls this with no user
+        // interaction) would leave the form permanently disabled with zero
+        // feedback — exactly the "nothing happens for a long time" report.
+        // Mirrors HandleRequestCode's catch.
+        const serverMsg = (err && typeof err === 'object' && 'message' in err)
+            ? String((err as { message?: unknown }).message ?? '')
+            : '';
+
+        setData((state) => {
+            return {...state, isSendingRequest: false, phase: EPhase.INPUT_CODE_REQUEST_ERROR, hint: serverMsg || undefined};
+        });
+    });
 };
