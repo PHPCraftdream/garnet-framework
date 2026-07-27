@@ -47,6 +47,12 @@ class GarnetDeployFullCommand {
         $skipMigrate = in_array('--skip-migrate', $args, true);
         $skipBackup = in_array('--skip-backup', $args, true);
 
+        // Boot the app once, up front, so IniConfig::deploy() (deploy.ini)
+        // is actually readable — resolveLayout() needs it and would
+        // otherwise silently fall back to bare defaults (caught by its own
+        // try/catch), exactly the bug this command's first real run hit.
+        self::bootstrapApp($appName);
+
         $layout = self::resolveLayout();
         self::preflightLayout($layout);
 
@@ -56,9 +62,26 @@ class GarnetDeployFullCommand {
         // 1. Build — reuses GarnetBundleCommand's own build+package logic
         // unmodified (no phar/zip; --keep-dir so the tree survives for us
         // to read). Same code path `php garnet bundle` uses on its own.
+        //
+        // Sibling dir names are passed EXPLICITLY (not left for bundle to
+        // re-derive from deploy.ini itself) — bundle's own internal
+        // deploy.ini read (readDeployDefaults()) does its own
+        // `require run_cmd.php` bootstrap attempt, which — now that this
+        // process already bootstrapped once above — would redeclare
+        // classes and get silently swallowed by that method's own
+        // try/catch, falling back to bare defaults that could disagree
+        // with $layout above. Passing the flags sidesteps that entirely:
+        // CLI flags take precedence over any ini read bundle might attempt.
         echo "\033[1m=== Garnet Deploy (full): {$appName} ===\033[0m" . PHP_EOL . PHP_EOL;
         self::step('1/5', 'Building fresh (php garnet bundle --keep-dir --no-phar)');
-        $bundleArgs = ['--keep-dir', '--no-phar'];
+        $bundleArgs = [
+            '--keep-dir', '--no-phar',
+            '--public-dir=' . $layout['public_dir'],
+            '--framework-dir=' . $layout['framework_dir'],
+            '--app-dir=' . $layout['app_dir'],
+            '--runtime-dir=' . $layout['runtime_dir'],
+            '--public-name=' . $layout['public_name'],
+        ];
 
         if ($skipBuild) {
             $bundleArgs[] = '--skip-build';
@@ -87,11 +110,22 @@ class GarnetDeployFullCommand {
 
         $remoteRoot = rtrim($layout['remote_path'], '/');
 
-        // 2. Ship the three STATELESS dirs — wholesale wipe + re-upload is
-        // safe for all three: no WorkDir, no Config, no persisted state of
-        // any kind lives in public/framework-dir/app-dir by design.
-        self::step('2/5', 'Shipping public / framework / app (wipe + re-upload)');
-        self::shipDir($ssh, $distPublic, "{$remoteRoot}/{$layout['public_dir']}", 'public');
+        // 2. Ship framework/app dirs — wholesale wipe + re-upload is safe
+        // for both: they're 100% app-controlled, no WorkDir/Config/state
+        // and nothing the hosting provider ever injects there.
+        //
+        // Public dir is DIFFERENT and must NOT be wholesale-wiped: shared
+        // hosting can inject files into the docroot that live outside this
+        // app's repo entirely and are never part of a bundle build — hit
+        // this for real testing this exact command against slotbook.ru,
+        // where an rm -rf of the public dir deleted its `.htaccess`
+        // (Apache/reg.ru's mod_rewrite rule routing everything through
+        // index.php) and every non-root URL 404'd until it was manually
+        // restored. `deploy:diff` never wholesale-replaces public/ either
+        // — it only ships the delta — so this merge-only upload (no
+        // delete) matches that existing, already-safe precedent.
+        self::step('2/5', 'Shipping public (merge, no delete) / framework / app (wipe + re-upload)');
+        self::shipPublicDir($ssh, $distPublic, "{$remoteRoot}/{$layout['public_dir']}");
         self::shipDir($ssh, $distFw, "{$remoteRoot}/{$layout['framework_dir']}", 'framework');
         self::shipDir($ssh, $distAppDir, "{$remoteRoot}/{$layout['app_dir']}", 'app');
         echo PHP_EOL;
@@ -181,9 +215,10 @@ class GarnetDeployFullCommand {
 
     /**
      * Remove the remote target dir entirely, then re-upload the fresh local
-     * tree wholesale. Safe here specifically because all three callers
-     * (public/framework/app) are stateless by design — never call this on
-     * the runtime dir.
+     * tree wholesale. Only ever call this on framework-dir/app-dir — both
+     * 100% app-controlled with no hosting-injected files. NEVER call this
+     * on public-dir (see shipPublicDir()) or the runtime dir (its WorkDir/
+     * carries real Config/*.ini, DB backups, log journals).
      *
      * `scp -r <local> <remote>` does NOT copy $local's CONTENTS into
      * $remote — it copies $local itself AS A SUBDIRECTORY of $remote (same
@@ -207,21 +242,75 @@ class GarnetDeployFullCommand {
             self::fail("Could not clear the remote {$label} dir ({$remoteDirNorm}): {$wipe->stderr}");
         }
 
+        self::putRecursive($ssh, $localDir, $remoteParent, $remoteDirNorm, $label);
+    }
+
+    /**
+     * Ship the public dir WITHOUT ever deleting anything remote first —
+     * `scp -r` into an already-existing target directory merges (adds new
+     * files, overwrites same-named ones, leaves everything else alone),
+     * confirmed by testing against a scratch remote dir. This is the one
+     * dir a full redeploy must never wholesale-replace: shared hosting can
+     * (and, on this exact host, does) inject files straight into the
+     * docroot that are never part of this app's repo or any bundle build
+     * at all — a real incident testing `deploy:full` against slotbook.ru:
+     * an `rm -rf` of the public dir silently deleted `.htaccess` (the
+     * Apache/reg.ru mod_rewrite rule routing every non-file URL through
+     * index.php), and every route except the bare "/" 404'd until it was
+     * manually restored. `deploy:diff` already ships public assets this
+     * same additive way — it only ever pushes the delta, never wipes —
+     * so this matches that existing, already-safe precedent rather than
+     * introducing new (destructive) behavior for this one dir.
+     */
+    private static function shipPublicDir(SshClient $ssh, string $localDir, string $remoteDir): void {
+        $remoteDirNorm = rtrim(str_replace('\\', '/', $remoteDir), '/');
+        $remoteParent = dirname($remoteDirNorm);
+
+        $ensure = $ssh->run('mkdir -p ' . escapeshellarg($remoteDirNorm), ['stream' => false]);
+
+        if (!$ensure->ok()) {
+            self::fail("Could not ensure the remote public dir exists ({$remoteDirNorm}): {$ensure->stderr}");
+        }
+
+        self::putRecursive($ssh, $localDir, $remoteParent, $remoteDirNorm, 'public');
+    }
+
+    /** Shared recursive-upload step used by both shipDir() and shipPublicDir(). */
+    private static function putRecursive(SshClient $ssh, string $localDir, string $remoteParent, string $remoteDirNorm, string $label): void {
         // SshClient::put() does NOT auto-detect a directory upload —
         // 'recursive' must be requested explicitly (only GarnetSshCommand,
         // the ssh:put CLI wrapper, does that is_dir() check, and this
         // command calls SshClient directly, bypassing it). Missing this
-        // failed in testing too: the wipe above succeeds, then scp errors
-        // "not a regular file" — left the remote dir simply missing, not
-        // corrupted, but still a real bug caught only by testing this
-        // against a scratch remote dir before ever pointing it at
-        // framework/app/public.
+        // failed in testing too: scp errors "not a regular file" instead
+        // of silently doing a plain file copy.
         $put = $ssh->put($localDir, $remoteParent, ['stream' => false, 'recursive' => true]);
 
         if (!$put->ok()) {
             self::fail("Upload of {$label} to {$remoteDirNorm} failed (exit {$put->exitCode}).");
         }
         echo "  -> {$remoteDirNorm}" . PHP_EOL;
+    }
+
+    /**
+     * Boot the app (same pattern as GarnetDeployDiffCommand/GarnetDbBackup
+     * Command's own bootstrapApp()) so IniConfig::deploy()/::ssh() are
+     * actually readable. Must run exactly once, before anything else in
+     * this process tries to read deploy.ini — including before
+     * GarnetBundleCommand::run(), whose own internal deploy.ini read
+     * would otherwise attempt a second `require run_cmd.php` and get
+     * silently swallowed by a redeclaration error.
+     */
+    private static function bootstrapApp(string $appName): void {
+        $runCmd = GarnetEnv::getAppDir($appName) . DS . 'run_cmd.php';
+
+        if (!file_exists($runCmd)) {
+            self::fail("app has no run_cmd.php at {$runCmd}");
+        }
+        $GLOBALS['argv'] = [$runCmd, 'noop'];
+        $GLOBALS['argc'] = 2;
+        ob_start();
+        require $runCmd;
+        ob_end_clean();
     }
 
     /** Same path GarnetBundleCommand::run() writes its output to. */
