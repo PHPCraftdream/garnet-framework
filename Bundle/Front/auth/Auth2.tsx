@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {useCallback, useEffect, useRef, useState} from 'react';
+import {useCallback, useRef, useState} from 'react';
 import {EPhase} from '@framework/auth/Enums';
 import {I18nFramework as I18n} from '@framework/I18nGen/I18nFramework';
 import {IAuthData, TInputRef} from '@framework/auth/Models';
@@ -16,21 +16,6 @@ import {IGarnetWindow} from '@common/Models';
 
 const w: IGarnetWindow = window as IGarnetWindow;
 
-export const getCodeFromHash = (): string => {
-    return window.location.hash.match(/token=([A-Z0-9]{8,})/i)?.[1] ?? '';
-};
-
-const cleanHash = () => {
-    try {
-        history.replaceState(
-            null, '',
-            window.location.pathname + window.location.search,
-        );
-    } catch {
-        window.location.hash = '';
-    }
-};
-
 export const Auth2Island: React.FC<Partial<IAuthData>> = (props) => {
     const [state, setData] = useState<IAuthData>({phase: EPhase.INPUT_EMAIL, ...props});
     const inputRef: TInputRef = useRef<HTMLInputElement>(null);
@@ -40,64 +25,6 @@ export const Auth2Island: React.FC<Partial<IAuthData>> = (props) => {
     const [csrfReady, setCsrfReady] = useState<boolean>(!!(w as any).__GARNET_CSRF__);
 
     const renderConsentPd = (): string => renderMarkdownLinks(I18n.Consent_PD());
-
-    const [pendingHashCode, setPendingHashCode] = useState<string>(() => getCodeFromHash());
-
-    // A magic link only differs from the page already open by its #token
-    // fragment. Pasting it over an already-loaded tab (e.g. one already
-    // sitting on the code-entry screen) is a same-document navigation in
-    // most browsers — no reload, so this component never remounts and the
-    // initial getCodeFromHash() read above never sees the new token. Without
-    // this listener the auto-verify effect below never re-fires and sign-in
-    // silently never happens for that tab.
-    useEffect(() => {
-        const onHashChange = () => {
-            const code = getCodeFromHash();
-
-            if (code) {
-                setPendingHashCode(code);
-            }
-        };
-
-        window.addEventListener('hashchange', onHashChange);
-
-        return () => window.removeEventListener('hashchange', onHashChange);
-    }, []);
-
-    // Magic-link auto-verify: a code captured from the email link's #token is
-    // submitted automatically once the session is in a code-entry phase. In the
-    // email phases it's held in state until the code is actually requested.
-    useEffect(() => {
-        if (!pendingHashCode) {
-            return;
-        }
-
-        switch (state?.phase) {
-            case EPhase.INPUT_EMAIL:
-            case EPhase.INPUT_EMAIL_AFTER_TIMEOUT:
-            case EPhase.INPUT_EMAIL_AFTER_FAIL_TRIES:
-            case EPhase.INPUT_EMAIL_WRONG_VALUE:
-            case EPhase.INPUT_EMAIL_REQUEST_ERROR: {
-                return;
-            }
-            case EPhase.INPUT_CODE:
-            case EPhase.INPUT_CODE_FAIL:
-            case EPhase.INPUT_CODE_WRONG_VALUE:
-            case EPhase.INPUT_CODE_REQUEST_ERROR: {
-                if (inputRef.current) {
-                    inputRef.current.value = pendingHashCode;
-                }
-                setPendingHashCode('');
-                cleanHash();
-                setTimeout(() => {
-                    handleCheckCode(setData, inputRef);
-                });
-                return;
-            }
-            default:
-                const _: never = null as never;
-        }
-    }, [state?.phase, pendingHashCode]);
 
     /**
      * Button click handler.
@@ -166,11 +93,10 @@ export const Auth2Island: React.FC<Partial<IAuthData>> = (props) => {
                 <CodeTimer value={state?.codeLifeTime} onTimeout={onTimeout} />
             </div>
             {state?.isSendingRequest && (
-                // Processing (manual submit, or the magic-link auto-verify
-                // effect firing with no user interaction at all): show a
-                // loader instead of leaving the page looking frozen while
-                // the request is in flight. The form below is hidden via
-                // CSS (not unmounted) rather than conditionally rendered —
+                // Processing a manual submit: show a loader instead of
+                // leaving the page looking frozen while the request is in
+                // flight. The form below is hidden via CSS (not unmounted)
+                // rather than conditionally rendered —
                 // conditional rendering would tear down and later remount
                 // the <input>, wiping out any value handleRequestCode /
                 // handleCheckCode set on it imperatively via inputRef

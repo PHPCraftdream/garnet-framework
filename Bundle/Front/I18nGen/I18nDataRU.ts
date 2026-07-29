@@ -36,6 +36,9 @@ export class I18nDataRU {
     static Auth_VerifyCode = 'Проверить код';
     static Auth_Complete = 'Завершить регистрацию';
     static Auth_Logout = 'Выйти';
+    static Auth_MagicLink_Error_Unknown = 'Ссылка недействительна';
+    static Auth_MagicLink_Error_Expired = 'Срок действия ссылки истёк';
+    static Auth_MagicLink_Error_Used = 'Ссылка уже была использована';
     static Theme_SwitchToDark = 'Переключить на тёмную тему';
     static Theme_SwitchToLight = 'Переключить на светлую тему';
     static Common_FromHasError = 'На форме имеются ошибки';

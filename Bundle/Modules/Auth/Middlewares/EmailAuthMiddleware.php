@@ -6,6 +6,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
     use PHPCraftdream\Garnet\Bundle\I18n\FwI18n;
     use PHPCraftdream\Garnet\Bundle\Modules\Auth\AuthStrategy\AuthConfig;
     use PHPCraftdream\Garnet\Bundle\Modules\Auth\AuthStrategy\AuthStrategyInterface;
+    use PHPCraftdream\Garnet\Bundle\Modules\Auth\FwMagicLoginService;
     use PHPCraftdream\Garnet\Bundle\Modules\Logging\Mail\FwAppMailer;
     use PHPCraftdream\Garnet\Bundle\Modules\SystemSettings\FwAppSettings;
     use PHPCraftdream\Garnet\Bundle\Utils\HtmlLayout;
@@ -265,12 +266,12 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
             // peekCSRF_ (existing token or '').
             //
             // The code-entry phases are different: they're only reachable AFTER
-            // consent (you must request a code first), and the magic-link
-            // auto-verify fires a POST the instant that page loads. It needs a
-            // valid CSRF token even when the prior CSRF cookie was dropped on
-            // the cross-site email-link navigation (or never replayed). So for
-            // those phases mint a fresh token here and inject it — this is what
-            // makes sign-in from an email link work.
+            // consent (you must request a code first). A fresh tab/device that
+            // lands directly on the code-entry screen (e.g. after the one-click
+            // magic-login link failed validation and fell back here) may never
+            // have replayed the CSRF cookie, so the manual-code-submit POST
+            // needs a valid token regardless. Mint a fresh one here and inject
+            // it into these phases.
             $phase = (string)($applyParams['phase'] ?? '');
 
             if (str_starts_with($phase, 'INPUT_CODE')) {
@@ -437,6 +438,64 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
         }
 
         /**
+         * Complete the login for $email in the CURRENT session/request — shared
+         * by the manual code-verification success path (processPhaseSentCodePost)
+         * and the one-click magic-login controller (FwMagicLoginController),
+         * which logs the user in from a token validated independently of any
+         * session. Called via `static::` (not self::) so app-level overrides of
+         * sendSuccessLogin() (e.g. IrabiAuthMiddleware's consent-journal audit
+         * write) still fire correctly through late static binding.
+         *
+         * $consentPdAt/$consentMarketingAt let a caller seed the session's
+         * consent timestamps before completing login — needed by the magic-login
+         * path, where the CURRENT session never went through processStartSession()
+         * and so has no consent values of its own; the magic-login token carries
+         * a snapshot taken when the code was originally requested. Pass '' (the
+         * default) to leave the session's existing values untouched — this is
+         * what the manual code-verification path does, since its session already
+         * has them from processStartSession().
+         */
+        public static function completeLogin(IGlobalReqParams $globals, string $email, string $consentPdAt = '', string $consentMarketingAt = ''): void {
+            $session = Session::get();
+
+            if ($consentPdAt !== '') {
+                $session->setValue('consent_pd_at', $consentPdAt);
+            }
+
+            if ($consentMarketingAt !== '') {
+                $session->setValue('consent_marketing_at', $consentMarketingAt);
+            }
+
+            $session->setValue(static::PHASE_KEY, static::PHASE_DONE);
+            $session->setValue(Account::SESSION_AUTH_LOGIN, $email);
+
+            $session->unsetValues([
+                static::SESSION_AUTH_CODE,
+                static::SESSION_AUTH_CODE_UT,
+                static::SESSION_AUTH_TRIES,
+            ]);
+
+            $account = Account::touchAccount($email, 'email');
+            $time = time();
+            $account->setParam('last_auth_time', $time);
+            $account->setParam('last_online_time', $time);
+
+            $sessionConsentPd = $session->getValue('consent_pd_at', '');
+
+            if ($sessionConsentPd !== '' && empty($account->readParam(Account::PARAM_CONSENT_PD_AT))) {
+                $account->setParam(Account::PARAM_CONSENT_PD_AT, $sessionConsentPd);
+            }
+
+            $sessionConsentMarketing = $session->getValue('consent_marketing_at', '');
+
+            if ($sessionConsentMarketing !== '') {
+                $account->setParam(Account::PARAM_CONSENT_MARKETING_AT, $sessionConsentMarketing);
+            }
+
+            static::sendSuccessLogin($globals, $email);
+        }
+
+        /**
          * @param IGlobalReqParams $globals
          * @param IRouterUriParams $params
          * @return ResponseInterface
@@ -530,49 +589,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
             }
 
             if ($postCodeStr === $sessionCode) {
-                $session->setValue(static::PHASE_KEY, static::PHASE_DONE);
-
-                $session->unsetValues([
-                    static::SESSION_AUTH_CODE,
-                    static::SESSION_AUTH_CODE_UT,
-                    static::SESSION_AUTH_TRIES,
-                ]);
-
-                // Verify succeeded — only NOW the account row is materialised.
-                // fromSession() is read-only and would return id=0 stub here
-                // for first-time logins.
-                $account = Account::touchAccount($sessionEmail, 'email');
-                $time = time();
-                $account->setParam('last_auth_time', $time);
-                $account->setParam('last_online_time', $time);
-
-                // Persist consent flags from session to account.
-                //
-                // consent_pd_at: always present (auth cannot reach this point
-                // without the PD consent checkbox). On first login we set it;
-                // on repeat logins we preserve the earliest timestamp.
-                //
-                // consent_marketing_at: only set when the user ticked the
-                // marketing checkbox THIS session. We treat each login as an
-                // implicit re-confirmation — if the box was ticked, we update
-                // the timestamp to track the latest consent moment. If the
-                // box was NOT ticked we leave the account value alone; the
-                // user may simply have skipped the checkbox this time, and
-                // explicit withdrawal is handled by
-                // Account::withdrawMarketingConsent().
-                $sessionConsentPd = $session->getValue('consent_pd_at', '');
-
-                if ($sessionConsentPd !== '' && empty($account->readParam(Account::PARAM_CONSENT_PD_AT))) {
-                    $account->setParam(Account::PARAM_CONSENT_PD_AT, $sessionConsentPd);
-                }
-
-                $sessionConsentMarketing = $session->getValue('consent_marketing_at', '');
-
-                if ($sessionConsentMarketing !== '') {
-                    $account->setParam(Account::PARAM_CONSENT_MARKETING_AT, $sessionConsentMarketing);
-                }
-
-                static::sendSuccessLogin($globals, $sessionEmail);
+                static::completeLogin($globals, $sessionEmail);
 
                 return ControllerTools::JSON(['success' => true], status: 200);
             }
@@ -613,7 +630,21 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
             $twig = Twig::get();
 
             $authCode = StrTools::randomString(max(8, static::$authCodeLen));
-            $render = $twig->render('Email/Email.twig', static::authEmailParams($globals, $authCode));
+
+            // One-click magic-login token: a 32-char, single-use, 5-minute code
+            // carried as a URL parameter (not a #hash) on a dedicated endpoint —
+            // unlike the 8-char code above (session-scoped, manual entry only),
+            // this one authenticates standalone, independent of which browser
+            // context opens the link. Replaces the old hash-based auto-verify,
+            // which silently failed whenever the link was opened in a different
+            // session than the one that requested the code (e.g. a webmail
+            // client's in-app browser).
+            $returnUri = $globals->getUri() ?: '/';
+            $consentPdAt = (string)$session->getValue('consent_pd_at', '');
+            $consentMarketingAt = (string)$session->getValue('consent_marketing_at', '');
+            $magicToken = FwMagicLoginService::generate($authEmail, $returnUri, $consentPdAt, $consentMarketingAt)['token'];
+
+            $render = $twig->render('Email/Email.twig', static::authEmailParams($globals, $authCode, $magicToken));
             $render = HtmlMinify::get()->minify($render);
 
             FwAppMailer::setNextMeta(['auth_code' => $authCode]);
@@ -662,15 +693,34 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
         }
 
         /**
+         * Path of the one-click magic-login endpoint, relative to base_url.
+         * Apps register a route at exactly this path (see FwMagicLoginController)
+         * — override this if a concrete app needs a different path, but the
+         * default matches the framework's own FwMagicLoginController convention.
+         *
+         * Deliberately does NOT start with `/~`: RouterUriParams::fromGlobals()
+         * finds the LAST `/~` in the whole URI to split off an explicit
+         * method name/params — a controller URL beginning with `/~` collides
+         * with that convention (the base path itself gets parsed as the
+         * method-dispatch marker, so `code~<token>` never reaches the
+         * controller as a URI param at all). Same reasoning as why
+         * RegisterController::URL is `/first-step`, not `/~first-step`.
+         */
+        protected static function magicLoginUrl(string $magicToken): string {
+            return '/magic-login/code~' . $magicToken;
+        }
+
+        /**
          * @param IGlobalReqParams $globals
          * @param string $code
+         * @param string $magicToken
          * @return array
          * @throws \Twig\Error\LoaderError
          * @throws \Twig\Error\RuntimeError
          * @throws \Twig\Error\SyntaxError
          * @throws LoggerException
          */
-        public static function authEmailParams(IGlobalReqParams $globals, string $code): array {
+        public static function authEmailParams(IGlobalReqParams $globals, string $code, string $magicToken): array {
             $twig = Twig::get();
             $row = fn (string $str, string $align = 'left') => $twig->render('Email/Row.twig', ['row' => $str, 'align' => $align]);
             $button = fn (string $text, string $href) => $twig->render('Email/ButtonMain.twig', ['text' => $text, 'href' => $href]);
@@ -678,15 +728,14 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
             $result = TwigParams::init()->get(TwigParams::DEF_EMAIL_PARAMS);
             $ttl = floor(static::$codeSecondsTTL / 60);
 
-            // Build the magic-link URL from app.ini base_url + the current
-            // request URI, NOT from HTTP_REFERER. Referer can be empty
-            // (programmatic POST, browser privacy modes, some proxies),
-            // which produced links like `<a href="#token=...">` — pure
-            // fragments that don't carry to the auth page when clicked
-            // from a mail client.
+            // Build the magic-link URL from app.ini base_url + the dedicated
+            // magic-login endpoint path, NOT from HTTP_REFERER and NOT as a
+            // URL fragment (#token=...). Referer can be empty (programmatic
+            // POST, browser privacy modes, some proxies), and a fragment
+            // never reaches the server, so a hash-based link couldn't be
+            // verified independently of the session that requested it.
             $baseUrl = rtrim(AppConfig::get(IniConfig::ENV_APP)->paramString('base_url'), '/');
-            $uri = $globals->getUri() ?: '/';
-            $authButton = $button(FwI18n::t('Auth_Login'), $baseUrl . $uri . '#token=' . $code);
+            $authButton = $button(FwI18n::t('Auth_Login'), $baseUrl . static::magicLoginUrl($magicToken));
 
             $result['info_blocks'] = [
                 [

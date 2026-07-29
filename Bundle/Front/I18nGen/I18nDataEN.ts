@@ -36,6 +36,9 @@ export class I18nDataEN {
     static Auth_VerifyCode = 'Verify code';
     static Auth_Complete = 'Complete registration';
     static Auth_Logout = 'Logout';
+    static Auth_MagicLink_Error_Unknown = 'Invalid link';
+    static Auth_MagicLink_Error_Expired = 'This link has expired';
+    static Auth_MagicLink_Error_Used = 'This link has already been used';
     static Theme_SwitchToDark = 'Switch to dark mode';
     static Theme_SwitchToLight = 'Switch to light mode';
     static Common_FromHasError = 'Form has errors';

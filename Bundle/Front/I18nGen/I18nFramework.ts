@@ -42,6 +42,9 @@ class I18n extends I18nBase {
     Auth_VerifyCode: t = (a = []) => this.t('Auth_VerifyCode', a);
     Auth_Complete: t = (a = []) => this.t('Auth_Complete', a);
     Auth_Logout: t = (a = []) => this.t('Auth_Logout', a);
+    Auth_MagicLink_Error_Unknown: t = (a = []) => this.t('Auth_MagicLink_Error_Unknown', a);
+    Auth_MagicLink_Error_Expired: t = (a = []) => this.t('Auth_MagicLink_Error_Expired', a);
+    Auth_MagicLink_Error_Used: t = (a = []) => this.t('Auth_MagicLink_Error_Used', a);
     Theme_SwitchToDark: t = (a = []) => this.t('Theme_SwitchToDark', a);
     Theme_SwitchToLight: t = (a = []) => this.t('Theme_SwitchToLight', a);
     Common_FromHasError: t = (a = []) => this.t('Common_FromHasError', a);

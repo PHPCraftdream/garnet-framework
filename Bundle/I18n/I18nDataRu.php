@@ -42,6 +42,9 @@ namespace PHPCraftdream\Garnet\Bundle\I18n {
             'Auth_VerifyCode' => 'Проверить код',
             'Auth_Complete' => 'Завершить регистрацию',
             'Auth_Logout' => 'Выйти',
+            'Auth_MagicLink_Error_Unknown' => 'Ссылка недействительна',
+            'Auth_MagicLink_Error_Expired' => 'Срок действия ссылки истёк',
+            'Auth_MagicLink_Error_Used' => 'Ссылка уже была использована',
 
             'Theme_SwitchToDark' => 'Переключить на тёмную тему',
             'Theme_SwitchToLight' => 'Переключить на светлую тему',
