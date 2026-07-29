@@ -1,5 +1,5 @@
 import type {LucideIcon} from 'lucide-react';
-import {LayoutDashboard, Gauge, Users, Settings, User, UserX, BookOpen, BookOpenText, Calendar, Bookmark, FileText as FileTextReact, Library, CalendarCheck, Banknote, Wallet, ClipboardList, GraduationCap, MessageCircle, Mail, CircleX, Activity} from 'lucide-react';
+import {LayoutDashboard, Gauge, Users, Settings, User, UserX, BookOpen, BookOpenText, Calendar, Bookmark, FileText as FileTextReact, Library, CalendarCheck, Banknote, Wallet, ClipboardList, GraduationCap, MessageCircle, Mail, Mailbox, CircleX, Activity} from 'lucide-react';
 import {createElement, Plus, FileText, Trash2} from 'lucide';
 
 export const menuIconMap: Record<string, LucideIcon> = {
@@ -22,6 +22,7 @@ export const menuIconMap: Record<string, LucideIcon> = {
 	'x-circle': CircleX,
 	'person-x': UserX,
 	envelope: Mail,
+	mailbox: Mailbox,
 	activity: Activity,
 	'layout-dashboard': LayoutDashboard,
 	speedometer2: Gauge,
