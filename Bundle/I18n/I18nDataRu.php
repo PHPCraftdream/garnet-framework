@@ -300,7 +300,6 @@ namespace PHPCraftdream\Garnet\Bundle\I18n {
             'StaticPages_ThemeToggle' => 'Светлая или тёмная тема',
             'StaticPages_NotFound_Title' => 'Страница не найдена',
             'StaticPages_NotFound_Text' => 'Возможно, ссылка устарела или была введена с ошибкой.',
-            'StaticPages_NotFound_Home' => 'На главную',
         ];
     }
 }

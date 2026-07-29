@@ -412,7 +412,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages {
             return Twig::get()->render('StaticPages/NotFound.twig', [
                 'title' => FwI18n::t('StaticPages_NotFound_Title'),
                 'text' => FwI18n::t('StaticPages_NotFound_Text'),
-                'home' => FwI18n::t('StaticPages_NotFound_Home'),
             ]);
         }
 

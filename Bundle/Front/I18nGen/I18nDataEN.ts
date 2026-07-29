@@ -260,5 +260,4 @@ export class I18nDataEN {
     static StaticPages_ThemeToggle = 'Light or dark theme';
     static StaticPages_NotFound_Title = 'Page not found';
     static StaticPages_NotFound_Text = 'The link may be outdated or was mistyped.';
-    static StaticPages_NotFound_Home = 'Go to homepage';
 }

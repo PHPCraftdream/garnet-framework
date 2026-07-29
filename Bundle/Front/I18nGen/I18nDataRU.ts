@@ -259,5 +259,4 @@ export class I18nDataRU {
     static StaticPages_ThemeToggle = 'Светлая или тёмная тема';
     static StaticPages_NotFound_Title = 'Страница не найдена';
     static StaticPages_NotFound_Text = 'Возможно, ссылка устарела или была введена с ошибкой.';
-    static StaticPages_NotFound_Home = 'На главную';
 }

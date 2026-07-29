@@ -266,7 +266,6 @@ class I18n extends I18nBase {
     StaticPages_ThemeToggle: t = (a = []) => this.t('StaticPages_ThemeToggle', a);
     StaticPages_NotFound_Title: t = (a = []) => this.t('StaticPages_NotFound_Title', a);
     StaticPages_NotFound_Text: t = (a = []) => this.t('StaticPages_NotFound_Text', a);
-    StaticPages_NotFound_Home: t = (a = []) => this.t('StaticPages_NotFound_Home', a);
 }
 
 export const I18nFramework = new I18n([I18nDataEN, I18nDataRU]);
