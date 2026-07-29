@@ -10,12 +10,13 @@ use Throwable;
  * One command, safe by construction, that takes a release all the way to
  * live: build the app fresh (via GarnetBundleCommand's own build+package
  * logic — the same code path `php garnet bundle` uses, already fixed and
- * verified for both the legacy monorepo and standalone-app layouts), push
- * public/framework/app to an EXISTING host (never touching the runtime
- * dir's WorkDir/ — real Config/*.ini, real DB backups, real logs, the one
- * thing on the host that isn't safe to blindly overwrite), then trigger
- * the existing, already-safe `php garnet deploy` (maintenance -> backup ->
- * migrate -> cache -> off) remotely over SSH as the final step.
+ * verified for both the legacy monorepo and standalone-app layouts), put
+ * the host into maintenance, push public/framework/app to an EXISTING host
+ * (never touching the runtime dir's WorkDir/ — real Config/*.ini, real DB
+ * backups, real logs, the one thing on the host that isn't safe to
+ * blindly overwrite), then trigger the existing, already-safe
+ * `php garnet deploy` (maintenance -> backup -> migrate -> cache -> off)
+ * remotely over SSH as the final step.
  *
  * Exists because the alternative — a manual sequence of `bundle` +
  * several `ssh:put` calls + remembering to also force a `deploy:diff
@@ -27,11 +28,22 @@ use Throwable;
  * build, ship, and migrate are one call, so there is no intermediate
  * state — and no separate manual step — to forget to complete.
  *
+ * framework-dir/app-dir are shipped via upload-to-a-fresh-name-then-rename
+ * (see shipDir()), not rm -rf + re-upload — a real production incident
+ * showed the latter leaves the live dir missing/partial for the whole
+ * transfer, and a request landing in that window gets a raw fatal error
+ * (worse: maintenance mode alone can't fully cover this, since
+ * MaintenanceMiddleware is itself a framework class). Maintenance mode is
+ * still set for the whole window as defense-in-depth against everything
+ * else a swap can't fix on its own (stale asset references, cache).
+ *
  * Migrations are triggered via the EXISTING `deploy` command rather than
  * reimplemented here, specifically so its safety guarantees (maintenance
  * stays ON on any failure, backup-before-migrate) are reused, not
  * duplicated or risked drifting. --skip-migrate opts out for whoever
- * wants to review the shipped code live before touching the schema.
+ * wants to review the shipped code live before touching the schema —
+ * maintenance is lifted by this command itself in that case, since nothing
+ * downstream will do it.
  */
 class GarnetDeployFullCommand {
     public static function run(array $args): void {
@@ -73,7 +85,7 @@ class GarnetDeployFullCommand {
         // with $layout above. Passing the flags sidesteps that entirely:
         // CLI flags take precedence over any ini read bundle might attempt.
         echo "\033[1m=== Garnet Deploy (full): {$appName} ===\033[0m" . PHP_EOL . PHP_EOL;
-        self::step('1/5', 'Building fresh (php garnet bundle --keep-dir --no-phar)');
+        self::step('1/6', 'Building fresh (php garnet bundle --keep-dir --no-phar)');
         $bundleArgs = [
             '--keep-dir', '--no-phar',
             '--public-dir=' . $layout['public_dir'],
@@ -110,9 +122,43 @@ class GarnetDeployFullCommand {
 
         $remoteRoot = rtrim($layout['remote_path'], '/');
 
-        // 2. Ship framework/app dirs — wholesale wipe + re-upload is safe
-        // for both: they're 100% app-controlled, no WorkDir/Config/state
-        // and nothing the hosting provider ever injects there.
+        $remoteRuntime = "{$remoteRoot}/{$layout['runtime_dir']}";
+
+        // 2. Maintenance ON before anything remote gets touched. This is
+        // NOT optional/defense-in-depth here — a real production incident
+        // showed why: framework-dir's swap once left a window where
+        // Bundle/Middlewares/MaintenanceMiddleware itself (a framework
+        // class) couldn't be autoloaded, so even the maintenance page
+        // can't be trusted to render if the swap below isn't also made
+        // effectively instantaneous (see shipDir()'s doc comment). Both
+        // fixes together — instant atomic swap AND a maintenance flag for
+        // everything else (mixed old/new asset refs, cache staleness) —
+        // are what make this safe. Mirrors `php garnet deploy`'s own
+        // policy: stays ON on any failure below, only lifted once this
+        // command's own responsibility (ship + boot check) is verified.
+        self::step('2/6', 'Maintenance mode ON (remote)');
+        // `php garnet maintenance on` run directly on the host with no IP
+        // args auto-detects ITS OWN public IP as the allow-list (fine when
+        // an operator SSHes in from elsewhere, useless here) — it would
+        // lock out the very operator running this deploy. Detect the local
+        // machine's public IP the same way `maintenance:remote` does and
+        // pass it through explicitly.
+        $operatorIp = self::detectLocalPublicIp();
+        $maintOnCmd = 'cd ' . escapeshellarg($remoteRuntime) . ' && php garnet maintenance on'
+            . ($operatorIp !== '' ? ' ' . escapeshellarg($operatorIp) : '');
+        $maintOn = $ssh->run($maintOnCmd, ['stream' => false]);
+
+        if (!$maintOn->ok()) {
+            self::fail("Could not enable maintenance mode on the host (exit {$maintOn->exitCode}): {$maintOn->stderr}");
+        }
+        echo PHP_EOL;
+
+        // 3. Ship framework/app dirs — both 100% app-controlled, no
+        // WorkDir/Config/state and nothing the hosting provider ever
+        // injects there, so a full replace is safe in principle. shipDir()
+        // itself uploads to a fresh sibling name and swaps it in with a
+        // near-instant rename rather than rm -rf + re-upload — see its doc
+        // comment for the incident that made this necessary.
         //
         // Public dir is DIFFERENT and must NOT be wholesale-wiped: shared
         // hosting can inject files into the docroot that live outside this
@@ -124,13 +170,13 @@ class GarnetDeployFullCommand {
         // restored. `deploy:diff` never wholesale-replaces public/ either
         // — it only ships the delta — so this merge-only upload (no
         // delete) matches that existing, already-safe precedent.
-        self::step('2/5', 'Shipping public (merge, no delete) / framework / app (wipe + re-upload)');
+        self::step('3/6', 'Shipping public (merge, no delete) / framework / app (atomic swap)');
         self::shipPublicDir($ssh, $distPublic, "{$remoteRoot}/{$layout['public_dir']}");
         self::shipDir($ssh, $distFw, "{$remoteRoot}/{$layout['framework_dir']}", 'framework');
         self::shipDir($ssh, $distAppDir, "{$remoteRoot}/{$layout['app_dir']}", 'app');
         echo PHP_EOL;
 
-        // 3. Runtime dir: ONLY the dispatcher + shared bootstrap — NEVER
+        // 4. Runtime dir: ONLY the dispatcher + shared bootstrap — NEVER
         // the whole tree. The live runtime-dir/WorkDir carries real
         // Config/*.ini (DB creds, SSH creds), real DB backups, real log
         // journals — none of that exists in a fresh bundle build at all,
@@ -139,8 +185,7 @@ class GarnetDeployFullCommand {
         // change release-to-release; both are already idempotent/versioned
         // by content, and the boot check below verifies the swap didn't
         // break anything before we call it done.
-        self::step('3/5', 'Syncing runtime dispatcher (garnet + _shared_index.php only — WorkDir left untouched)');
-        $remoteRuntime = "{$remoteRoot}/{$layout['runtime_dir']}";
+        self::step('4/6', 'Syncing runtime dispatcher (garnet + _shared_index.php only — WorkDir left untouched)');
 
         foreach (['garnet', '_shared_index.php'] as $file) {
             $localFile = $distRuntime . DS . $file;
@@ -158,14 +203,16 @@ class GarnetDeployFullCommand {
         $ssh->run('chmod 755 ' . escapeshellarg("{$remoteRuntime}/garnet"), ['stream' => false]);
         echo PHP_EOL;
 
-        // 4. Boot check — the same safety net deploy:diff already relies
+        // 5. Boot check — the same safety net deploy:diff already relies
         // on: confirm the host can actually start the app after the push,
-        // rather than finding out from a live 500.
+        // rather than finding out from a live 500. Maintenance is still ON
+        // here on purpose — this check happens before anyone but the
+        // allow-listed operator IP can see the result either way.
         if ($noBootCheck) {
-            self::step('4/5', 'Boot check SKIPPED (--no-boot-check)');
+            self::step('5/6', 'Boot check SKIPPED (--no-boot-check)');
             echo PHP_EOL;
         } else {
-            self::step('4/5', 'Boot check (php garnet noop on host)');
+            self::step('5/6', 'Boot check (php garnet noop on host)');
             $cmd = 'cd ' . escapeshellarg($remoteRuntime) . ' && php garnet noop 2>&1';
             $res = $ssh->run($cmd, ['stream' => false]);
 
@@ -175,12 +222,12 @@ class GarnetDeployFullCommand {
                 foreach (array_filter(explode("\n", trim($res->stdout . "\n" . $res->stderr))) as $line) {
                     echo "    \033[90m{$line}\033[0m" . PHP_EOL;
                 }
-                self::fail('Boot check failed — investigate before trusting this release.');
+                self::fail('Boot check failed — the host is left in maintenance mode intentionally. Investigate before trusting this release.');
             }
             echo '  ' . "\033[32m[OK]\033[0m app boots cleanly on the host" . PHP_EOL . PHP_EOL;
         }
 
-        // 5. Migrations — triggers the EXISTING, already-safe `php garnet
+        // 6. Migrations — triggers the EXISTING, already-safe `php garnet
         // deploy` (maintenance → backup → migrate → cache → off) remotely
         // over SSH, so this one command really does take a release all the
         // way to "live," not just "files are there, remember to migrate."
@@ -189,13 +236,24 @@ class GarnetDeployFullCommand {
         // context on the host (that's where WorkDir/Config/db.ini
         // resolves) — same command whether triggered remotely here or run
         // by hand later, so its own safety guarantees (maintenance stays
-        // ON on any failure) are never bypassed or reimplemented.
+        // ON on any failure) are never bypassed or reimplemented. That
+        // command's own maintenance-on call is a harmless idempotent
+        // re-write of the same flag we already set in step 2/6; its
+        // maintenance-off call at the very end is what finally reopens the
+        // site — so the ON we set above simply stays in effect until then.
         if ($skipMigrate) {
-            echo "\033[33m  Migrations SKIPPED (--skip-migrate)\033[0m — run "
-                . "\033[36mphp garnet deploy\033[0m from inside {$layout['runtime_dir']}/ on the host when ready."
+            // Nothing downstream will turn maintenance back off — do it
+            // ourselves now that shipping + boot check are both verified.
+            self::step('6/6', 'Migrations SKIPPED (--skip-migrate) — maintenance mode OFF (remote)');
+            $maintOff = $ssh->run('cd ' . escapeshellarg($remoteRuntime) . ' && php garnet maintenance off', ['stream' => false]);
+
+            if (!$maintOff->ok()) {
+                self::fail("Ship succeeded but could not disable maintenance mode (exit {$maintOff->exitCode}): {$maintOff->stderr}. Run `php garnet maintenance off` on the host manually.");
+            }
+            echo "  run \033[36mphp garnet deploy\033[0m from inside {$layout['runtime_dir']}/ on the host when ready to migrate."
                 . PHP_EOL;
         } else {
-            self::step('5/5', 'Migrating (php garnet deploy on host: maintenance → backup → migrate → cache → off)');
+            self::step('6/6', 'Migrating (php garnet deploy on host: maintenance → backup → migrate → cache → off)');
             $deployArgs = $skipBackup ? ' --skip-backup' : '';
             $cmd = 'cd ' . escapeshellarg($remoteRuntime) . ' && php garnet deploy' . $deployArgs;
             $res = $ssh->run($cmd, ['stream' => true]);
@@ -214,35 +272,68 @@ class GarnetDeployFullCommand {
     }
 
     /**
-     * Remove the remote target dir entirely, then re-upload the fresh local
-     * tree wholesale. Only ever call this on framework-dir/app-dir — both
-     * 100% app-controlled with no hosting-injected files. NEVER call this
-     * on public-dir (see shipPublicDir()) or the runtime dir (its WorkDir/
-     * carries real Config/*.ini, DB backups, log journals).
+     * Upload the fresh local tree to a brand-new sibling name, then swap it
+     * into place with two chained `mv`s (plain renames, same filesystem) in
+     * one SSH round-trip. Only ever call this on framework-dir/app-dir —
+     * both 100% app-controlled with no hosting-injected files. NEVER call
+     * this on public-dir (see shipPublicDir()) or the runtime dir (its
+     * WorkDir/ carries real Config/*.ini, DB backups, log journals).
      *
-     * `scp -r <local> <remote>` does NOT copy $local's CONTENTS into
-     * $remote — it copies $local itself AS A SUBDIRECTORY of $remote (same
-     * semantics as `cp -r`). Found this the hard way testing against a
-     * scratch remote dir first: files landed at
-     * "$remoteDir/$basename($localDir)/…" instead of directly under
-     * $remoteDir. The fix relies on bundle always naming its sibling dirs
-     * (public/framework-dir/app-dir) identically to this same deploy.ini's
-     * own configured names — i.e. basename($localDir) === basename($remoteDir)
-     * always holds — so scp'ing into dirname($remoteDir) recreates exactly
-     * $remoteDir with the right contents, no merge/overwrite ambiguity
-     * since the old one was just removed outright.
+     * This used to be rm -rf followed by a fresh scp -r upload — simpler,
+     * but it left $remoteDir completely missing/partial for the entire
+     * (sometimes multi-second) transfer. A real production incident hit
+     * exactly that window: framework-dir's re-upload got interrupted, and a
+     * live request landed while vendor/ was half-uploaded, producing a raw
+     * "Class ... not found" fatal error straight to the browser — and
+     * critically, maintenance mode alone can't fully guard against this,
+     * because MaintenanceMiddleware is itself a framework class that needs
+     * the same autoloader to render. Uploading to a fresh name first means
+     * $remoteDir keeps serving correctly for the whole transfer; only the
+     * swap itself (two renames) touches the live name, and that's fast
+     * enough to be effectively atomic.
+     *
+     * `scp -r <local> <newRemoteName>` creates <newRemoteName> as an exact
+     * copy of $local's contents as long as <newRemoteName> doesn't already
+     * exist yet (same semantics as `cp -r a b` when b is absent) — unlike
+     * scp'ing into an existing directory, which nests $local inside it by
+     * basename instead (see shipPublicDir()/putRecursive(), which relies on
+     * exactly that nesting behavior for its merge semantics).
      */
     private static function shipDir(SshClient $ssh, string $localDir, string $remoteDir, string $label): void {
         $remoteDirNorm = rtrim(str_replace('\\', '/', $remoteDir), '/');
         $remoteParent = dirname($remoteDirNorm);
+        $baseName = basename($remoteDirNorm);
+        $suffix = bin2hex(random_bytes(4));
+        $tmpName = "{$baseName}.new-{$suffix}";
+        $bakName = "{$baseName}.bak-{$suffix}";
+        $tmpDir = "{$remoteParent}/{$tmpName}";
 
-        $wipe = $ssh->run('rm -rf ' . escapeshellarg($remoteDirNorm), ['stream' => false]);
+        $put = $ssh->put($localDir, $tmpDir, ['stream' => false, 'recursive' => true]);
 
-        if (!$wipe->ok()) {
-            self::fail("Could not clear the remote {$label} dir ({$remoteDirNorm}): {$wipe->stderr}");
+        if (!$put->ok()) {
+            self::fail("Upload of {$label} to staging path {$tmpDir} failed (exit {$put->exitCode}). The live {$remoteDirNorm} was never touched.");
         }
 
-        self::putRecursive($ssh, $localDir, $remoteParent, $remoteDirNorm, $label);
+        $swap = sprintf(
+            'cd %s && (test -e %s && mv %s %s || true) && mv %s %s',
+            escapeshellarg($remoteParent),
+            escapeshellarg($baseName), escapeshellarg($baseName), escapeshellarg($bakName),
+            escapeshellarg($tmpName), escapeshellarg($baseName)
+        );
+        $res = $ssh->run($swap, ['stream' => false]);
+
+        if (!$res->ok()) {
+            self::fail(
+                "Atomic swap of {$label} into {$remoteDirNorm} failed (exit {$res->exitCode}): {$res->stderr}."
+                . " The new build is staged at {$tmpDir} — investigate before retrying."
+            );
+        }
+
+        // Best-effort cleanup of the old copy — not fatal if it lingers
+        // (disk space only; the live dir is already correct at this point).
+        $ssh->run('rm -rf ' . escapeshellarg("{$remoteParent}/{$bakName}"), ['stream' => false]);
+
+        echo "  -> {$remoteDirNorm}" . PHP_EOL;
     }
 
     /**
@@ -311,6 +402,20 @@ class GarnetDeployFullCommand {
         ob_start();
         require $runCmd;
         ob_end_clean();
+    }
+
+    /**
+     * Detect the operator's own public IP so it can be allow-listed when
+     * enabling remote maintenance mode — same detection `maintenance:remote`
+     * already uses. Returns '' on failure; the remote command then falls
+     * back to allow-listing its own IP (a warning, not fatal, since the
+     * operator can still reach the host over SSH regardless).
+     */
+    private static function detectLocalPublicIp(): string {
+        $detected = @file_get_contents('https://api.ipify.org');
+        $detected = is_string($detected) ? trim($detected) : '';
+
+        return filter_var($detected, FILTER_VALIDATE_IP) !== false ? $detected : '';
     }
 
     /** Same path GarnetBundleCommand::run() writes its output to. */
@@ -389,13 +494,16 @@ class GarnetDeployFullCommand {
   \033[1mWHAT IT DOES\033[0m
   ────────────────────────────────────────────────────────────────────────
   One command, start to live: build fresh (same code path as
-  `php garnet bundle`), push to an EXISTING host — public/framework/app
-  dirs wiped and re-uploaded wholesale (all three are stateless by
-  design, safe to fully replace), runtime dir's `garnet` dispatcher +
-  _shared_index.php synced individually (WorkDir/ — real Config/*.ini,
-  DB backups, log journals — never touched), boot check, then
-  \033[36mphp garnet deploy\033[0m (maintenance → backup → migrate →
-  cache → off) triggered remotely over SSH as the final step.
+  `php garnet bundle`), push to an EXISTING host — maintenance mode ON,
+  public dir merged (never wiped — see below), framework/app dirs
+  uploaded to a fresh staging name and swapped into place with a
+  near-instant rename (never rm -rf'd first), runtime dir's `garnet`
+  dispatcher + _shared_index.php synced individually (WorkDir/ — real
+  Config/*.ini, DB backups, log journals — never touched), boot check,
+  then \033[36mphp garnet deploy\033[0m (maintenance → backup → migrate
+  → cache → off) triggered remotely over SSH as the final step —
+  maintenance stays ON the whole time until that command (or, with
+  --skip-migrate, this one) turns it back off.
 
   Exists so a full release can never be left half-done by a forgotten
   intermediate step — build, ship, and migrate happen inside one call.
