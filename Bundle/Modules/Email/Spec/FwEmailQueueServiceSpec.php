@@ -778,9 +778,12 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Email\Spec {
             });
 
             function callBackoffSeconds(int $attemptNumber): int {
+                // setAccessible() has been a no-op since PHP 8.1 (all reflection
+                // methods are invocable regardless) and raises E_DEPRECATED as
+                // of PHP 8.5 — Kahlan treats that as a hard failure, so it must
+                // simply be omitted, not just left harmless.
                 $ref = new ReflectionClass(FwEmailQueueService::class);
                 $method = $ref->getMethod('backoffSeconds');
-                $method->setAccessible(true);
 
                 return $method->invoke(null, $attemptNumber);
             }
