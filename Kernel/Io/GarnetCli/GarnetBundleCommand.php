@@ -113,10 +113,15 @@ class GarnetBundleCommand {
                 $makePhar = false;
             } else {
                 echo "\033[33mNote:\033[0m relaunching with phar.readonly=0 (auto)" . PHP_EOL . PHP_EOL;
+                // App-mode's own ./garnet lives at the app root
+                // (GarnetRunner::$appDir), not under GARNET_ROOT (which in
+                // app-mode is the vendored framework dir) — same reasoning
+                // as $garnetSrc below for the runtime-dir assembly step.
+                $garnetBin = $isAppMode ? GarnetRunner::$appDir . DS . 'garnet' : GARNET_ROOT . DS . 'garnet';
                 $cmd = sprintf(
                     '%s -d phar.readonly=0 %s bundle %s %s',
                     escapeshellarg(PHP_BINARY),
-                    escapeshellarg(GARNET_ROOT . DS . 'garnet'),
+                    escapeshellarg($garnetBin),
                     implode(' ', array_map('escapeshellarg', $args)),
                     $relaunchFlag
                 );
