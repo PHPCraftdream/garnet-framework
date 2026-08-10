@@ -1,0 +1,77 @@
+# ── Dependencies (regenerable) ───────────────────────────────────────────
+/vendor/
+/node_modules/
+**/node_modules/
+
+# ── Runtime / per-environment state ──────────────────────────────────────
+# The template ships dev-default WorkDir/Config, WorkDir/ConfigDev and
+# .keep placeholders on purpose (see the framework's own .gitignore) —
+# they're scaffolding, not secrets. But once `app:create` copies this
+# template into a real app and a dev runs `git init && git add .` there,
+# none of the runtime state grown afterwards should ever be committed.
+/WorkDir/Backups/
+/WorkDir/Snapshots/
+/WorkDir/FileCache/*
+!/WorkDir/FileCache/.keep
+/WorkDir/TwigCache/*
+!/WorkDir/TwigCache/.keep
+/WorkDir/Upload/*
+!/WorkDir/Upload/.keep
+/WorkDir/LogJournal/Errors/*
+!/WorkDir/LogJournal/Errors/.keep
+/WorkDir/LogJournal/System/*
+!/WorkDir/LogJournal/System/.keep
+
+# Belt-and-suspenders: never track secret config or DB dumps anywhere.
+# NOTE: WorkDir/Config/*.ini and WorkDir/ConfigDev/*.ini are intentionally
+# tracked here (see the framework's own .gitignore, commit 461eff3) —
+# they're the dev-default scaffolding `app:create` ships, not secrets.
+# .gitignore rules can't retroactively protect them anyway: once a file
+# is tracked, .gitignore has no effect on it. If real credentials get
+# edited into them after a fresh `app:create` + `git init`, that's on
+# the app's own .gitignore (see quickstart docs) to guard, not the
+# template's.
+**/Backups/
+**/Snapshots/
+
+# Per-environment app identity (commit .env.example instead).
+/.env
+
+# ── Generated assets ─────────────────────────────────────────────────────
+/Public/assets/
+/Public/upload/
+**/Public/upload/
+*.gen.js
+*.gen.css
+*.gen.php
+*Gen.php
+
+# ── Logs / caches ────────────────────────────────────────────────────────
+errors.log
+**/errors.log
+.php-cs-fixer.cache
+*.cache
+
+# ── Test-scope markers (never commit — they open prod test gates) ─────────
+**/.allow_tests
+**/.test-mode
+
+# ── Admin console auth token (runtime state, opens the /__garnet/ console) ──
+/.garnet_admin
+
+# ── Debug-mode session token (runtime state, created/deleted by
+# `php garnet serve:debug`; opens the MCP debug-collector header gate) ──
+/.garnet_debug_token
+
+# ── Playwright (Tests/) ──────────────────────────────────────────────────
+/Tests/node_modules/
+/Tests/test-results/
+/Tests/playwright-report/
+/Tests/.auth/
+/Tests/playwright/.cache/
+
+# ── IDE / OS ─────────────────────────────────────────────────────────────
+/.idea/
+/.vscode/
+/.claude/
+.DS_Store
