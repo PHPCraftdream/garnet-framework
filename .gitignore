@@ -36,6 +36,10 @@
 # Test-mode marker (`php garnet test-mode on`).
 **/.test-mode
 
+# Debug-mode session token (runtime state, created/deleted by
+# `php garnet serve:debug`; opens the MCP debug-collector header gate).
+/.garnet_debug_token
+
 # Quality tools are composer dev-deps now, never vendored phars.
 *.phar
 
