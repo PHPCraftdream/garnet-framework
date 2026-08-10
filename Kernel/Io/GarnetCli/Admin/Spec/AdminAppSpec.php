@@ -333,7 +333,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Admin\Spec {
                 mkdir($dir, 0o777, true);
 
                 $method = new ReflectionMethod(AdminApp::class, 'execBuildWatchDetached');
-                $method->setAccessible(true);
 
                 ob_start();
                 $method->invoke(null, $dir);
