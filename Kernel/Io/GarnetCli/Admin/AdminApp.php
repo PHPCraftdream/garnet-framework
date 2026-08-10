@@ -205,6 +205,12 @@ class AdminApp {
         self::sendJson(['ticket' => AdminAuth::issueExecTicket($cmd)]);
     }
 
+    // Defense-in-depth cap on the exec SSE loop: no whitelisted command
+    // should legitimately run this long, so if one hangs (or a future
+    // ALLOWED_COMMANDS entry turns out to be long-running like build:watch
+    // was), the worker gets freed instead of pinned forever.
+    private const EXEC_STREAM_TIMEOUT_SECONDS = 300;
+
     private static function handleExec(): void {
         $ticket = (string)($_GET['ticket'] ?? '');
         $cmd = AdminAuth::redeemExecTicket($ticket);
@@ -216,7 +222,6 @@ class AdminApp {
         }
 
         $garnetRoot = $_ENV['GARNET_ROOT'] ?? GARNET_ROOT;
-        $garnetBin = $garnetRoot . DIRECTORY_SEPARATOR . 'garnet';
 
         header('Content-Type: text/event-stream');
         header('Cache-Control: no-cache');
@@ -225,6 +230,47 @@ class AdminApp {
         if (ob_get_level()) {
             ob_end_flush();
         }
+
+        // build:watch is a file watcher by definition — it never exits, so
+        // it cannot be streamed to completion over a single SSE response
+        // like the other (run-to-completion) commands below. Start it
+        // detached with its own lifecycle and immediately report "started";
+        // the operator watches its effect (rebuilt assets) rather than a
+        // live log here. This mirrors GarnetServeWatchCommand's own
+        // detached-start pattern for the same rspack watcher.
+        if ($cmd === 'build:watch') {
+            self::execBuildWatchDetached($garnetRoot);
+
+            return;
+        }
+
+        self::execStreamed($cmd, $garnetRoot);
+    }
+
+    private static function execBuildWatchDetached(string $garnetRoot): void {
+        $garnetBin = $garnetRoot . DIRECTORY_SEPARATOR . 'garnet';
+        $isWindows = DIRECTORY_SEPARATOR === '\\';
+
+        if ($isWindows) {
+            pclose(popen(
+                'cd /d ' . escapeshellarg($garnetRoot) . ' && start /B php '
+                    . escapeshellarg($garnetBin) . ' build:watch',
+                'r'
+            ));
+        } else {
+            exec(
+                'cd ' . escapeshellarg($garnetRoot) . ' && php '
+                    . escapeshellarg($garnetBin) . ' build:watch > /dev/null 2>&1 &'
+            );
+        }
+
+        echo 'data: ' . json_encode('build:watch started in the background (detached) — it will keep running independently of this request.') . "\n\n";
+        echo "event: done\ndata: 0\n\n";
+        flush();
+    }
+
+    private static function execStreamed(string $cmd, string $garnetRoot): void {
+        $garnetBin = $garnetRoot . DIRECTORY_SEPARATOR . 'garnet';
 
         $descriptors = [
             1 => ['pipe', 'w'], // stdout
@@ -276,6 +322,9 @@ class AdminApp {
         stream_set_blocking($pipes[1], false);
         stream_set_blocking($pipes[2], false);
 
+        $deadline = time() + self::EXEC_STREAM_TIMEOUT_SECONDS;
+        $timedOut = false;
+
         while (true) {
             $stdout = fgets($pipes[1]);
             $stderr = fgets($pipes[2]);
@@ -294,6 +343,13 @@ class AdminApp {
                 break;
             }
 
+            if (time() >= $deadline) {
+                $timedOut = true;
+                proc_terminate($process);
+
+                break;
+            }
+
             if ($stdout === false && $stderr === false) {
                 usleep(50000); // 50ms
             }
@@ -308,6 +364,10 @@ class AdminApp {
         fclose($pipes[1]);
         fclose($pipes[2]);
         $exitCode = proc_close($process);
+
+        if ($timedOut) {
+            echo 'data: ' . json_encode('Timed out after ' . self::EXEC_STREAM_TIMEOUT_SECONDS . 's — process terminated') . "\n\n";
+        }
 
         echo "event: done\ndata: {$exitCode}\n\n";
         flush();

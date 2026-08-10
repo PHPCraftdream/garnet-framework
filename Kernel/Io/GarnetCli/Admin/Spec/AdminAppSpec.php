@@ -305,5 +305,64 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Admin\Spec {
                 expect(AdminAuth::redeemExecTicket($ticket))->toBeNull();
             });
         });
+
+        // build:watch is a file watcher that never exits by design. Streaming
+        // it over the same run-to-completion SSE loop as `build`/`prepare`/
+        // `migration` would pin a worker forever (see handleExec's dispatch).
+        // These specs cover the detached-start branch and the general
+        // streaming timeout added as defense-in-depth for the other commands.
+        describe('::handleExec — build:watch takes the detached path', function (): void {
+            it('routes build:watch through execBuildWatchDetached, not execStreamed', function (): void {
+                $reflection = new ReflectionClass(AdminApp::class);
+                $source = file_get_contents($reflection->getFileName());
+
+                // Static assertion on the dispatch: build:watch must be special-cased
+                // before falling through to the streamed/blocking proc_open loop.
+                expect($source)->toContain("cmd === 'build:watch'");
+                expect($source)->toContain('execBuildWatchDetached');
+            });
+
+            it('execBuildWatchDetached emits an immediate "started" event and a done event (never blocks on process output)', function (): void {
+                // Uses its own scratch dir (not $this->tempDir): on Windows,
+                // `start /B` runs through a cmd.exe shell spawned via popen()
+                // that briefly holds the working directory open even after
+                // pclose() returns, which races the shared tempDir's rmdir()
+                // in afterEach. An isolated, best-effort-cleaned dir avoids
+                // that flake without weakening the assertion.
+                $dir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'gtest_bw_' . uniqid();
+                mkdir($dir, 0o777, true);
+
+                $method = new ReflectionMethod(AdminApp::class, 'execBuildWatchDetached');
+                $method->setAccessible(true);
+
+                ob_start();
+                $method->invoke(null, $dir);
+                $body = ob_get_clean();
+
+                expect($body)->toContain('started in the background');
+                expect($body)->toContain('event: done');
+
+                @rmdir($dir);
+            });
+        });
+
+        describe('::EXEC_STREAM_TIMEOUT_SECONDS — defense-in-depth cap on the streaming loop', function (): void {
+            it('defines a positive, finite timeout applied to non-detached commands', function (): void {
+                $reflection = new ReflectionClass(AdminApp::class);
+                $timeout = $reflection->getReflectionConstant('EXEC_STREAM_TIMEOUT_SECONDS')->getValue();
+
+                expect($timeout)->toBeA('integer');
+                expect($timeout > 0)->toBe(true);
+            });
+
+            it('is enforced inside execStreamed via a wall-clock deadline check', function (): void {
+                $reflection = new ReflectionClass(AdminApp::class);
+                $source = file_get_contents($reflection->getFileName());
+
+                expect($source)->toContain('$deadline = time() + self::EXEC_STREAM_TIMEOUT_SECONDS');
+                expect($source)->toContain('time() >= $deadline');
+                expect($source)->toContain('proc_terminate($process)');
+            });
+        });
     });
 }
