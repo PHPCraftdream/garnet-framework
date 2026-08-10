@@ -39,7 +39,12 @@ class GarnetServeCommand {
             }
         }
 
-        putenv('COMMON_GARNET_WEB_DIR=' . GARNET_ROOT . DIRECTORY_SEPARATOR);
+        // Mirror GarnetServeWatchCommand/GarnetBuildCommand: COMMON_GARNET_WEB_DIR
+        // is where rspack finds the local `garnet` CLI (app dir in app-mode) —
+        // the bare GARNET_ROOT constant is the vendored framework package dir
+        // in app-mode, which has no such file.
+        $appDir = GarnetRunner::$appDir !== '' ? GarnetRunner::$appDir : GARNET_ROOT;
+        putenv('COMMON_GARNET_WEB_DIR=' . $appDir . DIRECTORY_SEPARATOR);
 
         $isWindows = DIRECTORY_SEPARATOR === '\\';
         $phpBin = $debug ? 'phpd' : 'php';

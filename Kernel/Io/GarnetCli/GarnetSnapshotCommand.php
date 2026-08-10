@@ -221,8 +221,14 @@ class GarnetSnapshotCommand {
             self::fail('could not read SNAPSHOT_ARCHIVE from remote pack output.');
         }
 
+        // Default (no --out) must NOT be GARNET_ROOT — in app-mode that's the
+        // vendored framework package dir, and a downloaded prod DB dump
+        // would be wiped by the next `composer install`. GarnetEnv::workDir()
+        // is the documented single source of truth for the app-scoped,
+        // gitignored WorkDir; a real dump belongs next to Backups/Snapshots,
+        // not inside a dependency.
         $outDir = self::flagValue($args, '--out');
-        $outDir = $outDir !== null && $outDir !== '' ? rtrim($outDir, '/\\') : GARNET_ROOT . DS . 'snapshots';
+        $outDir = $outDir !== null && $outDir !== '' ? rtrim($outDir, '/\\') : GarnetEnv::workDir() . DS . 'Snapshots';
         self::mkdir($outDir);
         $local = $outDir . DS . basename($archive);
 
