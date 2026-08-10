@@ -21,6 +21,25 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
 
         protected int $lastAffectedRows = 0;
 
+        /**
+         * mysqli::$insert_id is a property of the connection, not of the
+         * last-executed statement -- it keeps whatever value the most
+         * recent INSERT/REPLACE produced until another INSERT/REPLACE
+         * changes it. On a pooled connection, surfacing it for every
+         * non-row-returning result (including UPDATE/DELETE) leaks that
+         * stale id instead of the statement's own outcome. Only
+         * INSERT/REPLACE are expected to report an insert id here.
+         */
+        protected function resolveNonRowResult(string $sql, bool|int|string $result): bool|int|string {
+            $firstWord = strtoupper((string)strtok(ltrim($sql), " \t\n\r"));
+
+            if (in_array($firstWord, ['INSERT', 'REPLACE'], true) && $this->link->insert_id) {
+                return intval($this->link->insert_id);
+            }
+
+            return $result;
+        }
+
         public function __construct(protected MySQLi $link) {
             $this->id = DbMySQLiLink::$idCounter;
             DbMySQLiLink::$idCounter += 1;
@@ -75,11 +94,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
                 $result = $stmt->get_result();
 
                 if (!is_object($result)) {
-                    $res = $result;
-
-                    if ($this->link->insert_id) {
-                        $res = intval($this->link->insert_id);
-                    }
+                    $res = $this->resolveNonRowResult($sql, $result);
 
                     $this->busy = false;
 
@@ -113,15 +128,13 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
             $data = [];
 
             try {
+                $polledSql = (string)$this->sql;
                 $result = $this->link->reap_async_query();
                 $this->sql = null;
 
                 if (!is_object($result)) {
-                    $res = $result;
-
-                    if ($this->link->insert_id) {
-                        $res = intval($this->link->insert_id);
-                    }
+                    $this->lastAffectedRows = (int)$this->link->affected_rows;
+                    $res = $this->resolveNonRowResult($polledSql, $result);
 
                     /* @phpstan-ignore-next-line */
                     if (!empty($this->callBack)) {

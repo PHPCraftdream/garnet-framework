@@ -61,7 +61,7 @@ namespace PHPCraftdream\GarnetMySql {
                 $insertId = $result;
             }
             echo json_encode([
-                'affected' => is_bool($result) ? ($result ? 1 : 0) : (is_int($result) ? 1 : 0),
+                'affected' => $link->getLastAffectedRows(),
                 'insertId' => $insertId,
             ], JSON_UNESCAPED_UNICODE);
         }

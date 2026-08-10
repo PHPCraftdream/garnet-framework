@@ -285,6 +285,38 @@ describe('DbPool Integration', function (): void {
             $link->query('ALTER TABLE dbtest_test_users DROP COLUMN bio', []);
         });
 
+        it('does not leak a stale insert_id into a following UPDATE result', function () use (&$dbAvailable): void {
+            if (!$dbAvailable) {
+                return;
+            }
+
+            $pool = DbPool::get();
+            $link = $pool->newLink();
+
+            // INSERT sets mysqli's connection-level insert_id.
+            $sql = 'INSERT INTO dbtest_test_users (name, email) VALUES (?, ?)';
+            $insertId = $link->query($sql, ['Stale Id User', 'test_stale_insert_id@example.com']);
+
+            expect($insertId)->toBeGreaterThan(0);
+
+            // An UPDATE on the SAME link must not echo back that insert_id.
+            // mysqli::$insert_id is a connection property and is only reset
+            // by another INSERT/REPLACE, so a naive read would leak it here.
+            $sql = 'UPDATE dbtest_test_users SET name = ? WHERE email = ?';
+            $updateResult = $link->query($sql, ['Updated Name', 'test_stale_insert_id@example.com']);
+
+            expect($updateResult)->not->toBe($insertId);
+            expect($link->getLastAffectedRows())->toBe(1);
+
+            // A DELETE on the same link must likewise report real
+            // affected-rows, not the stale insert_id either.
+            $sql = 'DELETE FROM dbtest_test_users WHERE email = ?';
+            $deleteResult = $link->query($sql, ['test_stale_insert_id@example.com']);
+
+            expect($deleteResult)->not->toBe($insertId);
+            expect($link->getLastAffectedRows())->toBe(1);
+        });
+
         it('handles multiple inserts and returns correct IDs', function () use (&$dbAvailable): void {
             if (!$dbAvailable) {
                 return;
