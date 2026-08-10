@@ -1,6 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Application\Migrations {
+    use PHPCraftdream\Application\Migrations\Items\M_0001;
     use PHPCraftdream\Application\Migrations\Items\M_0002;
     use PHPCraftdream\Application\Migrations\Items\M_0003;
     use PHPCraftdream\Application\Migrations\Items\M_0004;
@@ -17,6 +18,7 @@ namespace PHPCraftdream\Application\Migrations {
          * @var array|class-string[]
          */
         protected array $migrationClasses = [
+            1 => M_0001::class,
             2 => M_0002::class,
             3 => M_0003::class,
             4 => M_0004::class,
