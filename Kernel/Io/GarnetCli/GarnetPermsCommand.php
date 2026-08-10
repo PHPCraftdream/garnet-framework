@@ -51,7 +51,13 @@ class GarnetPermsCommand {
 
         $appName = GarnetEnv::requireAppName();
         $appDir = GarnetEnv::getAppDir($appName);
-        $workDir = $appDir . DS . 'WorkDir';
+        // GarnetEnv::workDir() (not a raw $appDir . '/WorkDir' guess) is the
+        // documented single source of truth — on a deployed bundle WorkDir
+        // is relocated into the runtime folder and pointed at via
+        // GARNET_WORKDIR_DIR. This command's own doc-comment says "Run this
+        // on the production host", so it must resolve the SAME dir the web
+        // runtime actually writes into, not a stale app-relative guess.
+        $workDir = GarnetEnv::workDir($appName);
         $publicDir = GarnetEnv::getPublicDir($appName);
 
         $targets = [

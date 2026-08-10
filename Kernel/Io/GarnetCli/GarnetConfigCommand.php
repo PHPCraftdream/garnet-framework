@@ -45,14 +45,22 @@ class GarnetConfigCommand {
         echo "\033[1m=== Garnet Config Init ===\033[0m" . PHP_EOL;
         echo "  source: {$exDir}" . PHP_EOL;
 
+        // ConfigExample/ (the source template above) always lives under the
+        // app's own WorkDir — it's a dev-scaffold artifact, never relocated.
+        // The WRITE targets are different: on a deployed bundle WorkDir
+        // itself is relocated into the runtime folder via GARNET_WORKDIR_DIR,
+        // and the web runtime reads Config/ConfigDev from THAT location —
+        // GarnetEnv::workDir() is the documented single source of truth for
+        // it, not a raw $appDir-relative guess.
+        $workDir = GarnetEnv::workDir($appName);
         $targets = [];
 
         if ($writeConfig) {
-            $targets['Config'] = $appDir . DS . 'WorkDir' . DS . 'Config';
+            $targets['Config'] = $workDir . DS . 'Config';
         }
 
         if ($writeConfigDev) {
-            $targets['ConfigDev'] = $appDir . DS . 'WorkDir' . DS . 'ConfigDev';
+            $targets['ConfigDev'] = $workDir . DS . 'ConfigDev';
         }
 
         foreach ($targets as $label => $cfgDir) {
