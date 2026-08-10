@@ -3,6 +3,8 @@
 namespace PHPCraftdream\Application {
     use Detection\MobileDetect;
     use PHPCraftdream\Application\Common\Backend\CommonController;
+    use PHPCraftdream\Application\Common\Commands\CMDTestProvision;
+    use PHPCraftdream\Application\Common\Commands\CMDTestTeardown;
     use PHPCraftdream\Application\Common\Common;
     use PHPCraftdream\Application\Common\Services\AppCronService;
     use PHPCraftdream\Application\Dashboard\Dashboard;
@@ -19,6 +21,7 @@ namespace PHPCraftdream\Application {
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Session;
     use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Router\IRouterUriParams;
+    use PHPCraftdream\Garnet\Kernel\Io\Command\CommandClasses;
     use PHPCraftdream\Garnet\Kernel\Io\Cron\CMDCron;
     use PHPCraftdream\Garnet\Kernel\Io\IniConfig\AppConfig;
     use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
@@ -73,6 +76,14 @@ namespace PHPCraftdream\Application {
         protected function defineMigrationClass(): void {
             CMDMigration::setMigrationClass(AppMigration::class);
             CMDCron::setCronServiceClass(AppCronService::class);
+
+            // Required by `php garnet test:remote` (see the framework's
+            // GarnetTestRemoteCommand) — the only sanctioned way to run
+            // Playwright against a real remote/production box. It SSHes in
+            // and calls these two over the CLI to provision/teardown an
+            // isolated test_worker_0 DB-prefix scope.
+            CommandClasses::set('test:provision', CMDTestProvision::class);
+            CommandClasses::set('test:teardown', CMDTestTeardown::class);
         }
 
         protected function defineTwigParams(): void {

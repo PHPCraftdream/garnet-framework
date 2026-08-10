@@ -68,6 +68,7 @@ final class GarnetTestRemoteCommand {
 
             if (!$res->ok()) {
                 fwrite(STDERR, "\033[31mWarning:\033[0m remote teardown exited {$res->exitCode} — clean up manually.\n");
+                self::hintIfCommandMissing();
             }
         };
 
@@ -82,6 +83,7 @@ final class GarnetTestRemoteCommand {
 
             if (!$res->ok()) {
                 fwrite(STDERR, "\033[31mError:\033[0m remote provision failed (exit {$res->exitCode}). Aborting.\n");
+                self::hintIfCommandMissing();
                 // Provision may have planted the token before failing — tear down.
                 $teardown();
 
@@ -113,6 +115,26 @@ final class GarnetTestRemoteCommand {
     }
 
     /**
+     * `stream: true` pipes the remote command's stdout/stderr straight to
+     * this process's own STDOUT/STDERR (see SshClient::execute()), so the
+     * real SSH failure is already visible above this line — SshResult
+     * carries no captured text to grep for "command not found" here. All
+     * this can safely add is a pointer at the most likely cause: the app
+     * has no `test:provision` / `test:teardown` commands registered (every
+     * app scaffolded from Templates/Application/ has them by default via
+     * Application::defineMigrationClass() — an older app predating that
+     * scaffold change would need them added, see
+     * Templates/Application/Common/Commands/CMDTestProvision.php).
+     */
+    private static function hintIfCommandMissing(): void {
+        fwrite(STDERR, "\033[33mHint:\033[0m if the output above mentions an unknown/missing command, the "
+            . 'remote app has no `test:provision` / `test:teardown` commands registered. Every app '
+            . 'scaffolded from the current app template gets them by default — see '
+            . 'Templates/Application/Common/Commands/CMDTestProvision.php in garnet-framework for what '
+            . "to add (registered via CommandClasses::set() in your app's defineMigrationClass()).\n");
+    }
+
+    /**
      * Spawn the local Playwright run. PW_PROD=1 switches the harness into
      * remote mode (token header on every context, no local DB isolation,
      * SQL routed back over SSH). Returns the Playwright exit code.
@@ -120,10 +142,10 @@ final class GarnetTestRemoteCommand {
      * @param list<string> $passthrough extra args forwarded to `playwright test`
      */
     private static function runPlaywright(string $baseUrl, string $token, array $passthrough): int {
-        $testsDir = GARNET_ROOT . DIRECTORY_SEPARATOR . 'tests';
+        $testsDir = self::resolveTestsDir();
 
         if (!is_dir($testsDir)) {
-            fwrite(STDERR, "\033[31mError:\033[0m tests/ dir not found at {$testsDir}.\n");
+            fwrite(STDERR, "\033[31mError:\033[0m tests dir not found at {$testsDir}.\n");
 
             return 1;
         }
@@ -182,8 +204,29 @@ final class GarnetTestRemoteCommand {
     }
 
     /**
+     * Resolve the local Playwright specs dir.
+     *
+     * App-mode (composer-vendored framework, e.g. IRabi): GARNET_ROOT is the
+     * vendored package dir under vendor/ — it never held app tests and, per
+     * .gitattributes' `/tests/ export-ignore`, the framework's own tests/
+     * doesn't even ship in the Packagist dist archive. The app's real specs
+     * live in `<appDir>/Tests` (capital T — see Templates/Application/Tests
+     * and Apps/IRabi/Tests). GarnetRunner::$appDir is the app root in
+     * app-mode and equals $frameworkDir in legacy/framework-repo dev
+     * checkout, where the framework's own lowercase tests/ (used only for
+     * the framework's own Playwright specs) is still meaningful.
+     */
+    private static function resolveTestsDir(): string {
+        $isAppMode = GarnetRunner::$appDir !== '' && GarnetRunner::$appDir !== GarnetRunner::$frameworkDir;
+
+        return $isAppMode
+            ? GarnetRunner::$appDir . DIRECTORY_SEPARATOR . 'Tests'
+            : GARNET_ROOT . DIRECTORY_SEPARATOR . 'tests';
+    }
+
+    /**
      * Resolve the @playwright/test CLI entrypoint (plain JS). Prefer the
-     * tests/-local install (where the prod config lives), fall back to the
+     * tests-local install (where the prod config lives), fall back to the
      * repo-root node_modules.
      */
     private static function resolvePlaywrightCli(string $testsDir): ?string {
