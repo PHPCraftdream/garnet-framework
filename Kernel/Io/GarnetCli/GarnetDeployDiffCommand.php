@@ -773,12 +773,14 @@ final class GarnetDeployDiffCommand {
     }
 
     /**
-     * Shadow directory for rebranded files. Uses GARNET_ROOT (which is
-     * the framework dir in vendor mode — fine, this is a temp build
-     * artefact, not an app file).
+     * Shadow directory for rebranded files. In vendor mode, keep this under
+     * the app root (like GarnetBundleCommand's own dist/) rather than
+     * GARNET_ROOT — in that mode GARNET_ROOT is the vendored framework
+     * package dir, and even a temp build artefact shouldn't risk a
+     * concurrent `composer install` sweeping it mid-write.
      */
     private static function shadowDir(): string {
-        return GARNET_ROOT . DS . 'dist' . DS . 'deploy-diff-shadow';
+        return (self::isVendorMode() ? GarnetRunner::$appDir : GARNET_ROOT) . DS . 'dist' . DS . 'deploy-diff-shadow';
     }
 
     /**

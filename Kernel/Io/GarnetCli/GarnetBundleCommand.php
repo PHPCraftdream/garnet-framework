@@ -204,7 +204,13 @@ class GarnetBundleCommand {
         }
 
         $root = GARNET_ROOT;
-        $distRoot = $root . DS . 'dist';
+        // dist/ must NOT land under GARNET_ROOT in app-mode — there it's the
+        // vendored framework package dir, wiped by the next composer
+        // install, and (worse) a stray bundle run can then copy the app
+        // into itself (this exact failure was hit for real once — see the
+        // anti-recursion guards in copyDir() below, which this fix makes
+        // largely unnecessary but doesn't remove, as defence in depth).
+        $distRoot = ($isAppMode ? GarnetRunner::$appDir : $root) . DS . 'dist';
         $distApp = $distRoot . DS . $appName;
 
         $publicSrc = GarnetEnv::getPublicDir($appName);
@@ -294,12 +300,13 @@ class GarnetBundleCommand {
         self::step('4/6', 'Copying app');
         $distAppApp = $distApp . DS . $appDirName;
         // WorkDir is entirely moved to the runtime dir — exclude it here.
-        // `dist` is excluded unconditionally: in app-mode GARNET_ROOT (and
-        // hence $distRoot, see above) resolves to the framework dir, which
-        // sits under this very app's own vendor/ — without this exclude a
+        // `dist` is excluded unconditionally: \$distRoot (see above) now
+        // lives under the app's OWN root in app-mode, i.e. directly inside
+        // the very tree this step copies FROM — without this exclude a
         // build recurses into its own not-yet-finished output and copies it
         // into itself, growing without bound (hit this for real: a stray
-        // --skip-build run ballooned to 2.5GB before being killed).
+        // --skip-build run ballooned to 2.5GB before being killed, back
+        // when \$distRoot instead sat under the vendored framework dir).
         $appExcludes = [
             'WorkDir',
             'Public',

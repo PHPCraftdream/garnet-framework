@@ -418,9 +418,19 @@ class GarnetDeployFullCommand {
         return filter_var($detected, FILTER_VALIDATE_IP) !== false ? $detected : '';
     }
 
-    /** Same path GarnetBundleCommand::run() writes its output to. */
+    /**
+     * Same path GarnetBundleCommand::run() writes its output to — must
+     * mirror its own \$isAppMode computation exactly, since this command
+     * calls GarnetBundleCommand::run() in-process just above and then reads
+     * back whatever it wrote. GARNET_ROOT alone would be wrong in app-mode
+     * (it's the vendored framework package dir there, not the app root).
+     */
     private static function distAppPath(string $appName): string {
-        return GARNET_ROOT . DS . 'dist' . DS . $appName;
+        $isAppMode = GarnetRunner::$appDir !== ''
+            && str_replace('\\', '/', (string)realpath(GarnetRunner::$appDir))
+               !== str_replace('\\', '/', (string)realpath(GarnetRunner::$frameworkDir));
+
+        return ($isAppMode ? GarnetRunner::$appDir : GARNET_ROOT) . DS . 'dist' . DS . $appName;
     }
 
     /** @return array{remote_path:string, public_dir:string, public_name:string, framework_dir:string, app_dir:string, runtime_dir:string} */
