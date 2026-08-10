@@ -192,6 +192,12 @@ function resolveStatic(urlPath) {
 	// Normalise and confine to PUBLIC_DIR (no `..` escape).
 	const full = path.normalize(path.join(PUBLIC_DIR, decoded));
 	if (full !== PUBLIC_DIR && !full.startsWith(PUBLIC_DIR + path.sep)) return null;
+	// Allowlist: only extensions with a known-safe MIME type are ever
+	// static-served. Anything else (.php, .phtml, .ini, .env, …) falls
+	// through to the PHP-proxy path instead of being streamed as-is —
+	// otherwise `.php` sources would be leaked verbatim to the client.
+	const ext = path.extname(full).toLowerCase();
+	if (!(ext in MIME)) return null;
 	try {
 		const st = statSync(full);
 		if (st.isFile()) return { full, size: st.size, mtime: st.mtimeMs };
