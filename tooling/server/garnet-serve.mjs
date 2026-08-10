@@ -56,7 +56,13 @@ if (!existsSync(PUBLIC_DIR)) {
 	process.exit(1);
 }
 
-const LOG_DIR = path.join(__dirname, 'logs');
+// GARNET_SERVE_LOG_DIR is set by GarnetServeCommand to the app's own
+// WorkDir/LogJournal/serve/ — in app-mode (composer-vendored consumption)
+// __dirname resolves inside vendor/, which composer install wipes. Fall
+// back to the old behavior for direct/non-vendored invocations.
+const LOG_DIR = process.env.GARNET_SERVE_LOG_DIR
+	? path.resolve(process.env.GARNET_SERVE_LOG_DIR)
+	: path.join(__dirname, 'logs');
 mkdirSync(LOG_DIR, { recursive: true });
 
 // ── opcache / mysqli tuning, identical intent to the old php-cgi pool ───────

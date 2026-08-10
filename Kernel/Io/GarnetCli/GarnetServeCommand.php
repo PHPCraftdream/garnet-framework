@@ -46,6 +46,13 @@ class GarnetServeCommand {
         $appDir = GarnetRunner::$appDir !== '' ? GarnetRunner::$appDir : GARNET_ROOT;
         putenv('COMMON_GARNET_WEB_DIR=' . $appDir . DIRECTORY_SEPARATOR);
 
+        // Same reasoning as COMMON_GARNET_WEB_DIR above: __dirname inside the
+        // .mjs would resolve into vendor/ under app-mode, so pass the app's
+        // own WorkDir/LogJournal/serve/ explicitly instead of letting Node
+        // derive a path from its own script location.
+        putenv('GARNET_SERVE_LOG_DIR=' . GarnetEnv::workDir($appName) . DIRECTORY_SEPARATOR . 'LogJournal'
+            . DIRECTORY_SEPARATOR . 'serve');
+
         $isWindows = DIRECTORY_SEPARATOR === '\\';
         $phpBin = $debug ? 'phpd' : 'php';
         $publicDir = GarnetEnv::getPublicDir($appName);
