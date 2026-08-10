@@ -243,36 +243,68 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session {
             }
 
             $sessionCookie = $this->cookies->get(static::COOKIE_NAME_SESSION);
-            $this->sessionValue = preg_replace('#[^A-z0-9]#', '', $sessionCookie->getValue() . '') . '';
+            $this->sessionValue = preg_replace('#[^A-Za-z0-9]#', '', $sessionCookie->getValue() . '') . '';
 
             if (strlen($this->sessionValue) === static::COOKIE_VALUE_LEN) {
                 return;
             }
 
             if ($createCookie) {
-                // Use randomUtString to embed a microsecond timestamp prefix.
-                // Plain randomString showed observable collisions between
-                // independent dev-server requests on Windows + PHP built-in
-                // server, which let two unrelated contexts share the same
-                // session row in the DB.
-                $this->sessionValue = StrTools::randomUtString(static::COOKIE_VALUE_LEN);
-                $sessionCookie->setValue($this->sessionValue)
-                    ->rememberForever()
-                    ->setPath('/')
-                    ->setSecure($this->isSecureRequest())
-                    ->setHttpOnly(true)
-                    // SameSite=Lax (not the default Strict) so the session
-                    // cookie is sent on top-level navigations coming from
-                    // a different site — magic-link clicks from webmail
-                    // (gmail.com, outlook.com, …) would otherwise arrive
-                    // at example.com WITHOUT the session cookie and the
-                    // user lands on a fresh INPUT_EMAIL phase. CSRF
-                    // protection still holds: we use a separate CSRF
-                    // token on every POST, and Lax keeps the cookie off
-                    // cross-site POST forms.
-                    ->setSameSiteLax();
-                $this->changedCookies = true;
+                $this->issueNewCookie();
             }
+        }
+
+        /**
+         * Mint a brand-new session identifier and write it to the cookie,
+         * discarding whatever value (if any) was previously assigned —
+         * including one supplied by the client before this call. Session
+         * DATA already read/attached under the old identifier is kept in
+         * memory ($sessionData/$sessionId untouched) and will be persisted
+         * under the NEW identifier on the next flush(), since flush() keys
+         * off $this->sessionValue.
+         *
+         * Callers MUST invoke this on every transition into an authenticated
+         * state (e.g. AUTH_PHASE -> PHASE_DONE), not just on first-ever
+         * visit — otherwise an attacker-supplied pre-login cookie value
+         * would be adopted as-is and become a valid authenticated session
+         * once the victim logs in (session fixation).
+         *
+         * @return void
+         * @throws Exception
+         */
+        public function rotate(): void {
+            $this->issueNewCookie();
+        }
+
+        /**
+         * @return void
+         * @throws Exception
+         */
+        protected function issueNewCookie(): void {
+            $sessionCookie = $this->cookies->get(static::COOKIE_NAME_SESSION);
+
+            // Use randomUtString to embed a microsecond timestamp prefix.
+            // Plain randomString showed observable collisions between
+            // independent dev-server requests on Windows + PHP built-in
+            // server, which let two unrelated contexts share the same
+            // session row in the DB.
+            $this->sessionValue = StrTools::randomUtString(static::COOKIE_VALUE_LEN);
+            $sessionCookie->setValue($this->sessionValue)
+                ->rememberForever()
+                ->setPath('/')
+                ->setSecure($this->isSecureRequest())
+                ->setHttpOnly(true)
+                // SameSite=Lax (not the default Strict) so the session
+                // cookie is sent on top-level navigations coming from
+                // a different site — magic-link clicks from webmail
+                // (gmail.com, outlook.com, …) would otherwise arrive
+                // at example.com WITHOUT the session cookie and the
+                // user lands on a fresh INPUT_EMAIL phase. CSRF
+                // protection still holds: we use a separate CSRF
+                // token on every POST, and Lax keeps the cookie off
+                // cross-site POST forms.
+                ->setSameSiteLax();
+            $this->changedCookies = true;
         }
 
         protected array $readDataAsyncLinks = [];

@@ -466,6 +466,12 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
                 $session->setValue('consent_marketing_at', $consentMarketingAt);
             }
 
+            // Rotate the session identifier on the anonymous->authenticated
+            // transition so a pre-login cookie value (possibly planted by
+            // an attacker before the victim logged in, or replayed from the
+            // magic-login flow) can never carry over into an authenticated
+            // session (session fixation).
+            $session->rotate();
             $session->setValue(static::PHASE_KEY, static::PHASE_DONE);
             $session->setValue(Account::SESSION_AUTH_LOGIN, $email);
 

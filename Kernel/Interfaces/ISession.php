@@ -13,6 +13,8 @@ namespace PHPCraftdream\Garnet\Kernel\Interfaces {
 
         public function touchCookie(bool $createCookie = false): void;
 
+        public function rotate(): void;
+
         public function peekCSRF(): string;
 
         public function touchCSRF(): string;

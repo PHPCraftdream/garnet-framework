@@ -495,6 +495,62 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Spec {
             });
         });
 
+        describe('rotate()', function (): void {
+            beforeEach(function (): void {
+                $session = Session::get(false);
+
+                // Initialize cookies via reflection
+                $mockCookies = new MockCookies();
+                $reflection = new ReflectionClass($session);
+                $prop = $reflection->getProperty('cookies');
+                $prop->setValue($session, $mockCookies);
+            });
+
+            it('replaces an already-set session value with a fresh one (session fixation regression guard)', function (): void {
+                $session = Session::get(false);
+
+                // Simulate an attacker-supplied (or otherwise pre-existing)
+                // session value fixed on the cookie BEFORE authentication —
+                // this is exactly the value that must NOT survive login.
+                $reflection = new ReflectionClass($session);
+                $prop = $reflection->getProperty('sessionValue');
+                $prop->setValue($session, 'attacker_fixed_session_value_32');
+                $before = $prop->getValue($session);
+
+                $session->rotate();
+
+                $after = $prop->getValue($session);
+
+                expect($after)->not->toBe($before);
+                expect(strlen($after))->toBe(Session::COOKIE_VALUE_LEN);
+            });
+
+            it('marks cookies as changed so the new value is actually sent to the browser', function (): void {
+                $session = Session::get(false);
+
+                $session->rotate();
+
+                $reflection = new ReflectionClass($session);
+                $prop = $reflection->getProperty('changedCookies');
+
+                expect($prop->getValue($session))->toBe(true);
+            });
+
+            it('writes the new value onto the session cookie object', function (): void {
+                $session = Session::get(false);
+
+                $session->rotate();
+
+                $reflection = new ReflectionClass($session);
+                $cookiesProp = $reflection->getProperty('cookies');
+                $mockCookies = $cookiesProp->getValue($session);
+                $sessionValueProp = $reflection->getProperty('sessionValue');
+
+                expect($mockCookies->cookies[Session::COOKIE_NAME_SESSION]->getValue())
+                    ->toBe($sessionValueProp->getValue($session));
+            });
+        });
+
         describe('isReadCookies()', function (): void {
             it('returns false before reading cookies', function (): void {
                 $session = Session::get(false);

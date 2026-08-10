@@ -393,6 +393,11 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
             }
 
             if ($postCodeStr === $sessionCode) {
+                // Rotate the session identifier on the anonymous->authenticated
+                // transition so a pre-login cookie value (possibly planted by
+                // an attacker before the victim logged in) can never carry
+                // over into an authenticated session (session fixation).
+                $session->rotate();
                 $session->setValue(static::PHASE_KEY, static::PHASE_DONE);
 
                 $session->unsetValues([
