@@ -337,6 +337,13 @@ class GarnetBundleCommand {
             'package-lock.json',
             'r_dump_autoload.bat',
             'seed.php',
+            // Prod test/debug gates and the admin console auth token — none
+            // of these belong in a shipped bundle (see .gitignore comments
+            // and Kernel/Io/GarnetCli/Admin/AdminAuth.php).
+            '.garnet_admin',
+            '.allow_tests',
+            '.test-mode',
+            '.garnet_debug_token',
         ];
 
         if ($noVendor) {

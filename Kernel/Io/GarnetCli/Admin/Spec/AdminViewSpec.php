@@ -32,7 +32,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Admin\Spec {
 
         describe('::dashboardPage', function (): void {
             it('embeds the currentApp + apps list as JSON props', function (): void {
-                $html = AdminView::dashboardPage('Blog', ['Blog', 'Shop', 'Docs']);
+                $html = AdminView::dashboardPage('Blog', ['Blog', 'Shop', 'Docs'], 'csrf-tok');
 
                 expect($html)->toContain('Garnet Admin');
                 // props_json is the JSON_HEX_QUOT-encoded payload — single quotes around
@@ -40,16 +40,17 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Admin\Spec {
                 expect($html)->toContain('currentApp');
                 expect($html)->toContain('Blog');
                 expect($html)->toContain('Shop');
+                expect($html)->toContain('csrf-tok');
             });
 
             it('survives an empty apps list', function (): void {
-                $html = AdminView::dashboardPage('', []);
+                $html = AdminView::dashboardPage('', [], '');
                 expect($html)->toContain('Garnet Admin');
                 expect($html)->toMatch('/<html/i');
             });
 
             it('escapes quotes in the JSON props (no XSS via app name)', function (): void {
-                $html = AdminView::dashboardPage('Mal"icious', ['x']);
+                $html = AdminView::dashboardPage('Mal"icious', ['x'], 'tok');
                 // JSON_HEX_QUOT replaces " with ", so the raw " never reaches
                 // the HTML attribute value boundary.
                 // The literal `Mal"icious` should NOT appear in the rendered page;

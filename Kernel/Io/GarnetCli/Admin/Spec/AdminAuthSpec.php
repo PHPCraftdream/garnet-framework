@@ -195,5 +195,79 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Admin\Spec {
                 expect(AdminAuth::validateCookie('x'))->toBe(false);
             });
         });
+
+        describe('::validateCookie — TTL enforcement', function (): void {
+            it('returns false once the active token is older than the TTL', function (): void {
+                AdminAuth::saveToken('old');
+                AdminAuth::activateToken('old');
+
+                $data = AdminAuth::readToken();
+                $data['created'] = time() - 90000; // > 24h
+                file_put_contents($this->tokenFile, json_encode($data));
+
+                expect(AdminAuth::validateCookie('old'))->toBe(false);
+            });
+
+            it('returns true for a freshly-activated token well within the TTL', function (): void {
+                AdminAuth::saveToken('fresh');
+                AdminAuth::activateToken('fresh');
+
+                expect(AdminAuth::validateCookie('fresh'))->toBe(true);
+            });
+        });
+
+        describe('::csrfToken / ::checkCsrfToken', function (): void {
+            it('returns null when there is no active token', function (): void {
+                expect(AdminAuth::csrfToken())->toBeNull();
+            });
+
+            it('returns a stable, non-empty token once activated', function (): void {
+                AdminAuth::saveToken('sess');
+                AdminAuth::activateToken('sess');
+
+                $a = AdminAuth::csrfToken();
+                $b = AdminAuth::csrfToken();
+
+                expect($a)->not->toBeEmpty();
+                expect($a)->toBe($b);
+                expect($a)->not->toBe('sess'); // never equal to the auth token itself
+            });
+
+            it('checkCsrfToken accepts the matching token and rejects everything else', function (): void {
+                AdminAuth::saveToken('sess2');
+                AdminAuth::activateToken('sess2');
+                $csrf = AdminAuth::csrfToken();
+
+                expect(AdminAuth::checkCsrfToken($csrf))->toBe(true);
+                expect(AdminAuth::checkCsrfToken('wrong'))->toBe(false);
+                expect(AdminAuth::checkCsrfToken(''))->toBe(false);
+            });
+
+            it('checkCsrfToken rejects when there is no active admin session', function (): void {
+                expect(AdminAuth::checkCsrfToken('anything'))->toBe(false);
+            });
+        });
+
+        describe('::issueExecTicket / ::redeemExecTicket', function (): void {
+            it('redeems a freshly issued ticket exactly once, returning the original cmd', function (): void {
+                $ticket = AdminAuth::issueExecTicket('build');
+
+                expect(AdminAuth::redeemExecTicket($ticket))->toBe('build');
+                expect(AdminAuth::redeemExecTicket($ticket))->toBeNull();
+            });
+
+            it('rejects an unknown/malformed ticket', function (): void {
+                expect(AdminAuth::redeemExecTicket('not-a-ticket'))->toBeNull();
+                expect(AdminAuth::redeemExecTicket(''))->toBeNull();
+            });
+
+            it('rejects a ticket older than its TTL', function (): void {
+                $ticket = AdminAuth::issueExecTicket('migration');
+                $file = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'garnet_admin_ticket_' . $ticket;
+                file_put_contents($file, json_encode(['cmd' => 'migration', 'created' => time() - 120]));
+
+                expect(AdminAuth::redeemExecTicket($ticket))->toBeNull();
+            });
+        });
     });
 }

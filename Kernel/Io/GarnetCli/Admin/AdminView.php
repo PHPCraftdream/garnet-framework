@@ -22,8 +22,11 @@ class AdminView {
         return self::twig()->render('denied.twig', ['title' => 'Garnet Admin - Denied']);
     }
 
-    public static function dashboardPage(string $currentApp, array $apps): string {
-        $propsJson = json_encode(['currentApp' => $currentApp, 'apps' => $apps], JSON_HEX_APOS | JSON_HEX_QUOT);
+    public static function dashboardPage(string $currentApp, array $apps, string $csrfToken): string {
+        $propsJson = json_encode(
+            ['currentApp' => $currentApp, 'apps' => $apps, 'csrfToken' => $csrfToken],
+            JSON_HEX_APOS | JSON_HEX_QUOT
+        );
 
         return self::twig()->render('dashboard.twig', [
             'title' => 'Garnet Admin',

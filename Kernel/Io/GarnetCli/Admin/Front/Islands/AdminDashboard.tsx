@@ -4,9 +4,10 @@ import {useState, useRef, useCallback, useEffect} from 'react';
 interface AdminDashboardProps {
     currentApp: string;
     apps: string[];
+    csrfToken: string;
 }
 
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({currentApp, apps}) => {
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({currentApp, apps, csrfToken}) => {
     const [selectedApp, setSelectedApp] = useState(currentApp);
     const [activeApp, setActiveApp] = useState(currentApp);
     const [output, setOutput] = useState('');
@@ -40,27 +41,51 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({currentApp, apps}
         setOutput('$ php garnet ' + cmd + '\n');
         setIsRunning(true);
 
-        const es = new EventSource('/__garnet/api/exec?cmd=' + encodeURIComponent(cmd));
-        eventSourceRef.current = es;
+        // exec is CSRF-protected: EventSource can only issue a plain GET (no
+        // body, no custom headers), so the CSRF-checked step happens here as
+        // a real POST that trades the token for a single-use, short-lived
+        // ticket; the GET below only ever redeems that ticket, never the cmd
+        // directly. See AdminApp::handleExecTicket()/handleExec().
+        fetch('/__garnet/api/exec-ticket', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({cmd, csrf: csrfToken}),
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (!data.ticket) {
+                    appendOutput('Error: ' + (data.error || 'could not start command') + '\n');
+                    setIsRunning(false);
 
-        es.onmessage = (e) => {
-            appendOutput(JSON.parse(e.data) + '\n');
-        };
+                    return;
+                }
 
-        es.addEventListener('done', (e: MessageEvent) => {
-            appendOutput('\nDone (exit ' + e.data + ')\n');
-            es.close();
-            eventSourceRef.current = null;
-            setIsRunning(false);
-        });
+                const es = new EventSource('/__garnet/api/exec?ticket=' + encodeURIComponent(data.ticket));
+                eventSourceRef.current = es;
 
-        es.onerror = () => {
-            appendOutput('\n--- Connection lost ---\n');
-            es.close();
-            eventSourceRef.current = null;
-            setIsRunning(false);
-        };
-    }, [stopCmd, appendOutput]);
+                es.onmessage = (e) => {
+                    appendOutput(JSON.parse(e.data) + '\n');
+                };
+
+                es.addEventListener('done', (e: MessageEvent) => {
+                    appendOutput('\nDone (exit ' + e.data + ')\n');
+                    es.close();
+                    eventSourceRef.current = null;
+                    setIsRunning(false);
+                });
+
+                es.onerror = () => {
+                    appendOutput('\n--- Connection lost ---\n');
+                    es.close();
+                    eventSourceRef.current = null;
+                    setIsRunning(false);
+                };
+            })
+            .catch(err => {
+                appendOutput('Error: ' + err.message + '\n');
+                setIsRunning(false);
+            });
+    }, [stopCmd, appendOutput, csrfToken]);
 
     const switchApp = useCallback(() => {
         // NOTE: raw fetch (not sendPost) is intentional here — the `/__garnet/*`

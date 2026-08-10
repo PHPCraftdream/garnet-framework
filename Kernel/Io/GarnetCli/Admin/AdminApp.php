@@ -2,12 +2,46 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Admin;
 
+use PHPCraftdream\Garnet\Kernel\Core\Env\Env;
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\GarnetEnv;
 
 class AdminApp {
     private const ALLOWED_COMMANDS = ['build', 'build:watch', 'prepare', 'migration'];
 
+    /**
+     * The console is a dev-only tool (proc_open of the `garnet` CLI on the
+     * host it runs on) — it must never be reachable from a production
+     * deploy. Gate on two independent signals: (1) Env::isDevDir() — the
+     * same dev/prod signal the rest of the framework uses, and (2) the
+     * request must originate from loopback, so even a dev box that's
+     * temporarily exposed on a LAN/tunnel doesn't hand out CLI exec to
+     * anyone but the machine itself.
+     *
+     * $_ENV['GARNET_ADMIN_FORCE_DEV'] is a test-only escape hatch (mirrors
+     * the $_ENV['GARNET_ROOT'] override already used throughout this class)
+     * — Env::isDevDir() walks real filesystem markers (.idea/.git/...) that
+     * kahlan specs can't fake without touching disk state outside their
+     * temp dirs.
+     */
+    private static function isDevRequestAllowed(): bool {
+        $isDev = ($_ENV['GARNET_ADMIN_FORCE_DEV'] ?? '') === '1' || Env::isDevDir();
+
+        return $isDev && self::isLoopbackRequest();
+    }
+
+    private static function isLoopbackRequest(): bool {
+        $remoteAddr = $_SERVER['REMOTE_ADDR'] ?? '';
+
+        return in_array($remoteAddr, ['127.0.0.1', '::1'], true);
+    }
+
     public static function handle(string $uri): void {
+        if (!self::isDevRequestAllowed()) {
+            self::sendJson(['error' => 'Not found'], 404);
+
+            return;
+        }
+
         $path = parse_url($uri, PHP_URL_PATH);
         $path = rtrim($path, '/') ?: '/__garnet';
 
@@ -31,7 +65,10 @@ class AdminApp {
             return;
         }
 
-        // Serve admin assets (no auth required — JS/CSS bundles)
+        // Serve admin assets (no auth required — static JS/CSS bundle for the
+        // login/dashboard UI, no secrets embedded; already gated above by
+        // isDevRequestAllowed() and path-traversal-safe via the filename
+        // whitelist in handleAsset()).
         if (str_starts_with($path, '/__garnet/assets/')) {
             self::handleAsset($path);
 
@@ -62,6 +99,7 @@ class AdminApp {
         match ($path) {
             '/__garnet/api/status' => self::handleStatus(),
             '/__garnet/api/app-use' => self::handleAppUse(),
+            '/__garnet/api/exec-ticket' => self::handleExecTicket(),
             '/__garnet/api/exec' => self::handleExec(),
             default => self::sendJson(['error' => 'Not found'], 404),
         };
@@ -82,15 +120,16 @@ class AdminApp {
     }
 
     private static function handleDashboard(): void {
-        $garnetRoot = $_ENV['GARNET_ROOT'];
+        $garnetRoot = $_ENV['GARNET_ROOT'] ?? GARNET_ROOT;
         self::sendHtml(AdminView::dashboardPage(
             GarnetEnv::readAppNameFromRoot($garnetRoot),
             GarnetEnv::listAppsFromRoot($garnetRoot),
+            AdminAuth::csrfToken() ?? '',
         ));
     }
 
     private static function handleStatus(): void {
-        $garnetRoot = $_ENV['GARNET_ROOT'];
+        $garnetRoot = $_ENV['GARNET_ROOT'] ?? GARNET_ROOT;
         self::sendJson([
             'app' => GarnetEnv::readAppNameFromRoot($garnetRoot),
             'apps' => GarnetEnv::listAppsFromRoot($garnetRoot),
@@ -113,7 +152,7 @@ class AdminApp {
             return;
         }
 
-        $garnetRoot = $_ENV['GARNET_ROOT'];
+        $garnetRoot = $_ENV['GARNET_ROOT'] ?? GARNET_ROOT;
         $appDir = $garnetRoot . DIRECTORY_SEPARATOR . 'Apps' . DIRECTORY_SEPARATOR . $app;
 
         if (!is_dir($appDir)) {
@@ -126,8 +165,36 @@ class AdminApp {
         self::sendJson(['ok' => true, 'app' => $app]);
     }
 
-    private static function handleExec(): void {
-        $cmd = $_GET['cmd'] ?? '';
+    /**
+     * exec is fundamentally a GET request (EventSource has no way to send a
+     * request body or custom headers, and it's the only browser-native way
+     * to stream proc_open output), which means a bare GET can't carry a CSRF
+     * token in the body the way the rest of the framework's POST-based CSRF
+     * checks do. Split it in two: this endpoint is a real POST, requires the
+     * admin-console CSRF token in the body, and — only if that checks out —
+     * mints a single-use, short-lived ticket. handleExec() (GET, via
+     * EventSource) then redeems the ticket instead of trusting the cookie
+     * alone. An attacker driving a same-site GET navigation (the actual
+     * SameSite=Lax CSRF vector) can never obtain a ticket because they can't
+     * complete this POST cross-site.
+     */
+    private static function handleExecTicket(): void {
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+            self::sendJson(['error' => 'Method not allowed'], 405);
+
+            return;
+        }
+
+        $body = json_decode(file_get_contents('php://input'), true);
+        $csrf = (string)($body['csrf'] ?? '');
+
+        if (!AdminAuth::checkCsrfToken($csrf)) {
+            self::sendJson(['error' => 'Bad CSRF token'], 403);
+
+            return;
+        }
+
+        $cmd = (string)($body['cmd'] ?? '');
 
         if (!in_array($cmd, self::ALLOWED_COMMANDS, true)) {
             self::sendJson(['error' => 'Command not allowed'], 400);
@@ -135,7 +202,20 @@ class AdminApp {
             return;
         }
 
-        $garnetRoot = $_ENV['GARNET_ROOT'];
+        self::sendJson(['ticket' => AdminAuth::issueExecTicket($cmd)]);
+    }
+
+    private static function handleExec(): void {
+        $ticket = (string)($_GET['ticket'] ?? '');
+        $cmd = AdminAuth::redeemExecTicket($ticket);
+
+        if ($cmd === null || !in_array($cmd, self::ALLOWED_COMMANDS, true)) {
+            self::sendJson(['error' => 'Command not allowed'], 400);
+
+            return;
+        }
+
+        $garnetRoot = $_ENV['GARNET_ROOT'] ?? GARNET_ROOT;
         $garnetBin = $garnetRoot . DIRECTORY_SEPARATOR . 'garnet';
 
         header('Content-Type: text/event-stream');
