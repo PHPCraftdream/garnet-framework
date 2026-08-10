@@ -7,7 +7,9 @@ cron runner drains.
 
 ## Configure SMTP once
 
-`<App>/WorkDir/Config/email.ini`:
+`<App>/WorkDir/ConfigDev/email.ini` for local dev, `<App>/WorkDir/Config/email.ini`
+in production (see [`core.md`](../core.md#env--execution-environment-detection) for
+which one a given checkout actually reads):
 
 ```ini
 enabled  = 1

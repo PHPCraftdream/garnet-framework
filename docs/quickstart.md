@@ -80,15 +80,33 @@ support and the Playwright deps under `Tests/`.
 
 ## First run
 
+`app:create` already wrote `.env` (`APP_NAME`) and the app ships working
+dev-default config in `WorkDir/Config/` and `WorkDir/ConfigDev/`
+(`app.ini`, `db.ini`, `email.ini` — DB disabled by default, generic
+placeholder credentials). So the app **runs immediately with zero manual
+config**:
+
 ```bash
-cp .env.example .env        # fill in APP_NAME, DB credentials, etc.
-php garnet config:init      # seed WorkDir/Config/ from templates
-php garnet migration        # run DB migrations (skip if you have no DB yet)
-php garnet build            # build frontend assets
-php garnet serve            # Node front-server + PHP worker pool (port 8001)
+php garnet build             # build frontend assets
+php garnet serve             # Node front-server + PHP worker pool (port 8001)
 ```
 
 Open <http://localhost:8001/> in your browser.
+
+To actually use a database, edit the `.ini` files with real credentials
+and enable them (`enabled = 1` in `db.ini`), then run migrations:
+
+```bash
+php garnet migration         # run DB migrations
+```
+
+Which `.ini` set you're editing depends on `Env::isDevDir()` — on a
+normal IDE checkout (`.vscode`/`.idea`/etc. present near the project
+root) the app reads `WorkDir/ConfigDev/`; otherwise it reads
+`WorkDir/Config/`. See [`core.md`](core.md#env--execution-environment-detection)
+for the exact rule. `php garnet config:init` (re-)seeds both from
+`WorkDir/ConfigExample/` — mainly useful for the deploy-only
+`ssh.ini`/`deploy.ini`, which aren't part of the default scaffolding.
 
 ## Re-cloning an existing app
 

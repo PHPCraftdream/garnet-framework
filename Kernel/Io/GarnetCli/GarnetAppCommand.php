@@ -202,7 +202,8 @@ class GarnetAppCommand {
         echo "App '{$name}' created at {$rel}." . PHP_EOL;
         echo 'Next steps:' . PHP_EOL;
         echo "  cd {$rel}" . PHP_EOL;
-        echo '  # Edit WorkDir/Config/*.ini (DB credentials, base_url, etc.)' . PHP_EOL;
+        echo '  # Edit WorkDir/ConfigDev/*.ini for local dev (DB credentials, base_url, etc.)' . PHP_EOL;
+        echo '  # — or WorkDir/Config/*.ini, whichever Env::isDevDir() picks for this checkout' . PHP_EOL;
         echo '  php garnet migration' . PHP_EOL;
         echo '  php garnet build' . PHP_EOL;
         echo '  php garnet serve' . PHP_EOL;

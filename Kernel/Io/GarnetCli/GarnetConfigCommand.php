@@ -5,9 +5,14 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli;
 /**
  * App-level config bootstrap.
  *
- *   config:init           Copy WorkDir/ConfigExample/*.ini → WorkDir/Config/
- *   config:init --dev     Copy WorkDir/ConfigExample/*.ini → WorkDir/ConfigDev/
- *   config:init --all     Both Config/ and ConfigDev/
+ *   config:init           Copy WorkDir/ConfigExample/*.ini → both WorkDir/Config/ and WorkDir/ConfigDev/
+ *   config:init --dev     Copy WorkDir/ConfigExample/*.ini → WorkDir/ConfigDev/ only
+ *   config:init --prod    Copy WorkDir/ConfigExample/*.ini → WorkDir/Config/ only
+ *
+ * `app.ini`/`db.ini`/`email.ini` already ship with usable dev-default
+ * placeholders directly in Config/ and ConfigDev/ (see the app template) —
+ * this command is mainly for seeding the deploy-only `ssh.ini`/`deploy.ini`
+ * that aren't part of that default scaffolding.
  *
  * Non-destructive by default: skips files that already exist.
  * Add --force to overwrite existing files.
@@ -25,12 +30,12 @@ class GarnetConfigCommand {
 
     private static function init(array $args): void {
         $dev = in_array('--dev',   $args, true);
-        $all = in_array('--all',   $args, true);
+        $prod = in_array('--prod', $args, true);
         $force = in_array('--force', $args, true);
 
-        // --all implies both; bare invocation writes only Config/
-        $writeConfig = !$dev || $all;
-        $writeConfigDev = $dev || $all;
+        // Bare invocation seeds both; --dev/--prod narrow to just one.
+        $writeConfig = $prod || !$dev;
+        $writeConfigDev = $dev || !$prod;
 
         $appName = GarnetEnv::requireAppName();
         $appDir = GarnetEnv::getAppDir($appName);
@@ -114,9 +119,9 @@ class GarnetConfigCommand {
 
     private static function help(): void {
         echo 'Usage:' . PHP_EOL;
-        echo '  php garnet config:init           Copy ConfigExample/*.ini → Config/  (non-destructive)' . PHP_EOL;
-        echo '  php garnet config:init --dev     Copy ConfigExample/*.ini → ConfigDev/  (non-destructive)' . PHP_EOL;
-        echo '  php garnet config:init --all     Both Config/ and ConfigDev/' . PHP_EOL;
+        echo '  php garnet config:init           Copy ConfigExample/*.ini → Config/ AND ConfigDev/  (non-destructive)' . PHP_EOL;
+        echo '  php garnet config:init --dev     Copy ConfigExample/*.ini → ConfigDev/ only' . PHP_EOL;
+        echo '  php garnet config:init --prod    Copy ConfigExample/*.ini → Config/ only' . PHP_EOL;
         echo '  php garnet config:init --force   Overwrite existing files' . PHP_EOL;
     }
 }

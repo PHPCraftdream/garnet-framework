@@ -27,10 +27,12 @@ the code.
 `Kernel/Core/Env/Env.php` answers three questions:
 
 - **Am I running in CLI or Web?** `Env::isCmd()` / `Env::isWeb()`.
-- **Is this a dev checkout?** `Env::isDevDir()` — looks for `.idea`,
-  `.vscode`, `.git`, etc. in the path. Used to gate destructive
-  dev-only operations (test seeding, dev-login bypass) so they
-  cannot run on prod.
+- **Is this a dev checkout?** `Env::isDevDir()` — walks up from the
+  framework's install location looking for an IDE-marker directory
+  (`.idea`, `.vs`, `.xcodeproj`, `.vscode`, `.atom` — **not** `.git`).
+  Used to gate destructive dev-only operations (test seeding,
+  dev-login bypass) so they cannot run on prod, and to pick
+  `WorkDir/ConfigDev/` over `WorkDir/Config/` for reading app config.
 - **Does this class implement that interface?** Reflection-cached
   variant — the framework calls this on every bundle init.
 

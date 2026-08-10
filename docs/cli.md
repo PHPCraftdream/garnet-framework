@@ -46,20 +46,26 @@ Apps/<App>/WorkDir/
 │   ├── email.ini
 │   ├── ssh.ini
 │   └── deploy.ini
-├── ConfigDev/          # your local values (gitignored)
-│   └── …
-└── Config/             # prod configs (on the server)
-    └── …
+├── ConfigDev/          # your local values — app.ini/db.ini/email.ini
+│   └── …                ship with working dev-default placeholders
+└── Config/             # prod configs — same three ship with placeholders too;
+    └── …                real deploys overwrite them with real values on the host
 ```
 
-Seed a working copy from the templates:
+`app.ini`/`db.ini`/`email.ini` already ship with usable placeholders in
+both `Config/` and `ConfigDev/` — a freshly scaffolded app needs no
+`config:init` call to run. The command exists to (re-)seed from
+`ConfigExample/`, and is mainly useful for the deploy-only
+`ssh.ini`/`deploy.ini`, which aren't part of that default scaffolding:
 
 ```bash
-php garnet config:init           # ConfigExample/ → Config/
-php garnet config:init --dev     # ConfigExample/ → ConfigDev/
+php garnet config:init           # ConfigExample/ → both Config/ and ConfigDev/
+php garnet config:init --dev     # ConfigExample/ → ConfigDev/ only
+php garnet config:init --prod    # ConfigExample/ → Config/ only
 ```
 
-The command is non-destructive — existing files are not overwritten.
+The command is non-destructive — existing files are not overwritten
+(pass `--force` to overwrite).
 
 ### Help
 
@@ -136,7 +142,7 @@ For the migration file structure see [`database.md`](database.md).
 
 | Command | What it does |
 |---|---|
-| `config:init` | Seeds `Config/` (or `ConfigDev/` with `--dev`) from `ConfigExample/`. Doesn't overwrite existing files. |
+| `config:init` | Seeds `Config/` and `ConfigDev/` (or just one with `--dev`/`--prod`) from `ConfigExample/`. Doesn't overwrite existing files. |
 | `perms:fix` | `chmod` write permissions on `WorkDir/{LogJournal,TwigCache,Upload,FileCache}`. |
 | `uninstall` | Removes a deployed bundle from the host (via ssh). Bundle-deploys only. |
 
