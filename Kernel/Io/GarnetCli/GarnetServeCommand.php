@@ -67,8 +67,10 @@ class GarnetServeCommand {
         }
 
         // Tear down any leftover workers / a previous Node server bound to
-        // our ports, so a re-`serve` starts clean.
-        self::killStale($isWindows);
+        // our ports, so a re-`serve` starts clean. Scoped to THIS app's own
+        // --public dir so a second Garnet app's dev server (or unrelated PHP
+        // processes on the machine) are left alone.
+        self::killStale($isWindows, $publicDir);
 
         $nodeBin = getenv('GARNET_NODE') ?: 'node';
 
@@ -86,42 +88,79 @@ class GarnetServeCommand {
             $cmdArgs[] = '--debug';
         }
 
-        $cmd = implode(' ', array_map(self::quote(...), $cmdArgs));
-
         // Hand the terminal to Node (foreground) so Ctrl-C tears the whole
-        // pool down via the .mjs SIGINT handler.
-        passthru($cmd, $code);
+        // pool down via the .mjs SIGINT handler. proc_open with an argv
+        // array bypasses the shell entirely — no quoting/escaping needed,
+        // and no shell-metacharacter injection risk from app paths.
+        $descriptors = [0 => STDIN, 1 => STDOUT, 2 => STDERR];
+        $proc = proc_open($cmdArgs, $descriptors, $pipes, null, null, ['bypass_shell' => true]);
 
-        exit($code);
+        if ($proc === false) {
+            echo 'Failed to start Node serve process' . PHP_EOL;
+
+            exit(1);
+        }
+
+        exit(proc_close($proc));
     }
 
     /**
      * Kill leftover php / node serve processes from a previous run. The
      * Node server respawns its own workers, so we only need to clear the
      * field before launching a fresh one.
+     *
+     * Scoped to THIS app: every worker/server process we spawn carries the
+     * app's own --public dir on its commandline (php -S ... -t <publicDir>
+     * ...; node garnet-serve.mjs ... --public=<publicDir>), so filtering on
+     * that string is precise even with multiple Garnet apps / dev servers
+     * running on the same machine.
      */
-    private static function killStale(bool $isWindows): void {
+    private static function killStale(bool $isWindows, string $publicDir): void {
         if ($isWindows) {
             $myPid = getmypid();
-            self::exec("taskkill /IM php.exe     /F /FI \"PID ne {$myPid}\" 2>NUL");
-            self::exec("taskkill /IM phpd.exe    /F /FI \"PID ne {$myPid}\" 2>NUL");
-            self::exec('taskkill /IM php-cgi.exe /F 2>NUL');
-            // Only the garnet-serve node process — match on the script name
-            // via WMIC so we don't nuke unrelated node tooling (rspack watch).
-            self::exec('wmic process where "name=\'node.exe\' and commandline like \'%garnet-serve.mjs%\'" call terminate 2>NUL');
+            $needle = self::wmicLikeEscape($publicDir);
+            // php -S workers for THIS app carry -t <publicDir> on their
+            // commandline; php-cgi.exe is not spawned anywhere in this
+            // architecture (php -S workers only), so there's nothing to kill.
+            self::exec('wmic process where "name=\'php.exe\' and commandline like \'%' . $needle . '%\' and not ProcessId=' . $myPid . '" call terminate 2>NUL');
+            self::exec('wmic process where "name=\'phpd.exe\' and commandline like \'%' . $needle . '%\' and not ProcessId=' . $myPid . '" call terminate 2>NUL');
+            // Only the garnet-serve node process for THIS app — match on the
+            // script name AND this app's own --public dir via WMIC so we
+            // don't nuke unrelated node tooling (rspack watch) or another
+            // app's dev server.
+            self::exec('wmic process where "name=\'node.exe\' and commandline like \'%garnet-serve.mjs%\' and commandline like \'%' . $needle . '%\'" call terminate 2>NUL');
 
             return;
         }
 
-        // Unix: pkill by the worker-router / serve-script signatures.
-        self::exec("pkill -f 'garnet-serve.mjs' 2>/dev/null");
-        self::exec("pkill -f 'php-worker-router.php' 2>/dev/null");
+        // Unix: pkill matches a single POSIX extended-regex pattern against
+        // the full commandline, so fold both signature (script name) and
+        // scope (this app's own --public dir) into one pattern, regex-escaping
+        // the path since it can contain characters that are ERE metachars
+        // (., +, (, ), etc. — e.g. an app dir like "R&D" is fine, but "R.D"
+        // or "app(v2)" would otherwise silently under- or over-match).
+        $publicDirPattern = preg_quote($publicDir, '/');
+        self::exec('pkill -f ' . escapeshellarg('garnet-serve\.mjs.*' . $publicDirPattern) . ' 2>/dev/null');
+        // Worker commandline is `php ... -t <publicDir> <router>` — the
+        // public dir precedes the router script, not the other way round.
+        self::exec('pkill -f ' . escapeshellarg($publicDirPattern . '.*php-worker-router\.php') . ' 2>/dev/null');
     }
 
-    private static function quote(string $arg): string {
-        // Windows `cmd` and POSIX shells both accept double-quoted args for
-        // the paths/values we pass (no embedded double quotes here).
-        return str_contains($arg, ' ') ? '"' . $arg . '"' : $arg;
+    /** Escape a value for a WMIC `LIKE` clause (single-quoted WQL string). */
+    private static function wmicLikeEscape(string $value): string {
+        // `\` is WQL's own escape character, so it must be doubled first —
+        // otherwise a literal `\_` or `\%` inside a Windows path (very
+        // common: `_`/`%` are legal path chars) would be parsed as an
+        // escaped wildcard instead of two literal characters. Also, an
+        // un-doubled trailing `\` (a path ending right before our `%`
+        // wildcard) breaks the WQL parser outright ("Invalid query").
+        $value = str_replace('\\', '\\\\', $value);
+
+        return str_replace(
+            ['%', '_', "'"],
+            ['[%]', '[_]', "''"],
+            $value,
+        );
     }
 
     private static function exec(string $cmd): void {
