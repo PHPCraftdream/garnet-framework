@@ -66,16 +66,19 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
                 throw new DbException('Link is busy');
             }
 
-            $this->busy = true;
             $this->sql = $sql;
+            $this->callBack = $callBack ? $callBack(...) : null;
 
             // Logger::get(Logger::SYSTEM_LOGGER)->append('sql', $sql);
 
-            $this->link->query($sql, MYSQLI_ASYNC);
+            if (!$this->link->query($sql, MYSQLI_ASYNC)) {
+                $this->sql = null;
+                $this->callBack = null;
 
-            if ($callBack) {
-                $this->callBack = $callBack(...);
+                throw new DbException("Failed to dispatch async query: [{$sql}]");
             }
+
+            $this->busy = true;
 
             return $this;
         }
@@ -164,6 +167,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
             } catch (Throwable $e) {
                 $sql = $this->sql;
                 $this->sql = null;
+                $this->callBack = null;
                 $this->busy = false;
 
                 throw new DbException($e->getMessage() . "\n on query: [{$sql}]\n", $e->getCode(), $e);

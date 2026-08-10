@@ -11,6 +11,12 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
     use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
 
     class DbPool implements IDbPool {
+        // pollFinishAll() must never spin forever: a link stuck busy=true
+        // (e.g. queryAsync()'s dispatch failing without throwing) would
+        // otherwise hang the request permanently under runtimes with no
+        // max_execution_time (e.g. `php -S`'s dev server).
+        protected const POLL_FINISH_ALL_TIMEOUT_SECONDS = 10.0;
+
         protected static ?DbPool $instance = null;
 
         protected function __construct() {
@@ -208,6 +214,8 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
         public function pollFinishAll(): void {
             // See pollLinks() above for the rationale — same usleep ->
             // mysqli_poll() switch, applied to the pool's own link set.
+            $deadline = microtime(true) + self::POLL_FINISH_ALL_TIMEOUT_SECONDS;
+
             while (true) {
                 BenchmarkLog::log('pollFinishAll');
 
@@ -221,6 +229,13 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
 
                 if (empty($busyMysqli)) {
                     return;
+                }
+
+                if (microtime(true) >= $deadline) {
+                    throw new DbException(
+                        'pollFinishAll() timed out after ' . self::POLL_FINISH_ALL_TIMEOUT_SECONDS
+                        . 's waiting for ' . count($busyMysqli) . ' busy link(s) to finish'
+                    );
                 }
 
                 $reads = $errors = $reject = $busyMysqli;
