@@ -3,6 +3,7 @@
 namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\Spec {
     use DateTimeInterface;
     use PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\AuthMiddleware;
+    use PHPCraftdream\Garnet\Kernel\Core\GlobalReqParams\GlobalReqParams;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookies;
     use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
@@ -412,6 +413,42 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\Spec {
                 $result = AuthMiddleware::checkCSRF($mockGlobals);
 
                 expect($result)->toBe(false);
+            });
+
+            it('processCSRF() still enforces CSRF on a real POST that carries X-Http-Method: GET (S7 regression)', function (): void {
+                // A real POST spoofing X-Http-Method: GET must NOT be able to
+                // skip CSRF checking — isPost() must be based on the real
+                // REQUEST_METHOD, not the overridable httpMethod().
+                $globals = GlobalReqParams::from(
+                    ['REQUEST_METHOD' => 'POST', 'HTTP_X_HTTP_METHOD' => 'GET'],
+                    [],
+                    [AuthMiddleware::CSRF_TOKEN => 'missing_on_purpose'],
+                    [],
+                    [],
+                );
+
+                allow('PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Session')->toReceive('touchCSRF')->andReturn('session_token');
+
+                $result = AuthMiddleware::processCSRF($globals);
+
+                expect($result)->not->toBeNull();
+                expect($result->getStatusCode())->toBe(403);
+            });
+
+            it('resolves httpMethod() to DELETE for routing while isPost() still gates CSRF on a real POST', function (): void {
+                // Legitimate method-override use case: a real POST escalated to
+                // DELETE for routing purposes must still be treated as a POST
+                // for CSRF-gating purposes.
+                $globals = GlobalReqParams::from(
+                    ['REQUEST_METHOD' => 'POST', 'HTTP_X_HTTP_METHOD' => 'DELETE'],
+                    [],
+                    [],
+                    [],
+                    [],
+                );
+
+                expect($globals->httpMethod())->toBe('DELETE');
+                expect($globals->isPost())->toBe(true);
             });
         });
 

@@ -117,12 +117,26 @@ namespace PHPCraftdream\Garnet\Kernel\Core\GlobalReqParams {
             return $uri;
         }
 
+        /** Method-override targets a real POST may escalate to via X-Http-Method. Never includes GET/POST. */
+        private const OVERRIDABLE_METHODS = ['PUT', 'PATCH', 'DELETE'];
+
         public function httpMethod(): string {
-            return $this->_server['HTTP_X_HTTP_METHOD'] ?? ($this->_server['REQUEST_METHOD'] ?? 'GET');
+            $realMethod = strtoupper((string)($this->_server['REQUEST_METHOD'] ?? 'GET'));
+            $override = $this->_server['HTTP_X_HTTP_METHOD'] ?? null;
+
+            // Only a genuine POST may be escalated to PUT/PATCH/DELETE (the
+            // standard method-override use case for clients that can't send
+            // those verbs directly). This can never be used to downgrade a
+            // real POST into something CSRF/origin checks would skip.
+            if ($realMethod === 'POST' && $override !== null && in_array(strtoupper($override), static::OVERRIDABLE_METHODS, true)) {
+                return strtoupper($override);
+            }
+
+            return $realMethod;
         }
 
         public function isPost(): bool {
-            return strtolower($this->httpMethod()) === 'post';
+            return strtolower((string)($this->_server['REQUEST_METHOD'] ?? 'GET')) === 'post';
         }
 
         public function isEmptyPost(): bool {
@@ -130,7 +144,7 @@ namespace PHPCraftdream\Garnet\Kernel\Core\GlobalReqParams {
         }
 
         public function isGet(): bool {
-            return strtolower($this->httpMethod()) === 'get';
+            return strtolower((string)($this->_server['REQUEST_METHOD'] ?? 'GET')) === 'get';
         }
 
         public function isLocalhost(): bool {

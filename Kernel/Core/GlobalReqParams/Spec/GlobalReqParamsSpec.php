@@ -124,9 +124,34 @@ describe('GlobalReqParams', function (): void {
             expect($params->httpMethod())->toBe('GET');
         });
 
-        it('prioritizes HTTP_X_HTTP_METHOD', function (): void {
+        it('allows a real POST to be overridden to PUT via X-Http-Method', function (): void {
             $params = GlobalReqParams::from(['REQUEST_METHOD' => 'POST', 'HTTP_X_HTTP_METHOD' => 'PUT'], [], [], [], []);
             expect($params->httpMethod())->toBe('PUT');
+        });
+
+        it('allows a real POST to be overridden to PATCH via X-Http-Method', function (): void {
+            $params = GlobalReqParams::from(['REQUEST_METHOD' => 'POST', 'HTTP_X_HTTP_METHOD' => 'PATCH'], [], [], [], []);
+            expect($params->httpMethod())->toBe('PATCH');
+        });
+
+        it('allows a real POST to be overridden to DELETE via X-Http-Method', function (): void {
+            $params = GlobalReqParams::from(['REQUEST_METHOD' => 'POST', 'HTTP_X_HTTP_METHOD' => 'DELETE'], [], [], [], []);
+            expect($params->httpMethod())->toBe('DELETE');
+        });
+
+        it('does NOT allow X-Http-Method to downgrade a real POST to GET', function (): void {
+            $params = GlobalReqParams::from(['REQUEST_METHOD' => 'POST', 'HTTP_X_HTTP_METHOD' => 'GET'], [], [], [], []);
+            expect($params->httpMethod())->toBe('POST');
+        });
+
+        it('does NOT honor X-Http-Method on a real GET request', function (): void {
+            $params = GlobalReqParams::from(['REQUEST_METHOD' => 'GET', 'HTTP_X_HTTP_METHOD' => 'DELETE'], [], [], [], []);
+            expect($params->httpMethod())->toBe('GET');
+        });
+
+        it('ignores an unrecognized X-Http-Method override value', function (): void {
+            $params = GlobalReqParams::from(['REQUEST_METHOD' => 'POST', 'HTTP_X_HTTP_METHOD' => 'TRACE'], [], [], [], []);
+            expect($params->httpMethod())->toBe('POST');
         });
     });
 
@@ -144,6 +169,16 @@ describe('GlobalReqParams', function (): void {
         it('returns false for GET method', function (): void {
             $params = GlobalReqParams::from(['REQUEST_METHOD' => 'GET'], [], [], [], []);
             expect($params->isPost())->toBe(false);
+        });
+
+        it('still returns true when a real POST carries X-Http-Method: GET (CSRF bypass regression)', function (): void {
+            $params = GlobalReqParams::from(['REQUEST_METHOD' => 'POST', 'HTTP_X_HTTP_METHOD' => 'GET'], [], [], [], []);
+            expect($params->isPost())->toBe(true);
+        });
+
+        it('still returns true when a real POST carries X-Http-Method: DELETE (legitimate override must not affect isPost)', function (): void {
+            $params = GlobalReqParams::from(['REQUEST_METHOD' => 'POST', 'HTTP_X_HTTP_METHOD' => 'DELETE'], [], [], [], []);
+            expect($params->isPost())->toBe(true);
         });
     });
 
