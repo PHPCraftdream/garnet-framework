@@ -162,6 +162,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload {
                 subDir: 'pending',
                 storedName: $pending->storedName,
                 displayName: $pending->originalName,
+                mimeType: $pending->mimeType,
                 accessCheck: fn () => true, // already verified ownership above
             );
         }

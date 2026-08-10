@@ -429,6 +429,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Controllers {
                 subDir: self::UPLOAD_SUBDIR,
                 storedName: $attachment['stored_name'],
                 displayName: $attachment['original_name'],
+                mimeType: $attachment['mime_type'],
                 accessCheck: fn () => (int)$ticket['account_id'] === $accountId,
             );
         }

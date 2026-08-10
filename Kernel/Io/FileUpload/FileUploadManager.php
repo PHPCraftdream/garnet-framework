@@ -87,11 +87,17 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload {
             $storedName = bin2hex(random_bytes(16)) . ($ext ? ".{$ext}" : '');
             $destPath = $this->baseDir . $storedName;
 
+            // Detect the real MIME type from file content BEFORE moving, since
+            // finfo needs the still-present upload tmp file — mirrors the same
+            // finfo-based check validateFile() already performs, so storage and
+            // validation never disagree about what this file actually is.
+            $finfo = new finfo(FILEINFO_MIME_TYPE);
+            $realMime = $finfo->file($file['tmp_name']);
+            $mimeType = $realMime !== false ? $realMime : (Mime::getFileMime($originalName) ?? 'application/octet-stream');
+
             if (!move_uploaded_file($file['tmp_name'], $destPath)) {
                 return null;
             }
-
-            $mimeType = Mime::getFileMime($originalName) ?? 'application/octet-stream';
 
             return new UploadedFileInfo(
                 storedName: $storedName,

@@ -54,6 +54,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
                     subDir: 'support',
                     storedName: 'safe.pdf',
                     displayName: 'safe.pdf',
+                    mimeType: 'application/pdf',
                     accessCheck: fn () => false,
                 );
 
@@ -67,6 +68,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
                     subDir: 'support',
                     storedName: 'safe.pdf',
                     displayName: 'safe.pdf',
+                    mimeType: 'application/pdf',
                     accessCheck: fn () => true,
                 );
 
@@ -82,12 +84,88 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
                     subDir: 'support',
                     storedName: 'safe.pdf',
                     displayName: 'My Document.pdf',
+                    mimeType: 'application/pdf',
                     accessCheck: fn () => true,
                     inline: false,
                 );
 
                 expect($resp->getHeaderLine('Content-Disposition'))->toContain('attachment');
                 expect($resp->getHeaderLine('Content-Disposition'))->toContain('My Document.pdf');
+            });
+
+            it('sends the correct Content-Length and full byte-identical body for a normal small file', function (): void {
+                $resp = SecureFileServing::serve(
+                    uploadDir: $this->tempDir,
+                    subDir: 'support',
+                    storedName: 'safe.pdf',
+                    displayName: 'safe.pdf',
+                    mimeType: 'application/pdf',
+                    accessCheck: fn () => true,
+                );
+
+                expect($resp->getHeaderLine('Content-Length'))->toBe((string)strlen('%PDF-1.4 fake'));
+                expect((string)$resp->getBody())->toBe('%PDF-1.4 fake');
+            });
+
+            it('always sends X-Content-Type-Options: nosniff', function (): void {
+                $resp = SecureFileServing::serve(
+                    uploadDir: $this->tempDir,
+                    subDir: 'support',
+                    storedName: 'safe.pdf',
+                    displayName: 'safe.pdf',
+                    mimeType: 'application/pdf',
+                    accessCheck: fn () => true,
+                );
+
+                expect($resp->getHeaderLine('X-Content-Type-Options'))->toBe('nosniff');
+            });
+        });
+
+        describe('::serve — stored MIME is the source of truth, not the display filename', function (): void {
+            it('forces attachment for image/svg+xml even when inline=true is requested (stored XSS mitigation)', function (): void {
+                $resp = SecureFileServing::serve(
+                    uploadDir: $this->tempDir,
+                    subDir: 'support',
+                    storedName: 'safe.pdf',
+                    displayName: 'logo.svg',
+                    mimeType: 'image/svg+xml',
+                    accessCheck: fn () => true,
+                    inline: true,
+                );
+
+                expect($resp->getHeaderLine('Content-Disposition'))->toContain('attachment');
+                expect($resp->getHeaderLine('Content-Type'))->toBe('image/svg+xml');
+            });
+
+            it('forces attachment for text/html even when inline=true is requested', function (): void {
+                $resp = SecureFileServing::serve(
+                    uploadDir: $this->tempDir,
+                    subDir: 'support',
+                    storedName: 'safe.pdf',
+                    displayName: 'page.html',
+                    mimeType: 'text/html',
+                    accessCheck: fn () => true,
+                    inline: true,
+                );
+
+                expect($resp->getHeaderLine('Content-Disposition'))->toContain('attachment');
+            });
+
+            it('serves using the stored MIME even when the display filename extension implies something else', function (): void {
+                // Display name says .svg, but the validated stored mime is a real PDF —
+                // the response must reflect the stored column, not a sniff of the fake name.
+                $resp = SecureFileServing::serve(
+                    uploadDir: $this->tempDir,
+                    subDir: 'support',
+                    storedName: 'safe.pdf',
+                    displayName: 'renamed-as-fake.svg',
+                    mimeType: 'application/pdf',
+                    accessCheck: fn () => true,
+                    inline: true,
+                );
+
+                expect($resp->getHeaderLine('Content-Type'))->toBe('application/pdf');
+                expect($resp->getHeaderLine('Content-Disposition'))->toBe('inline');
             });
         });
 
@@ -98,6 +176,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
                     subDir: 'support',
                     storedName: '../SECRET.txt',
                     displayName: 'innocent.pdf',
+                    mimeType: 'application/pdf',
                     accessCheck: fn () => true,
                 );
 
@@ -112,6 +191,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
                     subDir: 'support',
                     storedName: 'nonexistent.pdf',
                     displayName: 'nonexistent.pdf',
+                    mimeType: 'application/pdf',
                     accessCheck: fn () => true,
                 );
 
@@ -124,6 +204,34 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
                     subDir: 'support',
                     storedName: '../SECRET.txt',
                     displayName: 'safe.pdf',
+                    mimeType: 'application/pdf',
+                    accessCheck: fn () => true,
+                );
+
+                expect($resp->getStatusCode())->toBe(404);
+            });
+
+            it('returns 404 when subDir contains a traversal segment', function (): void {
+                $resp = SecureFileServing::serve(
+                    uploadDir: $this->tempDir,
+                    subDir: '../',
+                    storedName: 'SECRET.txt',
+                    displayName: 'innocent.pdf',
+                    mimeType: 'application/pdf',
+                    accessCheck: fn () => true,
+                );
+
+                expect($resp->getStatusCode())->toBe(404);
+                expect((string)$resp->getBody())->not->toContain('classified');
+            });
+
+            it('returns 404 when subDir contains an embedded traversal segment (support/../..)', function (): void {
+                $resp = SecureFileServing::serve(
+                    uploadDir: $this->tempDir,
+                    subDir: 'support/../..',
+                    storedName: 'safe.pdf',
+                    displayName: 'safe.pdf',
+                    mimeType: 'application/pdf',
                     accessCheck: fn () => true,
                 );
 
@@ -136,19 +244,25 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
                 $this->fn = new ReflectionMethod(SecureFileServing::class, 'isInlineSafe');
             });
 
-            it('returns true for image types', function (): void {
+            it('returns true for image types (excluding SVG)', function (): void {
                 expect($this->fn->invoke(null, 'image/jpeg'))->toBe(true);
                 expect($this->fn->invoke(null, 'image/png'))->toBe(true);
-                expect($this->fn->invoke(null, 'image/svg+xml'))->toBe(true);
             });
 
             it('returns true for PDF', function (): void {
                 expect($this->fn->invoke(null, 'application/pdf'))->toBe(true);
             });
 
-            it('returns true for text/* (e.g. text/plain, text/html)', function (): void {
+            it('returns true for text/* except text/html and text/xml', function (): void {
                 expect($this->fn->invoke(null, 'text/plain'))->toBe(true);
-                expect($this->fn->invoke(null, 'text/html'))->toBe(true);
+                expect($this->fn->invoke(null, 'text/csv'))->toBe(true);
+            });
+
+            it('returns false for SVG, HTML and XML — active-content types are never inline-safe', function (): void {
+                expect($this->fn->invoke(null, 'image/svg+xml'))->toBe(false);
+                expect($this->fn->invoke(null, 'text/html'))->toBe(false);
+                expect($this->fn->invoke(null, 'text/xml'))->toBe(false);
+                expect($this->fn->invoke(null, 'application/xhtml+xml'))->toBe(false);
             });
 
             it('returns false for executable / archive / binary types', function (): void {
