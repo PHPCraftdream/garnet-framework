@@ -5,6 +5,16 @@ namespace PHPCraftdream\Garnet\Kernel\Core\Env {
     use ReflectionException;
 
     class Env {
+        /**
+         * Explicit override for {@see self::isDevDir()}: set to "dev" or
+         * "prod" to short-circuit the IDE-marker-directory heuristic
+         * entirely. Distinct from GlobalReqParams's per-request GARNET_DEV
+         * (an HTTP/CLI request flag) — this one governs process-wide
+         * "which checkout is this" detection, so it is read via getenv()
+         * rather than $_SERVER.
+         */
+        public const ENV_MODE = 'GARNET_ENV';
+
         public static function isCmd(): bool {
             return php_sapi_name() === 'cli';
         }
@@ -32,11 +42,32 @@ namespace PHPCraftdream\Garnet\Kernel\Core\Env {
          * @return bool
          */
         public static function isDevDir(): bool {
-            $dirItems = explode(DIRECTORY_SEPARATOR, self::resolveAnchorDir());
+            $mode = getenv(self::ENV_MODE);
+
+            if ($mode === 'dev') {
+                return true;
+            }
+
+            if ($mode === 'prod') {
+                return false;
+            }
+
+            return self::hasDevMarkerAbove(self::resolveAnchorDir());
+        }
+
+        /**
+         * Walks up from $anchorDir (inclusive), up to 6 levels, looking for
+         * an IDE-marker directory in each ancestor. Extracted from
+         * {@see self::isDevDir()} so the ancestor-walk itself is testable
+         * against an arbitrary directory tree, independent of the
+         * process's real install location and of GARNET_ENV.
+         */
+        public static function hasDevMarkerAbove(string $anchorDir): bool {
+            $dirItems = explode(DIRECTORY_SEPARATOR, $anchorDir);
             $dirStr = '';
             $dirs = [];
 
-            foreach ($dirItems as $ind => $item) {
+            foreach ($dirItems as $item) {
                 $dirStr .= $item . DIRECTORY_SEPARATOR;
                 $dirs[] = $dirStr;
             }
@@ -44,19 +75,11 @@ namespace PHPCraftdream\Garnet\Kernel\Core\Env {
             $dirs = array_reverse($dirs);
             $dirs = array_slice($dirs, 0, 6);
 
-            $devFiles = ['.idea' => true, '.vs' => true, '.xcodeproj' => true, '.vscode' => true, '.atom' => true];
+            $devDirNames = ['.idea', '.vs', '.xcodeproj', '.vscode', '.atom'];
 
             foreach ($dirs as $dir) {
-                $files = glob($dir . '/\.*');
-
-                if (empty($files)) {
-                    return false;
-                }
-
-                foreach ($files as $file) {
-                    $fileBase = basename($file);
-
-                    if (!empty($devFiles[$fileBase])) {
+                foreach ($devDirNames as $devDirName) {
+                    if (is_dir($dir . $devDirName)) {
                         return true;
                     }
                 }

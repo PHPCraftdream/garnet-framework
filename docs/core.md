@@ -27,11 +27,13 @@ the code.
 `Kernel/Core/Env/Env.php` answers three questions:
 
 - **Am I running in CLI or Web?** `Env::isCmd()` / `Env::isWeb()`.
-- **Is this a dev checkout?** `Env::isDevDir()` — walks up from the
+- **Is this a dev checkout?** `Env::isDevDir()` — set the `GARNET_ENV`
+  environment variable to `dev` or `prod` to decide this explicitly;
+  when unset, falls back to walking up (up to 6 levels) from the
   framework's install location looking for an IDE-marker directory
-  (`.idea`, `.vs`, `.xcodeproj`, `.vscode`, `.atom` — **not** `.git`).
-  Used to gate destructive dev-only operations (test seeding,
-  dev-login bypass) so they cannot run on prod, and to pick
+  (`.idea`, `.vs`, `.xcodeproj`, `.vscode`, `.atom` — **not** `.git`)
+  in each ancestor. Used to gate destructive dev-only operations (test
+  seeding, dev-login bypass) so they cannot run on prod, and to pick
   `WorkDir/ConfigDev/` over `WorkDir/Config/` for reading app config.
 - **Does this class implement that interface?** Reflection-cached
   variant — the framework calls this on every bundle init.
