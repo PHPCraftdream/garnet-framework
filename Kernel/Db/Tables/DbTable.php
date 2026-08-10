@@ -421,10 +421,9 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
             int|float|string $value,
             ?callable $callback = null,
         ): IDbMySQLiLink {
-            $where = QueryTools::fieldVal($field, $value);
-            $sql = "SELECT * FROM `{$this->getTableName()}` WHERE {$where};";
+            $sql = "SELECT * FROM `{$this->getTableName()}` WHERE `{$field}` = ?;";
 
-            return $this->getQueryEx()->exAsync($sql, [], fn ($rows) => $callback($rows));
+            return $this->getQueryEx()->exAsync($sql, [$value], fn ($rows) => $callback($rows));
         }
 
         /**
@@ -435,10 +434,9 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
          * @throws IniConfigException
          */
         public function simpleSelectByField(string $field, int|float|string $value): ?array {
-            $where = QueryTools::fieldVal($field, $value);
-            $sql = "SELECT * FROM `{$this->getTableName()}` WHERE {$where};";
+            $sql = "SELECT * FROM `{$this->getTableName()}` WHERE `{$field}` = ?;";
 
-            $result = $this->getQueryEx()->exFetch($sql, []);
+            $result = $this->getQueryEx()->exFetch($sql, [$value]);
 
             return $result ?: null;
         }
@@ -492,10 +490,9 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
             int|float|string $value,
             ?callable $callback = null,
         ): IDbMySQLiLink {
-            $where = QueryTools::fieldVal($field, $value);
-            $sql = "SELECT * FROM `{$this->getTableName()}` WHERE {$where};";
+            $sql = "SELECT * FROM `{$this->getTableName()}` WHERE `{$field}` = ?;";
 
-            return $this->getQueryEx()->exAsync($sql, [], fn ($rows) => $callback($rows[0] ?? null));
+            return $this->getQueryEx()->exAsync($sql, [$value], fn ($rows) => $callback($rows[0] ?? null));
         }
 
         /**
@@ -506,10 +503,9 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
          * @throws IniConfigException
          */
         public function simpleSelectOneByField(string $field, int|float|string $value): ?array {
-            $where = QueryTools::fieldVal($field, $value);
-            $sql = "SELECT * FROM `{$this->getTableName()}` WHERE {$where};";
+            $sql = "SELECT * FROM `{$this->getTableName()}` WHERE `{$field}` = ?;";
 
-            $result = $this->getQueryEx()->ex($sql, []);
+            $result = $this->getQueryEx()->ex($sql, [$value]);
 
             return $result[0] ?? null;
         }

@@ -109,6 +109,14 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
                 port: $port,
             );
 
+            // Charset must be set on the connection itself (not just via
+            // "SET NAMES" in options[MYSQL_ATTR_INIT_COMMAND], which is
+            // optional and easy to omit) so that mysqli_real_escape_string()
+            // in QueryTools::escapeSqlParam() escapes using the connection's
+            // actual charset. Without this, multi-byte-unsafe charsets can
+            // make manual/real_escape_string escaping bypassable.
+            $mysqli->set_charset('utf8mb4');
+
             $options = $config->param('options');
             $initCmd = $options['MYSQL_ATTR_INIT_COMMAND'] ?? null;
 
@@ -162,9 +170,17 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
          * @throws DbException
          */
         public function queryAsync(string $sql, array $args = [], ?callable $callBack = null): IDbMySQLiLink {
-            $newSql = empty($args) ? $sql : QueryTools::buildSql($sql, $args);
+            $link = $this->getLink();
 
-            return $this->getLink()->queryAsync($newSql, $callBack);
+            // mysqli has no async prepared-statement execution (MYSQLI_ASYNC
+            // only works with mysqli::query() on a raw string, never with
+            // mysqli_stmt::execute()), so the async path can't use real
+            // bound parameters like the sync path (DbMySQLiLink::query())
+            // does. Values are escaped via mysqli_real_escape_string()
+            // against this connection (charset-aware) and interpolated.
+            $newSql = empty($args) ? $sql : QueryTools::buildSql($sql, $args, $link->getMysqli());
+
+            return $link->queryAsync($newSql, $callBack);
         }
 
         /**

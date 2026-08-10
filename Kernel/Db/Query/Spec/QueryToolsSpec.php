@@ -175,19 +175,35 @@ describe('QueryTools', function (): void {
             expect(QueryTools::escapeSqlParam("it's"))->toBe("it\\'s");
             expect(QueryTools::escapeSqlParam('say "hello"'))->toBe('say \\"hello\\"');
             expect(QueryTools::escapeSqlParam('back\\slash'))->toBe('back\\\\slash');
-            expect(QueryTools::escapeSqlParam("hello\tworld"))->toBe('hello\\tworld');
+            expect(QueryTools::escapeSqlParam("hello\tworld"))->toBe("hello\tworld");
             expect(QueryTools::escapeSqlParam("line1\nline2"))->toBe('line1\\nline2');
         });
 
-        it('handles non-printable characters and whitespace', function (): void {
-            expect(QueryTools::escapeSqlParam("test\x00"))->toBe('test ');
-            expect(QueryTools::escapeSqlParam('test    multiple   spaces'))->toBe('test multiple spaces');
+        it('handles non-printable characters and whitespace without corrupting them', function (): void {
+            // NUL is escaped (not stripped/replaced) so binary-safe data round-trips.
+            expect(QueryTools::escapeSqlParam("test\x00"))->toBe('test\\0');
+            // Multiple spaces are preserved, not collapsed to one.
+            expect(QueryTools::escapeSqlParam('test    multiple   spaces'))->toBe('test    multiple   spaces');
         });
 
         it('handles encoding and edge cases', function (): void {
             expect(QueryTools::escapeSqlParam("\x80\x81"))->toBe(''); // Non-UTF-8
             expect(QueryTools::escapeSqlParam(''))->toBe('');
             expect(QueryTools::escapeSqlParam('Héllo wörld'))->toBe('Héllo wörld');
+        });
+
+        it('preserves Unicode combining marks and format characters instead of stripping them', function (): void {
+            // Hebrew niqqud (combining marks, \p{M})
+            expect(QueryTools::escapeSqlParam('שָׁלוֹם'))->toBe('שָׁלוֹם');
+            // Arabic harakat
+            expect(QueryTools::escapeSqlParam('مَرْحَبًا'))->toBe('مَرْحَبًا');
+            // Devanagari matras/virama
+            expect(QueryTools::escapeSqlParam('नमस्ते'))->toBe('नमस्ते');
+            // Thai vowel marks
+            expect(QueryTools::escapeSqlParam('สวัสดี'))->toBe('สวัสดี');
+            // ZWJ emoji sequence (format character \p{Cf})
+            expect(QueryTools::escapeSqlParam("\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}"))
+                ->toBe("\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}");
         });
     });
 

@@ -1,6 +1,8 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Db\Query {
+    use mysqli;
+
     class QueryTools {
         public static function makeInsertBatchNamed(
             string $table,
@@ -213,7 +215,31 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
 
         // --------------------------------------------------------------------------------------------------------------
 
-        public static function escapeSqlParam(string|int|float|bool $value): string {
+        /**
+         * Escapes a scalar for interpolation into a raw SQL string.
+         *
+         * INTERNAL. This exists only to support {@see DbPool::queryAsync()},
+         * which cannot use real bound parameters because mysqli has no async
+         * prepared-statement execution (MYSQLI_ASYNC only works with
+         * mysqli::query() on a raw string). It is NOT a general-purpose
+         * sanitization helper — do not use it in app-level code as a
+         * substitute for parameterized queries. Prefer `?`/`:name`
+         * placeholders through `DbTable`/`QueryEx`/`DbPool::query()`
+         * (the sync path), which use real `mysqli::prepare()` + bound
+         * params.
+         *
+         * When a `mysqli` connection is supplied, escaping is delegated to
+         * `mysqli_real_escape_string()` against that connection so it is
+         * charset-aware and does not corrupt combining marks / multi-byte
+         * sequences. Without a connection, a conservative fallback is used
+         * that assumes an ASCII-safe connection charset (utf8mb4/utf8);
+         * callers on the async DB path always supply the connection.
+         *
+         * @param string|int|float|bool $value
+         * @param mysqli|null $link
+         * @return string
+         */
+        public static function escapeSqlParam(string|int|float|bool $value, ?mysqli $link = null): string {
             if (is_numeric($value)) {
                 return (string)$value;
             }
@@ -226,29 +252,36 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
                 return '';
             }
 
-            $value = preg_replace('/[^\p{L}\p{N}\p{P}\p{Z}\p{S}\r\n\t]/u', ' ', $value);
-
-            if (empty($value)) {
-                return '';
+            if ($link !== null) {
+                return $link->real_escape_string($value);
             }
 
-            $value = str_replace(
-                ['\\', "'", '"', "\t", "\r", "\n"],
-                ['\\\\', "\'", '\"', '\\t', '\\r', '\\n'],
+            // Mirrors mysqli_real_escape_string()'s escape table (NUL, \n,
+            // \r, \, ', ", Ctrl-Z) for callers without a live connection.
+            return str_replace(
+                ['\\', "'", '"', "\x00", "\n", "\r", "\x1a"],
+                ['\\\\', "\\'", '\\"', '\\0', '\\n', '\\r', '\\Z'],
                 $value
             );
-
-            return preg_replace('/\s+/u', ' ', $value);
         }
 
-        public static function buildSql(string $sql, array $args = []): string {
+        /**
+         * INTERNAL — see {@see self::escapeSqlParam()}. Not a general-purpose
+         * sanitization helper; do not use for app-level query building.
+         *
+         * @param string $sql
+         * @param array $args
+         * @param mysqli|null $link
+         * @return string
+         */
+        public static function buildSql(string $sql, array $args = [], ?mysqli $link = null): string {
             if (empty($args)) {
                 return $sql;
             }
 
             $index = -1;
 
-            $sql = preg_replace_callback('/[?]/', function () use (&$args, &$index) {
+            $sql = preg_replace_callback('/[?]/', function () use (&$args, &$index, $link) {
                 $index += 1;
 
                 $isset = array_key_exists($index, $args);
@@ -257,10 +290,10 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
                     return 'NULL';
                 }
 
-                return $isset ? '"' . static::escapeSqlParam($args[$index]) . '"' : '?';
+                return $isset ? '"' . static::escapeSqlParam($args[$index], $link) . '"' : '?';
             }, $sql);
 
-            $sql = preg_replace_callback('/:([a-zA-Z_][a-zA-Z0-9_]*)/', function ($matches) use ($args) {
+            $sql = preg_replace_callback('/:([a-zA-Z_][a-zA-Z0-9_]*)/', function ($matches) use ($args, $link) {
                 $key = $matches[1];
                 $isset = array_key_exists($key, $args);
 
@@ -269,13 +302,13 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
                 }
 
                 if ($isset) {
-                    return '"' . static::escapeSqlParam($args[$key]) . '"';
+                    return '"' . static::escapeSqlParam($args[$key], $link) . '"';
                 }
 
                 $key = ':' . $key;
 
                 if (array_key_exists($key, $args)) {
-                    return '"' . static::escapeSqlParam($args[$key]) . '"';
+                    return '"' . static::escapeSqlParam($args[$key], $link) . '"';
                 }
 
                 return $matches[0];
@@ -286,12 +319,22 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
 
         // --------------------------------------------------------------------------------------------------------------
 
+        /**
+         * INTERNAL — see {@see self::escapeSqlParam()}. Not a general-purpose
+         * sanitization helper. Prefer `?`/`:name` placeholders with bound
+         * args instead of interpolating this fragment into a query string.
+         */
         public static function fieldVal(string $fieldName, string|int|float $value): string {
             $v = is_string($value) ? static::escapeSqlParam($value) : $value;
 
             return "`{$fieldName}` = \"{$v}\"";
         }
 
+        /**
+         * INTERNAL — see {@see self::escapeSqlParam()}. Not a general-purpose
+         * sanitization helper. Prefer `?`/`:name` placeholders with bound
+         * args instead of interpolating this fragment into a query string.
+         */
         public static function fieldValIn(string $fieldName, array $array): string {
             $res = join(
                 ', ',
