@@ -18,7 +18,7 @@ namespace PHPCraftdream\GarnetMySql {
 
     // Minimal init: just load configs so DB connection works
     $configDir = $appDir . DIRECTORY_SEPARATOR . 'WorkDir' . DIRECTORY_SEPARATOR;
-    $configDir .= (Env::isDevDir() ? 'ConfigDev' : 'ConfigProd') . DIRECTORY_SEPARATOR;
+    $configDir .= (Env::isDevDir() ? 'ConfigDev' : 'Config') . DIRECTORY_SEPARATOR;
 
     IniConfig::defineDbIni($configDir . 'db.ini');
 
