@@ -35,7 +35,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Mailer {
                     $config->paramString('user'),
                     $config->paramString('password'),
                     $config->paramInt('port', 465),
-                    ['verify_peer' => $config->paramBool('verify_peer', false)]
+                    ['verify_peer' => $config->paramBool('verify_peer', true)]
                 );
 
                 $transport = (new SymfonySmtpFactory())->create($dsnObj);

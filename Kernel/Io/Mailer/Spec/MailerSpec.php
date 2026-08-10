@@ -6,6 +6,7 @@ use PHPCraftdream\Garnet\Kernel\Interfaces\IMailer;
 use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
 use PHPCraftdream\Garnet\Kernel\Io\Mailer\Mailer;
 use ReflectionClass;
+use Symfony\Component\Mailer\Transport\Dsn;
 use Symfony\Component\Mime\Email;
 
 describe('Mailer', function (): void {
@@ -131,6 +132,35 @@ verify_peer=0
             $mailer = Mailer::get();
 
             expect($mailer)->toBeAnInstanceOf(IMailer::class);
+
+            unlink($iniFile);
+        });
+
+        it('defaults verify_peer to true when the config key is absent', function (): void {
+            $iniFile = tempnam(sys_get_temp_dir(), 'email_test');
+            file_put_contents($iniFile, '
+scheme=smtp
+host=localhost
+user=test
+password=testpass
+enabled=0
+from=noreply@example.com
+');
+
+            IniConfig::defineEmailIni($iniFile);
+
+            $config = IniConfig::email();
+
+            $dsn = new Dsn(
+                $config->paramString('scheme', 'smtp'),
+                $config->paramString('host'),
+                $config->paramString('user'),
+                $config->paramString('password'),
+                $config->paramInt('port', 465),
+                ['verify_peer' => $config->paramBool('verify_peer', true)]
+            );
+
+            expect($dsn->getOption('verify_peer'))->toBe(true);
 
             unlink($iniFile);
         });
