@@ -413,3 +413,176 @@ jobs:
       - name: Verify built assets
         working-directory: ${{ runner.temp }}/TestApp
         run: php garnet build:check
+
+  vendored-app-mode:
+    name: Vendored app-mode — config:init → build → serve → DB smoke
+    runs-on: ubuntu-latest
+    # See the e2e job above for why Env::isDevDir() needs an explicit
+    # override in CI. This job's whole point is exercising the app as a
+    # real Composer consumer would run it (GARNET_ROOT resolving through
+    # vendor/, not a framework checkout at the repo root), so it deliberately
+    # mirrors dependency-install's vendoring recipe instead of zero-config/
+    # e2e's in-place scaffold-from-checkout.
+    env:
+      GARNET_ENV: dev
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: test
+          MYSQL_USER: test
+          MYSQL_PASSWORD: test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -u root -proot"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          path: garnet-framework
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, json, pdo, mysqli, intl
+          coverage: none
+          tools: composer:v2
+
+      # Same recipe as the dependency-install job: a path repo with
+      # symlink:false makes Composer physically copy the framework into
+      # vendor/phpcraftdream/garnet-framework instead of symlinking it —
+      # the closest approximation of a real Packagist install without
+      # depending on a live published release existing for every commit.
+      # Verified locally that GarnetRunner::resolveFrameworkDir() (which
+      # realpath()s the Composer-reported install path) lands on this
+      # physical vendored copy, not the bootstrap checkout, confirming this
+      # produces the same GARNET_ROOT-resolves-to-vendor-dir behaviour a
+      # real Packagist install would.
+      - name: Create consumer project
+        run: |
+          mkdir -p "${{ runner.temp }}/consumer"
+          cd "${{ runner.temp }}/consumer"
+          composer init \
+            --name=test/consumer \
+            --description="CI consumer project" \
+            --stability=dev \
+            --no-interaction
+          composer config repositories.local \
+            '{"type":"path","url":"'"$GITHUB_WORKSPACE/garnet-framework"'","options":{"symlink":false}}'
+          composer config minimum-stability dev
+          composer config prefer-stable true
+
+      - name: Install garnet-framework as dependency
+        working-directory: ${{ runner.temp }}/consumer
+        run: |
+          GARNET_SKIP_NODE_SETUP=1 composer require phpcraftdream/garnet-framework:@dev --no-interaction --no-progress
+
+      # Scaffold an app via the vendor-installed CLI (not the checkout).
+      - name: Scaffold TestApp via vendor/bin/garnet
+        working-directory: ${{ runner.temp }}/consumer
+        run: |
+          GARNET_SKIP_NODE_SETUP=1 php vendor/bin/garnet app:create TestApp --target="${{ runner.temp }}/TestApp"
+
+      - name: composer install in TestApp
+        working-directory: ${{ runner.temp }}/TestApp
+        run: GARNET_SKIP_NODE_SETUP=1 composer install --no-progress --no-interaction
+
+      # App node deps + Playwright browsers (no --skip-playwright — this job
+      # runs the real Playwright smoke suite below).
+      - name: TestApp node deps + Playwright browsers
+        working-directory: ${{ runner.temp }}/TestApp
+        run: php garnet setup --skip-composer
+
+      # T2: the first command a genuinely new user runs, per docs/quickstart.md
+      # ("php garnet config:init" seeds ssh.ini/deploy.ini from
+      # ConfigExample/). Non-destructive — db.ini/app.ini/email.ini already
+      # ship with dev defaults in ConfigDev/ and are left alone here; the DB
+      # wiring below edits ConfigDev/db.ini directly to point at the CI
+      # MySQL service.
+      - name: garnet config:init
+        working-directory: ${{ runner.temp }}/TestApp
+        run: php garnet config:init
+
+      # Point the scaffold's dev DB config at the CI MySQL service and
+      # enable it. host=127.0.0.1 (not "localhost" — PHP/mysqli treats
+      # literal "localhost" as a Unix socket request, which fails against
+      # Docker service containers) — same reasoning as the bundle-tests job.
+      - name: Wire TestApp db.ini to the MySQL service
+        working-directory: ${{ runner.temp }}/TestApp
+        run: |
+          DB_INI="WorkDir/ConfigDev/db.ini"
+          sed -i \
+            -e 's/^enabled = 0/enabled = 1/' \
+            -e 's/^dsn = .*/dsn = "mysql:host=127.0.0.1;port=3306;dbname=test;charset=utf8mb4"/' \
+            -e 's/^dbname = .*/dbname = "test"/' \
+            -e 's/^user = .*/user = "test"/' \
+            -e 's/^password = .*/password = "test"/' \
+            "$DB_INI"
+          echo 'host = "127.0.0.1"' >> "$DB_INI"
+          echo 'port = 3306' >> "$DB_INI"
+          cat "$DB_INI"
+
+      - name: Wait for MySQL
+        run: |
+          for i in {1..30}; do
+            if mysqladmin ping -h 127.0.0.1 -P 3306 -u test -ptest --silent; then
+              echo "MySQL up"; exit 0
+            fi
+            sleep 2
+          done
+          echo "MySQL never came up"; exit 1
+
+      # T4: run the app's real migration chain against the real vendored
+      # install — CMDMigration::migrate() self-bootstraps the tracker table
+      # on a fresh DB, so this is the same bare command the docs tell users
+      # to run.
+      - name: garnet migration
+        working-directory: ${{ runner.temp }}/TestApp
+        run: php garnet migration
+
+      - name: Build TestApp
+        working-directory: ${{ runner.temp }}/TestApp
+        run: php garnet build
+
+      # Serve + test in ONE step — a background process started in a
+      # separate step does not survive into the next one on GitHub-hosted
+      # runners (see the e2e job above). Runs the magic-link spec, which
+      # exercises EmailAuthMiddleware end to end against the real MySQL
+      # service (session_data + accounts rows via mysql2), addressing T4 —
+      # no other CI job runs DB + HTTP together.
+      - name: Serve + DB-backed Playwright smoke
+        working-directory: ${{ runner.temp }}/TestApp
+        run: |
+          php garnet serve > /tmp/garnet-serve.log 2>&1 &
+          SERVER_PID=$!
+          up=0
+          for i in $(seq 1 30); do
+            if curl --fail --silent http://localhost:8001/ > /dev/null; then up=1; break; fi
+            sleep 2
+          done
+          if [ "$up" != "1" ]; then
+            echo "Server did not come up in time." >&2
+            echo "--- garnet serve log ---" >&2
+            cat /tmp/garnet-serve.log >&2 || true
+            echo "--- curl verbose (last attempt) ---" >&2
+            curl -v http://localhost:8001/ 2>&1 >&2 || true
+            echo "--- PHP error log (if any) ---" >&2
+            find WorkDir -iname "*.log" -exec sh -c 'echo "== {} =="; cat "{}"' \; 2>/dev/null || true
+            kill "$SERVER_PID" 2>/dev/null || true
+            exit 1
+          fi
+          echo "Server is up — running Playwright."
+          npm --prefix Tests test -- specs/framework-bundle/magic-link.spec.ts
+          status=$?
+          kill "$SERVER_PID" 2>/dev/null || true
+          exit $status
