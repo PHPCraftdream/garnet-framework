@@ -230,6 +230,17 @@ class GarnetEnv {
 
     public static function listAppsFromRoot(string $garnetRoot): array {
         $appsDir = $garnetRoot . DIRECTORY_SEPARATOR . 'Apps';
+
+        // In app-mode there's no sibling Apps/ dir to scan (the app IS its
+        // own repo root) — scandir() on a missing path throws a warning and
+        // returns false, which foreach() then also warns on. Both the CLI
+        // (`app:list`) and the web /__garnet/ dashboard call this; on the
+        // web side the warnings print before headers are sent, corrupting
+        // the response.
+        if (!is_dir($appsDir)) {
+            return [];
+        }
+
         $apps = [];
 
         foreach (scandir($appsDir) as $entry) {
