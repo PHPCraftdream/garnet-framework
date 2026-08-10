@@ -94,7 +94,14 @@ const PHP_INI = [
 /** @type {{ port:number, proc:import('node:child_process').ChildProcess, inflight:number }[]} */
 const pool = [];
 
-function spawnWorker(index) {
+// Respawn backoff: rapid crash loops (e.g. port already in use) back off
+// exponentially and eventually give up on that slot instead of spamming
+// stderr / spawn() forever.
+const RESPAWN_BASE_DELAY_MS = 200;
+const RESPAWN_MAX_DELAY_MS = 5000;
+const RESPAWN_MAX_ATTEMPTS = 8;
+
+function spawnWorker(index, failureCount = 0) {
 	const port = BASE_PORT + index;
 	const iniArgs = PHP_INI.flatMap((kv) => ['-d', kv]);
 	const errLog = path.join(LOG_DIR, `php-worker-${port}.log`);
@@ -115,13 +122,35 @@ function spawnWorker(index) {
 
 	const entry = { port, proc, inflight: 0 };
 
+	proc.on('error', (err) => {
+		console.error(`[garnet-serve] failed to spawn PHP worker — check --php-bin: ${PHP_BIN}\n${err.message}`);
+	});
+
 	proc.on('exit', (code, signal) => {
 		if (shuttingDown) return;
+
+		if (failureCount + 1 >= RESPAWN_MAX_ATTEMPTS) {
+			console.error(
+				`[garnet-serve] worker :${port} exited (code=${code} signal=${signal}) — ` +
+				`${RESPAWN_MAX_ATTEMPTS} consecutive failures, giving up on this slot`,
+			);
+			return;
+		}
+
 		// A worker died mid-run (JIT crash, OOM, fatal). Respawn it so the
 		// pool self-heals — same resilience nginx got from max_fails=0.
-		console.error(`[garnet-serve] worker :${port} exited (code=${code} signal=${signal}) — respawning`);
-		const i = pool.findIndex((w) => w === entry);
-		if (i >= 0) pool[i] = spawnWorker(index);
+		// Exponential backoff avoids a tight spawn/exit loop when the cause
+		// is persistent (e.g. the port is already bound by another instance).
+		const delay = Math.min(RESPAWN_BASE_DELAY_MS * 2 ** failureCount, RESPAWN_MAX_DELAY_MS);
+		console.error(
+			`[garnet-serve] worker :${port} exited (code=${code} signal=${signal}) — ` +
+			`respawning in ${delay}ms (attempt ${failureCount + 1}/${RESPAWN_MAX_ATTEMPTS})`,
+		);
+		setTimeout(() => {
+			if (shuttingDown) return;
+			const i = pool.findIndex((w) => w === entry);
+			if (i >= 0) pool[i] = spawnWorker(index, failureCount + 1);
+		}, delay).unref();
 	});
 
 	return entry;
@@ -226,10 +255,43 @@ function serveStatic(res, file, method) {
 	createReadStream(file.full).pipe(res);
 }
 
+// RFC 7230 §6.1 hop-by-hop headers — never forward these verbatim between
+// the reverse-proxy layer and the upstream PHP worker's own HTTP handling.
+const HOP_BY_HOP_HEADERS = new Set([
+	'connection',
+	'keep-alive',
+	'proxy-authenticate',
+	'proxy-authorization',
+	'te',
+	'trailer',
+	'transfer-encoding',
+	'upgrade',
+]);
+
+function stripHopByHopHeaders(headers) {
+	const out = {};
+	for (const [key, value] of Object.entries(headers)) {
+		if (!HOP_BY_HOP_HEADERS.has(key.toLowerCase())) out[key] = value;
+	}
+	return out;
+}
+
 // ── Proxy to a php -S worker ────────────────────────────────────────────────
 function proxy(req, res) {
 	const worker = pickWorker(req);
 	worker.inflight++;
+
+	// Guard so the decrement can never double-fire — 'close' on the
+	// client-facing response fires reliably on success, client-abort, and
+	// upstream error alike, whereas upstream 'end'/'error' only cover two
+	// of those three cases and leave inflight permanently inflated on abort.
+	let inflightReleased = false;
+	function releaseInflight() {
+		if (inflightReleased) return;
+		inflightReleased = true;
+		worker.inflight--;
+	}
+	res.on('close', releaseInflight);
 
 	const options = {
 		host: '127.0.0.1',
@@ -240,13 +302,11 @@ function proxy(req, res) {
 	};
 
 	const upstream = http.request(options, (upRes) => {
-		res.writeHead(upRes.statusCode ?? 502, upRes.headers);
+		res.writeHead(upRes.statusCode ?? 502, stripHopByHopHeaders(upRes.headers));
 		upRes.pipe(res);
-		upRes.on('end', () => { worker.inflight--; });
 	});
 
 	upstream.on('error', (err) => {
-		worker.inflight--;
 		if (!res.headersSent) {
 			res.writeHead(502, { 'Content-Type': 'text/plain; charset=utf-8' });
 		}
