@@ -37,6 +37,25 @@ namespace PHPCraftdream\Garnet\Kernel\Core\GlobalReqParams {
 
         protected static ?array $post = null;
 
+        /**
+         * Clears the cached `$post` snapshot built by {@see currentPost()}.
+         *
+         * Harmless no-op requirement under traditional php-fpm / `php -S`
+         * process models: each request runs in a fresh process (or the
+         * static is naturally reset between worker cycles as this
+         * framework uses them today), so nothing currently calls this.
+         *
+         * It exists for persistent-runtime integrations (RoadRunner,
+         * Swoole, FrankenPHP, …) where the PHP process — and therefore
+         * this class's statics — survives across multiple requests. Such
+         * an integration MUST call `GlobalReqParams::reset()` at the start
+         * of every request it handles, or a later request on the same
+         * worker will silently reuse the previous request's POST body.
+         */
+        public static function reset(): void {
+            static::$post = null;
+        }
+
         public static function currentPost(): array {
             if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
                 return [];

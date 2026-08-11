@@ -8,6 +8,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Ssh\Spec {
     use PHPCraftdream\Garnet\Kernel\Exceptions\SshException;
     use PHPCraftdream\Garnet\Kernel\Io\Ssh\SshClient;
     use PHPCraftdream\Garnet\Kernel\Io\Ssh\SshConfig;
+    use ReflectionMethod;
     use Throwable;
 
     describe('SshClient', function (): void {
@@ -198,6 +199,33 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Ssh\Spec {
             it('defaults local to basename(remote) when omitted', function (): void {
                 $argv = ($this->newClient)()->buildGetArgv('/abs/path/some.log');
                 expect(end($argv))->toBe('some.log');
+            });
+        });
+
+        describe('::tempKeyDir (C9)', function (): void {
+            $callTempKeyDir = function (SshClient $client): string {
+                $method = new ReflectionMethod(SshClient::class, 'tempKeyDir');
+                $method->setAccessible(true);
+
+                return $method->invoke($client);
+            };
+
+            it('prefers /dev/shm when it exists and is writable (POSIX)', function () use ($callTempKeyDir): void {
+                if (PHP_OS_FAMILY === 'Windows' || !is_dir('/dev/shm') || !is_writable('/dev/shm')) {
+                    return; // No tmpfs available on this platform/runner — nothing to assert.
+                }
+
+                $dir = $callTempKeyDir(($this->newClient)());
+                expect($dir)->toBe('/dev/shm');
+            });
+
+            it('falls back to sys_get_temp_dir() when /dev/shm is unavailable', function () use ($callTempKeyDir): void {
+                if (PHP_OS_FAMILY !== 'Windows' && is_dir('/dev/shm') && is_writable('/dev/shm')) {
+                    return; // /dev/shm is available here — the fallback branch isn't exercised.
+                }
+
+                $dir = $callTempKeyDir(($this->newClient)());
+                expect($dir)->toBe(sys_get_temp_dir());
             });
         });
     });

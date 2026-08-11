@@ -118,7 +118,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router {
             // branch naturally; legacy URIs that still include the prefix
             // (e.g. /system/page/...) are stripped here so that both
             // shapes dispatch to the same controller.
-            if (static::$routePrefix !== '' && str_starts_with($uri, static::$routePrefix)) {
+            if (static::$routePrefix !== '' && ($uri === static::$routePrefix || str_starts_with($uri, static::$routePrefix . '/'))) {
                 $uri = substr($uri, strlen(static::$routePrefix));
 
                 if ($uri === '') {

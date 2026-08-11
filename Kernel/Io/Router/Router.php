@@ -2,7 +2,6 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Io\Router {
     use Closure;
-    use Error;
     use PHPCraftdream\Garnet\Kernel\Core\Benchmark\BenchmarkLog;
     use PHPCraftdream\Garnet\Kernel\Exceptions\RouterException;
     use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
@@ -73,6 +72,10 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router {
             $methodName = $uriParams->getMethodName();
             $method = $methodName ? "{$httpMethod}__{$methodName}" : "{$httpMethod}__main";
 
+            if (!method_exists($callParams[0], $method)) {
+                return ($this->handlerNotFound)($globals, $uriParams);
+            }
+
             /**
              * @phpstan-var callable-string $methodCallStr
              */
@@ -103,17 +106,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router {
                 BenchmarkLog::log('after_callBefore');
             }
 
-            try {
-                $resultApi = $methodCallStr($globals, $uriParams);
-            } catch (Error $e) {
-                $message = $e->getMessage();
-
-                if (str_starts_with($message, 'Call to undefined method ' . $methodCallStr)) {
-                    return ($this->handlerNotFound)($globals, $uriParams);
-                }
-
-                throw $e;
-            }
+            $resultApi = $methodCallStr($globals, $uriParams);
 
             BenchmarkLog::log('after_controller');
 

@@ -260,7 +260,7 @@ final class SshClient {
      * @throws SshException
      */
     private function writeTempKey(string $key): string {
-        $path = tempnam(sys_get_temp_dir(), 'garnet_ssh_');
+        $path = tempnam($this->tempKeyDir(), 'garnet_ssh_');
 
         if ($path === false) {
             throw new SshException('SshClient: could not create tempfile for identity key');
@@ -270,6 +270,22 @@ final class SshClient {
         chmod($path, 0o600);
 
         return $path;
+    }
+
+    /**
+     * Directory to write the identity-key tempfile into. Prefers /dev/shm
+     * (tmpfs, RAM-backed) when available: the key never touches a disk, so
+     * a SIGKILL/crash before the `finally: unlink()` in {@see execute()}
+     * runs leaves nothing recoverable on persistent storage. Falls back to
+     * the OS temp dir (Windows has no equivalent, and some POSIX
+     * containers mount without /dev/shm).
+     */
+    private function tempKeyDir(): string {
+        if (PHP_OS_FAMILY !== 'Windows' && is_dir('/dev/shm') && is_writable('/dev/shm')) {
+            return '/dev/shm';
+        }
+
+        return sys_get_temp_dir();
     }
 
     /**

@@ -321,6 +321,25 @@ describe('RouterUriParams', function (): void {
             expect($params->getRouteVal())->toBe('/page/{view}');
             expect($params->getUriParam('view'))->toBe('home');
         });
+
+        it('does not treat a URI that merely starts with the prefix string as prefix-matched (C6)', function (): void {
+            RouterUriParams::setRoutePrefix('/system');
+
+            // /systemd shares the raw string "/system" but is a distinct
+            // path segment ("systemd"), not /system/... — must NOT be
+            // stripped down to "d". It should dispatch as its own route.
+            $globals = MockGlobalParamsForRouter::create('/systemd');
+            $params = RouterUriParams::fromGlobals($globals);
+            expect($params->getRouteVal())->toBe('/systemd');
+        });
+
+        it('still strips when the URI is exactly the prefix with no trailing segment (C6)', function (): void {
+            RouterUriParams::setRoutePrefix('/system');
+
+            $globals = MockGlobalParamsForRouter::create('/system');
+            $params = RouterUriParams::fromGlobals($globals);
+            expect($params->getRouteVal())->toBe('/');
+        });
     });
 });
 

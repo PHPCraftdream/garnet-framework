@@ -403,6 +403,25 @@ describe('GlobalReqParams', function (): void {
         });
     });
 
+    describe('reset() (C8)', function (): void {
+        afterEach(function (): void {
+            GlobalReqParams::reset();
+        });
+
+        it('clears the cached currentPost() snapshot', function (): void {
+            $ref = new ReflectionClass(GlobalReqParams::class);
+            $prop = $ref->getProperty('post');
+            $prop->setAccessible(true);
+            $prop->setValue(null, ['stale' => 'from-previous-request']);
+
+            expect($prop->getValue())->toBe(['stale' => 'from-previous-request']);
+
+            GlobalReqParams::reset();
+
+            expect($prop->getValue())->toBe(null);
+        });
+    });
+
     describe('makeGet4Tests()', function (): void {
         it('creates params for GET request', function (): void {
             $params = GlobalReqParams::makeGet4Tests('/test/path');

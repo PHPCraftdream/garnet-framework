@@ -155,6 +155,29 @@ describe('Router', function (): void {
 
             expect($result)->toBe('GET__main called');
         });
+
+        it('calls handlerNotFound when the route exists but the HTTP-method handler does not (C7)', function (): void {
+            $handlerCalled = false;
+            $handler = function () use (&$handlerCalled) {
+                $handlerCalled = true;
+
+                return '404';
+            };
+
+            $router = new Router($handler);
+            $router->add('/test', TestController::class);
+
+            // TestController has no POST__main — must resolve via
+            // method_exists() and hit handlerNotFound, not crash with
+            // an uncaught Error nor rely on string-matching its message.
+            $uriParams = MockRouterUriParams::create('/test', 'POST');
+            $globals = MockGlobalParams::create();
+
+            $result = $router->dispatch($globals, $uriParams);
+
+            expect($handlerCalled)->toBe(true);
+            expect($result)->toBe('404');
+        });
     });
 });
 
