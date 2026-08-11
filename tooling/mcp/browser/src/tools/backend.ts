@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { execFile } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import type { SessionManager } from '../sessions.ts';
 import type { ToolDef, ToolResult } from '../types.ts';
 import { textResult } from '../utils.ts';
@@ -8,20 +8,54 @@ import { textResult } from '../utils.ts';
 const PHP_BIN = process.env.PHP_BIN || 'php';
 const RUNNER = resolve(import.meta.dirname, '..', '..', 'db-runner.php');
 
+const RUNNER_TIMEOUT_MS = 30_000;
+
 function runPhp(appDir: string, sql: string, params: unknown[]): Promise<{ rows?: Record<string, unknown>[]; affected?: number; insertId?: number; error?: string }> {
   const input = JSON.stringify({ sql, params });
   return new Promise((res, rej) => {
-    execFile(PHP_BIN, [RUNNER, input], {
+    const child = spawn(PHP_BIN, [RUNNER], {
       env: { ...process.env, GARNET_APP_DIR: appDir },
-      timeout: 30_000,
-    }, (err, stdout, stderr) => {
-      if (err && !stdout) return rej(new Error(stderr || err.message));
+    });
+
+    let stdout = '';
+    let stderr = '';
+    let killedByTimeout = false;
+
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk;
+    });
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk;
+    });
+
+    child.on('error', (err) => {
+      rej(err);
+    });
+
+    child.on('close', (code, signal) => {
+      if (killedByTimeout || signal) {
+        rej(new Error(`Query timed out after ${RUNNER_TIMEOUT_MS / 1000}s`));
+        return;
+      }
+      if (code !== 0 && !stdout) {
+        rej(new Error(stderr || `PHP exited with code ${code}`));
+        return;
+      }
       try {
         res(JSON.parse(stdout));
       } catch {
         rej(new Error(`Invalid PHP output: ${stdout.slice(0, 200)}`));
       }
     });
+
+    const timer = setTimeout(() => {
+      killedByTimeout = true;
+      child.kill();
+    }, RUNNER_TIMEOUT_MS);
+    child.on('close', () => clearTimeout(timer));
+
+    child.stdin.write(input);
+    child.stdin.end();
   });
 }
 

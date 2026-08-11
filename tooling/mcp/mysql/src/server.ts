@@ -6,7 +6,7 @@ import {
   ListToolsRequestSchema,
   CallToolRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-import { execFile } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { resolve } from 'node:path';
 
 // ── Config ──────────────────────────────────────────────────────────
@@ -24,44 +24,61 @@ function runPhp(sql: string, params: unknown[] = [], allowWrite = false): Promis
   const input = JSON.stringify({ sql, params, allowWrite });
 
   return new Promise((resolve, reject) => {
-    execFile(
-      PHP_BIN,
-      [RUNNER, input],
-      {
-        env: { ...process.env, GARNET_APP_DIR: APP_DIR },
-        maxBuffer: 10 * 1024 * 1024, // 10MB
-        timeout: RUNNER_TIMEOUT_MS,
-      },
-      (error, stdout, stderr) => {
-        if (stderr) {
-          console.error('[garnet-mysql-mcp]', stderr);
+    const child = spawn(PHP_BIN, [RUNNER], {
+      env: { ...process.env, GARNET_APP_DIR: APP_DIR },
+    });
+
+    let stdout = '';
+    let stderr = '';
+    let killedByTimeout = false;
+
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk;
+    });
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk;
+    });
+
+    child.on('error', (err) => {
+      reject(err);
+    });
+
+    child.on('close', (code, signal) => {
+      if (stderr) {
+        console.error('[garnet-mysql-mcp]', stderr);
+      }
+      if (killedByTimeout || signal) {
+        reject(
+          new Error(
+            `Query timed out after ${RUNNER_TIMEOUT_MS / 1000}s; the statement may have completed on the server despite the timeout — verify manually before assuming success or failure.`,
+          ),
+        );
+        return;
+      }
+      if (code !== 0 && !stdout) {
+        reject(new Error(stderr || `PHP exited with code ${code}`));
+        return;
+      }
+      try {
+        const result = JSON.parse(stdout || '{}');
+        if (result.error) {
+          reject(new Error(result.error));
+        } else {
+          resolve(result);
         }
-        if (error) {
-          if (error.killed || error.signal) {
-            reject(
-              new Error(
-                `Query timed out after ${RUNNER_TIMEOUT_MS / 1000}s; the statement may have completed on the server despite the timeout — verify manually before assuming success or failure.`,
-              ),
-            );
-            return;
-          }
-          if (!stdout) {
-            reject(new Error(stderr || error.message));
-            return;
-          }
-        }
-        try {
-          const result = JSON.parse(stdout || '{}');
-          if (result.error) {
-            reject(new Error(result.error));
-          } else {
-            resolve(result);
-          }
-        } catch {
-          reject(new Error(error?.message || `PHP returned invalid JSON: ${stdout}`));
-        }
-      },
-    );
+      } catch {
+        reject(new Error(`PHP returned invalid JSON: ${stdout}`));
+      }
+    });
+
+    const timer = setTimeout(() => {
+      killedByTimeout = true;
+      child.kill();
+    }, RUNNER_TIMEOUT_MS);
+    child.on('close', () => clearTimeout(timer));
+
+    child.stdin.write(input);
+    child.stdin.end();
   });
 }
 

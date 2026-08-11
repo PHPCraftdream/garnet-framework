@@ -2,7 +2,7 @@
 /**
  * Garnet MySQL Runner — executes SQL through the framework's DB connection.
  *
- * Reads JSON from argv[1]: {"sql": "...", "params": [...]}
+ * Reads JSON from stdin: {"sql": "...", "params": [...]}
  * Returns JSON to stdout: {"rows": [...]} or {"affected": N, "insertId": N} or {"error": "..."}
  */
 
@@ -23,7 +23,7 @@ namespace PHPCraftdream\GarnetMySql {
     IniConfig::defineDbIni($configDir . 'db.ini');
 
     // Read input
-    $input = $argv[1] ?? '';
+    $input = file_get_contents('php://stdin') ?: '';
 
     if (!$input) {
         echo json_encode(['error' => 'No input provided']);
