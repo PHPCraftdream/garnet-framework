@@ -78,9 +78,9 @@ extension-point convention.
 
 ### Tests (kahlan, under `<area>/Spec/`)
 
-- Kernel specs (`Kernel/**/Spec/`) are DB-free. Run via `composer test:kernel`.
+- Kernel specs (`Kernel/**/Spec/`) include both DB-free unit tests and 9 DB-touching integration specs (`*IntegrationSpec.php`). Run via `composer test:kernel` (unit only) or `composer test:kernel-integration` (integration only).
 - Bundle specs (`Bundle/**/Spec/`) may touch MySQL. Run via `composer test:bundle` (needs `localhost:3306` matching `TestsInit/TestConfig/db.ini`).
-- CI runs both behind `composer test` (matrix on PHP 8.1/8.2/8.3/8.4/8.5).
+- CI runs all three behind `composer test` (matrix on PHP 8.1/8.2/8.3/8.4/8.5).
 
 ## Common operations
 
@@ -90,7 +90,8 @@ extension-point convention.
 | Static analysis | `composer phpstan` |
 | Code style check / fix | `composer cs:check` / `composer cs:fix` |
 | Run all specs | `composer test` |
-| Run kernel-only specs | `composer test:kernel` |
+| Run kernel-only specs (unit only) | `composer test:kernel` |
+| Run kernel integration specs | `composer test:kernel-integration` |
 | Run bundle specs (needs MySQL) | `composer test:bundle` |
 | TS typecheck | `cd FrontBuilder && npm run typecheck` |
 | Lint everything before pushing | `composer ci` |

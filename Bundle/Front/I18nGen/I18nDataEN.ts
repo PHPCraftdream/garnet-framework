@@ -218,8 +218,6 @@ export class I18nDataEN {
     static AdminAction_user_approve = 'Approve user';
     static AdminAction_user_disable = 'Disable user';
     static AdminAction_user_flag_set = 'Set user flag';
-    static AdminAction_slot_delete = 'Delete slot';
-    static AdminAction_booking_cancel = 'Cancel booking';
     static AdminAction_support_assign = 'Assign ticket';
     static AdminAction_support_status_change = 'Change ticket status';
     static AdminAction_balance_adjust = 'Adjust balance';

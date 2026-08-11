@@ -224,8 +224,6 @@ class I18n extends I18nBase {
     AdminAction_user_approve: t = (a = []) => this.t('AdminAction_user_approve', a);
     AdminAction_user_disable: t = (a = []) => this.t('AdminAction_user_disable', a);
     AdminAction_user_flag_set: t = (a = []) => this.t('AdminAction_user_flag_set', a);
-    AdminAction_slot_delete: t = (a = []) => this.t('AdminAction_slot_delete', a);
-    AdminAction_booking_cancel: t = (a = []) => this.t('AdminAction_booking_cancel', a);
     AdminAction_support_assign: t = (a = []) => this.t('AdminAction_support_assign', a);
     AdminAction_support_status_change: t = (a = []) => this.t('AdminAction_support_status_change', a);
     AdminAction_balance_adjust: t = (a = []) => this.t('AdminAction_balance_adjust', a);

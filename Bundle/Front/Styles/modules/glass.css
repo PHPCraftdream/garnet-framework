@@ -125,7 +125,7 @@ body.glass-skin::after {
    See .admin-panel-block / page-level wrappers. */
 
 /* Hover: the edge glow blooms a little brighter (cards only). */
-.glass-skin :is(.card, .user-balance-card, .slot-card, .admin-dash-card, .booking-card):hover {
+.glass-skin :is(.card, .user-balance-card, .time-slot-card, .admin-dash-card):hover {
     box-shadow:
         0 0 0 1px color-mix(in srgb, var(--color-accent) 38%, transparent),
         0 14px 14px -14px color-mix(in srgb, var(--color-accent) 42%, transparent),
@@ -159,9 +159,9 @@ body.glass-skin::after {
 /* Dark theme: drop the bright top highlight, deepen the bloom. */
 [data-theme="dark"] .glass-skin :is(
     .welcome-card, .card, .stat-tile, .empty-state-card, .user-balance-card,
-    .booking-card, .slot-card, .admin-dash-card, .modal-content, .page-hero,
+    .time-slot-card, .admin-dash-card, .modal-content, .page-hero,
     [data-test-id="news-feed"], [data-test-id="notifications-widget"],
-    [data-test-id="moderator-stats"], [data-test-id="expert-stats"]
+    [data-test-id="moderator-stats"], [data-test-id="profile-stats"]
 ) {
     border-color: color-mix(in srgb, white 10%, var(--color-border)) !important;
     box-shadow:
@@ -348,9 +348,9 @@ body.glass-skin::after {
 @media (prefers-reduced-transparency: reduce) {
     .glass-skin :is(
         .welcome-card, .card, .stat-tile, .empty-state-card, .user-balance-card,
-        .booking-card, .slot-card, .admin-dash-card, .modal-content,
+        .time-slot-card, .admin-dash-card, .modal-content,
         [data-test-id="news-feed"], [data-test-id="notifications-widget"],
-        [data-test-id="moderator-stats"], [data-test-id="expert-stats"]
+        [data-test-id="moderator-stats"], [data-test-id="profile-stats"]
     ),
     .glass-skin :is(.btn-outline-primary, .btn-secondary, .btn-ghost),
     .glass-skin :is(.banner, .toast),

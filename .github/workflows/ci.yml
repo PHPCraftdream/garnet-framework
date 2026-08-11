@@ -266,6 +266,68 @@ jobs:
 
           exit $status
 
+  i18n-gen-staleness:
+    name: i18n generated files — committed TS matches PHP source
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, json, pdo, mysqli, intl
+          coverage: none
+          tools: composer:v2
+
+      - name: Regenerate i18n TS files into temp location
+        run: |
+          TEMP_DIR=$(mktemp -d)
+          OUT_DIR="$TEMP_DIR/I18nGen"
+          mkdir -p "$OUT_DIR"
+          php -r '
+            require "Kernel/Io/I18n/I18nFrontendDumper.php";
+            require "Bundle/I18n/I18nDataEn.php";
+            require "Bundle/I18n/I18nDataRu.php";
+            use PHPCraftdream\Garnet\Kernel\Io\I18n\I18nFrontendDumper;
+            use PHPCraftdream\Garnet\Bundle\I18n\I18nDataEn;
+            use PHPCraftdream\Garnet\Bundle\I18n\I18nDataRu;
+            I18nFrontendDumper::dump(
+              [I18nDataEn::LANG => I18nDataEn::$data, I18nDataRu::LANG => I18nDataRu::$data],
+              "'"$OUT_DIR"'",
+              "Framework",
+              true
+            );
+          '
+
+          # Compare regenerated files against committed ones
+          status=0
+          for f in Bundle/Front/I18nGen/*.ts; do
+            fname=$(basename "$f")
+            if [ ! -f "$OUT_DIR/$fname" ]; then
+              echo "::error::Committed i18n file $fname was not regenerated. Remove it or add it to PHP source."
+              status=1
+            elif ! diff -u "$f" "$OUT_DIR/$fname" >/dev/null; then
+              echo "::error::$fname diverges from PHP source. Run: php tooling/scripts/regen-i18n.php, then commit Bundle/Front/I18nGen/**"
+              echo "::group::Diff for $fname"
+              diff -u "$f" "$OUT_DIR/$fname" || true
+              echo "::endgroup::"
+              status=1
+            fi
+          done
+
+          # Check for new files that should be committed
+          for f in "$OUT_DIR"/*.ts; do
+            fname=$(basename "$f")
+            if [ ! -f "Bundle/Front/I18nGen/$fname" ]; then
+              echo "::error::Regenerated i18n file $fname is not committed. Run: php tooling/scripts/regen-i18n.php, then commit Bundle/Front/I18nGen/**"
+              status=1
+            fi
+          done
+
+          rm -rf "$TEMP_DIR"
+          exit $status
+
   zero-config:
     name: Zero-config — setup → app:create → build
     runs-on: ubuntu-latest

@@ -204,8 +204,6 @@ look booking-shaped from the outside:
 - `FwAppSettings::cancellationPenaltyPercent` is a booking-domain
   setting in the framework's settings module; v1.0 will move it to the
   application layer.
-- A handful of CRUD-action i18n keys reference `booking_*` operations
-  (e.g. `AdminAction_booking_cancel`). They'll be generalised the same way.
 
 Until v1.0 the framework is the most natural fit for booking /
 scheduling / appointment-style apps, but it works for plain CRUD or

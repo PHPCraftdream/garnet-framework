@@ -78,17 +78,17 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
             });
         });
 
-        describe('::lessonMaterials', function (): void {
-            it('caps at one file (one lesson upload at a time)', function (): void {
-                expect(UploadRules::lessonMaterials()->maxFilesCount)->toBe(1);
+        describe('::documentAttachments', function (): void {
+            it('caps at one file (single attachment at a time)', function (): void {
+                expect(UploadRules::documentAttachments()->maxFilesCount)->toBe(1);
             });
 
             it('defaults maxFileSize to 20 MB', function (): void {
-                expect(UploadRules::lessonMaterials()->maxFileSize)->toBe(20 * 1024 * 1024);
+                expect(UploadRules::documentAttachments()->maxFileSize)->toBe(20 * 1024 * 1024);
             });
 
             it('covers Office, ODF, PDF, EPUB and image types', function (): void {
-                $types = UploadRules::lessonMaterials()->allowedTypes;
+                $types = UploadRules::documentAttachments()->allowedTypes;
                 expect($types)->toContain('application/pdf');
                 expect($types)->toContain('application/epub+zip');
                 expect($types)->toContain('application/msword');

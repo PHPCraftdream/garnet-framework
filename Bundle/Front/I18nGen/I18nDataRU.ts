@@ -217,8 +217,6 @@ export class I18nDataRU {
     static AdminAction_user_approve = 'Подтверждение пользователя';
     static AdminAction_user_disable = 'Блокировка пользователя';
     static AdminAction_user_flag_set = 'Установка флага пользователю';
-    static AdminAction_slot_delete = 'Удаление слота';
-    static AdminAction_booking_cancel = 'Отмена брони';
     static AdminAction_support_assign = 'Назначение тикета';
     static AdminAction_support_status_change = 'Изменение статуса тикета';
     static AdminAction_balance_adjust = 'Корректировка баланса';

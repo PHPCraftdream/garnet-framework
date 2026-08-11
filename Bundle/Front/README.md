@@ -13,7 +13,7 @@ flow's client. Apps add their own business islands under
 | `auth/` | The passwordless magic-link UI: state machine, code input, error toast. Renders inside the `/system/` page. |
 | `Common/` | The big shared library — see breakdown below. |
 | `EntryPoints/` | rspack entry-point shims — the islands that always load in the page shell (top menu, sidebar, mobile drawer, toaster). |
-| `I18nGen/` | Generated TS shims for the framework's translation keys (`I18nFramework.ts`). **Generated** — never edit by hand; `php garnet prepare` rewrites them. |
+| `I18nGen/` | Generated TS shims for the framework's translation keys (`I18nFramework.ts`). **Generated** — never edit by hand. For scaffolded apps, `php garnet prepare` rewrites them. For the framework repo itself, use `php tooling/scripts/regen-i18n.php`. |
 | `lightbox/` | Image lightbox wrapper around `@fancyapps/ui`. |
 | `Styles/` | Tailwind v4 theme tokens, component classes, base reset. The theming pipeline. |
 | `ThirdParty/` | Vendored third-party JS/CSS that doesn't fit npm (small CDN-style drops). |

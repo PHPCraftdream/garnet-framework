@@ -14,7 +14,7 @@ interface UserLinkProps {
 
 /**
  * Foreground-only link to a user/expert profile.
- * Inside an IrabiPreviewProvider tree, plain left-click opens the preview modal.
+ * Inside a PreviewProvider tree, plain left-click opens the preview modal.
  * Modifier-clicks (Ctrl/Meta/Shift, middle button) and absent provider fall back
  * to navigation.
  *

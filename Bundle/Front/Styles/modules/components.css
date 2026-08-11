@@ -542,8 +542,8 @@ input.custom-date-input::-webkit-inner-spin-button {
 }
 
 /* Slot card — borderless card relying on shadow + lift for depth.
-   Used in slots calendar; can be reused for other booking-style cards. */
-.slot-card {
+   Used in calendars; can be reused for other time-slot-style cards. */
+.time-slot-card {
   @apply rounded-xl bg-surface p-3 mb-2 cursor-pointer;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
   transition: box-shadow 200ms ease, transform 200ms ease;
@@ -553,11 +553,11 @@ input.custom-date-input::-webkit-inner-spin-button {
               0 2px 6px -2px rgba(15, 23, 42, 0.08);
   transform: translateY(-2px);
 }
-[data-theme="dark"] .slot-card {
+[data-theme="dark"] .time-slot-card {
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04),
               inset 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
-[data-theme="dark"] .slot-card:hover {
+[data-theme="dark"] .time-slot-card:hover {
   box-shadow: 0 14px 32px -10px rgba(0, 0, 0, 0.6),
               inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 30%, transparent);
 }
@@ -1083,12 +1083,12 @@ body:has(#show--menu:checked) {
   color: var(--color-status-green);
 }
 
-/* Expert profile compact card inside UserDetailPanel.teachingTab */
-.admin-expert-profile-card {
+/* Extended profile compact card inside UserDetailPanel.detailTab */
+.admin-profile-card {
   @apply bg-surface-alt rounded p-3 text-sm mb-4;
 }
 
-.admin-expert-profile-row {
+.admin-profile-row {
   @apply flex gap-6 flex-wrap;
 }
 
@@ -1179,28 +1179,28 @@ body:has(#show--menu:checked) {
   @apply inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-success-subtle text-success;
 }
 
-/* Booking/slot list row — bordered card-like row used in upcoming widgets. */
-.booking-row {
+/* Time-slot list row — bordered card-like row used in upcoming widgets. */
+.time-slot-row {
   @apply flex items-center justify-between p-3 rounded-lg border border-default bg-surface;
 }
 
-/* Booking group — wraps multiple bookings for the same time slot. */
-.booking-group {
+/* Time-slot group — wraps multiple items for the same time slot. */
+.time-slot-group {
   @apply rounded-lg border border-default bg-surface-alt p-3 flex flex-col gap-3;
 }
-.booking-group-header {
+.time-slot-group-header {
   @apply flex items-center justify-between gap-2 flex-wrap;
 }
-.booking-group-title {
+.time-slot-group-title {
   @apply text-base font-semibold text-on-surface;
 }
-.booking-group-meta {
+.time-slot-group-meta {
   @apply text-sm text-muted;
 }
-.booking-group-count {
+.time-slot-group-count {
   @apply inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-accent-subtle text-accent;
 }
-.booking-group-list {
+.time-slot-group-list {
   @apply flex flex-col gap-3;
 }
 
@@ -1418,20 +1418,20 @@ body:has(#show--menu:checked) {
   @apply text-[11px] uppercase tracking-wider font-semibold;
 }
 
-/* ─── expert pages ─── */
+/* ─── stat tiles with coloured values ─── */
 
-.expert-stat-value-success { @apply text-2xl font-bold text-success; }
-.expert-stat-value-accent  { @apply text-2xl font-bold text-accent; }
-.expert-stat-value-warning { @apply text-2xl font-bold text-warning; }
+.stat-value-success { @apply text-2xl font-bold text-success; }
+.stat-value-accent  { @apply text-2xl font-bold text-accent; }
+.stat-value-warning { @apply text-2xl font-bold text-warning; }
 
-/* Header inside ExpertCalendar day cell. */
-.expert-cal-day-head {
+/* Header inside calendar day cell. */
+.cal-day-head {
   @apply text-center py-1.5 px-1 border-b border-default text-xs font-medium;
 }
-.expert-cal-slot {
+.cal-slot {
   @apply mb-1.5 p-2 rounded border border-default bg-surface text-xs;
 }
-.expert-cal-icon-btn {
+.cal-icon-btn {
   @apply text-sm px-1.5 py-0.5 rounded transition-colors;
 }
 

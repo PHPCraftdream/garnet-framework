@@ -33,7 +33,7 @@ export interface PreviewLabels {
     loadError: string;
 }
 
-interface ExpertProfile {
+interface ExtendedProfile {
     display_name: string;
     specialization: string;
     bio: string;
@@ -50,9 +50,9 @@ interface UserStats {
 interface PreviewUser {
     id: number;
     name: string;
-    type: 'user' | 'expert';
+    type: string;
     avatar?: string | null;
-    expertProfile: ExpertProfile | null;
+    extendedProfile: ExtendedProfile | null;
     stats: UserStats;
 }
 
@@ -106,7 +106,7 @@ export const UserPreviewModal: React.FC<Props> = ({
         if (e.target === e.currentTarget) onClose();
     };
 
-    const displayName = user?.expertProfile?.display_name?.trim()
+    const displayName = user?.extendedProfile?.display_name?.trim()
         || user?.name
         || initialName
         || `#${userId}`;
@@ -117,8 +117,8 @@ export const UserPreviewModal: React.FC<Props> = ({
         .slice(0, 2)
         .join('');
 
-    const isExpert = user?.type === 'expert';
-    const profileHref = appUrl(profileUrl ?? (isExpert ? `/expert/id~${userId}` : `/user/id~${userId}`));
+    const hasExtendedProfile = user?.type === 'expert';
+    const profileHref = appUrl(profileUrl ?? (hasExtendedProfile ? `/expert/id~${userId}` : `/user/id~${userId}`));
 
     return (
         <Portal><div
@@ -157,36 +157,36 @@ export const UserPreviewModal: React.FC<Props> = ({
                                 <div className="preview-identity">
                                     <div className="preview-name">{displayName}</div>
                                     <div className="role-badge preview-role-badge">
-                                        {isExpert ? labels.roleExpert : labels.roleUser}
+                                        {hasExtendedProfile ? labels.roleExpert : labels.roleUser}
                                     </div>
                                 </div>
                             </div>
 
-                            {user.expertProfile && (
+                            {user.extendedProfile && (
                                 <div className="preview-section">
-                                    {user.expertProfile.specialization && (
+                                    {user.extendedProfile.specialization && (
                                         <div className="preview-row">
                                             <span className="preview-label">{labels.specialization}:</span>{' '}
-                                            <span>{user.expertProfile.specialization}</span>
+                                            <span>{user.extendedProfile.specialization}</span>
                                         </div>
                                     )}
-                                    {user.expertProfile.rating > 0 && (
+                                    {user.extendedProfile.rating > 0 && (
                                         <div className="preview-row">
                                             <span className="preview-label">{labels.rating}:</span>{' '}
-                                            <span>{user.expertProfile.rating.toFixed(2)}</span>
+                                            <span>{user.extendedProfile.rating.toFixed(2)}</span>
                                         </div>
                                     )}
-                                    {user.expertProfile.bio && (
+                                    {user.extendedProfile.bio && (
                                         <div className="preview-row preview-bio">
                                             <span className="preview-label">{labels.bio}:</span>{' '}
-                                            <span>{user.expertProfile.bio}</span>
+                                            <span>{user.extendedProfile.bio}</span>
                                         </div>
                                     )}
                                 </div>
                             )}
 
                             <div className="preview-stats-grid">
-                                {isExpert ? (
+                                {hasExtendedProfile ? (
                                     <>
                                         <div className="stat-tile">
                                             <div className="stat-tile-value">{user.stats.conducted ?? 0}</div>

@@ -42,9 +42,9 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload {
         }
 
         /**
-         * Preset: lesson materials — broad document support (PDF, Office, EPUB, text, images).
+         * Preset: document attachments — broad document support (PDF, Office, EPUB, text, images).
          */
-        public static function lessonMaterials(int $maxSize = 20 * 1024 * 1024): self {
+        public static function documentAttachments(int $maxSize = 20 * 1024 * 1024): self {
             return new self(
                 maxFileSize: $maxSize,
                 maxFilesCount: 1,

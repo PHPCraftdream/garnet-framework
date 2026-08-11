@@ -19,8 +19,8 @@ export const applyLiveCounts = (
     }
 
     const items = menuItems.map(item =>
-        (config?.pendingBookingsItemId && item.id === config.pendingBookingsItemId)
-            ? {...item, badge: live.bookingsPending}
+        (config?.primaryBadgeItemId && item.id === config.primaryBadgeItemId)
+            ? {...item, badge: live.primaryBadgeCount}
             : item,
     );
 

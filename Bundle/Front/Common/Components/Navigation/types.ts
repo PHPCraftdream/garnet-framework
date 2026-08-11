@@ -9,8 +9,8 @@ export interface MenuItem {
 }
 
 export interface LiveBadgeConfig {
-    /** Menu item ID to badge with pending-bookings count. */
-    pendingBookingsItemId?: string;
+    /** Menu item ID to badge with primary-badge count. */
+    primaryBadgeItemId?: string;
 }
 
 export interface UtilityClusterData {

@@ -10,7 +10,7 @@
  */
 
 export interface LiveCounts {
-    bookingsPending: number;
+    primaryBadgeCount: number;
     unreadIm: number;
     unreadSupport: number;
 }
@@ -39,7 +39,7 @@ const toCounts = (raw: unknown): LiveCounts | null => {
     if (!raw || typeof raw !== 'object') return null;
     const r = raw as Record<string, unknown>;
     return {
-        bookingsPending: Number(r.bookingsPending) || 0,
+        primaryBadgeCount: Number(r.primaryBadgeCount) || 0,
         unreadIm: Number(r.unreadIm) || 0,
         unreadSupport: Number(r.unreadSupport) || 0,
     };
