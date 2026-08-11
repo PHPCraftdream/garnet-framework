@@ -2,180 +2,458 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Db\Link\Spec;
 
-use mysqli;
+use Exception;
+use PHPCraftdream\Garnet\Kernel\Db\Link\DbPool;
+use PHPCraftdream\Garnet\Kernel\Exceptions\DbException;
+use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+use ReflectionClass;
 
 /**
- * M1/M2 integration tests for sql_mode guard.
+ * M1/M2 integration tests for sql_mode guard — real end-to-end tests.
  *
- * These tests verify the sql_mode guard against a live MySQL server
- * to confirm the current server's sql_mode is safe (does not contain
- * NO_BACKSLASH_ESCAPES or ANSI_QUOTES).
+ * These tests verify the sql_mode guard in DbPool::newLink() by calling
+ * the ACTUAL production code with db.ini configs whose MYSQL_ATTR_INIT_COMMAND
+ * sets dangerous modes via SET SESSION. The guard runs AFTER the init command,
+ * so this exercises the exact code path production would hit.
  *
  * This file follows the *IntegrationSpec.php naming convention so it is
  * EXCLUDED from the "composer test:kernel" (no-DB) job and ONLY runs
  * via "composer test:kernel-integration" (DB-backed), where MySQL is
  * available. See kahlan-config.php lines 20-43.
  */
-describe('DbPool sql_mode guard integration (M1/M2 live server)', function (): void {
-    it('verifies current server sql_mode is safe', function (): void {
-        // Connect to the test MySQL instance
-        $mysqli = @new mysqli('127.0.0.1', 'test', 'test', 'test', 3306);
+describe('DbPool sql_mode guard integration (M1/M2 end-to-end)', function (): void {
+    $dbAvailable = false;
+    $originalDbIniPath = null;
 
-        if ($mysqli->connect_error) {
-            skip('MySQL connection not available for live test');
+    // Close all DbPool connections after all tests to avoid leaking links
+    // into subsequent integration spec files (they run in the same PHP process).
+    afterAll(function (): void {
+        DbPool::closeAll();
+    });
+
+    beforeAll(function () use (&$dbAvailable, &$originalDbIniPath): void {
+        // Load database configuration
+        $dbConfigPath = __DIR__ . '/../../../../TestsInit/TestConfig/db.ini';
+
+        if (!file_exists($dbConfigPath)) {
+            echo "db.ini not found at {$dbConfigPath}\n";
+
+            return;
         }
 
-        // Query the actual session sql_mode
-        $result = $mysqli->query('SELECT @@session.sql_mode AS sql_mode');
+        $config = parse_ini_file($dbConfigPath);
 
-        if (!$result) {
-            $mysqli->close();
+        if (!isset($config['enabled']) || $config['enabled'] !== '1') {
+            echo "enabled != 1 in db.ini\n";
 
-            skip('Could not query sql_mode');
+            return;
         }
 
-        $row = $result->fetch_assoc();
-        $result->free();
-        $sqlMode = $row['sql_mode'] ?? '';
+        // Save the original db.ini path for restoration
+        $originalDbIniPath = $dbConfigPath;
 
-        // Verify the guard logic would accept this mode
-        $dangerousModes = ['NO_BACKSLASH_ESCAPES', 'ANSI_QUOTES'];
-        $found = false;
+        // Define the database config for DbPool
+        IniConfig::defineDbIni($dbConfigPath);
 
-        foreach ($dangerousModes as $mode) {
-            if (stripos($sqlMode, $mode) !== false) {
-                $found = true;
+        // Test database connection with safe config
+        try {
+            $pool = DbPool::get();
+            $link = $pool->newLink();
+            $result = $link->query('SELECT 1 AS result_val', []);
 
-                break;
+            if ($result) {
+                $dbAvailable = true;
             }
+        } catch (DbException $e) {
+            // Database not available, tests will be skipped
+            echo 'Database connection failed: ' . $e->getMessage() . "\n";
         }
-
-        $mysqli->close();
-
-        expect($found)->toBe(false);
-        expect($sqlMode)->not->toContain('NO_BACKSLASH_ESCAPES');
-        expect($sqlMode)->not->toContain('ANSI_QUOTES');
     });
 
-    it('drains result set from result-returning init command (regression test)', function (): void {
-        // This test verifies that a result-returning init command (e.g. "SELECT 1")
-        // does NOT cause the sql_mode guard probe query to fail with
-        // "Commands out of sync; you can't run this command now".
-        //
-        // Before the fix: real_query() would dispatch the init command and leave
-        // any result set unconsumed, causing the subsequent query() call on the
-        // same connection to fail with "Commands out of sync". This made
-        // $sqlModeResult false, bypassing the entire guard check silently.
-        //
-        // After the fix: store_result() drains any result set from the init
-        // command, and next_result() drains any additional result sets from
-        // multi-statement init commands, allowing the guard probe to run successfully.
-        $mysqli = @new mysqli('127.0.0.1', 'test', 'test', 'test', 3306);
+    // Helper: clear the cached IniConfig instance so defineDbIni() takes effect
+    $clearIniConfigCache = function (): void {
+        $reflection = new ReflectionClass(IniConfig::class);
+        $itemsProperty = $reflection->getProperty('items');
+        $itemsProperty->setAccessible(true);
+        $itemsProperty->setValue([]);
+    };
 
-        if ($mysqli->connect_error) {
-            skip('MySQL connection not available for live test');
-        }
+    // Helper: create a temporary db.ini file with a custom init command
+    // and point DbPool to it. Returns the temp file path for cleanup.
+    $createTempDbIni = function (string $initCommand): string {
+        $originalPath = __DIR__ . '/../../../../TestsInit/TestConfig/db.ini';
+        $originalContent = file_get_contents($originalPath);
 
-        // Run an init command that returns a result set
-        $initCmd = 'SELECT 1';
-        $initResult = $mysqli->real_query($initCmd);
-        expect($initResult)->toBe(true);
+        // Replace the init command line
+        $newContent = preg_replace(
+            '/options\[MYSQL_ATTR_INIT_COMMAND\] = ".*"/',
+            'options[MYSQL_ATTR_INIT_COMMAND] = "' . $initCommand . '"',
+            $originalContent
+        );
 
-        // Drain the result set (this is the fix)
-        if ($res = $mysqli->store_result()) {
-            $res->free();
-        }
+        // Create a temp file
+        $tempPath = tempnam(sys_get_temp_dir(), 'garnet_db_test_');
+        unlink($tempPath); // remove the file so we can recreate it with .ini extension
+        $tempIniPath = $tempPath . '.ini';
 
-        // Drain any additional result sets from multi-statement init commands
-        while ($mysqli->more_results() && $mysqli->next_result()) {
-            if ($res = $mysqli->store_result()) {
-                $res->free();
+        file_put_contents($tempIniPath, $newContent);
+
+        return $tempIniPath;
+    };
+
+    // Helper: restore DbPool singleton state for next test
+    $resetDbPool = function () use ($clearIniConfigCache): void {
+        DbPool::closeAll();
+        $clearIniConfigCache();
+    };
+
+    describe('ANSI_QUOTES dangerous mode detection (M1)', function () use (
+        &$dbAvailable,
+        $createTempDbIni,
+        $resetDbPool
+    ): void {
+        it('throws DbException when init command sets ANSI_QUOTES', function () use (
+            &$dbAvailable,
+            $createTempDbIni,
+            $resetDbPool
+        ): void {
+            if (!$dbAvailable) {
+                skip('MySQL connection not available for live test');
             }
-        }
 
-        // Verify the guard probe query now succeeds
-        $sqlModeResult = $mysqli->query('SELECT @@session.sql_mode AS sql_mode');
+            $resetDbPool();
 
-        // With the fix, this should NOT be false
-        expect($sqlModeResult)->not->toBe(false);
-        expect($sqlModeResult)->toBeAnInstanceOf('mysqli_result');
+            // Create temp db.ini with ANSI_QUOTES init command
+            $tempIniPath = $createTempDbIni("SET SESSION sql_mode='ANSI_QUOTES'");
 
-        // Verify we got a valid sql_mode value
-        $row = $sqlModeResult->fetch_assoc();
-        $sqlModeResult->free();
-        expect($row)->toBeAn('array');
-        expect(isset($row['sql_mode']))->toBe(true);
+            try {
+                // Point DbPool to the temp config
+                IniConfig::defineDbIni($tempIniPath);
 
-        $mysqli->close();
+                $pool = DbPool::get();
+
+                // This SHOULD throw DbException due to the guard
+                $exceptionThrown = false;
+                $exceptionMessage = '';
+
+                try {
+                    $link = $pool->newLink();
+                } catch (DbException $e) {
+                    $exceptionThrown = true;
+                    $exceptionMessage = $e->getMessage();
+                }
+
+                // Clean up temp file
+                if (file_exists($tempIniPath)) {
+                    unlink($tempIniPath);
+                }
+
+                // Verify the exception was thrown
+                expect($exceptionThrown)->toBe(true);
+                expect($exceptionMessage)->toMatch('/ANSI_QUOTES/i');
+            } finally {
+                $resetDbPool();
+            }
+        });
+
+        it('throws DbException when ANSI_QUOTES is combined with other modes', function () use (
+            &$dbAvailable,
+            $createTempDbIni,
+            $resetDbPool
+        ): void {
+            if (!$dbAvailable) {
+                skip('MySQL connection not available for live test');
+            }
+
+            $resetDbPool();
+
+            // Create temp db.ini with ANSI_QUOTES among other modes
+            $tempIniPath = $createTempDbIni(
+                "SET SESSION sql_mode='STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION,ANSI_QUOTES'"
+            );
+
+            try {
+                IniConfig::defineDbIni($tempIniPath);
+
+                $pool = DbPool::get();
+
+                $exceptionThrown = false;
+                $exceptionMessage = '';
+
+                try {
+                    $link = $pool->newLink();
+                } catch (DbException $e) {
+                    $exceptionThrown = true;
+                    $exceptionMessage = $e->getMessage();
+                }
+
+                if (file_exists($tempIniPath)) {
+                    unlink($tempIniPath);
+                }
+
+                expect($exceptionThrown)->toBe(true);
+                expect($exceptionMessage)->toMatch('/ANSI_QUOTES/i');
+            } finally {
+                $resetDbPool();
+            }
+        });
     });
 
-    it('rejects dangerous sql_mode set via result-set-free init command', function (): void {
-        // This test verifies that an init command that sets a dangerous sql_mode
-        // (e.g. "SET SESSION sql_mode='ANSI_QUOTES'") is correctly detected by
-        // the guard, even when the init command itself returns no result set.
-        //
-        // This confirms the earlier reorder fix (guard runs AFTER init_command)
-        // still works correctly after adding the drain logic.
-        $mysqli = @new mysqli('127.0.0.1', 'test', 'test', 'test', 3306);
+    describe('NO_BACKSLASH_ESCAPES dangerous mode detection (M2)', function () use (
+        &$dbAvailable,
+        $createTempDbIni,
+        $resetDbPool
+    ): void {
+        it('throws DbException when init command sets NO_BACKSLASH_ESCAPES', function () use (
+            &$dbAvailable,
+            $createTempDbIni,
+            $resetDbPool
+        ): void {
+            if (!$dbAvailable) {
+                skip('MySQL connection not available for live test');
+            }
 
-        if ($mysqli->connect_error) {
-            skip('MySQL connection not available for live test');
-        }
+            $resetDbPool();
 
-        // Run an init command that sets a dangerous sql_mode
-        $initCmd = "SET SESSION sql_mode='ANSI_QUOTES'";
-        $initResult = $mysqli->real_query($initCmd);
-        expect($initResult)->toBe(true);
+            // Create temp db.ini with NO_BACKSLASH_ESCAPES init command
+            $tempIniPath = $createTempDbIni("SET SESSION sql_mode='NO_BACKSLASH_ESCAPES'");
 
-        // Drain the result set (though SET SESSION returns no result set)
-        if ($res = $mysqli->store_result()) {
-            $res->free();
-        }
+            try {
+                IniConfig::defineDbIni($tempIniPath);
 
-        // Query the sql_mode to verify the guard would detect it
-        $sqlModeResult = $mysqli->query('SELECT @@session.sql_mode AS sql_mode');
-        expect($sqlModeResult)->not->toBe(false);
+                $pool = DbPool::get();
 
-        $row = $sqlModeResult->fetch_assoc();
-        $sqlModeResult->free();
-        $sqlMode = $row['sql_mode'] ?? '';
+                $exceptionThrown = false;
+                $exceptionMessage = '';
 
-        // Verify the dangerous mode is present
-        expect(stripos($sqlMode, 'ANSI_QUOTES'))->not->toBe(false);
+                try {
+                    $link = $pool->newLink();
+                } catch (DbException $e) {
+                    $exceptionThrown = true;
+                    $exceptionMessage = $e->getMessage();
+                }
 
-        $mysqli->close();
+                if (file_exists($tempIniPath)) {
+                    unlink($tempIniPath);
+                }
+
+                expect($exceptionThrown)->toBe(true);
+                expect($exceptionMessage)->toMatch('/NO_BACKSLASH_ESCAPES/i');
+            } finally {
+                $resetDbPool();
+            }
+        });
+
+        it('throws DbException when NO_BACKSLASH_ESCAPES is combined with other modes', function () use (
+            &$dbAvailable,
+            $createTempDbIni,
+            $resetDbPool
+        ): void {
+            if (!$dbAvailable) {
+                skip('MySQL connection not available for live test');
+            }
+
+            $resetDbPool();
+
+            $tempIniPath = $createTempDbIni(
+                "SET SESSION sql_mode='STRICT_TRANS_TABLES,NO_BACKSLASH_ESCAPES,NO_ENGINE_SUBSTITUTION'"
+            );
+
+            try {
+                IniConfig::defineDbIni($tempIniPath);
+
+                $pool = DbPool::get();
+
+                $exceptionThrown = false;
+                $exceptionMessage = '';
+
+                try {
+                    $link = $pool->newLink();
+                } catch (DbException $e) {
+                    $exceptionThrown = true;
+                    $exceptionMessage = $e->getMessage();
+                }
+
+                if (file_exists($tempIniPath)) {
+                    unlink($tempIniPath);
+                }
+
+                expect($exceptionThrown)->toBe(true);
+                expect($exceptionMessage)->toMatch('/NO_BACKSLASH_ESCAPES/i');
+            } finally {
+                $resetDbPool();
+            }
+        });
     });
 
-    it('normal init commands remain unaffected', function (): void {
-        // This test verifies that normal init commands like "SET NAMES 'utf8mb4'"
-        // (which return no result set) continue to work correctly with the drain
-        // logic in place. The drain loop should be a no-op for commands that
-        // don't return results.
-        $mysqli = @new mysqli('127.0.0.1', 'test', 'test', 'test', 3306);
+    describe('safe init commands succeed', function () use (
+        &$dbAvailable,
+        $createTempDbIni,
+        $resetDbPool,
+        &$originalDbIniPath
+    ): void {
+        it('succeeds with normal SET NAMES init command', function () use (
+            &$dbAvailable
+            ,
+            $resetDbPool,
+            &$originalDbIniPath
+        ): void {
+            if (!$dbAvailable) {
+                skip('MySQL connection not available for live test');
+            }
 
-        if ($mysqli->connect_error) {
-            skip('MySQL connection not available for live test');
-        }
+            $resetDbPool();
 
-        // Run a normal init command that returns no result set
-        $initCmd = "SET NAMES 'utf8mb4'";
-        $initResult = $mysqli->real_query($initCmd);
-        expect($initResult)->toBe(true);
+            // Restore the original safe config
+            IniConfig::defineDbIni($originalDbIniPath);
 
-        // Drain the result set (this should be a no-op for SET NAMES)
-        if ($res = $mysqli->store_result()) {
-            $res->free();
-        }
+            $pool = DbPool::get();
 
-        // Verify the guard probe query still succeeds
-        $sqlModeResult = $mysqli->query('SELECT @@session.sql_mode AS sql_mode');
-        expect($sqlModeResult)->not->toBe(false);
+            // This should succeed without throwing
+            $link = $pool->newLink();
+            expect($link)->not->toBeNull();
 
-        $row = $sqlModeResult->fetch_assoc();
-        $sqlModeResult->free();
-        expect($row)->toBeAn('array');
-        expect(isset($row['sql_mode']))->toBe(true);
+            // Verify the link actually works
+            $result = $link->query('SELECT 1 AS result_val', []);
+            expect($result[0]['result_val'])->toBe(1);
 
-        $mysqli->close();
+            $resetDbPool();
+        });
+
+        it('succeeds with safe sql_mode init command', function () use (
+            &$dbAvailable,
+            $createTempDbIni,
+            $resetDbPool
+        ): void {
+            if (!$dbAvailable) {
+                skip('MySQL connection not available for live test');
+            }
+
+            $resetDbPool();
+
+            // Create temp db.ini with a safe sql_mode
+            $tempIniPath = $createTempDbIni(
+                "SET SESSION sql_mode='STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION'"
+            );
+
+            try {
+                IniConfig::defineDbIni($tempIniPath);
+
+                $pool = DbPool::get();
+
+                // This should succeed
+                $link = $pool->newLink();
+                expect($link)->not->toBeNull();
+
+                $result = $link->query('SELECT 1 AS result_val', []);
+                expect($result[0]['result_val'])->toBe(1);
+
+                if (file_exists($tempIniPath)) {
+                    unlink($tempIniPath);
+                }
+            } finally {
+                $resetDbPool();
+            }
+        });
+    });
+
+    describe('result-returning init commands drain correctly', function () use (
+        &$dbAvailable,
+        $createTempDbIni,
+        $resetDbPool
+    ): void {
+        it('result-returning init command alone succeeds (drain consumed result)', function () use (
+            &$dbAvailable,
+            $createTempDbIni,
+            $resetDbPool
+        ): void {
+            if (!$dbAvailable) {
+                skip('MySQL connection not available for live test');
+            }
+
+            $resetDbPool();
+
+            // Create temp db.ini with a result-returning init command
+            $tempIniPath = $createTempDbIni('SELECT 1');
+
+            try {
+                IniConfig::defineDbIni($tempIniPath);
+
+                $pool = DbPool::get();
+
+                // The drain logic should consume the SELECT 1 result,
+                // allowing the guard probe to run successfully.
+                $exceptionThrown = false;
+
+                try {
+                    $link = $pool->newLink();
+                } catch (DbException $e) {
+                    $exceptionThrown = true;
+                }
+
+                if (file_exists($tempIniPath)) {
+                    unlink($tempIniPath);
+                }
+
+                // Should NOT throw — the drain worked
+                expect($exceptionThrown)->toBe(false);
+            } finally {
+                $resetDbPool();
+            }
+        });
+    });
+
+    describe('guard probe query failure handling', function () use (
+        &$dbAvailable,
+        $createTempDbIni,
+        $resetDbPool
+    ): void {
+        it('throws DbException when guard detects dangerous mode', function () use (
+            &$dbAvailable,
+            $createTempDbIni,
+            $resetDbPool
+        ): void {
+            if (!$dbAvailable) {
+                skip('MySQL connection not available for live test');
+            }
+
+            $resetDbPool();
+
+            // This is already tested by ANSI_QUOTES and NO_BACKSLASH_ESCAPES tests above.
+            // This test explicitly verifies that DbException (not a raw mysqli exception)
+            // is thrown with the correct message format.
+            $tempIniPath = $createTempDbIni("SET SESSION sql_mode='ANSI_QUOTES'");
+
+            try {
+                IniConfig::defineDbIni($tempIniPath);
+
+                $pool = DbPool::get();
+
+                $exceptionThrown = false;
+                $isDbException = false;
+                $exceptionMessage = '';
+
+                try {
+                    $link = $pool->newLink();
+                } catch (DbException $e) {
+                    $exceptionThrown = true;
+                    $isDbException = true;
+                    $exceptionMessage = $e->getMessage();
+                } catch (Exception $e) {
+                    $exceptionThrown = true;
+                    $exceptionMessage = $e->getMessage();
+                }
+
+                if (file_exists($tempIniPath)) {
+                    unlink($tempIniPath);
+                }
+
+                expect($exceptionThrown)->toBe(true);
+                expect($isDbException)->toBe(true);
+                expect($exceptionMessage)->toMatch('/sql_mode/i');
+            } finally {
+                $resetDbPool();
+            }
+        });
     });
 });

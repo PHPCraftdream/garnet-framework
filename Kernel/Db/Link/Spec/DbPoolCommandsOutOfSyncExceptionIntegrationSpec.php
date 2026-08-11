@@ -101,7 +101,7 @@ describe('DbPool Commands out of sync exception handling (Integration)', functio
             $sourceCode = file_get_contents($reflection->getFileName());
 
             // Verify the try/catch for mysqli_sql_exception is present
-            expect($sourceCode)->toContain('catch (\mysqli_sql_exception $e)');
+            expect($sourceCode)->toContain('catch (mysqli_sql_exception $e)');
 
             // Verify the false-return defense-in-depth is present
             expect($sourceCode)->toContain('Defense-in-depth');
