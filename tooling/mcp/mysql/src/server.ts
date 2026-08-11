@@ -15,11 +15,12 @@ const ROOT_DIR = process.env.GARNET_ROOT || resolve(import.meta.dirname, '..', '
 const APP_DIR = process.env.GARNET_APP_DIR || resolve(ROOT_DIR, 'Apps', 'App');
 const PHP_BIN = process.env.PHP_BIN || 'php';
 const RUNNER = resolve(import.meta.dirname, '..', 'db-runner.php');
+const ALLOW_WRITES = process.env.GARNET_MCP_ALLOW_WRITES === '1';
 
 // ── PHP runner ──────────────────────────────────────────────────────
 
-function runPhp(sql: string, params: unknown[] = []): Promise<Record<string, unknown>> {
-  const input = JSON.stringify({ sql, params });
+function runPhp(sql: string, params: unknown[] = [], allowWrite = false): Promise<Record<string, unknown>> {
+  const input = JSON.stringify({ sql, params, allowWrite });
 
   return new Promise((resolve, reject) => {
     execFile(
@@ -78,7 +79,9 @@ const tools = [
     name: 'exec',
     description:
       'Execute an INSERT/UPDATE/DELETE/ALTER query against the application database. ' +
-      'Uses the framework DB connection. Returns {affected, insertId}.',
+      'Uses the framework DB connection. Returns {affected, insertId}. ' +
+      'Disabled unless the MCP server process was started with GARNET_MCP_ALLOW_WRITES=1, ' +
+      'and refused if the DB config does not resolve to a local host.',
     inputSchema: {
       type: 'object' as const,
       properties: {
@@ -108,6 +111,65 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools,
 }));
 
+const READ_ONLY_PREFIXES = ['SELECT', 'SHOW', 'DESCRIBE', 'DESC', 'EXPLAIN'];
+
+function formatResult(result: Record<string, unknown>) {
+  if ('rows' in result) {
+    const rows = result.rows as Record<string, unknown>[];
+    const count = rows.length;
+    // Compact output for large results
+    const text =
+      count === 0
+        ? '(empty result set)'
+        : count <= 50
+          ? JSON.stringify(rows, null, 2)
+          : JSON.stringify(rows.slice(0, 50), null, 2) + `\n... and ${count - 50} more rows`;
+    return { content: [{ type: 'text', text: `${count} row(s):\n${text}` }] };
+  }
+
+  return {
+    content: [
+      {
+        type: 'text',
+        text: `OK. Affected: ${result.affected ?? 0}, insertId: ${result.insertId ?? 0}`,
+      },
+    ],
+  };
+}
+
+async function handleQuery(sql: string, params: unknown[]) {
+  const first = sql.trim().split(/\s+/)[0].toUpperCase();
+  if (!READ_ONLY_PREFIXES.includes(first)) {
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: `Blocked: 'query' only allows ${READ_ONLY_PREFIXES.join('/')}. Use 'exec' for mutations.`,
+        },
+      ],
+    };
+  }
+
+  const result = await runPhp(sql, params, false);
+  return formatResult(result);
+}
+
+async function handleExec(sql: string, params: unknown[]) {
+  if (!ALLOW_WRITES) {
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: "Blocked: 'exec' is disabled. Restart the MCP server with GARNET_MCP_ALLOW_WRITES=1 to enable mutating queries.",
+        },
+      ],
+    };
+  }
+
+  const result = await runPhp(sql, params, true);
+  return formatResult(result);
+}
+
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
   const sql = (args?.sql as string) || '';
@@ -117,38 +179,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     return { content: [{ type: 'text', text: 'Error: sql is required' }] };
   }
 
-  // Safety: block dangerous operations
-  const first = sql.trim().split(/\s+/)[0].toUpperCase();
-  if (['DROP', 'TRUNCATE'].includes(first)) {
-    return {
-      content: [{ type: 'text', text: `Blocked: ${first} is not allowed via MCP` }],
-    };
-  }
-
   try {
-    const result = await runPhp(sql, params);
-
-    if ('rows' in result) {
-      const rows = result.rows as Record<string, unknown>[];
-      const count = rows.length;
-      // Compact output for large results
-      const text =
-        count === 0
-          ? '(empty result set)'
-          : count <= 50
-            ? JSON.stringify(rows, null, 2)
-            : JSON.stringify(rows.slice(0, 50), null, 2) + `\n... and ${count - 50} more rows`;
-      return { content: [{ type: 'text', text: `${count} row(s):\n${text}` }] };
+    switch (name) {
+      case 'query':
+        return await handleQuery(sql, params);
+      case 'exec':
+        return await handleExec(sql, params);
+      default:
+        return { content: [{ type: 'text', text: `Error: unknown tool '${name}'` }] };
     }
-
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `OK. Affected: ${result.affected ?? 0}, insertId: ${result.insertId ?? 0}`,
-        },
-      ],
-    };
   } catch (e) {
     return {
       content: [{ type: 'text', text: `Error: ${(e as Error).message}` }],

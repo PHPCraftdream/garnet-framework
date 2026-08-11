@@ -41,8 +41,23 @@ namespace PHPCraftdream\GarnetMySql {
 
     $sql = trim($data['sql']);
     $params = $data['params'] ?? [];
+    $allowWrite = $data['allowWrite'] ?? false;
 
     try {
+        // Defense-in-depth: even with writes explicitly enabled by the caller,
+        // never mutate a database that doesn't resolve to a local host — guards
+        // against an accidentally-prod-pointed dev config.
+        if ($allowWrite) {
+            $dbHost = IniConfig::db()->param('host');
+            $localHosts = ['localhost', '127.0.0.1', '::1'];
+
+            if (!in_array($dbHost, $localHosts, true)) {
+                echo json_encode(['error' => "Blocked: writes are only allowed against a local DB host (localhost/127.0.0.1/::1), resolved host is '{$dbHost}'"]);
+
+                exit(1);
+            }
+        }
+
         $link = DbPool::get()->newLink();
 
         // Determine query type
