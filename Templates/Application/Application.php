@@ -10,6 +10,7 @@ namespace PHPCraftdream\Application {
     use PHPCraftdream\Application\Common\Tables\MagicLoginTokens;
     use PHPCraftdream\Application\Dashboard\Dashboard;
     use PHPCraftdream\Application\Foreground\Backend\AccountController;
+    use PHPCraftdream\Application\Foreground\Backend\MagicLoginController;
     use PHPCraftdream\Application\Foreground\Backend\MainController;
     use PHPCraftdream\Application\Foreground\Foreground;
     use PHPCraftdream\Application\Migrations\AppMigration;
@@ -62,6 +63,14 @@ namespace PHPCraftdream\Application {
             $router->add(AccountController::URL, AccountController::class, [
                 [EmailAuthMiddleware::class, 'authOnly'],
             ]);
+
+            // One-click magic-login endpoint — the URL the CTA button in
+            // every login email points to (EmailAuthMiddleware::magicLoginUrl).
+            // Registered with the /{code} placeholder so RouterUriParams'
+            // `/code~<token>` → `/{code}` normalization actually matches the
+            // route key. No auth middleware: the token IS the auth (validated
+            // and consumed atomically by FwMagicLoginController::get__main).
+            $router->add(MagicLoginController::URL . '/{code}', MagicLoginController::class);
 
             return $router->dispatch($globals, $uriParams);
         }
