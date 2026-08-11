@@ -477,5 +477,66 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Admin\Spec {
                 expect($source)->toContain('proc_terminate($process)');
             });
         });
+
+        describe('::handle — loopback request guard (isDevRequestAllowed)', function (): void {
+            it('returns 404 when REMOTE_ADDR is a non-loopback address even with GARNET_ADMIN_FORCE_DEV=1', function (): void {
+                // Temporarily override REMOTE_ADDR to a LAN IP (non-loopback)
+                $prevRemoteAddrLocal = $_SERVER['REMOTE_ADDR'] ?? null;
+                $_SERVER['REMOTE_ADDR'] = '192.168.1.50';
+
+                ob_start();
+                @AdminApp::handle('/__garnet/');
+                $body = ob_get_clean();
+
+                // Restore the original REMOTE_ADDR before global afterEach runs
+                if ($prevRemoteAddrLocal === null) {
+                    unset($_SERVER['REMOTE_ADDR']);
+                } else {
+                    $_SERVER['REMOTE_ADDR'] = $prevRemoteAddrLocal;
+                }
+
+                expect($body)->toContain('Not found');
+            });
+
+            it('allows request when REMOTE_ADDR is 127.0.0.1 (IPv4 loopback)', function (): void {
+                // Ensure loopback IPv4 is set
+                $prevRemoteAddrLocal = $_SERVER['REMOTE_ADDR'] ?? null;
+                $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
+
+                ob_start();
+                @AdminApp::handle('/__garnet/');
+                $body = ob_get_clean();
+
+                // Restore the original REMOTE_ADDR before global afterEach runs
+                if ($prevRemoteAddrLocal === null) {
+                    unset($_SERVER['REMOTE_ADDR']);
+                } else {
+                    $_SERVER['REMOTE_ADDR'] = $prevRemoteAddrLocal;
+                }
+
+                // Should return the login page, not "Not found"
+                expect($body)->toContain('Garnet Admin - Login');
+            });
+
+            it('allows request when REMOTE_ADDR is ::1 (IPv6 loopback)', function (): void {
+                // Ensure loopback IPv6 is set
+                $prevRemoteAddrLocal = $_SERVER['REMOTE_ADDR'] ?? null;
+                $_SERVER['REMOTE_ADDR'] = '::1';
+
+                ob_start();
+                @AdminApp::handle('/__garnet/');
+                $body = ob_get_clean();
+
+                // Restore the original REMOTE_ADDR before global afterEach runs
+                if ($prevRemoteAddrLocal === null) {
+                    unset($_SERVER['REMOTE_ADDR']);
+                } else {
+                    $_SERVER['REMOTE_ADDR'] = $prevRemoteAddrLocal;
+                }
+
+                // Should return the login page, not "Not found"
+                expect($body)->toContain('Garnet Admin - Login');
+            });
+        });
     });
 }
