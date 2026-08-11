@@ -128,6 +128,21 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
 
             if ($initCmd) {
                 $mysqli->real_query($initCmd);
+
+                // Drain any result set the init command may have produced.
+                // If real_query() returns rows (e.g. "SELECT 1" as an init command),
+                // that result set must be consumed before the next query can run,
+                // otherwise we get "Commands out of sync; you can't run this command now".
+                if ($res = $mysqli->store_result()) {
+                    $res->free();
+                }
+
+                // Drain any additional result sets from multi-statement init commands.
+                while ($mysqli->more_results() && $mysqli->next_result()) {
+                    if ($res = $mysqli->store_result()) {
+                        $res->free();
+                    }
+                }
             }
 
             // Guard against MySQL sql_mode values that would break escaping
@@ -141,24 +156,34 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
             // final, actually-active session mode (not the mode before init_command).
             $sqlModeResult = $mysqli->query('SELECT @@session.sql_mode AS sql_mode');
 
-            if ($sqlModeResult) {
-                $row = $sqlModeResult->fetch_assoc();
-                $sqlModeResult->free();
+            if (!$sqlModeResult) {
+                // Fail-closed: if the probe query fails for ANY reason
+                // (connection error, desync, revoked privileges, proxy interference,
+                // or an un-drained result set from a result-returning init command),
+                // refuse to establish the connection rather than handing it out unguarded.
+                $mysqli->close();
 
-                if ($row && isset($row['sql_mode'])) {
-                    $sqlMode = $row['sql_mode'];
-                    $dangerousModes = ['NO_BACKSLASH_ESCAPES', 'ANSI_QUOTES'];
+                throw new DbException(
+                    'Refusing to establish DB connection: could not verify sql_mode (probe query failed)'
+                );
+            }
 
-                    foreach ($dangerousModes as $mode) {
-                        if (stripos($sqlMode, $mode) !== false) {
-                            $mysqli->close();
+            $row = $sqlModeResult->fetch_assoc();
+            $sqlModeResult->free();
 
-                            throw new DbException(
-                                "Refusing to establish DB connection: sql_mode contains {$mode}, "
-                                . 'which would break escaping safety assumptions. '
-                                . "Current sql_mode: {$sqlMode}"
-                            );
-                        }
+            if ($row && isset($row['sql_mode'])) {
+                $sqlMode = $row['sql_mode'];
+                $dangerousModes = ['NO_BACKSLASH_ESCAPES', 'ANSI_QUOTES'];
+
+                foreach ($dangerousModes as $mode) {
+                    if (stripos($sqlMode, $mode) !== false) {
+                        $mysqli->close();
+
+                        throw new DbException(
+                            "Refusing to establish DB connection: sql_mode contains {$mode}, "
+                            . 'which would break escaping safety assumptions. '
+                            . "Current sql_mode: {$sqlMode}"
+                        );
                     }
                 }
             }
