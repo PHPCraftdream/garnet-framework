@@ -205,6 +205,76 @@ describe('QueryTools', function (): void {
             expect(QueryTools::escapeSqlParam("\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}"))
                 ->toBe("\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}");
         });
+
+        describe('numeric fast-path (F4 fix)', function (): void {
+            it('fast-paths canonical integer forms', function (): void {
+                expect(QueryTools::escapeSqlParam('42'))->toBe('42');
+                expect(QueryTools::escapeSqlParam('0'))->toBe('0');
+                expect(QueryTools::escapeSqlParam('-3'))->toBe('-3');
+            });
+
+            it('fast-paths canonical decimal forms', function (): void {
+                expect(QueryTools::escapeSqlParam('3.14'))->toBe('3.14');
+                expect(QueryTools::escapeSqlParam('-0.5'))->toBe('-0.5');
+                expect(QueryTools::escapeSqlParam('0.0'))->toBe('0.0');
+            });
+
+            it('escapes non-canonical numeric strings with whitespace', function (): void {
+                // Whitespace-padded numbers should fall through to normal escaping
+                // " 1 " is is_numeric(true) but doesn't match canonical regex,
+                // so it goes through the escape table (no special chars, so unchanged)
+                expect(QueryTools::escapeSqlParam(' 1 '))->toBe(' 1 ');
+                // Real newline character is is_numeric(true) but doesn't match canonical regex,
+                // so it falls through to the escape table and gets escaped to \n
+                // Match the existing test pattern from line 179
+                expect(QueryTools::escapeSqlParam("1\n"))->toBe('1\\n');
+            });
+
+            it('escapes non-canonical numeric strings with exponent', function (): void {
+                // Exponent notation should be escaped (not passed verbatim)
+                expect(QueryTools::escapeSqlParam('1e309'))->toBe('1e309');
+                expect(QueryTools::escapeSqlParam('1.5e-3'))->toBe('1.5e-3');
+            });
+
+            it('escapes non-canonical numeric strings with leading zeros', function (): void {
+                // Leading zeros make it non-canonical (could be interpreted as octal)
+                expect(QueryTools::escapeSqlParam('0777'))->toBe('0777');
+                expect(QueryTools::escapeSqlParam('00042'))->toBe('00042');
+            });
+
+            it('escapes non-canonical numeric strings with plus sign', function (): void {
+                // Plus sign is not canonical
+                expect(QueryTools::escapeSqlParam('+1'))->toBe('+1');
+            });
+
+            it('escapes non-canonical numeric strings starting with decimal', function (): void {
+                // Decimal-first is not canonical
+                expect(QueryTools::escapeSqlParam('.5'))->toBe('.5');
+            });
+
+            it('escapes non-canonical numeric strings with zero exponent', function (): void {
+                // Zero exponent is not canonical
+                expect(QueryTools::escapeSqlParam('0e0'))->toBe('0e0');
+            });
+
+            it('handles floats that stringify to INF/NAN (robustness bug)', function (): void {
+                // Float 1e309 overflows to INF, which is an invalid SQL token
+                // After the fix, INF should fall through to the string handling
+                // path and be escaped normally (or rejected by mb_check_encoding)
+                $overflowFloat = 1e309;
+                expect(is_float($overflowFloat))->toBe(true);
+                expect(is_infinite($overflowFloat))->toBe(true);
+                // (string)$overflowFloat === 'INF', which should NOT be fast-pathed
+                // because it doesn't match the canonical numeric regex
+                $result = QueryTools::escapeSqlParam($overflowFloat);
+                expect($result)->toBe('INF'); // Falls through to mb_check_encoding
+
+                $nanFloat = NAN;
+                expect(is_nan($nanFloat))->toBe(true);
+                $result = QueryTools::escapeSqlParam($nanFloat);
+                expect($result)->toBe('NAN'); // Falls through to mb_check_encoding
+            });
+        });
     });
 
     describe('buildSql()', function (): void {

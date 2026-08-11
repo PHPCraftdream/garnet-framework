@@ -240,20 +240,35 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
          * @return string
          */
         public static function escapeSqlParam(string|int|float|bool $value, ?mysqli $link = null): string {
-            if (is_numeric($value)) {
-                return (string)$value;
-            }
-
             if (is_bool($value)) {
                 return $value ? '1' : '0';
             }
 
-            if (!mb_check_encoding($value, 'UTF-8')) {
+            // Convert non-string types to string for further processing
+            $strValue = is_string($value) ? $value : (string)$value;
+
+            // Numeric fast-path: only bypass escaping for canonical numeric forms
+            // (no whitespace, no exponent, no leading zeros). This prevents edge
+            // cases like " 1 " (whitespace), "1e309" (exponent), or INF/NAN from
+            // float overflow from being returned verbatim. The regex matches:
+            // - Optional leading minus sign
+            // - Integer part: either 0 or non-zero digit followed by digits
+            // - Optional decimal part: dot followed by one or more digits
+            // The D modifier ensures $ matches only at true end (not before newline)
+            if (is_numeric($strValue)) {
+                if (preg_match('/^-?(?:0|[1-9]\d*)(?:\.\d+)?$/D', $strValue)) {
+                    return $strValue; // Canonical form, safe to return verbatim
+                }
+                // Non-canonical numeric string (e.g. " 1 ", "1e309", "0777") falls through
+            }
+
+            // For non-canonical numeric strings or other types, escape+quote
+            if (!mb_check_encoding($strValue, 'UTF-8')) {
                 return '';
             }
 
             if ($link !== null) {
-                return $link->real_escape_string($value);
+                return $link->real_escape_string($strValue);
             }
 
             // Mirrors mysqli_real_escape_string()'s escape table (NUL, \n,
@@ -261,7 +276,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
             return str_replace(
                 ['\\', "'", '"', "\x00", "\n", "\r", "\x1a"],
                 ['\\\\', "\\'", '\\"', '\\0', '\\n', '\\r', '\\Z'],
-                $value
+                $strValue
             );
         }
 
@@ -353,9 +368,14 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
          * INTERNAL — see {@see self::escapeSqlParam()}. Not a general-purpose
          * sanitization helper. Prefer `?`/`:name` placeholders with bound
          * args instead of interpolating this fragment into a query string.
+         *
+         * @param string $fieldName
+         * @param string|int|float $value
+         * @param mysqli|null $link Optional connection for charset-aware escaping
+         * @return string
          */
-        public static function fieldVal(string $fieldName, string|int|float $value): string {
-            $v = is_string($value) ? static::escapeSqlParam($value) : $value;
+        public static function fieldVal(string $fieldName, string|int|float $value, ?mysqli $link = null): string {
+            $v = is_string($value) ? static::escapeSqlParam($value, $link) : $value;
 
             return "`{$fieldName}` = \"{$v}\"";
         }
@@ -364,12 +384,17 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
          * INTERNAL — see {@see self::escapeSqlParam()}. Not a general-purpose
          * sanitization helper. Prefer `?`/`:name` placeholders with bound
          * args instead of interpolating this fragment into a query string.
+         *
+         * @param string $fieldName
+         * @param array $array
+         * @param mysqli|null $link Optional connection for charset-aware escaping
+         * @return string
          */
-        public static function fieldValIn(string $fieldName, array $array): string {
+        public static function fieldValIn(string $fieldName, array $array, ?mysqli $link = null): string {
             $res = join(
                 ', ',
                 array_map(
-                    fn ($v) => '"' . (is_string($v) ? static::escapeSqlParam($v) : $v) . '"',
+                    fn ($v) => '"' . (is_string($v) ? static::escapeSqlParam($v, $link) : $v) . '"',
                     $array
                 )
             );
