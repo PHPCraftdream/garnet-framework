@@ -28,8 +28,9 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
             file_put_contents($this->safeFile, '%PDF-1.4 fake');
 
             // Plant a file OUTSIDE the protected dir — the access path must
-            // never reach it via ../ tricks.
-            $this->secretFile = $this->tempDir . DIRECTORY_SEPARATOR . 'SECRET.txt';
+            // never reach it via ../ tricks. CRITICAL: plant in tempDir's PARENT,
+            // NOT in tempDir itself.
+            $this->secretFile = dirname($this->tempDir) . DIRECTORY_SEPARATOR . 'SECRET.txt';
             file_put_contents($this->secretFile, 'classified');
         });
 
@@ -44,6 +45,11 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
                     $f->isDir() ? rmdir($f->getPathname()) : unlink($f->getPathname());
                 }
                 rmdir($this->tempDir);
+            }
+
+            // Clean up the secret file outside tempDir
+            if (file_exists($this->secretFile ?? '')) {
+                unlink($this->secretFile);
             }
         });
 
@@ -211,7 +217,10 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
                 expect($resp->getStatusCode())->toBe(404);
             });
 
-            it('returns 404 when subDir contains a traversal segment', function (): void {
+            it('returns 404 when subDir contains a traversal segment — cannot read SECRET.txt in parent', function (): void {
+                // FIXED: secret file is now in tempDir's parent, so this traversal
+                // would actually reach it if isSafeSubDir() fails. The test fails
+                // (200 + "classified" content) when isSafeSubDir() is neutered.
                 $resp = SecureFileServing::serve(
                     uploadDir: $this->tempDir,
                     subDir: '../',
@@ -226,16 +235,43 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
             });
 
             it('returns 404 when subDir contains an embedded traversal segment (support/../..)', function (): void {
+                // FIXED: traversal goes up two levels, escaping tempDir entirely.
+                // The secret file is at dirname(tempDir) and is reachable if guard fails.
                 $resp = SecureFileServing::serve(
                     uploadDir: $this->tempDir,
                     subDir: 'support/../..',
-                    storedName: 'safe.pdf',
+                    storedName: 'SECRET.txt',
                     displayName: 'safe.pdf',
                     mimeType: 'application/pdf',
                     accessCheck: fn () => true,
                 );
 
                 expect($resp->getStatusCode())->toBe(404);
+                expect((string)$resp->getBody())->not->toContain('classified');
+            });
+
+            it('returns 404 for symlink inside upload dir pointing outside (cannot escape via symlink)', function (): void {
+                // Plant a symlink inside the upload dir that points to the secret file
+                $symlinkPath = $this->tempDir . DIRECTORY_SEPARATOR . 'support' . DIRECTORY_SEPARATOR . 'evil_link.txt';
+                $secretTarget = dirname($this->tempDir) . DIRECTORY_SEPARATOR . 'SECRET.txt';
+
+                // Note: symlinks require admin rights on Windows; this test is best-effort.
+                $symlinkCreated = @symlink($secretTarget, $symlinkPath);
+                skipIf(!$symlinkCreated);
+
+                $resp = SecureFileServing::serve(
+                    uploadDir: $this->tempDir,
+                    subDir: 'support',
+                    storedName: 'evil_link.txt',
+                    displayName: 'safe.pdf',
+                    mimeType: 'application/pdf',
+                    accessCheck: fn () => true,
+                );
+
+                expect($resp->getStatusCode())->toBe(404);
+                // Symlink resolution happens AFTER realpath() on basePath, so the containment
+                // check at line 73-77 in SecureFileServing.php MUST block the symlink escape.
+                expect((string)$resp->getBody())->not->toContain('classified');
             });
         });
 

@@ -83,8 +83,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload {
          */
         public function storeSingle(array $file): ?UploadedFileInfo {
             $originalName = basename($file['name']);
-            $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
-            $storedName = bin2hex(random_bytes(16)) . ($ext ? ".{$ext}" : '');
+            $storedName = static::buildStoredName($originalName);
             $destPath = $this->baseDir . $storedName;
 
             // Detect the real MIME type from file content BEFORE moving, since
@@ -106,6 +105,19 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload {
                 size: (int)$file['size'],
                 subDir: basename(rtrim($this->baseDir, '/\\')),
             );
+        }
+
+        /**
+         * Builds the random on-disk filename for a stored upload, preserving
+         * the client-supplied extension. Split out from storeSingle() so
+         * the extension-preservation behavior is testable without needing
+         * move_uploaded_file() to succeed (which requires a real HTTP
+         * upload — untestable in a unit-test harness).
+         */
+        protected static function buildStoredName(string $originalName): string {
+            $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+
+            return bin2hex(random_bytes(16)) . ($ext ? ".{$ext}" : '');
         }
 
         /**
@@ -150,6 +162,17 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload {
                 return 'Invalid upload';
             }
 
+            return static::validateFileRules($file, $rules);
+        }
+
+        /**
+         * Size/extension/MIME checks against an already-confirmed-uploaded
+         * file. Split out from validateFile() so this logic is testable
+         * without needing a real HTTP upload — is_uploaded_file() can only
+         * ever return true for a file the SAPI actually received via POST,
+         * which a test harness has no way to fake.
+         */
+        protected static function validateFileRules(array $file, UploadRules $rules): ?string {
             // Size check
             $size = (int)($file['size'] ?? 0);
 
