@@ -245,7 +245,12 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
             }
 
             // Convert non-string types to string for further processing
-            $strValue = is_string($value) ? $value : (string)$value;
+            // Handle INF and NAN specially to avoid E_WARNING in PHP 8.1+
+            if (is_float($value) && (is_infinite($value) || is_nan($value))) {
+                $strValue = is_infinite($value) ? 'INF' : 'NAN';
+            } else {
+                $strValue = is_string($value) ? $value : (string)$value;
+            }
 
             // Numeric fast-path: only bypass escaping for canonical numeric forms
             // (no whitespace, no exponent, no leading zeros). This prevents edge

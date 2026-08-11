@@ -2,7 +2,6 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Db\Link\Spec;
 
-use mysqli;
 use PHPCraftdream\Garnet\Kernel\Db\Link\DbPool;
 
 /**
