@@ -1,6 +1,7 @@
 <?php declare(strict_types=1);
 
 use PHPCraftdream\Garnet\Kernel\Db\Query\QueryTools;
+use PHPCraftdream\Garnet\Kernel\Exceptions\DbException;
 
 describe('QueryTools', function (): void {
     describe('makeInsertBatchNamed()', function (): void {
@@ -259,20 +260,44 @@ describe('QueryTools', function (): void {
 
             it('handles floats that stringify to INF/NAN (robustness bug)', function (): void {
                 // Float 1e309 overflows to INF, which is an invalid SQL token
-                // After the fix, INF should fall through to the string handling
-                // path and be escaped normally (or rejected by mb_check_encoding)
+                // Non-finite floats now throw DbException instead of silently
+                // converting to '0' in the database, consistent with fail-closed
+                // philosophy.
                 $overflowFloat = 1e309;
                 expect(is_float($overflowFloat))->toBe(true);
                 expect(is_infinite($overflowFloat))->toBe(true);
-                // (string)$overflowFloat === 'INF', which should NOT be fast-pathed
-                // because it doesn't match the canonical numeric regex
-                $result = QueryTools::escapeSqlParam($overflowFloat);
-                expect($result)->toBe('INF'); // Falls through to mb_check_encoding
+
+                expect(function () use ($overflowFloat): void {
+                    QueryTools::escapeSqlParam($overflowFloat);
+                })->toThrow(new DbException(
+                    "Non-finite float value 'INF' cannot be used as SQL parameter. " .
+                    'This usually indicates an upstream bug (e.g., division by zero). ' .
+                    'Use is_finite() to check values before passing to SQL queries.'
+                ));
 
                 $nanFloat = NAN;
                 expect(is_nan($nanFloat))->toBe(true);
-                $result = QueryTools::escapeSqlParam($nanFloat);
-                expect($result)->toBe('NAN'); // Falls through to mb_check_encoding
+
+                expect(function () use ($nanFloat): void {
+                    QueryTools::escapeSqlParam($nanFloat);
+                })->toThrow(new DbException(
+                    "Non-finite float value 'NAN' cannot be used as SQL parameter. " .
+                    'This usually indicates an upstream bug (e.g., division by zero). ' .
+                    'Use is_finite() to check values before passing to SQL queries.'
+                ));
+
+                // Test -INF specifically (regression for -INF sign loss bug)
+                $negInf = -INF;
+                expect(is_infinite($negInf))->toBe(true);
+                expect($negInf < 0)->toBe(true);
+
+                expect(function () use ($negInf): void {
+                    QueryTools::escapeSqlParam($negInf);
+                })->toThrow(new DbException(
+                    "Non-finite float value '-INF' cannot be used as SQL parameter. " .
+                    'This usually indicates an upstream bug (e.g., division by zero). ' .
+                    'Use is_finite() to check values before passing to SQL queries.'
+                ));
             });
         });
     });

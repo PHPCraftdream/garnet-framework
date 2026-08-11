@@ -2,6 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Db\Query {
     use mysqli;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\DbException;
 
     class QueryTools {
         public static function makeInsertBatchNamed(
@@ -245,9 +246,24 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
             }
 
             // Convert non-string types to string for further processing
-            // Handle INF and NAN specially to avoid E_WARNING in PHP 8.1+
+            // Handle INF and NAN specially to avoid E_WARNING in PHP 8.5+
             if (is_float($value) && (is_infinite($value) || is_nan($value))) {
-                $strValue = is_infinite($value) ? 'INF' : 'NAN';
+                // INF/NAN reaching a SQL parameter is always an upstream application bug
+                // (e.g., uncaught division by zero). Rather than silently writing '0'
+                // into the database (which masks the bug and causes data corruption),
+                // we fail loudly with DbException, consistent with the fail-closed
+                // philosophy used throughout the DB layer.
+                if (is_infinite($value)) {
+                    $strValue = $value > 0 ? 'INF' : '-INF';
+                } else {
+                    $strValue = 'NAN';
+                }
+
+                throw new DbException(
+                    "Non-finite float value '{$strValue}' cannot be used as SQL parameter. " .
+                    'This usually indicates an upstream bug (e.g., division by zero). ' .
+                    'Use is_finite() to check values before passing to SQL queries.'
+                );
             } else {
                 $strValue = is_string($value) ? $value : (string)$value;
             }
