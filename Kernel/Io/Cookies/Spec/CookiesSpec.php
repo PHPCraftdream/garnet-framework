@@ -243,14 +243,16 @@ describe('Cookies', function (): void {
             $newResponse = $cookies->toResponse($response);
             expect(count($newResponse->getHeader('Set-Cookie')))->toBe(2);
 
-            // Removes existing Set-Cookie headers
+            // Preserves a pre-existing Set-Cookie for a name NOT managed by
+            // this jar; only the managed cookie is added.
             $cookie = new Cookie('new', 'value');
             $cookies = new Cookies([$cookie]);
             $response = new Response(200, ['Set-Cookie' => 'old=value']);
             $newResponse = $cookies->toResponse($response);
             $headers = $newResponse->getHeader('Set-Cookie');
-            expect(count($headers))->toBe(1);
-            expect($headers[0])->toContain('new=value');
+            expect(count($headers))->toBe(2);
+            expect($headers)->toContain('old=value');
+            expect($headers)->toContain('new=value; SameSite=Strict');
 
             // Skips empty cookie strings
             $cookie1 = new Cookie('has_value', 'val');
@@ -259,6 +261,54 @@ describe('Cookies', function (): void {
             $response = new Response();
             $newResponse = $cookies->toResponse($response);
             expect(count($newResponse->getHeader('Set-Cookie')))->toBe(1);
+        });
+
+        it('replaces a pre-existing Set-Cookie for a MANAGED name without duplicating', function (): void {
+            $cookie = new Cookie('tracked', 'fresh');
+            $cookies = new Cookies([$cookie]);
+
+            $response = new Response(200, ['Set-Cookie' => 'tracked=stale; SameSite=Lax']);
+            $newResponse = $cookies->toResponse($response);
+
+            $headers = $newResponse->getHeader('Set-Cookie');
+            expect(count($headers))->toBe(1);
+            expect($headers[0])->toContain('tracked=fresh');
+            expect($headers[0])->not->toContain('stale');
+        });
+
+        it('replaces only managed names and preserves all unmanaged ones across multiple headers', function (): void {
+            $tracked = new Cookie('tracked', 'fresh');
+            $new = new Cookie('new', 'val');
+            $cookies = new Cookies([$tracked, $new]);
+
+            $response = new Response(200, ['Set-Cookie' => [
+                'tracked=stale',
+                'external=foo',
+                'other=bar',
+            ]]);
+            $newResponse = $cookies->toResponse($response);
+
+            $headers = $newResponse->getHeader('Set-Cookie');
+            expect(count($headers))->toBe(4);
+            expect($headers)->toContain('external=foo');
+            expect($headers)->toContain('other=bar');
+            expect($headers)->toContain('tracked=fresh; SameSite=Strict');
+            expect($headers)->toContain('new=val; SameSite=Strict');
+            expect($headers)->not->toContain('tracked=stale');
+        });
+
+        it('drops a stale pre-existing Set-Cookie for a managed name that emits nothing', function (): void {
+            // An unchanged, already-existing managed cookie emits no Set-Cookie
+            // line, but it must still suppress a stale raw header for its name.
+            $tracked = new Cookie('tracked', 'val');
+            $tracked->setOld();
+            $tracked->startObserveChanges();
+            $cookies = new Cookies([$tracked]);
+
+            $response = new Response(200, ['Set-Cookie' => 'tracked=stalevalue']);
+            $newResponse = $cookies->toResponse($response);
+
+            expect($newResponse->getHeader('Set-Cookie'))->toBe([]);
         });
     });
 

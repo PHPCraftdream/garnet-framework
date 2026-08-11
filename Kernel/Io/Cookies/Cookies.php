@@ -72,7 +72,25 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Cookies {
         }
 
         public function toResponse(ResponseInterface $response): ResponseInterface {
+            $existing = $response->getHeader(self::SET_COOKIE_HEADER);
+            $preserved = [];
+
+            foreach ($existing as $cookieStr) {
+                // Drop any pre-existing line whose name this jar manages: the
+                // jar's own state (fresh value, or nothing at all) must win.
+                // Lines for names we don't manage are left untouched.
+                if (isset($this->cookies[$this->extractCookieName($cookieStr)])) {
+                    continue;
+                }
+
+                $preserved[] = $cookieStr;
+            }
+
             $response = $response->withoutHeader(self::SET_COOKIE_HEADER);
+
+            foreach ($preserved as $cookieStr) {
+                $response = $response->withAddedHeader(self::SET_COOKIE_HEADER, $cookieStr);
+            }
 
             foreach ($this->cookies as $cookie) {
                 $cookieStr = $cookie->__toString();
@@ -85,6 +103,18 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Cookies {
             }
 
             return $response;
+        }
+
+        /**
+         * Decode the cookie NAME (the part before the first `=`) from a raw
+         * `Set-Cookie` header line, using the same splitting the framework
+         * uses to parse cookies so it matches $this->cookies keys exactly.
+         */
+        protected function extractCookieName(string $cookieStr): string {
+            $parts = $this->splitOnAttributeDelimiter($cookieStr);
+            [$name] = $this->splitCookiePair($parts[0] ?? '');
+
+            return $name;
         }
 
         public function fromResponse(ResponseInterface $response): ICookies {
