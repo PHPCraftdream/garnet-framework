@@ -70,7 +70,11 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload {
             $realPath = realpath($fullPath);
             $realBase = realpath($basePath);
 
-            if ($realPath === false || $realBase === false || !str_starts_with($realPath, $realBase)) {
+            if (
+                $realPath === false
+                || $realBase === false
+                || ($realPath !== $realBase && !str_starts_with($realPath, $realBase . DIRECTORY_SEPARATOR))
+            ) {
                 return ControllerTools::JSON(['error' => 'File not found'], status: 404);
             }
 
