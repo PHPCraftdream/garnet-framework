@@ -416,6 +416,7 @@ jobs:
           echo "Server is up — running Playwright."
           npm --prefix Tests test -- \
             specs/smoke.spec.ts \
+            specs/smoke/pageloader-incoming-state-ids-guard.spec.ts \
             specs/framework-bundle/api-no-react-import.spec.ts \
             specs/framework-bundle/cron-cli.spec.ts \
             specs/framework-bundle/html-lang.spec.ts \

@@ -7,7 +7,7 @@
  * on soft-nav to such pages.
  *
  * This test is CI-able: no MySQL, no live server needed. It uses Playwright's
- * headless Chromium to execute the real PageLoader.updatePage() against DOM
+ * headless Chromium to execute the REAL PageLoader.updatePage() against DOM
  * fixtures.
  *
  * BEFORE the fix (round-5 bug):
@@ -21,6 +21,9 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
+import { transformSync } from 'esbuild';
 
 // Fixtures representing real HTML responses from the Garnet framework.
 
@@ -90,6 +93,52 @@ const MAINTENANCE_PAGE_HTML = `
 </html>
 `;
 
+/**
+ * Read and transpile the real PageLoader.ts for browser injection.
+ * Uses esbuild to transpile TypeScript to JavaScript, then stubs
+ * the require() calls and replaces loadStyles/swapBody with no-ops.
+ */
+function getRealPageLoaderCode(): string {
+	// process.cwd() is Templates/Application/Tests
+	// Bundle/ is at the framework root (3 levels up from Tests)
+	const realPath = resolve(process.cwd(), '../../../Bundle/Front/Common/Dom/PageLoader.ts');
+	const tsCode = readFileSync(realPath, 'utf8');
+
+	// Use esbuild to transpile TypeScript to JavaScript
+	const result = transformSync(tsCode, {
+		loader: 'ts',
+		target: 'es2022',
+		format: 'iife',
+		banner: '// Transpiled from real Bundle/Front/Common/Dom/PageLoader.ts\n',
+	});
+
+	let code = result.code;
+
+	// Stub the require() calls that esbuild generated
+	// @common/Utils/PageEvents and @common/Enums are not needed for this test
+	code = code.replace(
+		/var import_PageEvents = require\("@common\/Utils\/PageEvents"\);/g,
+		'var import_PageEvents = { init: () => ({ emmit: () => {} }) };'
+	);
+	code = code.replace(
+		/var import_Enums = require\("@common\/Enums"\);/g,
+		'var import_Enums = { ECommonEvents: { PAGE_RELOADED: "PAGE_RELOADED" } };'
+	);
+
+	// Replace the final loadStyles/swapBody call with no-op
+	code = code.replace(
+		/return PageLoader\.loadStyles\(stylesToLoad\)\s*\.then\(\(\) => PageLoader\.swapBody\(doc, scriptsToLoad\)\);/g,
+		'return Promise.resolve();'
+	);
+
+	// Remove the IIFE wrapper and export to window
+	code = code.replace(/\(\(\) => \{([\s\S]*?)\}\)\(\);/, '$1\nwindow.PageLoader = PageLoader;');
+
+	return code;
+}
+
+const REAL_PAGE_LOADER_CODE = getRealPageLoaderCode();
+
 test.describe('PageLoader.updatePage() — incomingStateIds.size > 0 guard', () => {
 	test('normal to error page: state globals are PRESERVED (guard active)', async ({ page }) => {
 		// Load the normal page HTML first to establish state globals.
@@ -106,105 +155,12 @@ test.describe('PageLoader.updatePage() — incomingStateIds.size > 0 guard', () 
 		expect(userBefore).toEqual({id: 1, name: "Test User", email: "test@example.com"});
 		expect(accountIdBefore).toBe(42);
 
-		// Now simulate soft-nav to error page by calling PageLoader.updatePage().
-		// We need to inject the PageLoader code first.
-		await page.evaluate(async () => {
-			// Inline PageLoader.updatePage() logic (the real implementation).
-			class PageLoader {
-				static updatePage(html: string): Promise<void> {
-					const parser = new DOMParser();
-					const doc = parser.parseFromString(html, 'text/html');
-
-					// Update title
-					const newTitle = doc.querySelector('title');
-					if (newTitle) {
-						document.title = newTitle.textContent ?? '';
-					}
-
-					// Update meta tags
-					const newMetas = Array.from(doc.head.querySelectorAll('meta[name]'));
-					for (const meta of newMetas) {
-						const name = meta.getAttribute('name');
-						if (!name) continue;
-						const existing = document.head.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null;
-						if (existing) {
-							existing.content = (meta as HTMLMetaElement).content;
-						} else {
-							document.head.appendChild(meta.cloneNode(true));
-						}
-					}
-
-					// Collect external resources (styles, scripts)
-					const stylesToLoad: string[] = [];
-					for (const link of Array.from(doc.querySelectorAll('link[rel="stylesheet"][href]'))) {
-						const href = link.getAttribute('href');
-						if (href) stylesToLoad.push(href);
-					}
-
-					const scriptsToLoad: string[] = [];
-					for (const scriptEl of Array.from(doc.querySelectorAll('script[src]'))) {
-						const src = scriptEl.getAttribute('src');
-						if (src) scriptsToLoad.push(src);
-					}
-
-					// Merge inline <style id> tags
-					for (const style of Array.from(doc.querySelectorAll('style[id]'))) {
-						if (!document.getElementById(style.id)) {
-							document.head.appendChild(style.cloneNode(true));
-						}
-					}
-
-					// Merge/recreate inline <script id> tags (state scripts)
-					const incomingStateIds = new Set<string>();
-
-					for (const scriptEl of Array.from(doc.querySelectorAll('script[id]:not([src])'))) {
-						const isStateScript = scriptEl.id.startsWith('__GARNET_');
-						if (isStateScript) {
-							incomingStateIds.add(scriptEl.id);
-						}
-
-						const existing = document.getElementById(scriptEl.id);
-						const stale = isStateScript && !!existing
-							&& existing.textContent !== scriptEl.textContent;
-
-						if (existing && !stale) {
-							continue;
-						}
-
-						existing?.remove();
-
-						const fresh = document.createElement('script');
-						for (const attr of Array.from(scriptEl.attributes)) {
-							fresh.setAttribute(attr.name, attr.value);
-						}
-						fresh.textContent = scriptEl.textContent;
-						document.head.appendChild(fresh);
-					}
-
-					// Case 2: remove __GARNET_* state scripts the server stopped emitting
-					// and clear their globals. THE GUARD: skip when incomingStateIds is empty.
-					if (incomingStateIds.size > 0) {
-						for (const el of Array.from(document.querySelectorAll('script[id]'))) {
-							if (!el.id.startsWith('__GARNET_') || incomingStateIds.has(el.id)) {
-								continue;
-							}
-							el.remove();
-							(window as unknown as Record<string, unknown>)[el.id] = undefined;
-						}
-					}
-
-					// Skip loadStyles/swapBody for this test (no external resources in fixtures)
-					return Promise.resolve();
-				}
-			}
-
-			// Expose on window so we can call it
-			(window as any).__TEST_PageLoader = PageLoader;
-		});
+		// Inject the REAL PageLoader code from Bundle/Front/Common/Dom/PageLoader.ts
+		await page.addScriptTag({ content: REAL_PAGE_LOADER_CODE });
 
 		// Call PageLoader.updatePage() with error page HTML (zero state scripts)
 		await page.evaluate(async (html: string) => {
-			await (window as any).__TEST_PageLoader.updatePage(html);
+			await (window as any).PageLoader.updatePage(html);
 		}, ERROR_PAGE_HTML);
 
 		// CRITICAL: All state globals should STILL EXIST and be UNCHANGED.
@@ -223,89 +179,8 @@ test.describe('PageLoader.updatePage() — incomingStateIds.size > 0 guard', () 
 	test('normal to maintenance page: state globals are PRESERVED (guard active)', async ({ page }) => {
 		await page.setContent(NORMAL_PAGE_HTML);
 
-		// Setup PageLoader (same as above)
-		await page.evaluate(async () => {
-			class PageLoader {
-				static updatePage(html: string): Promise<void> {
-					const parser = new DOMParser();
-					const doc = parser.parseFromString(html, 'text/html');
-
-					const newTitle = doc.querySelector('title');
-					if (newTitle) {
-						document.title = newTitle.textContent ?? '';
-					}
-
-					const newMetas = Array.from(doc.head.querySelectorAll('meta[name]'));
-					for (const meta of newMetas) {
-						const name = meta.getAttribute('name');
-						if (!name) continue;
-						const existing = document.head.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null;
-						if (existing) {
-							existing.content = (meta as HTMLMetaElement).content;
-						} else {
-							document.head.appendChild(meta.cloneNode(true));
-						}
-					}
-
-					const stylesToLoad: string[] = [];
-					for (const link of Array.from(doc.querySelectorAll('link[rel="stylesheet"][href]'))) {
-						const href = link.getAttribute('href');
-						if (href) stylesToLoad.push(href);
-					}
-
-					const scriptsToLoad: string[] = [];
-					for (const scriptEl of Array.from(doc.querySelectorAll('script[src]'))) {
-						const src = scriptEl.getAttribute('src');
-						if (src) scriptsToLoad.push(src);
-					}
-
-					for (const style of Array.from(doc.querySelectorAll('style[id]'))) {
-						if (!document.getElementById(style.id)) {
-							document.head.appendChild(style.cloneNode(true));
-						}
-					}
-
-					const incomingStateIds = new Set<string>();
-
-					for (const scriptEl of Array.from(doc.querySelectorAll('script[id]:not([src])'))) {
-						const isStateScript = scriptEl.id.startsWith('__GARNET_');
-						if (isStateScript) {
-							incomingStateIds.add(scriptEl.id);
-						}
-
-						const existing = document.getElementById(scriptEl.id);
-						const stale = isStateScript && !!existing
-							&& existing.textContent !== scriptEl.textContent;
-
-						if (existing && !stale) {
-							continue;
-						}
-
-						existing?.remove();
-
-						const fresh = document.createElement('script');
-						for (const attr of Array.from(scriptEl.attributes)) {
-							fresh.setAttribute(attr.name, attr.value);
-						}
-						fresh.textContent = scriptEl.textContent;
-						document.head.appendChild(fresh);
-					}
-
-					if (incomingStateIds.size > 0) {
-						for (const el of Array.from(document.querySelectorAll('script[id]'))) {
-							if (!el.id.startsWith('__GARNET_') || incomingStateIds.has(el.id)) {
-								continue;
-							}
-							el.remove();
-							(window as unknown as Record<string, unknown>)[el.id] = undefined;
-						}
-					}
-
-					return Promise.resolve();
-				}
-			}
-			(window as any).__TEST_PageLoader = PageLoader;
-		});
+		// Inject the REAL PageLoader code
+		await page.addScriptTag({ content: REAL_PAGE_LOADER_CODE });
 
 		// Capture initial values
 		const csrfBefore = await page.evaluate(() => (window as any).__GARNET_CSRF__);
@@ -313,7 +188,7 @@ test.describe('PageLoader.updatePage() — incomingStateIds.size > 0 guard', () 
 
 		// Soft-nav to maintenance page
 		await page.evaluate(async (html: string) => {
-			await (window as any).__TEST_PageLoader.updatePage(html);
+			await (window as any).PageLoader.updatePage(html);
 		}, MAINTENANCE_PAGE_HTML);
 
 		// Globals should be preserved
@@ -326,102 +201,22 @@ test.describe('PageLoader.updatePage() — incomingStateIds.size > 0 guard', () 
 
 	test('control: WITHOUT guard, error page WIPES all globals (mutation test harness)', async ({ page }) => {
 		// This test verifies the harness is sensitive to the fix: if the guard is
-		// removed, this test SHOULD fail (globals would be wiped).
+		// removed from the REAL PageLoader.ts, this test SHOULD fail (globals would be wiped).
 		//
-		// We deliberately disable the guard here to prove the test would catch
-		// a regression. This is NOT the PageLoader implementation — it's a
-		// mutation-test harness.
+		// We deliberately disable the guard here by modifying the injected code to prove
+		// the test would catch a regression. This is NOT modifying the PageLoader implementation
+		// on disk — it's a mutation-test harness.
 
 		await page.setContent(NORMAL_PAGE_HTML);
 
-		// Setup PageLoader WITH GUARD DISABLED (simulating the bug)
-		await page.evaluate(async () => {
-			class PageLoader {
-				static updatePage(html: string): Promise<void> {
-					const parser = new DOMParser();
-					const doc = parser.parseFromString(html, 'text/html');
+		// Create a MUTATED version of the PageLoader code with the guard disabled
+		const mutatedCode = REAL_PAGE_LOADER_CODE.replace(
+			/if \(incomingStateIds\.size > 0\) \{/,
+			// Guard disabled: sweep runs even when incomingStateIds is empty
+			'// MUTATION: guard disabled for control test\nif (true) {'
+		);
 
-					const newTitle = doc.querySelector('title');
-					if (newTitle) {
-						document.title = newTitle.textContent ?? '';
-					}
-
-					const newMetas = Array.from(doc.head.querySelectorAll('meta[name]'));
-					for (const meta of newMetas) {
-						const name = meta.getAttribute('name');
-						if (!name) continue;
-						const existing = document.head.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null;
-						if (existing) {
-							existing.content = (meta as HTMLMetaElement).content;
-						} else {
-							document.head.appendChild(meta.cloneNode(true));
-						}
-					}
-
-					const stylesToLoad: string[] = [];
-					for (const link of Array.from(doc.querySelectorAll('link[rel="stylesheet"][href]'))) {
-						const href = link.getAttribute('href');
-						if (href) stylesToLoad.push(href);
-					}
-
-					const scriptsToLoad: string[] = [];
-					for (const scriptEl of Array.from(doc.querySelectorAll('script[src]'))) {
-						const src = scriptEl.getAttribute('src');
-						if (src) scriptsToLoad.push(src);
-					}
-
-					for (const style of Array.from(doc.querySelectorAll('style[id]'))) {
-						if (!document.getElementById(style.id)) {
-							document.head.appendChild(style.cloneNode(true));
-						}
-					}
-
-					const incomingStateIds = new Set<string>();
-
-					for (const scriptEl of Array.from(doc.querySelectorAll('script[id]:not([src])'))) {
-						const isStateScript = scriptEl.id.startsWith('__GARNET_');
-						if (isStateScript) {
-							incomingStateIds.add(scriptEl.id);
-						}
-
-						const existing = document.getElementById(scriptEl.id);
-						const stale = isStateScript && !!existing
-							&& existing.textContent !== scriptEl.textContent;
-
-						if (existing && !stale) {
-							continue;
-						}
-
-						existing?.remove();
-
-						const fresh = document.createElement('script');
-						for (const attr of Array.from(scriptEl.attributes)) {
-							fresh.setAttribute(attr.name, attr.value);
-						}
-						fresh.textContent = scriptEl.textContent;
-						document.head.appendChild(fresh);
-					}
-
-					// *** GUARD DISABLED FOR MUTATION TEST ***
-					// This is the round-5 bug: the sweep runs even when incomingStateIds is empty.
-					// All __GARNET_* globals are wiped.
-					//
-					// BEFORE the fix (buggy): if (incomingStateIds.size > 0) { ... }
-					// AFTER the fix (correct): if (incomingStateIds.size > 0) { ... }
-					// WITH GUARD REMOVED (this test): // No guard — sweep always runs
-					for (const el of Array.from(document.querySelectorAll('script[id]'))) {
-						if (!el.id.startsWith('__GARNET_') || incomingStateIds.has(el.id)) {
-							continue;
-						}
-						el.remove();
-						(window as unknown as Record<string, unknown>)[el.id] = undefined;
-					}
-
-					return Promise.resolve();
-				}
-			}
-			(window as any).__TEST_PageLoader = PageLoader;
-		});
+		await page.addScriptTag({ content: mutatedCode });
 
 		// Capture initial values (not used in this control test, but captured for symmetry)
 		const _csrfBefore = await page.evaluate(() => (window as any).__GARNET_CSRF__);
@@ -429,7 +224,7 @@ test.describe('PageLoader.updatePage() — incomingStateIds.size > 0 guard', () 
 
 		// Soft-nav to error page (zero state scripts)
 		await page.evaluate(async (html: string) => {
-			await (window as any).__TEST_PageLoader.updatePage(html);
+			await (window as any).PageLoader.updatePage(html);
 		}, ERROR_PAGE_HTML);
 
 		// WITH GUARD DISABLED: All globals should be WIPED (undefined).
