@@ -36,6 +36,17 @@ namespace PHPCraftdream\Application\Common\Backend {
         }
 
         public static function not_found_404(IGlobalReqParams $globals, IRouterUriParams $params): ResponseInterface {
+            // A POST hitting a route whose controller has no matching
+            // `{method}__{name}` handler (e.g. a middleware-gated endpoint
+            // that only defines get__main) 404s here BEFORE any `callBefore`
+            // middleware runs — see Router::dispatch(), which checks
+            // method_exists() first. Callers doing a JSON POST expect a
+            // JSON error back, not an HTML page; matches the framework's
+            // own BaseController::not_found_404 convention.
+            if ($globals->isPost()) {
+                return ControllerTools::JSON(['code' => 404, 'message' => 'Page not found'], status: 404);
+            }
+
             $twig = Twig::get();
 
             $twigParams = self::commonTwigParams($globals);
@@ -44,6 +55,18 @@ namespace PHPCraftdream\Application\Common\Backend {
         }
 
         public static function internal_error_500(IGlobalReqParams $globals, IRouterUriParams $params, string $error): ResponseInterface {
+            // Same reasoning as not_found_404 above: a POST expects JSON
+            // back, even on an unhandled exception.
+            if ($globals->isPost()) {
+                $err = ['code' => 500, 'message' => 'Internal server error'];
+
+                if ($globals->isDev() && Env::isDevDir()) {
+                    $err['details'] = $error;
+                }
+
+                return ControllerTools::JSON($err, status: 500);
+            }
+
             $twig = Twig::get();
             $twigParams = self::commonTwigParams($globals);
 
