@@ -123,12 +123,22 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
             // make manual/real_escape_string escaping bypassable.
             $mysqli->set_charset('utf8mb4');
 
+            $options = $config->param('options');
+            $initCmd = $options['MYSQL_ATTR_INIT_COMMAND'] ?? null;
+
+            if ($initCmd) {
+                $mysqli->real_query($initCmd);
+            }
+
             // Guard against MySQL sql_mode values that would break escaping
             // assumptions:
             // - NO_BACKSLASH_ESCAPES: makes \' parse as literal backslash+quote,
             //   not an escaped quote, bypassing mysqli_real_escape_string()
             // - ANSI_QUOTES: makes "..." parse as identifiers instead of string
             //   literals, breaking buildSql/fieldVal/fieldValIn's value wrapping
+            //
+            // This guard runs AFTER MYSQL_ATTR_INIT_COMMAND so it observes the
+            // final, actually-active session mode (not the mode before init_command).
             $sqlModeResult = $mysqli->query('SELECT @@session.sql_mode AS sql_mode');
 
             if ($sqlModeResult) {
@@ -141,6 +151,8 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
 
                     foreach ($dangerousModes as $mode) {
                         if (stripos($sqlMode, $mode) !== false) {
+                            $mysqli->close();
+
                             throw new DbException(
                                 "Refusing to establish DB connection: sql_mode contains {$mode}, "
                                 . 'which would break escaping safety assumptions. '
@@ -149,13 +161,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
                         }
                     }
                 }
-            }
-
-            $options = $config->param('options');
-            $initCmd = $options['MYSQL_ATTR_INIT_COMMAND'] ?? null;
-
-            if ($initCmd) {
-                $mysqli->real_query($initCmd);
             }
 
             $link = new DbMySQLiLink($mysqli);

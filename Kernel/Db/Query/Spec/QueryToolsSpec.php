@@ -318,6 +318,41 @@ describe('QueryTools', function (): void {
             $result = QueryTools::buildSql($sql, [0 => null, 'n' => null]);
             expect($result)->toBe('WHERE a = NULL AND b = NULL');
         });
+
+        it('does not treat :digit as named placeholder inside string literals (B9)', function (): void {
+            // Bug fixed: :0, :1, :2, etc. inside JSON or other string literals
+            // must NOT be treated as named placeholders
+            $sql = 'UPDATE t SET meta = \'{"retries":0}\' WHERE id = ?';
+            $result = QueryTools::buildSql($sql, [5]);
+            expect($result)->toBe('UPDATE t SET meta = \'{"retries":0}\' WHERE id = "5"');
+
+            $sql = 'UPDATE t SET meta = \'{"v":1}\' WHERE id = ? AND o = ?';
+            $result = QueryTools::buildSql($sql, [5, 'boom']);
+            expect($result)->toBe('UPDATE t SET meta = \'{"v":1}\' WHERE id = "5" AND o = "boom"');
+
+            $sql = 'UPDATE t SET data = \'{"x":0,"y":1,"z":2}\' WHERE id = ?';
+            $result = QueryTools::buildSql($sql, [99]);
+            expect($result)->toBe('UPDATE t SET data = \'{"x":0,"y":1,"z":2}\' WHERE id = "99"');
+        });
+
+        it('allows letter-or-underscore first for named placeholders (B10)', function (): void {
+            // Verify named placeholders starting with letter or underscore still work
+            $sql = 'SELECT * FROM users WHERE id = :id';
+            $result = QueryTools::buildSql($sql, ['id' => 42]);
+            expect($result)->toBe('SELECT * FROM users WHERE id = "42"');
+
+            $sql = 'SELECT * FROM t WHERE a = :_private AND b = ?';
+            $result = QueryTools::buildSql($sql, ['_private' => 'val', 'test']);
+            expect($result)->toBe('SELECT * FROM t WHERE a = "val" AND b = "test"');
+
+            $sql = 'SELECT * FROM t WHERE a = :abc123 AND b = ?';
+            $result = QueryTools::buildSql($sql, ['abc123' => 'test', 'val']);
+            expect($result)->toBe('SELECT * FROM t WHERE a = "test" AND b = "val"');
+
+            $sql = 'SELECT * FROM t WHERE a = :a0 AND b = ?';
+            $result = QueryTools::buildSql($sql, ['a0' => 'value', 'test']);
+            expect($result)->toBe('SELECT * FROM t WHERE a = "value" AND b = "test"');
+        });
     });
 
     describe('fieldVal()', function (): void {
@@ -476,6 +511,20 @@ describe('QueryTools', function (): void {
             expect(count($params))->toBe(3);
             expect($params[0])->toBe(1);
             expect($params[2])->toBe(3);
+        });
+
+        it('does not treat :digit as named placeholder inside string literals (B9 sibling)', function (): void {
+            // Bug fixed: :0, :1, :2, etc. inside JSON or other string literals
+            // must NOT be treated as named placeholders
+            $sql = 'UPDATE t SET meta = \'{"retries":0}\' WHERE id = ?';
+            [$newSql, $params] = QueryTools::patchArgsIndexed($sql, [5]);
+            expect($newSql)->toBe('UPDATE t SET meta = \'{"retries":0}\' WHERE id = ?');
+            expect($params)->toBe([5]);
+
+            $sql = 'UPDATE t SET meta = \'{"v":1}\' WHERE id = ? AND o = ?';
+            [$newSql, $params] = QueryTools::patchArgsIndexed($sql, [5, 'boom']);
+            expect($newSql)->toBe('UPDATE t SET meta = \'{"v":1}\' WHERE id = ? AND o = ?');
+            expect($params)->toBe([5, 'boom']);
         });
     });
 });

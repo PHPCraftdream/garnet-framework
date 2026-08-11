@@ -183,7 +183,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
             $newArgs = [];
             $currentInd = 0;
 
-            $sql = preg_replace_callback('#(\?)|(:(\w+))#is', function ($matches) use (&$newArgs, &$currentInd, $args) {
+            $sql = preg_replace_callback('#(\?)|(:([a-zA-Z_]\w*))#is', function ($matches) use (&$newArgs, &$currentInd, $args) {
                 $statement = $matches[3] ?? $matches[0];
                 $isQ = $statement === '?';
                 $key = $isQ ? $currentInd : $statement;
@@ -287,7 +287,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
             // original template, never re-scanning substituted output. This prevents
             // cross-pass re-substitution bugs where a positional value containing
             // ":name" could be re-expanded by a later named-placeholder pass.
-            if (preg_match_all('#(\?)|(:(\w+))#is', $sql, $matches, PREG_OFFSET_CAPTURE)) {
+            if (preg_match_all('#(\?)|(:([a-zA-Z_]\w*))#is', $sql, $matches, PREG_OFFSET_CAPTURE)) {
                 foreach ($matches[0] as $i => [$fullMatch, $matchPos]) {
                     // Append literal text before this match
                     $result .= substr($sql, $lastEnd, $matchPos - $lastEnd);
