@@ -16,6 +16,7 @@ const APP_DIR = process.env.GARNET_APP_DIR || resolve(ROOT_DIR, 'Apps', 'App');
 const PHP_BIN = process.env.PHP_BIN || 'php';
 const RUNNER = resolve(import.meta.dirname, '..', 'db-runner.php');
 const ALLOW_WRITES = process.env.GARNET_MCP_ALLOW_WRITES === '1';
+const RUNNER_TIMEOUT_MS = 30000;
 
 // ── PHP runner ──────────────────────────────────────────────────────
 
@@ -29,11 +30,25 @@ function runPhp(sql: string, params: unknown[] = [], allowWrite = false): Promis
       {
         env: { ...process.env, GARNET_APP_DIR: APP_DIR },
         maxBuffer: 10 * 1024 * 1024, // 10MB
-        timeout: 30000,
+        timeout: RUNNER_TIMEOUT_MS,
       },
       (error, stdout, stderr) => {
         if (stderr) {
           console.error('[garnet-mysql-mcp]', stderr);
+        }
+        if (error) {
+          if (error.killed || error.signal) {
+            reject(
+              new Error(
+                `Query timed out after ${RUNNER_TIMEOUT_MS / 1000}s; the statement may have completed on the server despite the timeout — verify manually before assuming success or failure.`,
+              ),
+            );
+            return;
+          }
+          if (!stdout) {
+            reject(new Error(stderr || error.message));
+            return;
+          }
         }
         try {
           const result = JSON.parse(stdout || '{}');
