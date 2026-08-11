@@ -165,7 +165,10 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
             it('matches its own worker commandline literally despite regex metacharacters in the path', function (): void {
                 $publicDir = 'D:' . DIRECTORY_SEPARATOR . 'dev' . DIRECTORY_SEPARATOR . 'R&D(app)'
                     . DIRECTORY_SEPARATOR . 'Public';
-                $pattern = '/' . ($this->invoke)('escapeEre', [$publicDir]) . '.*php-worker-router\.php/';
+                // PCRE delimiter ~ avoids clashing with the literal / that
+                // escapeEre() correctly leaves unescaped (it's not an ERE
+                // metachar) but would break a /…/ delimited preg pattern.
+                $pattern = '~' . ($this->invoke)('escapeEre', [$publicDir]) . '.*php-worker-router\.php~';
 
                 $ownCommandline = 'php -d opcache.enable=1 -S 127.0.0.1:8011 -t ' . $publicDir
                     . ' /framework/tooling/server/php-worker-router.php';
@@ -176,7 +179,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
             it('does not match a different app whose public dir merely shares a prefix', function (): void {
                 $publicDir = 'D:' . DIRECTORY_SEPARATOR . 'dev' . DIRECTORY_SEPARATOR . 'R&D(app)'
                     . DIRECTORY_SEPARATOR . 'Public';
-                $pattern = '/' . ($this->invoke)('escapeEre', [$publicDir]) . '.*php-worker-router\.php/';
+                $pattern = '~' . ($this->invoke)('escapeEre', [$publicDir]) . '.*php-worker-router\.php~';
 
                 $otherAppCommandline = 'php -S 127.0.0.1:8011 -t D:' . DIRECTORY_SEPARATOR . 'dev'
                     . DIRECTORY_SEPARATOR . 'R&D(app)-other' . DIRECTORY_SEPARATOR . 'Public'
