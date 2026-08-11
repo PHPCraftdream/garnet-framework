@@ -319,13 +319,14 @@ jobs:
     runs-on: ubuntu-latest
     # Env::isDevDir() decides "dev mode" (reads WorkDir/ConfigDev/ — the
     # zero-config quickstart defaults) vs "production mode" (reads
-    # WorkDir/Config/, empty on a fresh scaffold with no deploy/config:init
-    # step). GARNET_ENV=dev short-circuits the heuristic explicitly instead
-    # of relying on an IDE-marker directory being present by accident; a
-    # bare CI checkout has none, so without this a freshly-scaffolded app
-    # 500s on every request (IniConfigException: Wrong file
-    # .../WorkDir/Config/db.ini) because nothing ever populated the
-    # production Config/ dir.
+    # WorkDir/Config/). Without an explicit GARNET_ENV, the heuristic keys
+    # off an IDE-marker directory (.idea/.vscode/etc. — see
+    # Env::hasDevMarkerAbove()) that a bare CI checkout never has, so a
+    # freshly-scaffolded app in CI is misclassified as "production" and
+    # reads WorkDir/Config/db.ini, whose git-tracked template ships with
+    # `enabled = 0` (DB disabled) rather than the ConfigDev/ zero-config
+    # defaults the app actually needs to boot correctly in this job.
+    # GARNET_ENV=dev short-circuits that heuristic explicitly.
     env:
       GARNET_ENV: dev
     steps:

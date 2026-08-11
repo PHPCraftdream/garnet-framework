@@ -1,9 +1,10 @@
 # Testing
 
 The framework ships [kahlan](https://kahlan.github.io/) spec files with
-2657 passing expectations (1848 DB-free kernel + 94 kernel integration +
-715 bundle), covering `Kernel/` and `Bundle/`. This guide covers how to
-run them, how to write a new one, and where the line sits between
+around 5500 passing expectations (~4055 DB-free kernel + ~225 kernel
+integration + ~1196 bundle — run the suites yourself for the exact,
+current count), covering `Kernel/` and `Bundle/`. This guide covers how
+to run them, how to write a new one, and where the line sits between
 framework-level unit specs and application-level e2e tests.
 
 `*IntegrationSpec.php` files under `Kernel/` deliberately touch a real
@@ -49,9 +50,13 @@ that with POSIX `VAR=value command` syntax (works under CI's bash,
 breaks on native Windows). `kahlan-config.php` reads that flag to
 exclude `*IntegrationSpec.php` from the DB-free run.
 
-`composer ci` runs `cs:check`, `phpstan`, then `test` — the same sequence CI
-runs on every push. See [Dev workflow](dev-workflow.md) for developing the
-framework against a side-by-side app checkout.
+`composer ci` runs `cs:check`, `phpstan`, then `test` (kernel +
+kernel-integration + bundle) as one convenience script — useful to run
+locally before pushing, but CI itself does NOT invoke `composer ci` or
+`composer test` for the framework; it runs `cs:check`, `phpstan`,
+`test:kernel`, and `test:bundle` as separate jobs (see
+`.github/workflows/ci.yml`). See [Dev workflow](dev-workflow.md) for
+developing the framework against a side-by-side app checkout.
 
 ## Writing a kahlan spec
 

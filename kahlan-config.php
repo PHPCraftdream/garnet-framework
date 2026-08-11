@@ -14,9 +14,9 @@ GlobalVars::set('ErrorCatcherTestEnabled', true);
 // they test, per this project's "spec sits beside its source" convention,
 // rather than under Bundle/ where the DB-backed test suite otherwise lives.
 // `composer test:kernel` (and the CI "no DB" Kernel job) sets
-// GARNET_SKIP_INTEGRATION_SPECS=1 to skip them here; `composer test:bundle`
-// (which already has a live MySQL connection) picks them up via a separate
-// --spec=Kernel pass so they still run somewhere in `composer test`/CI.
+// GARNET_SKIP_INTEGRATION_SPECS=1 to skip them here; they run via the
+// separate `composer test:kernel-integration` script instead, which needs
+// its own DB-backed CI job/step to actually be invoked.
 if (getenv('GARNET_SKIP_INTEGRATION_SPECS') === '1') {
     Filters::apply($this, 'load', function ($chain): void {
         $specDirs = $this->commandLine()->get('spec');

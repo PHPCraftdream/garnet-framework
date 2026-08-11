@@ -113,11 +113,11 @@ describe('SlotDateFilter — exhaustive 2020–2060 cross-check vs @hebcal/core'
     });
 
     it('known deferred-fast discrepancies are documented', function () use (&$knownDiscrepancies): void {
-        // Merely asserts the count is stable — if HCalendar starts handling
-        // deferred fasts like @hebcal/core, this number drops to 0 and the
-        // test still passes. If new discrepancies appear, investigate.
-        expect(count($knownDiscrepancies))->toBeGreaterThan(0);
-        expect(count($knownDiscrepancies) <= 50)->toBe(true);
+        // Merely asserts the count stays bounded — if HCalendar starts
+        // handling deferred fasts like @hebcal/core, this number can drop
+        // to 0 and the test still passes. If new discrepancies appear
+        // beyond the bound, investigate.
+        expect(count($knownDiscrepancies))->toBeLessThan(51);
     });
 
     // -------------------------------------------------------------------------
