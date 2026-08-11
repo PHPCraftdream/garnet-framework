@@ -253,8 +253,6 @@ namespace PHPCraftdream\Garnet\Bundle\I18n {
             'AdminAction_user_approve' => 'Approve user',
             'AdminAction_user_disable' => 'Disable user',
             'AdminAction_user_flag_set' => 'Set user flag',
-            'AdminAction_slot_delete' => 'Delete slot',
-            'AdminAction_booking_cancel' => 'Cancel booking',
             'AdminAction_support_assign' => 'Assign ticket',
             'AdminAction_support_status_change' => 'Change ticket status',
             'AdminAction_balance_adjust' => 'Adjust balance',
