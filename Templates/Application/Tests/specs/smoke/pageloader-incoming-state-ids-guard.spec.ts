@@ -111,7 +111,13 @@ function getRealPageLoaderCode(): string {
 		resolve(__dirname, '../../../../../Bundle/Front/Common/Dom/PageLoader.ts'),
 	];
 
-	// In CI, the framework source might be available via GITHUB_WORKSPACE
+	// CI sets GARNET_FRAMEWORK_PATH explicitly (see .github/workflows/ci.yml);
+	// GITHUB_WORKSPACE is a fallback for jobs that don't set it.
+	if (process.env.GARNET_FRAMEWORK_PATH) {
+		candidates.push(
+			resolve(process.env.GARNET_FRAMEWORK_PATH, 'Bundle/Front/Common/Dom/PageLoader.ts')
+		);
+	}
 	if (process.env.GITHUB_WORKSPACE) {
 		candidates.push(
 			resolve(process.env.GITHUB_WORKSPACE, 'Bundle/Front/Common/Dom/PageLoader.ts')
