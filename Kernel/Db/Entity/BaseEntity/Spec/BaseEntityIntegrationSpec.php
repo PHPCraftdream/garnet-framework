@@ -3,9 +3,9 @@
 namespace PHPCraftdream\Garnet\Kernel\Db\Entity\BaseEntity\Spec;
 
 use Exception;
-use PDO;
 use PHPCraftdream\Garnet\Kernel\Db\Entity\BaseEntity\BaseEntity;
 use PHPCraftdream\Garnet\Kernel\Db\Entity\BaseEntity\SaveEntityResult;
+use PHPCraftdream\Garnet\Kernel\Db\Link\DbPool;
 
 // Helper function to get db config path
 function getDbConfigPath(): string {
@@ -96,18 +96,12 @@ describe('BaseEntity Integration', function (): void {
             return;
         }
 
-        // Create test table using QueryExPdo
-        $iniConfig = \PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig::db();
-        $dsn = $iniConfig->param('dsn');
-        $user = $iniConfig->param('user');
-        $password = $iniConfig->param('password');
+        // Create test table using DbPool/mysqli
+        \PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig::defineDbIni($dbConfigPath);
 
         try {
-            $pdo = new \PHPCraftdream\Garnet\Kernel\Db\Link\ExtPDO($dsn, $user, $password);
-            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-            $queryEx = \PHPCraftdream\Garnet\Kernel\Db\Query\QueryExPdo::get();
-            $queryEx->setPDO($pdo);
+            $pool = DbPool::get();
+            $link = $pool->newLink();
 
             // Create test table
             $sql = '
@@ -119,7 +113,10 @@ describe('BaseEntity Integration', function (): void {
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 ) ENGINE=InnoDB COLLATE=utf8mb4_unicode_ci
             ';
-            $queryEx->ex($sql, []);
+            $link->query($sql, []);
+
+            // Clean up test data
+            $link->query("DELETE FROM dbtest_test_entities WHERE email LIKE 'test_%'", []);
 
             $dbAvailable = true;
         } catch (Exception $e) {
@@ -134,8 +131,7 @@ describe('BaseEntity Integration', function (): void {
             }
 
             // Clean up test data
-            $queryEx = \PHPCraftdream\Garnet\Kernel\Db\Query\QueryExPdo::get();
-            $queryEx->ex("DELETE FROM dbtest_test_entities WHERE email LIKE 'test_%'", []);
+            DbPool::get()->newLink()->query("DELETE FROM dbtest_test_entities WHERE email LIKE 'test_%'", []);
         });
 
         afterEach(function () use (&$dbAvailable): void {
@@ -144,8 +140,7 @@ describe('BaseEntity Integration', function (): void {
             }
 
             // Clean up test data
-            $queryEx = \PHPCraftdream\Garnet\Kernel\Db\Query\QueryExPdo::get();
-            $queryEx->ex("DELETE FROM dbtest_test_entities WHERE email LIKE 'test_%'", []);
+            DbPool::get()->newLink()->query("DELETE FROM dbtest_test_entities WHERE email LIKE 'test_%'", []);
         });
 
         it('validates and processes valid data', function () use (&$dbAvailable): void {

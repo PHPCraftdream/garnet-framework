@@ -2,6 +2,11 @@
 
 How to develop the Garnet framework and your application together.
 
+> This is the path-repo flow — see
+> [quickstart.md § "Which install path do I want?"](quickstart.md#which-install-path-do-i-want)
+> if you're not sure whether you want this or the Packagist
+> `composer require` path (real apps use the latter).
+
 ## Use case
 
 You're building an app on top of `phpcraftdream/garnet-framework`, and you've hit

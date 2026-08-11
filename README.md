@@ -113,9 +113,15 @@ loop, this might fit.
 composer require phpcraftdream/garnet-framework
 ```
 
-You typically don't `require` Garnet directly — you create an app from
-the bundled template (`php bin/garnet app:create MyApp`), which pins the
-dependency and wires the composer path-repo for you.
+This is how real production apps consume Garnet — a normal versioned
+Composer dependency in `vendor/`. `php bin/garnet app:create` (from within
+your app) scaffolds this wiring for you.
+
+The quickstart above (`git clone` + `app:create` run *inside the framework
+checkout*) is a different, dev-only path: it's for contributing to the
+framework itself, or trying Garnet without setting up a real project. See
+["Which install path do I want?"](docs/quickstart.md#which-install-path-do-i-want)
+for the full comparison, including which CI job covers each path.
 
 ### Requirements
 

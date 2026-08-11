@@ -1,7 +1,6 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
-    use PHPCraftdream\Garnet\Kernel\Db\Link\ExtPDO;
     use PHPCraftdream\Garnet\Kernel\Exceptions\DbTableBuilderException;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbM2M;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbTable;
@@ -18,7 +17,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
             }
 
             return match ($type) {
-                ExtPDO::DB_TYPE_MYSQL => new TableBuilderMySQL($tableName),
+                'mysql' => new TableBuilderMySQL($tableName),
                 default => throw new DbTableBuilderException('Unknown type: ' . $type)
             };
         }

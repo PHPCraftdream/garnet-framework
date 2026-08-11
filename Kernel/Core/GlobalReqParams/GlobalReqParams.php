@@ -56,6 +56,20 @@ namespace PHPCraftdream\Garnet\Kernel\Core\GlobalReqParams {
             static::$post = null;
         }
 
+        /**
+         * Builds the effective POST body for the current request, merging
+         * in a JSON request body when present (see {@see mergeJsonBody()}).
+         *
+         * Not called anywhere inside the framework itself — this is part
+         * of the app-contract API, meant to be called once from the app's
+         * own `run_web.php` bootstrap entry point to build the `$_post`
+         * array passed into {@see from()}:
+         *   GlobalReqParams::from($_SERVER, $_GET, GlobalReqParams::currentPost(), $_COOKIE, $_FILES)
+         *
+         * Caches its result per request; on a persistent runtime
+         * (RoadRunner, Swoole, FrankenPHP, …) the bootstrap MUST call
+         * {@see reset()} before this on every request.
+         */
         public static function currentPost(): array {
             if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
                 return [];

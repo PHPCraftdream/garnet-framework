@@ -24,15 +24,21 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router {
         }
 
         /**
-         * Register a URI prefix that should NEVER receive the global route
-         * prefix. Useful for public-facing routes (landing, static pages,
-         * webhooks) that must live at clean URLs even when the rest of the
-         * app sits under e.g. /system.
+         * Register a URI prefix that consumers building outbound URLs (see
+         * {@see isNoPrefixPath()}) should treat as living outside the
+         * global route prefix. This does NOT affect routing itself —
+         * {@see fromGlobals()} never consults this list, it's a
+         * URL-building/rendering helper. Real consumers are app-side link
+         * builders (e.g. `Bundle/Utils/HtmlLayout.php`, an app's
+         * `IRabi.php`-style bootstrap) that need to render clean URLs for
+         * public-facing routes (landing, static pages, webhooks) even when
+         * the rest of the app sits under e.g. /system.
          *
          * Example:
          *   setRoutePrefix('/system');
          *   registerNoPrefixPath('/page');
-         *   // Now /page/view~slug is served as-is, /system/bookings is stripped to /bookings.
+         *   // A link builder consulting isNoPrefixPath('/page/view~slug')
+         *   // renders it as-is instead of prefixing it with /system.
          */
         public static function registerNoPrefixPath(string $path): void {
             $path = '/' . trim($path, '/');

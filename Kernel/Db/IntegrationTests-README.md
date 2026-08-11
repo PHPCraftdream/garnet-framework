@@ -43,9 +43,6 @@ Run individual integration test files:
 # DbPool tests
 php vendor/bin/kahlan --spec=Framework/Db/Link/Spec/DbPoolIntegrationSpec.php
 
-# QueryExPdo tests
-php vendor/bin/kahlan --spec=Framework/Db/Query/Spec/QueryExPdoIntegrationSpec.php
-
 # BaseEntity tests
 php vendor/bin/kahlan --spec=Framework/Db/Entity/BaseEntity/Spec/BaseEntityIntegrationSpec.php
 
@@ -69,7 +66,6 @@ php vendor/bin/kahlan --spec=Framework/Db/**/Spec/*IntegrationSpec.php
 | Component | Test File | Tests | Coverage |
 |-----------|-----------|-------|----------|
 | DbPool | `Framework/Db/Link/Spec/DbPoolIntegrationSpec.php` | 15 | Connection pool, singleton pattern, CRUD operations, transactions |
-| QueryExPdo | `Framework/Db/Query/Spec/QueryExPdoIntegrationSpec.php` | 18 | SELECT, INSERT, UPDATE, DELETE, query builder, async operations |
 | BaseEntity | `Framework/Db/Entity/BaseEntity/Spec/BaseEntityIntegrationSpec.php` | 15 | saveOne(), validation, field filtering, grid info |
 | Settings | `Framework/Db/Entity/Settings/Spec/SettingsIntegrationSpec.php` | 16 | getValue(), setValue(), unsetValue(), caching, flush() |
 | Session | `Framework/Db/Entity/Session/Spec/SessionIntegrationSpec.php` | 16 | Session data management, persistence, token handling |
@@ -82,7 +78,6 @@ php vendor/bin/kahlan --spec=Framework/Db/**/Spec/*IntegrationSpec.php
 Integration tests create the following temporary tables:
 
 - `db_test_users` - For DbPool tests
-- `db_test_products` - For QueryExPdo tests
 - `db_test_entities` - For BaseEntity tests
 - `db_settings` - For Settings tests
 - `db_session` - For Session tests (main table)

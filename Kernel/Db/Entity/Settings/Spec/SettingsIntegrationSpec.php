@@ -35,7 +35,7 @@ describe('Settings Integration', function (): void {
             return;
         }
 
-        // Create test table using QueryExPdo
+        // Create test table using DbPool/mysqli
         \PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig::defineDbIni($dbConfigPath);
 
         try {
