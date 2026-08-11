@@ -217,16 +217,51 @@ jobs:
       # The committed Kernel/Io/GarnetCli/Admin/dist/** is shipped to Packagist
       # (carved out of .gitignore's **/dist/** rule). If a .tsx change lands
       # without rebuilding, the shipped admin console silently drifts out of
-      # sync with its server-side CSRF/exec-ticket contract. Fail the build if
-      # a clean rebuild from current source does not reproduce the committed
-      # bundle byte-for-byte.
+      # sync with its server-side CSRF/exec-ticket contract — exactly the
+      # defect this guard exists to stop recurring. Fail the build if a clean
+      # rebuild from current source does not reproduce the committed bundle.
+      #
+      # Why "normalized" rather than a raw `git diff --exit-code`: the JS
+      # bundles (swc — a Rust core) are byte-deterministic across OSes, but
+      # admin.css is minified by lightningcss, whose sRGB→lab() colour
+      # conversion yields last-decimal FP-rounding variance between its
+      # platform-native binaries (win32-x64-msvc vs linux-x64-gnu) — visually
+      # identical colours that are NOT byte-identical across Windows/Linux.
+      # Truncating every decimal to 3 places on BOTH sides makes the compare
+      # stable on any contributor's OS (a no-op for the JS, which carries no
+      # 4+-digit decimals) while still catching every real drift: structural
+      # CSS changes, new/changed JS, and added/dropped chunk files. ([.] is
+      # used instead of \. so the regex needs no shell backslash escaping.)
       - name: Fail if committed dist diverges from a clean rebuild
         run: |
-          if ! git diff --exit-code -- Kernel/Io/GarnetCli/Admin/dist/; then
-            echo "::error::Committed admin bundle is stale. Rebuild with: cd FrontBuilder && npx cross-env NODE_ENV=production npx rspack build --config rspack.admin.config.ts"
-            echo "::error::then commit Kernel/Io/GarnetCli/Admin/dist/**"
-            exit 1
+          DIST=Kernel/Io/GarnetCli/Admin/dist
+          # Truncate every decimal to 3 places (no-op on the JS bundles,
+          # which carry no 4+-digit decimals). Written to a file so the
+          # regex isn't at the mercy of any shell's backslash / `$1`
+          # quoting — behaves identically on every contributor's OS.
+          printf '%s\n' 's/([.][0-9]{3})[0-9]+/$1/g' > /tmp/garnet_admin_norm.pl
+          norm() { perl -p /tmp/garnet_admin_norm.pl; }
+          status=0
+
+          # Every committed dist file must match the rebuild (normalized).
+          while IFS= read -r f; do
+            if ! diff -u <(git show "HEAD:$f" | norm) <(norm < "$f") >/dev/null; then
+              echo "::error::$f diverges from a clean rebuild (normalized). Rebuild: cd FrontBuilder && npx cross-env NODE_ENV=production npx rspack build --config rspack.admin.config.ts, then commit $DIST/**"
+              status=1
+            fi
+          done < <(git ls-tree -r --name-only HEAD -- "$DIST")
+
+          # The rebuild must produce exactly the committed file set (catches a
+          # new/dropped chunk the per-file loop above wouldn't visit).
+          committed=$(git ls-tree -r --name-only HEAD -- "$DIST" | sed "s|^$DIST/||" | sort)
+          built=$(ls -1 "$DIST" | sort)
+          if [ "$committed" != "$built" ]; then
+            echo "::error::Admin dist file set diverges. committed vs built:"
+            diff <(printf '%s\n' "$committed") <(printf '%s\n' "$built") || true
+            status=1
           fi
+
+          exit $status
 
   zero-config:
     name: Zero-config — setup → app:create → build
