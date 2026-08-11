@@ -24,8 +24,8 @@ interface Props {
     accept?: string;
     /** URL for the upload endpoint. */
     uploadUrl: string;
-    /** URL for removing a pending upload. */
-    removeUrl?: string;
+    /** URL for removing a pending upload (required). */
+    removeUrl: string;
     /** Label text shown in the drop area. */
     label?: string;
     /** Label shown while uploading (default: "Uploading..."). */
@@ -43,7 +43,7 @@ export default function Dropzone({
     maxFiles = 10,
     accept = 'image/jpeg,image/png,image/gif,image/webp',
     uploadUrl,
-    removeUrl = '/expert/~removePending',
+    removeUrl,
     label,
     uploadingLabel = 'Uploading...',
     removeLabel = 'Remove',
