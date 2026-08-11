@@ -11,6 +11,16 @@ use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
 describe('DbPool Integration', function (): void {
     $dbAvailable = false;
 
+    // Kahlan runs every *IntegrationSpec.php file in one PHP process
+    // (composer test:kernel-integration / composer test:bundle). DbPool
+    // is a per-process singleton that never closes connections on its
+    // own (see DbPool::closeAll() docblock) — without this, links opened
+    // by this file's newLink() calls stay open into the next spec file
+    // and the suite exhausts MySQL's max_connections partway through.
+    afterAll(function (): void {
+        DbPool::closeAll();
+    });
+
     beforeAll(function () use (&$dbAvailable): void {
         // Load database configuration
         $dbConfigPath = __DIR__ . '/../../../../TestsInit/TestConfig/db.ini';

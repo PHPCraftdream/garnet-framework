@@ -18,6 +18,13 @@ function getDbConfigPath(): string {
 }
 
 describe('BaseEntity Integration', function (): void {
+    // See AccountIntegrationSpec.php for why this is needed: DbPool
+    // never closes connections on its own, and Kahlan runs every
+    // *IntegrationSpec.php file in one PHP process.
+    afterAll(function (): void {
+        DbPool::closeAll();
+    });
+
     class TestIntegrationEntity extends BaseEntity {
         public string $tableName = 'dbtest_test_entities';
 

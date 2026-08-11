@@ -22,6 +22,15 @@ function getDbConfigPath(): string {
 describe('Account Integration', function (): void {
     $dbAvailable = false;
 
+    // Kahlan runs every *IntegrationSpec.php file in one PHP process
+    // (composer test:kernel-integration / composer test:bundle). DbPool
+    // never closes connections on its own (see DbPool::closeAll()), so
+    // without this, links opened here stay open into the next spec file
+    // and the suite exhausts MySQL's max_connections partway through.
+    afterAll(function (): void {
+        DbPool::closeAll();
+    });
+
     beforeAll(function () use (&$dbAvailable): void {
         // Load database configuration
         $dbConfigPath = getDbConfigPath();

@@ -21,6 +21,13 @@ function getDbConfigPath(): string {
 describe('Settings Integration', function (): void {
     $dbAvailable = false;
 
+    // See AccountIntegrationSpec.php for why this is needed: DbPool
+    // never closes connections on its own, and Kahlan runs every
+    // *IntegrationSpec.php file in one PHP process.
+    afterAll(function (): void {
+        DbPool::closeAll();
+    });
+
     beforeAll(function () use (&$dbAvailable): void {
         // Load database configuration
         $dbConfigPath = getDbConfigPath();

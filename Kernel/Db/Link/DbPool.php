@@ -255,5 +255,39 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
         public function getLinksCount(): int {
             return count($this->links);
         }
+
+        /**
+         * Close every open mysqli connection this pool holds. Not called
+         * from the request lifecycle: a single php-fpm/`php -S` worker
+         * keeps a small, steady-state pool of reused connections for its
+         * whole life, which is intentional (see getLink()). This exists
+         * for test-process hygiene, where many independent Kahlan spec
+         * files run back-to-back in one PHP process and would otherwise
+         * each accumulate their own links against the shared singleton
+         * until the DB's max_connections is exhausted.
+         *
+         * Deliberately does NOT reset static::$instance to null: other
+         * singletons (e.g. QueryEx::$instance) capture the DbPool object
+         * itself via DbPool::get() and keep that reference for the life
+         * of the process. Replacing the singleton here would leave those
+         * callers holding a stale IDbPool wrapping closed connections, so
+         * this mutates the existing instance's link list in place instead
+         * — every current and future holder of the DbPool object observes
+         * the same emptied pool and transparently opens fresh connections
+         * on next use.
+         *
+         * @return void
+         */
+        public static function closeAll(): void {
+            if (static::$instance === null) {
+                return;
+            }
+
+            foreach (static::$instance->links as $link) {
+                $link->getMysqli()->close();
+            }
+
+            static::$instance->links = [];
+        }
     }
 }

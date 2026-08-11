@@ -20,6 +20,13 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link\Spec {
     describe('DbPool async callback isolation across a pooled link', function (): void {
         $dbAvailable = false;
 
+        // See DbPoolIntegrationSpec.php for why this is needed: DbPool
+        // never closes connections on its own, and Kahlan runs every
+        // *IntegrationSpec.php file in one PHP process.
+        afterAll(function (): void {
+            DbPool::closeAll();
+        });
+
         beforeAll(function () use (&$dbAvailable): void {
             $dbConfigPath = __DIR__ . '/../../../../TestsInit/TestConfig/db.ini';
 
