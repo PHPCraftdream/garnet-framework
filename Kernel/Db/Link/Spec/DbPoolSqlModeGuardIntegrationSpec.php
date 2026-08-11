@@ -74,7 +74,6 @@ describe('DbPool sql_mode guard integration (M1/M2 end-to-end)', function (): vo
     $clearIniConfigCache = function (): void {
         $reflection = new ReflectionClass(IniConfig::class);
         $itemsProperty = $reflection->getProperty('items');
-        $itemsProperty->setAccessible(true);
         $itemsProperty->setValue(null, []);
     };
 

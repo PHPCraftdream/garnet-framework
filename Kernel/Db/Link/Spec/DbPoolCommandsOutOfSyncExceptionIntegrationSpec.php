@@ -48,7 +48,6 @@ describe('DbPool Commands out of sync exception handling (Integration)', functio
         // Use reflection to call the protected newLink() method
         $reflection = new ReflectionClass($dbPool);
         $newLinkMethod = $reflection->getMethod('newLink');
-        $newLinkMethod->setAccessible(true);
 
         // Call the REAL newLink() method
         // This should succeed because the default db.ini uses "SET NAMES 'utf8mb4'"
@@ -138,7 +137,6 @@ describe('DbPool Commands out of sync exception handling (Integration)', functio
         // Drain logic is absent - this is the mutation test case
         // Call the REAL newLink() and verify the exception type
         $newLinkMethod = $reflection->getMethod('newLink');
-        $newLinkMethod->setAccessible(true);
 
         $exceptionThrown = false;
         $exceptionType = null;
