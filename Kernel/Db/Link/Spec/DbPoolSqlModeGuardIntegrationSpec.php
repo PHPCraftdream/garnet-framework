@@ -75,7 +75,7 @@ describe('DbPool sql_mode guard integration (M1/M2 end-to-end)', function (): vo
         $reflection = new ReflectionClass(IniConfig::class);
         $itemsProperty = $reflection->getProperty('items');
         $itemsProperty->setAccessible(true);
-        $itemsProperty->setValue([]);
+        $itemsProperty->setValue(null, []);
     };
 
     // Helper: create a temporary db.ini file with a custom init command
