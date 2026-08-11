@@ -110,6 +110,19 @@ namespace PHPCraftdream\Application {
                     'csrf' => Session::touchCSRF_(),
                     'title' => $appConf->paramString('title'),
                     'styles_assets' => [],
+                    // vendor_react/vendor_other are separate rspack split
+                    // chunks (react/react-dom + shared node_modules code).
+                    // Every framework/app JS entry is compiled against the
+                    // SAME shared chunk-loading registry (globalThis.webpackChunk*),
+                    // so an entry's top-level module body stays deferred
+                    // forever — never executing, no console error — until
+                    // its vendor chunk dependency has actually been pushed
+                    // onto that registry by a loaded <script> tag. Omitting
+                    // these silently breaks every React island on the page.
+                    'vendor_js_assets' => array_filter([
+                        FrameworkJsGen::vendor_react(),
+                        FrameworkJsGen::vendor_other(),
+                    ]),
                     'js_assets' => [
                         FrameworkJsGen::framework(),
                     ],
