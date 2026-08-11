@@ -612,7 +612,14 @@ jobs:
               console.log("diag: navigating");
               await page.goto("http://localhost:8001/account", { waitUntil: "domcontentloaded", timeout: 15000 });
               console.log("diag: navigated, waiting");
-              await page.waitForTimeout(3000);
+              await page.waitForTimeout(10000);
+              const html = await page.evaluate(() => {
+                const el = document.querySelector(".auth2-container-init");
+                return el ? el.outerHTML : "NO auth2-container-init ELEMENT";
+              });
+              console.log("diag: island container HTML: " + html);
+              const bodyLen = await page.evaluate(() => document.body.innerHTML.length);
+              console.log("diag: body innerHTML length: " + bodyLen);
               console.log("diag: closing");
               await browser.close();
               console.log("diag: done");
