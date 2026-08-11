@@ -60,13 +60,15 @@ interface Props {
     userId: number;
     initialName?: string;
     previewUrl?: string;
+    profileUrl?: string;
+    messageUrl?: string;
     labels: PreviewLabels;
     extraSection?: React.ReactNode;
     onClose: () => void;
 }
 
 export const UserPreviewModal: React.FC<Props> = ({
-    userId, initialName, previewUrl = '/users/~preview', labels, extraSection, onClose,
+    userId, initialName, previewUrl = '/users/~preview', profileUrl, messageUrl, labels, extraSection, onClose,
 }) => {
     useBodyScrollLock(true);
     const [user, setUser] = React.useState<PreviewUser | null>(null);
@@ -116,7 +118,7 @@ export const UserPreviewModal: React.FC<Props> = ({
         .join('');
 
     const isExpert = user?.type === 'expert';
-    const profileHref = appUrl(isExpert ? `/expert/id~${userId}` : `/user/id~${userId}`);
+    const profileHref = appUrl(profileUrl ?? (isExpert ? `/expert/id~${userId}` : `/user/id~${userId}`));
 
     return (
         <Portal><div
@@ -230,7 +232,7 @@ export const UserPreviewModal: React.FC<Props> = ({
                                     {labels.openProfile}
                                 </a>
                                 <a
-                                    href={appUrl(`/im/#to=${userId}`)}
+                                    href={appUrl(messageUrl ?? `/im/#to=${userId}`)}
                                     className="btn btn-sm btn-outline-primary"
                                     data-test-id="preview-message"
                                 >

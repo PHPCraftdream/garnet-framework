@@ -6,6 +6,7 @@ interface UserLinkProps {
     id: number;
     name: string;
     isExpert?: boolean;
+    profileUrl?: string;
     className?: string;
     children?: React.ReactNode;
     onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
@@ -16,11 +17,13 @@ interface UserLinkProps {
  * Inside an IrabiPreviewProvider tree, plain left-click opens the preview modal.
  * Modifier-clicks (Ctrl/Meta/Shift, middle button) and absent provider fall back
  * to navigation.
+ *
+ * @deprecated The `isExpert` prop is legacy. Use `profileUrl` for domain-agnostic routing.
  */
-export const UserLink: React.FC<UserLinkProps> = ({id, name, isExpert, className, children, onClick}) => {
+export const UserLink: React.FC<UserLinkProps> = ({id, name, isExpert, profileUrl, className, children, onClick}) => {
     const preview = usePreview();
     if (!id) return <>{children ?? name}</>;
-    const href = appUrl(isExpert ? `/expert/id~${id}` : `/user/id~${id}`);
+    const href = appUrl(profileUrl ?? (isExpert ? `/expert/id~${id}` : `/user/id~${id}`));
 
     const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
         onClick?.(e);
