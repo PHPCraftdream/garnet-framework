@@ -332,24 +332,66 @@ describe('GlobalReqParams', function (): void {
             expect($params->ip())->toBe('203.0.113.1');
         });
 
-        it('returns first IP from comma-separated X_FORWARDED_FOR when the proxy is trusted', function (): void {
+        it('selects the rightmost untrusted IP from a comma-separated X_FORWARDED_FOR — not the client-controlled leftmost', function (): void {
             IniConfig::app()->setRuntimeOverride('trusted_proxies', ['192.168.1.1']);
 
             $params = GlobalReqParams::from([
                 'REMOTE_ADDR' => '192.168.1.1',
                 'HTTP_X_FORWARDED_FOR' => '203.0.113.1, 198.51.100.1',
             ], [], [], [], []);
-            expect($params->ip())->toBe('203.0.113.1');
+            expect($params->ip())->toBe('198.51.100.1');
         });
 
-        it('trims whitespace from first IP when the proxy is trusted', function (): void {
+        it('ignores a spoofed leftmost entry and returns the real client IP appended by the trusted proxy', function (): void {
             IniConfig::app()->setRuntimeOverride('trusted_proxies', ['192.168.1.1']);
 
             $params = GlobalReqParams::from([
                 'REMOTE_ADDR' => '192.168.1.1',
-                'HTTP_X_FORWARDED_FOR' => '  203.0.113.1  , 198.51.100.1',
+                // Client forged "1.2.3.4" as its XFF; nginx appended the
+                // real TCP peer on the right via $proxy_add_x_forwarded_for.
+                'HTTP_X_FORWARDED_FOR' => '1.2.3.4, 203.0.113.5',
             ], [], [], [], []);
-            expect($params->ip())->toBe('203.0.113.1');
+            expect($params->ip())->toBe('203.0.113.5');
+        });
+
+        it('walks past intermediate trusted-proxy hops to find the real client IP', function (): void {
+            IniConfig::app()->setRuntimeOverride('trusted_proxies', ['192.168.1.1', '10.0.0.1', '10.0.0.2']);
+
+            $params = GlobalReqParams::from([
+                'REMOTE_ADDR' => '10.0.0.2',
+                'HTTP_X_FORWARDED_FOR' => '203.0.113.5, 10.0.0.1',
+            ], [], [], [], []);
+            expect($params->ip())->toBe('203.0.113.5');
+        });
+
+        it('trims whitespace around the selected IP', function (): void {
+            IniConfig::app()->setRuntimeOverride('trusted_proxies', ['192.168.1.1']);
+
+            $params = GlobalReqParams::from([
+                'REMOTE_ADDR' => '192.168.1.1',
+                'HTTP_X_FORWARDED_FOR' => '1.2.3.4,   203.0.113.5   ',
+            ], [], [], [], []);
+            expect($params->ip())->toBe('203.0.113.5');
+        });
+
+        it('falls back to REMOTE_ADDR when every XFF entry is itself a trusted proxy (all-trusted edge case)', function (): void {
+            IniConfig::app()->setRuntimeOverride('trusted_proxies', ['10.0.0.1', '10.0.0.2']);
+
+            $params = GlobalReqParams::from([
+                'REMOTE_ADDR' => '10.0.0.2',
+                'HTTP_X_FORWARDED_FOR' => '10.0.0.1, 10.0.0.2',
+            ], [], [], [], []);
+            expect($params->ip())->toBe('10.0.0.2');
+        });
+
+        it('handles a comma-leading X_FORWARDED_FOR without treating the whole header as the value (strpos fix)', function (): void {
+            IniConfig::app()->setRuntimeOverride('trusted_proxies', ['192.168.1.1']);
+
+            $params = GlobalReqParams::from([
+                'REMOTE_ADDR' => '192.168.1.1',
+                'HTTP_X_FORWARDED_FOR' => ',203.0.113.5',
+            ], [], [], [], []);
+            expect($params->ip())->toBe('203.0.113.5');
         });
     });
 

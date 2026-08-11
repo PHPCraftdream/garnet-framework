@@ -234,19 +234,45 @@ namespace PHPCraftdream\Garnet\Kernel\Core\GlobalReqParams {
 
         public function ip(): string {
             $remoteAddr = $this->_server['REMOTE_ADDR'] ?? '';
-            $ipForward = $this->_server['HTTP_X_FORWARDED_FOR'] ?? false;
+            $ipForward = $this->_server['HTTP_X_FORWARDED_FOR'] ?? '';
 
-            if (!$ipForward || !static::isTrustedProxy($remoteAddr)) {
+            if ($ipForward === '' || !static::isTrustedProxy($remoteAddr)) {
                 return $remoteAddr;
             }
 
-            if (strpos($ipForward, ',') > 0) {
-                $addr = explode(',', $ipForward);
+            // X-Forwarded-For is a comma-separated chain that each proxy
+            // appends to the RIGHT (nginx's $proxy_add_x_forwarded_for is
+            // append, not overwrite), so the LEFTMOST element is whatever
+            // the client sent — fully spoofable. Taking explode()[0] here
+            // would let an attacker forge the IP shown in a "successful
+            // login from IP ..." security email, defeating the very
+            // trusted_proxies gate above. Walk the chain RIGHT to LEFT and
+            // return the first entry that is NOT itself a trusted proxy:
+            // that is the address that entered the trusted network, i.e.
+            // the real client IP as observed by the outermost trusted hop.
+            $parts = explode(',', $ipForward);
+            $realClientIp = '';
 
-                return trim($addr[0]);
+            for ($i = count($parts) - 1; $i >= 0; $i--) {
+                $addr = trim($parts[$i]);
+
+                if ($addr === '' || static::isTrustedProxy($addr)) {
+                    continue;
+                }
+
+                $realClientIp = $addr;
+
+                break;
             }
 
-            return trim($ipForward);
+            // Every entry was a trusted proxy or empty (a malformed or
+            // attacker-only chain): fall back to the TCP peer we actually
+            // observed rather than returning an empty string or trusting
+            // an attacker-controlled value. (explode() inherently handles
+            // leading/trailing/multiple commas, so the old `strpos` gate
+            // — which mis-parsed a comma-leading header via `> 0` — is no
+            // longer needed.)
+            return $realClientIp !== '' ? $realClientIp : $remoteAddr;
         }
 
         /**
