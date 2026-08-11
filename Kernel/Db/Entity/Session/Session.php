@@ -257,11 +257,43 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session {
         /**
          * Mint a brand-new session identifier and write it to the cookie,
          * discarding whatever value (if any) was previously assigned —
-         * including one supplied by the client before this call. Session
-         * DATA already read/attached under the old identifier is kept in
-         * memory ($sessionData untouched) and will be persisted under the
-         * NEW identifier on the next flush(), since flush() keys off
-         * $this->sessionValue.
+         * including one supplied by the client before this call.
+         *
+         * IMPORTANT — what happens to session DATA across rotation:
+         *
+         * rotate() itself does NOT touch $this->sessionData, so getValue()
+         * calls made LATER IN THE SAME REQUEST (after rotate()) still return
+         * pre-rotation values. Do not mistake this for durability: it is an
+         * in-memory artefact only, and it is easy to be misled into believing
+         * a read-then-rotated value survived.
+         *
+         * What actually gets persisted under the NEW identifier on the next
+         * flush() is ONLY the keys present in $this->changedValues — i.e. keys
+         * explicitly setValue()'d during THIS request, whether setValue() was
+         * called before or after rotate(). flush() writes changedValues (see
+         * flush() / setValue()), NOT the full $this->sessionData array.
+         *
+         * Consequence: any value that was merely READ into sessionData earlier
+         * in the request (via readDataAsync() / getValue()) — data that lived
+         * under the OLD session row BEFORE rotation and was never re-
+         * setValue()'d afterwards — is silently DISCARDED across the rotation
+         * boundary. Once flush() runs and the old row is deleted, the value is
+         * gone from the database: getValue() returned it during this request
+         * (in memory), but it will NOT exist under the new row on any later
+         * request. If a caller needs a pre-rotation value to survive into the
+         * authenticated session, it MUST re-setValue() it after rotate().
+         *
+         * Security rationale — this narrow persistence is INTENTIONAL, not a
+         * limitation. rotate() exists to defeat session fixation: an attacker
+         * plants a session identifier, gets it adopted by a victim, and hopes
+         * attacker-controlled state written to that row before the victim's
+         * login carries forward into the now-authenticated session. Were
+         * rotation to merge ALL previously-read session data into the new row,
+         * attacker-planted pre-fixation state would survive the rotation
+         * boundary — reintroducing the very fixation class rotate() was built
+         * to close (see the session-fixation fix, commits 7b80b8b / 27a3d1c).
+         * Persisting only this-request's explicit setValue()s is the safer
+         * behaviour and is preserved here by design.
          *
          * $this->sessionId (the DB row id resolved for the OLD cookie
          * value) is reset to null so flush() takes the genuine
