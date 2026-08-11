@@ -596,25 +596,21 @@ jobs:
           status=0
           npm --prefix Tests test -- specs/framework-bundle/magic-link.spec.ts || status=$?
           if [ "$status" != "0" ]; then
-            echo "--- /account response (diagnostics) ---" >&2
-            curl -sD- http://localhost:8001/account -o /dev/null 2>&1 >&2 || true
-            echo "--- gen.js assets referenced by /account (HTTP status only) ---" >&2
-            for f in $(curl -s http://localhost:8001/account | grep -o '/assets/[^"]*\.gen\.js' | sort -u); do
-              echo "$f -> $(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8001$f")" >&2
-            done
-            echo "--- gen.js files actually on disk (Public/) ---" >&2
-            find Public -iname "*.gen.js" 2>/dev/null >&2 || true
-            echo "--- gen.js syntax check (node --check) ---" >&2
-            for f in $(curl -s http://localhost:8001/account | grep -o '/assets/[^"]*\.gen\.js' | sort -u); do
-              curl -s "http://localhost:8001$f" -o "/tmp/$(basename "$f")"
-              node --check "/tmp/$(basename "$f")" 2>&1 >&2 && echo "$f: OK" >&2
-            done
-            echo "--- PHP error log (if any) ---" >&2
-            find WorkDir -iname "*.log" -exec sh -c 'echo "== {} =="; cat "{}"' \; 2>/dev/null || true
-            echo "--- garnet serve log (tail) ---" >&2
-            tail -100 /tmp/garnet-serve.log >&2 || true
-            echo "--- Playwright error-context.md (accessibility snapshot) ---" >&2
-            find Tests/test-results -iname "error-context.md" -exec sh -c 'echo "== {} =="; cat "{}"' \; 2>/dev/null || true
+            echo "--- Browser console/network dump for /account ---" >&2
+            node -e '
+              const { chromium } = require("./Tests/node_modules/@playwright/test");
+              (async () => {
+                const browser = await chromium.launch();
+                const page = await browser.newPage();
+                page.on("console", (msg) => console.log(`[console.${msg.type()}] ${msg.text()}`));
+                page.on("pageerror", (err) => console.log(`[pageerror] ${err.message}`));
+                page.on("requestfailed", (req) => console.log(`[requestfailed] ${req.url()} ${req.failure()?.errorText}`));
+                page.on("response", (res) => { if (!res.ok()) console.log(`[response] ${res.status()} ${res.url()}`); });
+                await page.goto("http://localhost:8001/account", { waitUntil: "networkidle" });
+                await page.waitForTimeout(2000);
+                await browser.close();
+              })().catch((e) => { console.error(e); process.exit(1); });
+            ' 2>&1 >&2 || true
           fi
           kill "$SERVER_PID" 2>/dev/null || true
           exit $status
