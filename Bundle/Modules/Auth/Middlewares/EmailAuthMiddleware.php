@@ -359,6 +359,17 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
                     }
                 }
 
+                // Per-IP rate limit: caps distinct-email attempts from a single IP.
+                // 30 attempts per IP per 10 minutes, regardless of target address.
+                // Prevents SMTP abuse by rotating through many recipient addresses.
+                $ipRateLimitKey = 'email_auth_ip:' . $globals->ip();
+
+                if (!RateLimit::hit($ipRateLimitKey, 30, 600)) {
+                    return ControllerTools::JSON(['message' => FwI18n::t('Auth_TooManyRequests')], status: 429);
+                }
+
+                // Per-email rate limit: caps attempts to a single recipient address.
+                // 5 attempts per address per 10 minutes.
                 $rateLimitKey = 'email_auth:' . strtolower($authEmailStr);
 
                 if (!RateLimit::hit($rateLimitKey, 5, 600)) {

@@ -235,6 +235,86 @@ describe('RateLimit', function (): void {
     });
 
     // -----------------------------------------------------------------------
+    describe('per-IP rate limiting (email auth abuse scenario)', function (): void {
+        it('allows requests up to per-IP limit across distinct keys', function (): void {
+            $tmp = makeTmpDir();
+            $ip = '192.0.2.1';
+
+            // Simulate an attacker rotating through 30 distinct recipient addresses
+            // from the same IP — this should be allowed (the per-IP limit).
+            for ($i = 0; $i < 30; $i++) {
+                $email = "user{$i}@example.com";
+                $ipKey = "email_auth_ip:{$ip}";
+                $emailKey = "email_auth:{$email}";
+
+                $ipAllowed = RateLimit::hit($ipKey, 30, 600, $tmp);
+                $emailAllowed = RateLimit::hit($emailKey, 5, 600, $tmp);
+
+                // Both should be allowed — we're at the per-IP limit (30),
+                // and each email is only hit once (limit is 5).
+                expect($ipAllowed)->toBe(true);
+                expect($emailAllowed)->toBe(true);
+            }
+
+            removeTmpDir($tmp);
+        });
+
+        it('blocks request beyond per-IP limit across distinct keys', function (): void {
+            $tmp = makeTmpDir();
+            $ip = '192.0.2.1';
+
+            // Fill the per-IP bucket with 30 requests to 30 distinct emails
+            for ($i = 0; $i < 30; $i++) {
+                $email = "user{$i}@example.com";
+                $ipKey = "email_auth_ip:{$ip}";
+                $emailKey = "email_auth:{$email}";
+
+                RateLimit::hit($ipKey, 30, 600, $tmp);
+                RateLimit::hit($emailKey, 5, 600, $tmp);
+            }
+
+            // The 31st request to a fresh email should be blocked by the per-IP limit
+            $ipKey = "email_auth_ip:{$ip}";
+            $freshEmailKey = 'email_auth:fresh@example.com';
+
+            $ipAllowed = RateLimit::hit($ipKey, 30, 600, $tmp);
+            $emailAllowed = RateLimit::hit($freshEmailKey, 5, 600, $tmp);
+
+            // Per-IP limit blocks; per-email limit would allow (first hit on this email).
+            expect($ipAllowed)->toBe(false);
+            expect($emailAllowed)->toBe(true);
+
+            removeTmpDir($tmp);
+        });
+
+        it('per-IP and per-email limits are independent', function (): void {
+            $tmp = makeTmpDir();
+            $ip = '192.0.2.1';
+            $email = 'user@example.com';
+            $ipKey = "email_auth_ip:{$ip}";
+            $emailKey = "email_auth:{$email}";
+
+            // Hit the same email 5 times (per-email limit)
+            for ($i = 0; $i < 5; $i++) {
+                RateLimit::hit($ipKey, 30, 600, $tmp);
+                expect(RateLimit::hit($emailKey, 5, 600, $tmp))->toBe(true);
+            }
+
+            // The 6th hit to the same email should be blocked by per-email limit,
+            // but the per-IP bucket still has 25 slots left.
+            RateLimit::hit($ipKey, 30, 600, $tmp);
+            expect(RateLimit::hit($emailKey, 5, 600, $tmp))->toBe(false);
+
+            // A fresh email from the same IP should still be allowed (per-IP not exhausted).
+            $freshEmailKey = 'email_auth:fresh@example.com';
+            RateLimit::hit($ipKey, 30, 600, $tmp);
+            expect(RateLimit::hit($freshEmailKey, 5, 600, $tmp))->toBe(true);
+
+            removeTmpDir($tmp);
+        });
+    });
+
+    // -----------------------------------------------------------------------
     describe('symlink attack resistance (S11)', function (): void {
         it('refuses to use a state file that is a symlink', function (): void {
             if (!function_exists('symlink')) {

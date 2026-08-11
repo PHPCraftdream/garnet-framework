@@ -33,12 +33,12 @@ namespace PHPCraftdream\Garnet\Kernel\Io\RateLimit {
             $file = self::filePath($key, $tmpDir);
             $now = time();
 
-            // Opportunistic cleanup: a stale state file for THIS key whose
-            // whole window has already expired is deleted before use, so a
-            // long-lived attacker rotating through many keys (e.g. random
-            // emails) doesn't leave inodes behind forever. This only ever
-            // touches the file for the key being hit right now — no directory
-            // scan, no cron dependency.
+            // Opportunistic cleanup: delete a stale state file for THIS key
+            // whose entire window has already expired. This only ever touches
+            // the file for the key being hit right now — no directory scan,
+            // no cron dependency. Note: keys that are never revisited (e.g.
+            // an attacker rotating through random emails) never get cleaned up
+            // by this mechanism — their inodes persist until external cleanup.
             self::cleanupIfExpired($file, $now, $windowSec);
 
             // Refuse to operate on a symlink: a shared temp dir is
