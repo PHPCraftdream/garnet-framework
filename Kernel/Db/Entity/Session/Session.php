@@ -259,9 +259,20 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session {
          * discarding whatever value (if any) was previously assigned —
          * including one supplied by the client before this call. Session
          * DATA already read/attached under the old identifier is kept in
-         * memory ($sessionData/$sessionId untouched) and will be persisted
-         * under the NEW identifier on the next flush(), since flush() keys
-         * off $this->sessionValue.
+         * memory ($sessionData untouched) and will be persisted under the
+         * NEW identifier on the next flush(), since flush() keys off
+         * $this->sessionValue.
+         *
+         * $this->sessionId (the DB row id resolved for the OLD cookie
+         * value) is reset to null so flush() takes the genuine
+         * first-write path for the new cookie value instead of writing
+         * session_data under the stale old row — otherwise all data
+         * (including post-login auth state) keeps landing under the
+         * OLD, attacker-fixable identifier while the browser is handed a
+         * new cookie that points at an empty session: fixation stays
+         * open AND the login appears to silently fail for real users.
+         * The old row (and its session_data) is deleted outright so the
+         * pre-rotation token doesn't linger as a live, empty session.
          *
          * Callers MUST invoke this on every transition into an authenticated
          * state (e.g. AUTH_PHASE -> PHASE_DONE), not just on first-ever
@@ -273,7 +284,13 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session {
          * @throws Exception
          */
         public function rotate(): void {
+            $oldSessionId = $this->sessionId;
+            $this->sessionId = null;
             $this->issueNewCookie();
+
+            if (!empty($oldSessionId)) {
+                SessionData::get()->deleteSessionAsync($oldSessionId);
+            }
         }
 
         /**

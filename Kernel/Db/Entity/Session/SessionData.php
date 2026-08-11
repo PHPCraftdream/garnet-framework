@@ -23,11 +23,19 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session {
             $sessionTable = SessionTable::get();
 
             $onSelectSession = function ($sessionRow) use ($callback): void {
-                $sessionId = intval($sessionRow['id'] ?? 0);
+                // No row found for this cookie value: report `null`, not
+                // `0`. `0` used to be treated as "no id" by empty() here
+                // but is NOT treated as absent by `??` downstream in
+                // SessionData::flush() (`0 ?? $x` evaluates to `0`), so a
+                // literal 0 assigned into Session::$sessionId silently
+                // became the write target for subsequent session_data —
+                // an unreachable bucket, since getDataAsync() also treats
+                // sessionId=0 as "empty" and never reads it back.
+                $sessionId = isset($sessionRow['id']) ? intval($sessionRow['id']) : null;
                 $lastUsage = intval($sessionRow['lastUsage'] ?? 0);
 
                 if (empty($sessionId)) {
-                    $callback([$sessionId, []]);
+                    $callback([null, []]);
 
                     return;
                 }
@@ -144,6 +152,22 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session {
             ]);
             $queryEx = SessionDataTable::get()->getQueryEx();
             $queryEx->exDeleteAsync($delete);
+        }
+
+        /**
+         * Delete a session row and all its session_data rows outright —
+         * used by Session::rotate() to remove the OLD (pre-rotation) row
+         * once its cookie value has been superseded, so an attacker-fixed
+         * pre-login token doesn't linger as a live, empty session.
+         */
+        public function deleteSessionAsync(int $sessionId): void {
+            $dataDelete = SessionDataTable::get()->newDelete();
+            $dataDelete->where('`sessionId`=:sessionId', ['sessionId' => $sessionId]);
+            SessionDataTable::get()->getQueryEx()->exDeleteAsync($dataDelete);
+
+            $sessionDelete = SessionTable::get()->newDelete();
+            $sessionDelete->where('`id`=:id', ['id' => $sessionId]);
+            SessionTable::get()->getQueryEx()->exDeleteAsync($sessionDelete);
         }
 
         public function init(): void {

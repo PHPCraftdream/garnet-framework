@@ -2,6 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Spec;
 
+use DateTimeInterface;
 use Exception;
 use PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Session;
 use PHPCraftdream\Garnet\Kernel\Db\Entity\Session\SessionDataTable;
@@ -579,6 +580,146 @@ describe('Session Integration', function (): void {
         });
     });
 
+    describe('rotate() session-fixation regression (behavioral, not internal-state)', function () use (&$dbAvailable): void {
+        // Load a session's data the way a fresh HTTP request would: a new
+        // Session instance, given only a cookie value, resolving its own
+        // sessionId from the DB via readDataAsync()/pollFinishAll().
+        $loadSessionByCookieValue = function (string $cookieValue) {
+            $reflectionClass = new ReflectionClass(Session::class);
+            $session = $reflectionClass->newInstanceWithoutConstructor();
+
+            $prop = $reflectionClass->getProperty('sessionValue');
+            $prop->setValue($session, $cookieValue);
+
+            $session->readDataAsync();
+            $session->readDataAsyncPollFinishAll();
+
+            return $session;
+        };
+
+        beforeEach(function () use (&$dbAvailable): void {
+            if (!$dbAvailable) {
+                return;
+            }
+
+            $pool = DbPool::get();
+            $link = $pool->newLink();
+            $link->query("DELETE FROM dbtest_test_session_data WHERE param LIKE 'test_%'", []);
+            $link->query('DELETE FROM dbtest_test_session WHERE 1', []);
+        });
+
+        afterEach(function () use (&$dbAvailable): void {
+            if (!$dbAvailable) {
+                return;
+            }
+
+            $pool = DbPool::get();
+            $link = $pool->newLink();
+            $link->query("DELETE FROM dbtest_test_session_data WHERE param LIKE 'test_%'", []);
+            $link->query('DELETE FROM dbtest_test_session WHERE 1', []);
+        });
+
+        it('does not leave post-rotate data readable under the OLD (pre-fixation) cookie, and makes it readable under the NEW cookie', function () use (&$dbAvailable, $loadSessionByCookieValue): void {
+            if (!$dbAvailable) {
+                return;
+            }
+
+            // Attacker fixes a cookie value on the victim's browser before
+            // login and it gets some pre-login data written under it.
+            $oldCookieValue = 'test_old_fixed_' . rand(100000, 999999);
+            $session = Session::get(false);
+            $reflection = new ReflectionClass($session);
+            $cookiesProp = $reflection->getProperty('cookies');
+            $cookiesProp->setValue($session, new MockCookiesForRotateSpec());
+            $valueProp = $reflection->getProperty('sessionValue');
+            $valueProp->setValue($session, $oldCookieValue);
+
+            $session->setValue('test_pre_login', 'attacker_visible_value');
+            $session->flush();
+            DbPool::get()->pollFinishAll();
+
+            // Victim actually authenticates: rotate() mints a new cookie
+            // value and post-login data is written under it.
+            $session->rotate();
+            $newCookieValue = $valueProp->getValue($session);
+            expect($newCookieValue)->not->toBe($oldCookieValue);
+
+            $session->setValue('test_post_login', 'victim_authenticated_value');
+            $session->flush();
+            DbPool::get()->pollFinishAll();
+
+            // Re-load "by cookie" exactly like the next HTTP request would.
+            $oldReload = $loadSessionByCookieValue($oldCookieValue);
+            $newReload = $loadSessionByCookieValue($newCookieValue);
+
+            // The attacker's pre-fixed cookie must NOT resolve to the
+            // authenticated data.
+            expect($oldReload->getValue('test_post_login'))->toBeNull();
+
+            // The victim's real (new) cookie MUST resolve to the
+            // authenticated data written after rotate().
+            expect($newReload->getValue('test_post_login'))->toBe('victim_authenticated_value');
+        });
+    });
+
+    describe('sessionId=0-vs-null regression (unknown cookie, immediate write+reload)', function () use (&$dbAvailable): void {
+        beforeEach(function () use (&$dbAvailable): void {
+            if (!$dbAvailable) {
+                return;
+            }
+
+            $pool = DbPool::get();
+            $link = $pool->newLink();
+            $link->query("DELETE FROM dbtest_test_session_data WHERE param LIKE 'test_%'", []);
+            $link->query('DELETE FROM dbtest_test_session WHERE 1', []);
+        });
+
+        afterEach(function () use (&$dbAvailable): void {
+            if (!$dbAvailable) {
+                return;
+            }
+
+            $pool = DbPool::get();
+            $link = $pool->newLink();
+            $link->query("DELETE FROM dbtest_test_session_data WHERE param LIKE 'test_%'", []);
+            $link->query('DELETE FROM dbtest_test_session WHERE 1', []);
+        });
+
+        it('makes data written on a never-seen cookie readable when immediately reloaded under the same cookie', function () use (&$dbAvailable): void {
+            if (!$dbAvailable) {
+                return;
+            }
+
+            // A never-seen/expired cookie value: readDataAsync() finds no
+            // row, so the object's sessionId resolves from "no row found".
+            $unknownCookieValue = 'test_unknown_' . rand(100000, 999999);
+
+            $reflectionClass = new ReflectionClass(Session::class);
+            $session = $reflectionClass->newInstanceWithoutConstructor();
+            $prop = $reflectionClass->getProperty('sessionValue');
+            $prop->setValue($session, $unknownCookieValue);
+
+            // Simulate readDataAsync() having resolved "no session row yet"
+            // for this cookie, exactly as a real first request would.
+            $session->readDataAsync();
+            $session->readDataAsyncPollFinishAll();
+
+            $session->setValue('test_auth_code', '123456');
+            $session->flush();
+            DbPool::get()->pollFinishAll();
+
+            // Reload under the SAME cookie value, as the very next request
+            // (e.g. the code-entry step) would.
+            $reloaded = $reflectionClass->newInstanceWithoutConstructor();
+            $reloadedProp = $reflectionClass->getProperty('sessionValue');
+            $reloadedProp->setValue($reloaded, $unknownCookieValue);
+            $reloaded->readDataAsync();
+            $reloaded->readDataAsyncPollFinishAll();
+
+            expect($reloaded->getValue('test_auth_code'))->toBe('123456');
+        });
+    });
+
     afterAll(function () use (&$dbAvailable): void {
         // Tables left for debugging purposes
         if (!$dbAvailable) {
@@ -586,3 +727,199 @@ describe('Session Integration', function (): void {
         }
     });
 });
+
+// Minimal ICookie double: only the members rotate()/issueNewCookie() and
+// touchCookie() actually exercise are meaningfully implemented.
+class MinimalMockCookieForRotateSpec implements \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+    public ?string $name = null;
+
+    public ?string $value = null;
+
+    public function setOld(): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+        return $this;
+    }
+
+    public function setItNew(): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+        return $this;
+    }
+
+    public function isNew(): bool {
+        return false;
+    }
+
+    public function startObserveChanges(): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+        return $this;
+    }
+
+    public function isChanged(): bool {
+        return false;
+    }
+
+    public function resetChanged(): bool {
+        return false;
+    }
+
+    public function getName(): ?string {
+        return $this->name;
+    }
+
+    public function getValue(): ?string {
+        return $this->value;
+    }
+
+    public function getExpires(): ?int {
+        return null;
+    }
+
+    public function getMaxAge(): ?int {
+        return null;
+    }
+
+    public function getPath(): ?string {
+        return null;
+    }
+
+    public function getDomain(): ?string {
+        return null;
+    }
+
+    public function getSecure(): bool {
+        return false;
+    }
+
+    public function getHttpOnly(): bool {
+        return false;
+    }
+
+    public function getSameSite(): string {
+        return '';
+    }
+
+    public function setName(?string $name = null): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    public function setValue(?string $value = null): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+        $this->value = $value;
+
+        return $this;
+    }
+
+    public function setSameSiteStrict(): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+        return $this;
+    }
+
+    public function setSameSiteLax(): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+        return $this;
+    }
+
+    public function setSameSiteNone(): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+        return $this;
+    }
+
+    public function setExpires(null|DateTimeInterface|int|string $expires = null): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+        return $this;
+    }
+
+    public function rememberForever(): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+        return $this;
+    }
+
+    public function expire(): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+        return $this;
+    }
+
+    public function setMaxAge(?int $maxAge = null): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+        return $this;
+    }
+
+    public function setPath(?string $path = null): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+        return $this;
+    }
+
+    public function setDomain(?string $domain = null): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+        return $this;
+    }
+
+    public function setSecure(?bool $secure = null): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+        return $this;
+    }
+
+    public function setHttpOnly(?bool $httpOnly = null): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+        return $this;
+    }
+
+    public function __toString(): string {
+        return '';
+    }
+
+    public function parse(string $string): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+        return $this;
+    }
+}
+
+// Minimal ICookies double for the rotate()-regression spec: rotate() calls
+// issueNewCookie(), which needs a working cookies->get(name)->setValue()...
+// chain.
+class MockCookiesForRotateSpec implements \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookies {
+    public array $cookies = [];
+
+    public function has(string $name): bool {
+        return isset($this->cookies[$name]);
+    }
+
+    public function get(string $name): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+        if (!isset($this->cookies[$name])) {
+            $this->cookies[$name] = new MinimalMockCookieForRotateSpec();
+            $this->cookies[$name]->setName($name);
+        }
+
+        return $this->cookies[$name];
+    }
+
+    public function setItNew(): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookies {
+        return $this;
+    }
+
+    public function getAll(): array {
+        return $this->cookies;
+    }
+
+    public function add(\PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie $cookie): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookies {
+        return $this;
+    }
+
+    public function delete(string $name): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookies {
+        return $this;
+    }
+
+    public function toResponse(\Psr\Http\Message\ResponseInterface $response): \Psr\Http\Message\ResponseInterface {
+        return $response;
+    }
+
+    public function fromResponse(\Psr\Http\Message\ResponseInterface $response): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookies {
+        return $this;
+    }
+
+    public function toRequest(\Psr\Http\Message\RequestInterface $request): \Psr\Http\Message\RequestInterface {
+        return $request;
+    }
+
+    public function fromRequest(\Psr\Http\Message\RequestInterface $request): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookies {
+        return $this;
+    }
+
+    public function fromServer(array $_server): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookies {
+        return $this;
+    }
+
+    public function fromCookieStrings(array $cookieStrings): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookies {
+        return $this;
+    }
+
+    public function fromGlobals($globals): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookies {
+        return $this;
+    }
+}
