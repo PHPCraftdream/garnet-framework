@@ -267,21 +267,35 @@ class GarnetServeCommand {
         );
     }
 
-    /** Escape a value for a WMIC `LIKE` clause (single-quoted WQL string). */
+    /**
+     * Escape a value for a WMIC `LIKE` clause (single-quoted WQL string).
+     *
+     * WQL escaping rules — verified live against `Get-CimInstance -Query` and
+     * the real `wmic.exe` fallback tool by spawning a process whose commandline
+     * carried every special char and confirming the escaped pattern matches it:
+     *   - `\` is WQL's string-literal escape character. Only `\\` and `\'` are
+     *     valid escapes; every other `\X` is rejected as "Invalid query".
+     *   - an embedded single-quote is escaped `\'` (backslash-quote), NOT SQL
+     *     doubling — `''` is a hard syntax error in WQL.
+     *   - LIKE wildcards `%` and `_` are neutralised with the `[...]` literal
+     *     form (`[%]`, `[_]`); a literal `[` likewise becomes `[[]` so it can't
+     *     open a character class.
+     *   - `]` is deliberately NOT escaped: once every `[` is neutralised, a bare
+     *     `]` is never a class terminator and is already literal. Escaping it as
+     *     `[]]` actually BREAKS the match (the empty class `[]` matches nothing).
+     *
+     * Ordering is load-bearing: backslash is doubled first (so the backslash the
+     * quote-escape introduces is not itself re-doubled); the `[`/`%`/`_` group is
+     * replaced in a single `strtr()` pass (one-pass, so the brackets each
+     * replacement emits are not themselves re-escaped — a sequential
+     * `str_replace` for `[` would corrupt its own `[[]` output); the quote runs
+     * last so its backslash survives undoubled.
+     */
     private static function wmicLikeEscape(string $value): string {
-        // `\` is WQL's own escape character, so it must be doubled first —
-        // otherwise a literal `\_` or `\%` inside a Windows path (very
-        // common: `_`/`%` are legal path chars) would be parsed as an
-        // escaped wildcard instead of two literal characters. Also, an
-        // un-doubled trailing `\` (a path ending right before our `%`
-        // wildcard) breaks the WQL parser outright ("Invalid query").
         $value = str_replace('\\', '\\\\', $value);
+        $value = strtr($value, ['[' => '[[]', '%' => '[%]', '_' => '[_]']);
 
-        return str_replace(
-            ['%', '_', "'"],
-            ['[%]', '[_]', "''"],
-            $value,
-        );
+        return str_replace("'", "\\'", $value);
     }
 
     /**

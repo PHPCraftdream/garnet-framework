@@ -67,13 +67,56 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
                 expect($escaped)->toBe('D:\\\\dev\\\\100[%]done');
             });
 
-            it('escapes an embedded single-quote so it cannot break out of the WQL string literal', function (): void {
+            it('escapes an embedded single-quote with a backslash (`\\\'`), NOT SQL-style doubling', function (): void {
+                // WQL string literals use backslash-escaping for an embedded quote;
+                // `''` (SQL doubling) is a hard syntax error ("Invalid query").
+                // Verified live against both Get-CimInstance -Query and the real
+                // `wmic.exe` fallback tool with a process whose commandline
+                // contained `O'Brien`.
                 $escaped = ($this->invoke)('wmicLikeEscape', ["D:\\dev\\it's\\app"]);
 
-                expect(str_contains($escaped, "''"))->toBe(true);
-                // No lone, un-doubled quote remains that could terminate the
-                // surrounding 'commandline like \'%...%\'' WQL string early.
-                expect($escaped)->toBe("D:\\\\dev\\\\it''s\\\\app");
+                expect(str_contains($escaped, "\\'"))->toBe(true);
+                // No lone quote remains that could terminate the surrounding
+                // 'commandline like \'%...%\'' WQL string literal early.
+                expect($escaped)->toBe("D:\\\\dev\\\\it\\'s\\\\app");
+            });
+
+            it('escapes a literal `[` via the `[[]` char-class form so it cannot open a WQL class', function (): void {
+                // An un-escaped `[` opens a WQL character class and corrupts the
+                // match (verified live: `lit[a-e]` un-escaped is parsed as a class
+                // matching one of a..e and does NOT match the literal text).
+                $escaped = ($this->invoke)('wmicLikeEscape', ['C:\\Program Files [x86]\\app']);
+
+                expect($escaped)->toBe('C:\\\\Program Files [[]x86]\\\\app');
+            });
+
+            it('does NOT escape `]` — once every `[` is neutralised, a bare `]` is already literal', function (): void {
+                // Escaping `]` as `[]]` actually BREAKS the match (verified live:
+                // `[[]x86[]]` returned 0 rows where `[[]x86]` returned 1), because
+                // the empty class `[]` can never match. Leaving `]` bare is the
+                // only correct choice once all `[` are escaped.
+                $escaped = ($this->invoke)('wmicLikeEscape', [']odd[']);
+
+                expect($escaped)->toBe(']odd[[]');
+            });
+
+            it('escapes every special char together in one pass without self-corruption', function (): void {
+                // The full set in one path: backslash, quote, `[`, `]`, `%`, `_`.
+                // strtr() is one-pass so the `[`/`]` it introduces (e.g. in `[%]`)
+                // are not themselves re-escaped — a naive sequential str_replace
+                // for `[` would mangle its own `[[]` output.
+                $escaped = ($this->invoke)('wmicLikeEscape', ["D:\\dev\\O'Brien [x86]\\100%done_v1"]);
+
+                expect($escaped)->toBe("D:\\\\dev\\\\O\\'Brien [[]x86]\\\\100[%]done[_]v1");
+            });
+
+            it('keeps a `[` directly followed by `%` correctly escaped in one pass', function (): void {
+                // Guards the one-pass property: `[%` must become `[[][%]`, not
+                // `[[]%]` (which a `%`-first sequential replacement would produce
+                // before the `[` step then mangled it).
+                $escaped = ($this->invoke)('wmicLikeEscape', ['a[%b']);
+
+                expect($escaped)->toBe('a[[][%]b');
             });
         });
 
