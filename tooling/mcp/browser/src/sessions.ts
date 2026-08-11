@@ -100,11 +100,6 @@ export class SessionManager {
     // Inject debug collector into every page
     await context.addInitScript({ content: this.collectorScript });
 
-    // Set debug token header on all requests
-    await context.setExtraHTTPHeaders({
-      'X-Garnet-Debug-Token': this.config.debugToken,
-    });
-
     const page = await context.newPage();
 
     // Forward console errors to timeline

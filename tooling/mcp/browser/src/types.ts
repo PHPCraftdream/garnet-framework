@@ -54,7 +54,6 @@ export interface EnvConfig {
   authDir: string;
   appDir: string;
   phpErrorLog: string;
-  debugToken: string;
   /** The data attribute name used for test IDs (default: "data-test-id"). Set via TESTID_ATTR env var. */
   testidAttr: string;
 }

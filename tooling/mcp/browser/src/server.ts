@@ -9,7 +9,6 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 
 import { SessionManager } from './sessions.ts';
-import { readToken } from './utils.ts';
 import type { EnvConfig, ToolDef, ToolResult } from './types.ts';
 
 import * as sessionTools from './tools/sessions.ts';
@@ -57,27 +56,12 @@ for (const mod of modules) {
 function loadConfig(): EnvConfig {
   const env = process.env;
 
-  // Read debug token (required)
-  let debugToken: string;
-  try {
-    debugToken = readToken();
-  } catch {
-    // Allow running without token for initial setup
-    debugToken = env.GARNET_DEBUG_TOKEN || '';
-    if (!debugToken) {
-      console.error(
-        'Warning: No debug token found. Create .garnet_debug_token or set GARNET_DEBUG_TOKEN env var.',
-      );
-    }
-  }
-
   const rootDir = resolve(import.meta.dirname, '..', '..');
   return {
     baseUrl: env.BASE_URL || env.GARNET_BASE_URL || 'http://localhost',
     authDir: env.AUTH_DIR || env.GARNET_AUTH_DIR || '',
     appDir: env.GARNET_APP_DIR || resolve(rootDir, 'Apps', 'App'),
     phpErrorLog: env.PHP_ERROR_LOG || env.GARNET_PHP_ERROR_LOG || '',
-    debugToken,
     testidAttr: env.TESTID_ATTR || 'data-test-id',
   };
 }
@@ -157,7 +141,6 @@ async function main(): Promise<void> {
   console.error(`  Base URL: ${config.baseUrl}`);
   console.error(`  Auth dir: ${config.authDir || '(not set)'}`);
   console.error(`  App dir: ${config.appDir}`);
-  console.error(`  Token: ${config.debugToken ? 'loaded' : 'NOT SET'}`);
   console.error(`  Tools: ${allTools.length}`);
 }
 
