@@ -3,17 +3,15 @@
 namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
     use const DIRECTORY_SEPARATOR;
 
-    use function file_get_contents;
-    use function file_put_contents;
     use function is_dir;
     use function mkdir;
+
+    use PHPCraftdream\Garnet\Kernel\Io\FileUpload\PendingUploadManager;
+    use ReflectionMethod;
+
     use function sys_get_temp_dir;
     use function uniqid;
     use function unlink;
-
-    use PHPCraftdream\Garnet\Kernel\Io\FileUpload\PendingUploadManager;
-    use ReflectionClass;
-    use ReflectionMethod;
 
     describe('PendingUploadManager', function (): void {
         $uploadDir = '';
@@ -42,8 +40,10 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
 
             // Clean up temporary files
             $pendingDir = $this->uploadDir . DIRECTORY_SEPARATOR . 'pending';
+
             if (is_dir($pendingDir)) {
                 $files = glob($pendingDir . DIRECTORY_SEPARATOR . '*');
+
                 foreach ($files as $file) {
                     if (is_file($file)) {
                         @unlink($file);
@@ -54,9 +54,11 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
 
             // Clean up any entity directories created during tests
             $dirs = glob($this->uploadDir . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR);
+
             foreach ($dirs as $dir) {
                 if (basename($dir) !== 'pending') {
                     $files = glob($dir . DIRECTORY_SEPARATOR . '*');
+
                     foreach ($files as $file) {
                         if (is_file($file)) {
                             @unlink($file);
@@ -68,9 +70,11 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
 
             // Clean up subdirectories
             $subdirs = glob($this->uploadDir . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR);
+
             foreach ($subdirs as $subdir) {
                 if (is_dir($subdir)) {
                     $files = glob($subdir . DIRECTORY_SEPARATOR . '*');
+
                     foreach ($files as $file) {
                         if (is_file($file)) {
                             @unlink($file);
@@ -89,7 +93,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
                     PendingUploadManager::class,
                     'isSafeEntityDir'
                 );
-                $this->fn->setAccessible(true);
             });
 
             it('accepts empty string (uploads to baseDir)', function (): void {
@@ -140,7 +143,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
                     PendingUploadManager::class,
                     'isSafeEntityDir'
                 );
-                $fn->setAccessible(true);
 
                 // Verify the validation would reject these paths
                 expect($fn->invoke(null, '../../../etc'))->toBe(false);
@@ -157,7 +159,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
                     PendingUploadManager::class,
                     'isSafeEntityDir'
                 );
-                $fn->setAccessible(true);
 
                 // Common traversal patterns
                 expect($fn->invoke(null, '..'))->toBe(false);
@@ -183,7 +184,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
                     PendingUploadManager::class,
                     'isSafeEntityDir'
                 );
-                $fn->setAccessible(true);
 
                 // Backslash separators should be treated like forward slashes
                 expect($fn->invoke(null, 'courses\\42'))->toBe(true);

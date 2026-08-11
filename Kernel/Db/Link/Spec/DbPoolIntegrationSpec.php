@@ -4,11 +4,9 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link\Spec;
 
 use Exception;
 use PHPCraftdream\Garnet\Kernel\Db\Link\DbPool;
-use PHPCraftdream\Garnet\Kernel\Exceptions\DbException;
 use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbMySQLiLink;
 use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbPool;
 use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
-use ReflectionClass;
 
 describe('DbPool Integration', function (): void {
     $dbAvailable = false;
@@ -402,7 +400,7 @@ describe('DbPool Integration', function (): void {
             expect(count($links))->toBe(0);
 
             // Clean up
-            $link->query("DELETE FROM dbtest_test_users WHERE email = ?", ['test_poll@example.com']);
+            $link->query('DELETE FROM dbtest_test_users WHERE email = ?', ['test_poll@example.com']);
         });
     });
 });
