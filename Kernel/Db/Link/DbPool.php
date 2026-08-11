@@ -48,6 +48,13 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
             // mysqli_poll() with $microseconds > 0 blocks in select()/
             // WSAPoll(), which uses the OS scheduler — no user-space
             // sleep involved.
+            //
+            // Must never spin forever: a link stuck busy=true (e.g.
+            // queryAsync()'s dispatch failing without throwing) would
+            // otherwise hang the request permanently under runtimes with
+            // no max_execution_time (e.g. `php -S`'s dev server).
+            $deadline = microtime(true) + self::POLL_FINISH_ALL_TIMEOUT_SECONDS;
+
             while (true) {
                 $busyMysqli = [];
 
@@ -61,6 +68,13 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
                     $links = [];
 
                     return;
+                }
+
+                if (microtime(true) >= $deadline) {
+                    throw new DbException(
+                        'pollLinks() timed out after ' . self::POLL_FINISH_ALL_TIMEOUT_SECONDS
+                        . 's waiting for ' . count($busyMysqli) . ' busy link(s) to finish'
+                    );
                 }
 
                 $reads = $errors = $reject = $busyMysqli;

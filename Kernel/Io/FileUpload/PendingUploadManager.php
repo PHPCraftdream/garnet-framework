@@ -92,6 +92,11 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload {
                 return null;
             }
 
+            // Validate entityDir to prevent path traversal attacks
+            if (!$this->isSafeEntityDir($entityDir)) {
+                return null;
+            }
+
             $srcPath = $this->tempDir . basename($pending['stored_name']);
 
             if (!is_file($srcPath)) {
@@ -239,6 +244,40 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload {
 
         private function deletePending(int $id): void {
             PendingUploadsTable::get()->deleteById($id);
+        }
+
+        /**
+         * Validate that entityDir is safe (no path traversal).
+         *
+         * Rejects:
+         * - Null bytes (can bypass checks in some PHP versions)
+         * - Segments containing '..' (path traversal)
+         *
+         * Matches the behavior of SecureFileServing::isSafeSubDir().
+         */
+        private static function isSafeEntityDir(string $entityDir): bool {
+            // Empty string is valid (uploads to baseDir)
+            if ($entityDir === '') {
+                return true;
+            }
+
+            // Reject null bytes
+            if (str_contains($entityDir, "\0")) {
+                return false;
+            }
+
+            // Normalize path separators to forward slashes for consistent parsing
+            $normalized = str_replace('\\', '/', $entityDir);
+            $segments = explode('/', $normalized);
+
+            foreach ($segments as $segment) {
+                // Reject parent directory references
+                if ($segment === '..') {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

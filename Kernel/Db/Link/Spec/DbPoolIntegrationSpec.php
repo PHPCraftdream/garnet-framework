@@ -4,9 +4,11 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link\Spec;
 
 use Exception;
 use PHPCraftdream\Garnet\Kernel\Db\Link\DbPool;
+use PHPCraftdream\Garnet\Kernel\Exceptions\DbException;
 use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbMySQLiLink;
 use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbPool;
 use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+use ReflectionClass;
 
 describe('DbPool Integration', function (): void {
     $dbAvailable = false;
@@ -343,6 +345,64 @@ describe('DbPool Integration', function (): void {
             expect($id1)->toBeGreaterThan(0);
             expect($id2)->toBe($id1 + 1);
             expect($id3)->toBe($id2 + 1);
+        });
+    });
+
+    describe('pollLinks() timeout', function () use (&$dbAvailable): void {
+        it('completes immediately when no links are busy (baseline for timeout fix)', function () use (&$dbAvailable): void {
+            if (!$dbAvailable) {
+                return;
+            }
+
+            $links = [];
+            $start = microtime(true);
+
+            DbPool::pollLinks($links, finishAll: true);
+
+            $elapsed = microtime(true) - $start;
+
+            // Should complete almost instantly (< 0.1s) - verifies no infinite loop
+            expect($elapsed)->toBeLessThan(0.1);
+            expect(count($links))->toBe(0);
+        });
+
+        it('completes immediately with empty links array and finishAll=false', function () use (&$dbAvailable): void {
+            if (!$dbAvailable) {
+                return;
+            }
+
+            $links = [];
+            DbPool::pollLinks($links, finishAll: false);
+
+            expect(count($links))->toBe(0);
+        });
+
+        it('completes immediately with real but non-busy links', function () use (&$dbAvailable): void {
+            if (!$dbAvailable) {
+                return;
+            }
+
+            $pool = DbPool::get();
+            $link = $pool->newLink();
+
+            // Query and wait for it to complete (non-busy)
+            $sql = 'INSERT INTO dbtest_test_users (name, email) VALUES (?, ?)';
+            $link->query($sql, ['Poll Test', 'test_poll@example.com']);
+
+            // Get the link reference
+            $links = [$link];
+            $start = microtime(true);
+
+            DbPool::pollLinks($links, finishAll: true);
+
+            $elapsed = microtime(true) - $start;
+
+            // Should complete almost instantly since link is not busy
+            expect($elapsed)->toBeLessThan(0.1);
+            expect(count($links))->toBe(0);
+
+            // Clean up
+            $link->query("DELETE FROM dbtest_test_users WHERE email = ?", ['test_poll@example.com']);
         });
     });
 });
