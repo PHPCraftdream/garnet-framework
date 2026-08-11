@@ -595,5 +595,11 @@ jobs:
           echo "Server is up — running Playwright."
           npm --prefix Tests test -- specs/framework-bundle/magic-link.spec.ts
           status=$?
+          if [ "$status" != "0" ]; then
+            echo "--- /account response (diagnostics) ---" >&2
+            curl -v http://localhost:8001/account 2>&1 >&2 || true
+            echo "--- PHP error log (if any) ---" >&2
+            find WorkDir -iname "*.log" -exec sh -c 'echo "== {} =="; cat "{}"' \; 2>/dev/null || true
+          fi
           kill "$SERVER_PID" 2>/dev/null || true
           exit $status
