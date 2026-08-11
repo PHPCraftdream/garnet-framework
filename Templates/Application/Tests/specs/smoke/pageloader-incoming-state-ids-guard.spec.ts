@@ -100,14 +100,25 @@ const MAINTENANCE_PAGE_HTML = `
  */
 function getRealPageLoaderCode(): string {
 	// Find the framework root by looking for Bundle/Front/Common/Dom/PageLoader.ts
-	// Try multiple potential root locations
+	// Try multiple potential root locations, including CI-specific paths
 	let realPath: string | null = null;
-	const candidates = [
-		resolve(process.cwd(), '../../../Bundle/Front/Common/Dom/PageLoader.ts'), // From Tests/
-		resolve(process.cwd(), '../../Bundle/Front/Common/Dom/PageLoader.ts'),    // From Application/Tests/
-		resolve(__dirname, '../../../../../Bundle/Front/Common/Dom/PageLoader.ts'),  // From specs/smoke/
+	const candidates: string[] = [
+		// Local development: from Templates/Application/Tests
+		resolve(process.cwd(), '../../../Bundle/Front/Common/Dom/PageLoader.ts'),
+		// From Tests/ (if run directly)
+		resolve(process.cwd(), '../../Bundle/Front/Common/Dom/PageLoader.ts'),
+		// From specs/smoke/ (if run directly)
+		resolve(__dirname, '../../../../../Bundle/Front/Common/Dom/PageLoader.ts'),
 	];
 
+	// In CI, the framework source might be available via GITHUB_WORKSPACE
+	if (process.env.GITHUB_WORKSPACE) {
+		candidates.push(
+			resolve(process.env.GITHUB_WORKSPACE, 'Bundle/Front/Common/Dom/PageLoader.ts')
+		);
+	}
+
+	// Try each candidate
 	for (const candidate of candidates) {
 		try {
 			readFileSync(candidate, 'utf8');

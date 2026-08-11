@@ -394,6 +394,8 @@ jobs:
       # code bug.
       - name: Serve + Playwright smoke suite
         working-directory: ${{ runner.temp }}/CiApp
+        env:
+          GARNET_FRAMEWORK_PATH: ${{ github.workspace }}
         run: |
           php garnet serve > /tmp/garnet-serve.log 2>&1 &
           SERVER_PID=$!
