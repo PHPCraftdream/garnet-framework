@@ -33,8 +33,11 @@ export class SessionManager {
 
   // ── Lifecycle ──────────────────────────────────────────────────────
 
-  async init(): Promise<void> {
-    this.browser = await chromium.launch({ headless: true });
+  async init(): Promise<Browser> {
+    if (!this.browser) {
+      this.browser = await chromium.launch({ headless: true });
+    }
+    return this.browser;
   }
 
   async close(): Promise<void> {
@@ -53,9 +56,8 @@ export class SessionManager {
     role: string,
     opts: { storageState?: string; baseUrl?: string; viewport?: { width: number; height: number } } = {},
   ): Promise<void> {
-    if (!this.browser) {
-      throw new Error('Browser not initialized. Call init() first.');
-    }
+    // Chromium is launched lazily, on first use, rather than at server startup.
+    const browser = await this.init();
 
     // Close existing session for this role if any
     if (this.sessions.has(role)) {
@@ -84,7 +86,7 @@ export class SessionManager {
       contextOpts.viewport = opts.viewport;
     }
 
-    const context = await this.browser.newContext(contextOpts);
+    const context = await browser.newContext(contextOpts);
 
     // Define __name no-op — esbuild/tsx wraps functions with __name() which doesn't exist in browser context
     // This must be injected BEFORE any page.evaluate calls run

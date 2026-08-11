@@ -72,8 +72,8 @@ async function main(): Promise<void> {
   const config = loadConfig();
   const sessionManager = new SessionManager(config);
 
-  // Initialize browser
-  await sessionManager.init();
+  // Chromium is launched lazily on the first session_create call (see sessions.ts),
+  // not here — most MCP client startups never touch the browser tools.
 
   // Create MCP server
   const server = new Server(
@@ -122,14 +122,22 @@ async function main(): Promise<void> {
   });
 
   // ── Graceful shutdown ────────────────────────────────────────────
+  // Covers both process signals (SIGINT/SIGTERM) and the MCP client simply
+  // closing the stdio pipe on disconnect/restart without sending a signal —
+  // the normal way an AI coding client detaches from this server.
 
+  let cleanedUp = false;
   const cleanup = async () => {
+    if (cleanedUp) return;
+    cleanedUp = true;
     await sessionManager.close();
     process.exit(0);
   };
 
   process.on('SIGINT', cleanup);
   process.on('SIGTERM', cleanup);
+  process.stdin.on('end', cleanup);
+  process.stdin.on('close', cleanup);
 
   // ── Start transport ──────────────────────────────────────────────
 
