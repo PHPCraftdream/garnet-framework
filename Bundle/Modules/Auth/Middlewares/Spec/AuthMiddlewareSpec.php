@@ -2,11 +2,13 @@
 
 namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\Spec {
     use DateTimeInterface;
+    use PHPCraftdream\Garnet\Bundle\Modules\Auth\AuthStrategy\AuthConfig;
     use PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\AuthMiddleware;
     use PHPCraftdream\Garnet\Kernel\Core\GlobalReqParams\GlobalReqParams;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookies;
     use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
+    use Psr\Http\Message\ResponseInterface;
     use ReflectionClass;
 
     // Mock for ICookie that returns $this for method chaining
@@ -178,11 +180,11 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\Spec {
             return $this;
         }
 
-        public function toResponse(\Psr\Http\Message\ResponseInterface $response): \Psr\Http\Message\ResponseInterface {
+        public function toResponse(ResponseInterface $response): ResponseInterface {
             return $response;
         }
 
-        public function fromResponse(\Psr\Http\Message\ResponseInterface $response): ICookies {
+        public function fromResponse(ResponseInterface $response): ICookies {
             return $this;
         }
 
@@ -487,10 +489,100 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\Spec {
         });
 
         describe('processOrigin()', function (): void {
-            // Skipping processOrigin tests as they require the missing appConfigEnv property
-            it('validates origin and referer headers', function (): void {
-                // This test is skipped due to missing appConfigEnv property in AuthMiddleware
-                expect(true)->toBe(true);
+            beforeEach(function (): void {
+                // Reset AuthConfig singleton before each test
+                $ref = new ReflectionClass(AuthConfig::class);
+                $prop = $ref->getProperty('instance');
+                $prop->setValue(null, null);
+
+                // Reset AuthMiddleware::$authConfig cache before each test
+                $ref2 = new ReflectionClass(AuthMiddleware::class);
+                $prop2 = $ref2->getProperty('authConfig');
+                $prop2->setValue(null, null);
+            });
+
+            it('returns null when HTTP_ORIGIN is set to an allowed origin', function (): void {
+                \PHPCraftdream\Garnet\Bundle\Modules\Auth\AuthStrategy\Spec\makeAuthConfig(['allowed_origins' => ['http://example.com', 'https://app.example.com']]);
+
+                $mockGlobals = new MockGlobalReqParams();
+                $mockGlobals->server = ['HTTP_ORIGIN' => 'http://example.com'];
+
+                $ref = new ReflectionClass(AuthMiddleware::class);
+                $method = $ref->getMethod('processOrigin');
+                $result = $method->invoke(null, $mockGlobals);
+
+                expect($result)->toBeNull();
+            });
+
+            it('returns a 400 response with "Bad origin" when HTTP_ORIGIN is disallowed', function (): void {
+                \PHPCraftdream\Garnet\Bundle\Modules\Auth\AuthStrategy\Spec\makeAuthConfig(['allowed_origins' => ['http://example.com']]);
+
+                $mockGlobals = new MockGlobalReqParams();
+                $mockGlobals->server = ['HTTP_ORIGIN' => 'http://evil.com'];
+
+                $ref = new ReflectionClass(AuthMiddleware::class);
+                $method = $ref->getMethod('processOrigin');
+                $result = $method->invoke(null, $mockGlobals);
+
+                expect($result)->toBeAnInstanceOf(ResponseInterface::class);
+                expect($result->getStatusCode())->toBe(400);
+                $body = (string)$result->getBody();
+                expect($body)->toContain('Bad origin');
+            });
+
+            it('returns null when HTTP_ORIGIN is absent and HTTP_REFERER is an allowed origin (without port)', function (): void {
+                \PHPCraftdream\Garnet\Bundle\Modules\Auth\AuthStrategy\Spec\makeAuthConfig(['allowed_origins' => ['http://example.com']]);
+
+                $mockGlobals = new MockGlobalReqParams();
+                $mockGlobals->server = ['HTTP_REFERER' => 'http://example.com/path'];
+
+                $ref = new ReflectionClass(AuthMiddleware::class);
+                $method = $ref->getMethod('processOrigin');
+                $result = $method->invoke(null, $mockGlobals);
+
+                expect($result)->toBeNull();
+            });
+
+            it('returns null when HTTP_ORIGIN is absent and HTTP_REFERER is an allowed origin (with port)', function (): void {
+                \PHPCraftdream\Garnet\Bundle\Modules\Auth\AuthStrategy\Spec\makeAuthConfig(['allowed_origins' => ['http://example.com:8080']]);
+
+                $mockGlobals = new MockGlobalReqParams();
+                $mockGlobals->server = ['HTTP_REFERER' => 'http://example.com:8080/path'];
+
+                $ref = new ReflectionClass(AuthMiddleware::class);
+                $method = $ref->getMethod('processOrigin');
+                $result = $method->invoke(null, $mockGlobals);
+
+                expect($result)->toBeNull();
+            });
+
+            it('returns a 400 response with "Bad referer" when HTTP_ORIGIN is absent and HTTP_REFERER is disallowed', function (): void {
+                \PHPCraftdream\Garnet\Bundle\Modules\Auth\AuthStrategy\Spec\makeAuthConfig(['allowed_origins' => ['http://example.com']]);
+
+                $mockGlobals = new MockGlobalReqParams();
+                $mockGlobals->server = ['HTTP_REFERER' => 'http://evil.com/path'];
+
+                $ref = new ReflectionClass(AuthMiddleware::class);
+                $method = $ref->getMethod('processOrigin');
+                $result = $method->invoke(null, $mockGlobals);
+
+                expect($result)->toBeAnInstanceOf(ResponseInterface::class);
+                expect($result->getStatusCode())->toBe(400);
+                $body = (string)$result->getBody();
+                expect($body)->toContain('Bad referer');
+            });
+
+            it('returns null when both HTTP_ORIGIN and HTTP_REFERER are absent (fallback-open behavior)', function (): void {
+                \PHPCraftdream\Garnet\Bundle\Modules\Auth\AuthStrategy\Spec\makeAuthConfig(['allowed_origins' => ['http://example.com']]);
+
+                $mockGlobals = new MockGlobalReqParams();
+                $mockGlobals->server = [];
+
+                $ref = new ReflectionClass(AuthMiddleware::class);
+                $method = $ref->getMethod('processOrigin');
+                $result = $method->invoke(null, $mockGlobals);
+
+                expect($result)->toBeNull();
             });
         });
 

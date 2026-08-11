@@ -144,7 +144,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router\Spec {
 
                 $reflection = new ReflectionClass($router);
                 $prop = $reflection->getProperty('filesDirs');
-                $prop->setAccessible(true);
                 $filesDirs = $prop->getValue($router);
 
                 expect($filesDirs)->toBeAn('array');
@@ -158,7 +157,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router\Spec {
 
                 $reflection = new ReflectionClass($router);
                 $prop = $reflection->getProperty('filesDirs');
-                $prop->setAccessible(true);
                 $filesDirs = $prop->getValue($router);
 
                 expect($filesDirs)->toBeAn('array');
