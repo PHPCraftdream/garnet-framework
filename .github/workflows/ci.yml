@@ -144,6 +144,9 @@ jobs:
         # service container exactly, so no config override is needed.
         run: composer test:bundle
 
+      - name: Kernel integration specs
+        run: composer test:kernel-integration
+
   frontend:
     name: Frontend — oxlint + tsgo
     runs-on: ubuntu-latest
