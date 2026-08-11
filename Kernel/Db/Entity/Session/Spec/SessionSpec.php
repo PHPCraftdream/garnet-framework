@@ -570,7 +570,11 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Spec {
 
                 $session->flush();
 
-                expect(true)->toBe(true);
+                expect($mockCookies->response)->toBe(null);
+
+                // Verify sessionId wasn't set (flush() did nothing)
+                $sessionIdProp = $reflection->getProperty('sessionId');
+                expect($sessionIdProp->getValue($session))->toBe(null);
             });
 
             it('does nothing when no changed values', function (): void {
@@ -588,7 +592,11 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Spec {
 
                 $session->flush();
 
-                expect(true)->toBe(true);
+                expect($mockCookies->response)->toBe(null);
+
+                // Verify sessionId wasn't set (flush() did nothing)
+                $sessionIdProp = $reflection->getProperty('sessionId');
+                expect($sessionIdProp->getValue($session))->toBe(null);
             });
         });
 

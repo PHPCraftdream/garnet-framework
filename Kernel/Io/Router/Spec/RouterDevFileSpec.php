@@ -142,14 +142,28 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router\Spec {
                 $router = new RouterDevFile();
                 $router->addFilesDir('assets', $this->tempDir . '/assets');
 
-                expect(true)->toBe(true);
+                $reflection = new ReflectionClass($router);
+                $prop = $reflection->getProperty('filesDirs');
+                $prop->setAccessible(true);
+                $filesDirs = $prop->getValue($router);
+
+                expect($filesDirs)->toBeAn('array');
+                expect(isset($filesDirs['assets']))->toBe(true);
+                expect($filesDirs['assets'])->toBe($this->tempDir . DIRECTORY_SEPARATOR . 'assets');
             });
 
             it('trims slashes from name', function (): void {
                 $router = new RouterDevFile();
                 $router->addFilesDir('/assets/', $this->tempDir . DIRECTORY_SEPARATOR . 'assets');
 
-                expect(true)->toBe(true);
+                $reflection = new ReflectionClass($router);
+                $prop = $reflection->getProperty('filesDirs');
+                $prop->setAccessible(true);
+                $filesDirs = $prop->getValue($router);
+
+                expect($filesDirs)->toBeAn('array');
+                expect(isset($filesDirs['assets']))->toBe(true);
+                expect($filesDirs['assets'])->toBe($this->tempDir . DIRECTORY_SEPARATOR . 'assets');
             });
 
             it('throws exception for wrong name pattern', function (): void {
