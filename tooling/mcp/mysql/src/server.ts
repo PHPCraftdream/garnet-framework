@@ -77,6 +77,11 @@ function runPhp(sql: string, params: unknown[] = [], allowWrite = false): Promis
     }, RUNNER_TIMEOUT_MS);
     child.on('close', () => clearTimeout(timer));
 
+    // EPIPE here (child exited before reading stdin) is an unhandled 'error'
+    // on the child.stdin stream, not the child process — without this guard it
+    // crashes the whole MCP server. The real failure is still reported via the
+    // child's 'close'/'error' handlers above.
+    child.stdin.on('error', () => {});
     child.stdin.write(input);
     child.stdin.end();
   });
