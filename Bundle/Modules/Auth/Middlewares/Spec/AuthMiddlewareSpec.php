@@ -494,13 +494,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\Spec {
             });
         });
 
-        describe('closeAuthSession()', function (): void {
-            it('clears all auth session values', function (): void {
-                // Skipping this test due to complex Session dependency
-                expect(true)->toBe(true);
-            });
-        });
-
         describe('Phase constants', function (): void {
             it('has defined PHASE_NULL constant', function (): void {
                 expect(AuthMiddleware::PHASE_NULL)->toBe('PHASE_NULL');

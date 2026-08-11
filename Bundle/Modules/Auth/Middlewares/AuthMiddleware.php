@@ -289,6 +289,29 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
         protected static function closeAuthSession(): void {
             $session = Session::get();
 
+            // Rotate the session identifier on the authenticated->anonymous
+            // transition — the symmetric counterpart of completeLogin()'s
+            // anonymous->authenticated rotate(). Without this, logout leaves
+            // the session cookie value (and its DB row) unchanged, so any
+            // non-auth session data accumulated while authenticated (cart,
+            // preferences, ...) survives the logout boundary under the SAME
+            // identifier and is inherited by the next user of a shared/kiosk
+            // browser. rotate() also reissues the CSRF token.
+            //
+            // Ordering mirrors completeLogin(): rotate() FIRST, then the
+            // setValue()/unsetValues() calls. rotate() persists ONLY
+            // $changedValues to the new row on flush() — it does NOT clear
+            // $this->sessionData (see the rotate() docblock) — so setValue()
+            // MUST run AFTER rotate() to land PHASE_NULL in $changedValues,
+            // where flush() writes it under the fresh anonymous identifier.
+            // The trailing unsetValues([...]) is then redundant for the NEW
+            // row (rotate() never copied those keys forward) but NOT for this
+            // request: $sessionData still holds the pre-rotation auth values,
+            // so a later getValue() in the same response must see them gone.
+            // Safe on an already-anonymous session too — rotate() guards the
+            // old-row delete on `if (!empty($oldSessionId))` and mints a fresh
+            // identifier regardless.
+            $session->rotate();
             $session->setValue(static::PHASE_KEY, static::PHASE_NULL);
 
             $session->unsetValues([
