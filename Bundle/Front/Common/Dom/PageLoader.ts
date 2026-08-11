@@ -160,17 +160,58 @@ export class PageLoader {
                 document.head.appendChild(style.cloneNode(true));
             }
         }
+        // __GARNET_* inline scripts carry per-request state (CSRF token,
+        // account id, user payload) that must track the LATEST server
+        // response, not the first page load. Two cases to handle:
+        //   1. content changed (e.g. CSRF after Session::rotate()) — the
+        //      existing <script> must be REPLACED: assigning textContent on
+        //      an already-inserted element does NOT re-execute it, so
+        //      window.__GARNET_CSRF__ would stay stale until a hard reload
+        //      and the next POST would 403.
+        //   2. the server no longer emits it (e.g. __GARNET_USER__ after
+        //      logout — HtmlLayout omits it once account_id is 0) — the
+        //      stale element and its global must be dropped, or the previous
+        //      user's data lingers in JS until a hard reload.
+        // Non-__GARNET_ inline <script id> tags keep skip-if-present
+        // semantics to avoid blindly re-running arbitrary third-party init.
+        const incomingStateIds = new Set<string>();
+
         for (const scriptEl of Array.from(doc.querySelectorAll('script[id]:not([src])'))) {
-            if (!document.getElementById(scriptEl.id)) {
-                // Re-create via createElement so the browser executes it —
-                // a cloned/innerHTML-inserted <script> stays inert.
-                const fresh = document.createElement('script');
-                for (const attr of Array.from(scriptEl.attributes)) {
-                    fresh.setAttribute(attr.name, attr.value);
-                }
-                fresh.textContent = scriptEl.textContent;
-                document.head.appendChild(fresh);
+            const isStateScript = scriptEl.id.startsWith('__GARNET_');
+
+            if (isStateScript) {
+                incomingStateIds.add(scriptEl.id);
             }
+
+            const existing = document.getElementById(scriptEl.id);
+            const stale = isStateScript && !!existing
+                && existing.textContent !== scriptEl.textContent;
+
+            if (existing && !stale) {
+                continue;
+            }
+
+            existing?.remove();
+
+            // Re-create via createElement so the browser executes it —
+            // a cloned/innerHTML-inserted <script> stays inert.
+            const fresh = document.createElement('script');
+            for (const attr of Array.from(scriptEl.attributes)) {
+                fresh.setAttribute(attr.name, attr.value);
+            }
+            fresh.textContent = scriptEl.textContent;
+            document.head.appendChild(fresh);
+        }
+
+        // Case 2: remove __GARNET_* state scripts the server stopped emitting
+        // and clear their globals. By convention each script id equals its
+        // own window global name (see HtmlLayout.en/ru.twig).
+        for (const el of Array.from(document.querySelectorAll('script[id]'))) {
+            if (!el.id.startsWith('__GARNET_') || incomingStateIds.has(el.id)) {
+                continue;
+            }
+            el.remove();
+            (window as unknown as Record<string, unknown>)[el.id] = undefined;
         }
 
         return PageLoader.loadStyles(stylesToLoad)

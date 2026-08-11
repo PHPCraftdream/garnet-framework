@@ -93,8 +93,11 @@ async function readAuthCodeFromDb(page: Page): Promise<string> {
  *
  * `login` must end in `.test` for this to work outside an active
  * TestScope registration gate — see `EmailAuthMiddleware::processPhaseNullPost()`.
+ *
+ * `opts.skipFinalGoto` — if true, skips the hard `page.goto('/')` after
+ * successful auth (line 123). Default false preserves existing behavior.
  */
-export async function registerAccount(page: Page, login: string): Promise<void> {
+export async function registerAccount(page: Page, login: string, opts?: { skipFinalGoto?: boolean }): Promise<void> {
 	await page.context().clearCookies();
 	await page.goto(AUTH_PATH);
 
@@ -120,7 +123,9 @@ export async function registerAccount(page: Page, login: string): Promise<void> 
 		() => document.querySelector('[data-test-id="auth-submit-btn"]') === null,
 		{ timeout: 30000 }
 	);
-	await page.goto('/');
+	if (!opts?.skipFinalGoto) {
+		await page.goto('/');
+	}
 	console.log(`Registration successful for ${login}`);
 }
 
