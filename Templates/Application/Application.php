@@ -7,6 +7,7 @@ namespace PHPCraftdream\Application {
     use PHPCraftdream\Application\Common\Commands\CMDTestTeardown;
     use PHPCraftdream\Application\Common\Common;
     use PHPCraftdream\Application\Common\Services\AppCronService;
+    use PHPCraftdream\Application\Common\Tables\MagicLoginTokens;
     use PHPCraftdream\Application\Dashboard\Dashboard;
     use PHPCraftdream\Application\Foreground\Backend\AccountController;
     use PHPCraftdream\Application\Foreground\Backend\MainController;
@@ -15,6 +16,7 @@ namespace PHPCraftdream\Application {
     use PHPCraftdream\Garnet\Bundle\Framework;
     use PHPCraftdream\Garnet\Bundle\FrameworkJsGen;
     use PHPCraftdream\Garnet\Bundle\I18n\FwI18n;
+    use PHPCraftdream\Garnet\Bundle\Modules\Auth\FwMagicLoginService;
     use PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\EmailAuthMiddleware;
     use PHPCraftdream\Garnet\Kernel\Core\AppInit\BaseAppInit;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Migration\CMDMigration;
@@ -71,6 +73,13 @@ namespace PHPCraftdream\Application {
                 new Dashboard($this->workDir, $this),
                 new Foreground($this->workDir, $this),
             ];
+
+            // Required by EmailAuthMiddleware::sendCode() (called on every
+            // request-code POST) — pins the magic-login-token table for this
+            // app. Wired here (not defineMigrationClass()) because that only
+            // runs on consoleInit(); this needs to be set before any web
+            // request too.
+            FwMagicLoginService::setTableClasses(MagicLoginTokens::class);
         }
 
         protected function defineMigrationClass(): void {

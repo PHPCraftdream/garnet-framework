@@ -9,10 +9,11 @@ namespace PHPCraftdream\Application\Migrations {
     use PHPCraftdream\Application\Migrations\Items\M_0006;
     use PHPCraftdream\Application\Migrations\Items\M_0007;
     use PHPCraftdream\Application\Migrations\Items\M_0008;
+    use PHPCraftdream\Application\Migrations\Items\M_0009;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Migration\Migration;
 
     class AppMigration extends Migration {
-        protected int $currentVersion = 8;
+        protected int $currentVersion = 9;
 
         /**
          * @var array|class-string[]
@@ -26,6 +27,7 @@ namespace PHPCraftdream\Application\Migrations {
             6 => M_0006::class,
             7 => M_0007::class,
             8 => M_0008::class,
+            9 => M_0009::class,
         ];
     }
 }
