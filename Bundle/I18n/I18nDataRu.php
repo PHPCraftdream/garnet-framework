@@ -253,8 +253,6 @@ namespace PHPCraftdream\Garnet\Bundle\I18n {
             'AdminAction_user_approve' => 'Подтверждение пользователя',
             'AdminAction_user_disable' => 'Блокировка пользователя',
             'AdminAction_user_flag_set' => 'Установка флага пользователю',
-            'AdminAction_slot_delete' => 'Удаление слота',
-            'AdminAction_booking_cancel' => 'Отмена брони',
             'AdminAction_support_assign' => 'Назначение тикета',
             'AdminAction_support_status_change' => 'Изменение статуса тикета',
             'AdminAction_balance_adjust' => 'Корректировка баланса',
