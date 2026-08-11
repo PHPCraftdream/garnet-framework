@@ -72,13 +72,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router {
             $methodName = $uriParams->getMethodName();
             $method = $methodName ? "{$httpMethod}__{$methodName}" : "{$httpMethod}__main";
 
-            if (!method_exists($callParams[0], $method)) {
-                return ($this->handlerNotFound)($globals, $uriParams);
-            }
-
-            /**
-             * @phpstan-var callable-string $methodCallStr
-             */
             $methodCallStr = "{$callParams[0]}::{$method}";
 
             $callBefore = $callParams[1];
@@ -106,6 +99,13 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router {
                 BenchmarkLog::log('after_callBefore');
             }
 
+            if (!is_callable($methodCallStr)) {
+                return ($this->handlerNotFound)($globals, $uriParams);
+            }
+
+            /**
+             * @phpstan-var callable-string $methodCallStr
+             */
             $resultApi = $methodCallStr($globals, $uriParams);
 
             BenchmarkLog::log('after_controller');

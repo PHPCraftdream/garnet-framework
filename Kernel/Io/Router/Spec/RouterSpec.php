@@ -168,9 +168,77 @@ describe('Router', function (): void {
             $router->add('/test', TestController::class);
 
             // TestController has no POST__main — must resolve via
-            // method_exists() and hit handlerNotFound, not crash with
+            // is_callable() and hit handlerNotFound, not crash with
             // an uncaught Error nor rely on string-matching its message.
             $uriParams = MockRouterUriParams::create('/test', 'POST');
+            $globals = MockGlobalParams::create();
+
+            $result = $router->dispatch($globals, $uriParams);
+
+            expect($handlerCalled)->toBe(true);
+            expect($result)->toBe('404');
+        });
+
+        it('still runs callBefore middleware when the route exists but the HTTP-method handler does not (regression #28)', function (): void {
+            $middlewareRan = false;
+            $handler = fn () => '404';
+
+            $router = new Router($handler);
+
+            $before = [
+                function () use (&$middlewareRan) {
+                    $middlewareRan = true;
+
+                    return null;
+                },
+            ];
+
+            $router->add('/test', TestController::class, $before);
+
+            // TestController has no POST__main. callBefore middleware
+            // (e.g. auth middleware handling login/logout/consent POSTs
+            // against the current page) must still run before the
+            // route's own handler is resolved, since it may fully
+            // handle the request itself.
+            $uriParams = MockRouterUriParams::create('/test', 'POST');
+            $globals = MockGlobalParams::create();
+
+            $result = $router->dispatch($globals, $uriParams);
+
+            expect($middlewareRan)->toBe(true);
+            expect($result)->toBe('404');
+        });
+
+        it('lets callBefore middleware short-circuit the request when the HTTP-method handler does not exist (regression #28)', function (): void {
+            $handler = fn () => '404';
+            $router = new Router($handler);
+
+            $before = [
+                fn () => 'handled by middleware',
+            ];
+
+            $router->add('/test', TestController::class, $before);
+
+            $uriParams = MockRouterUriParams::create('/test', 'POST');
+            $globals = MockGlobalParams::create();
+
+            $result = $router->dispatch($globals, $uriParams);
+
+            expect($result)->toBe('handled by middleware');
+        });
+
+        it('calls handlerNotFound instead of crashing when the resolved method exists but is not public', function (): void {
+            $handlerCalled = false;
+            $handler = function () use (&$handlerCalled) {
+                $handlerCalled = true;
+
+                return '404';
+            };
+
+            $router = new Router($handler);
+            $router->add('/private-method', TestControllerWithPrivateMethod::class);
+
+            $uriParams = MockRouterUriParams::create('/private-method', 'GET');
             $globals = MockGlobalParams::create();
 
             $result = $router->dispatch($globals, $uriParams);
@@ -184,6 +252,12 @@ describe('Router', function (): void {
 // Helper classes for testing
 class TestController {
     public static function GET__main(): string {
+        return 'GET__main called';
+    }
+}
+
+class TestControllerWithPrivateMethod {
+    private static function GET__main(): string {
         return 'GET__main called';
     }
 }

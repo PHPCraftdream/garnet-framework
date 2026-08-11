@@ -35,14 +35,11 @@ namespace PHPCraftdream\Application\Foreground\Backend {
         }
 
         /**
-         * Router::dispatch() only runs a route's `callBefore` middleware
-         * (here, EmailAuthMiddleware::authOnly) once a matching
-         * `{method}__{name}` handler exists on the target controller — a
-         * bare POST to /account with no method_exists() match 404s before
-         * the middleware ever runs. authOnly() itself handles and responds
+         * EmailAuthMiddleware::authOnly() (callBefore) handles and responds
          * to every in-flow POST action (start-session, logout, auth_email,
-         * code); this only executes on the same fallthrough case get__main
-         * handles — already authenticated (PHASE_DONE) — so it mirrors it.
+         * code) itself. This only executes on the fallthrough case
+         * get__main handles too — already authenticated (PHASE_DONE) — so
+         * it mirrors it.
          */
         public static function post__main(IGlobalReqParams $globals, IRouterUriParams $params): mixed {
             return static::get__main($globals, $params);
