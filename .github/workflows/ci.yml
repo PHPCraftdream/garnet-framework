@@ -597,9 +597,17 @@ jobs:
           npm --prefix Tests test -- specs/framework-bundle/magic-link.spec.ts || status=$?
           if [ "$status" != "0" ]; then
             echo "--- /account response (diagnostics) ---" >&2
-            curl -v http://localhost:8001/account 2>&1 >&2 || true
+            curl -sD- http://localhost:8001/account -o /dev/null 2>&1 >&2 || true
+            echo "--- gen.js assets referenced by /account (HTTP status only) ---" >&2
+            for f in $(curl -s http://localhost:8001/account | grep -o '/assets/[^"]*\.gen\.js' | sort -u); do
+              echo "$f -> $(curl -s -o /dev/null -w '%{http_code}' "http://localhost:8001$f")" >&2
+            done
+            echo "--- gen.js files actually on disk (Public/) ---" >&2
+            find Public -iname "*.gen.js" 2>/dev/null >&2 || true
             echo "--- PHP error log (if any) ---" >&2
             find WorkDir -iname "*.log" -exec sh -c 'echo "== {} =="; cat "{}"' \; 2>/dev/null || true
+            echo "--- garnet serve log (tail) ---" >&2
+            tail -100 /tmp/garnet-serve.log >&2 || true
           fi
           kill "$SERVER_PID" 2>/dev/null || true
           exit $status
