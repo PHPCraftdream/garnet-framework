@@ -142,9 +142,25 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session {
                 return $csrfTokenCookie;
             }
 
+            return $this->mintCsrfCookie();
+        }
+
+        /**
+         * Unconditionally mint a fresh CSRF token and write it onto the CSRF
+         * cookie. Shared by touchCSRF() (lazy first-mint) and rotate() (eager
+         * re-mint on session-identifier rotation). Unlike touchCSRF(), this has
+         * NO reuse path: it always generates a brand-new token and overwrites
+         * whatever value the cookie currently holds.
+         *
+         * @return string
+         * @throws Exception
+         */
+        protected function mintCsrfCookie(): string {
             $csrfToken = StrTools::randomString(static::COOKIE_VALUE_LEN);
             $this->csrfToken = $csrfToken;
-            $sessionCookie->setValue($csrfToken)
+
+            $csrfCookie = $this->cookies->get(static::CSRF_TOKEN);
+            $csrfCookie->setValue($csrfToken)
                 ->rememberForever()
                 ->setPath('/')
                 ->setSecure($this->isSecureRequest())
@@ -306,6 +322,20 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session {
          * The old row (and its session_data) is deleted outright so the
          * pre-rotation token doesn't linger as a live, empty session.
          *
+         * In addition to the session identifier, rotate() ALSO invalidates
+         * and reissues the CSRF token (cookie name CSRF_TOKEN): the in-memory
+         * cached token is cleared and a fresh value is eagerly minted onto
+         * the cookie in the same call, so a Set-Cookie is guaranteed on this
+         * response even when nothing else calls touchCSRF() later in the
+         * request. The CSRF token is pre-auth client state of exactly the
+         * kind rotate() exists to stop trusting — an attacker who fixed or
+         * learned it pre-login (e.g. by visiting the login page themselves
+         * first and reading their own CSRF cookie) must not carry that token
+         * into the now-authenticated session. mintCsrfCookie() is shared
+         * with touchCSRF()'s lazy first-mint path, so the reissued cookie
+         * keeps identical Secure/HttpOnly/Path/SameSite=Lax attributes —
+         * only the VALUE rotates.
+         *
          * Callers MUST invoke this on every transition into an authenticated
          * state (e.g. AUTH_PHASE -> PHASE_DONE), not just on first-ever
          * visit — otherwise an attacker-supplied pre-login cookie value
@@ -319,6 +349,13 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session {
             $oldSessionId = $this->sessionId;
             $this->sessionId = null;
             $this->issueNewCookie();
+
+            // Rotate the CSRF token alongside the session identifier: clear the
+            // cached in-memory value and eagerly mint a fresh one (see docblock)
+            // so a Set-Cookie is guaranteed on this response even if nothing else
+            // calls touchCSRF() later in the request.
+            $this->csrfToken = '';
+            $this->mintCsrfCookie();
 
             if (!empty($oldSessionId)) {
                 SessionData::get()->deleteSessionAsync($oldSessionId);

@@ -6,6 +6,7 @@ use Mockery;
 use PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Session;
 use PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie;
 use PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookies;
+use PHPCraftdream\Garnet\Kernel\Io\Cookies\Cookies;
 use ReflectionClass;
 
 /**
@@ -346,6 +347,46 @@ describe('Session CSRF lifecycle', function (): void {
             $ref = new ReflectionClass($session);
             $prop = $ref->getProperty('csrfToken');
             expect($prop->getValue($session))->toBe('');
+        });
+    });
+
+    // -------------------------------------------------------------------------
+    // rotate() — CSRF token is invalidated & reissued (defense-in-depth)
+    // -------------------------------------------------------------------------
+    describe('rotate() invalidates the CSRF token alongside the session id', function (): void {
+        // Behavioral: drives the REAL Cookies/Cookie classes (stateful — a
+        // setValue() is observable through the next getValue()) instead of
+        // fixed-return Mockery stubs, so the assertions exercise the actual
+        // token value a later caller / next request would observe.
+        it('issues a NEW CSRF token value after rotate(), different from the pre-rotation one', function (): void {
+            $cookies = new Cookies();
+            $session = buildSessionWithCookies($cookies);
+
+            $before = $session->touchCSRF();
+            expect(strlen($before))->toBe(Session::COOKIE_VALUE_LEN);
+
+            $session->rotate();
+
+            // What peekCSRF() (and thus any later caller in the same request)
+            // observes AFTER rotation — must be a brand-new value.
+            $after = $session->peekCSRF();
+            expect(strlen($after))->toBe(Session::COOKIE_VALUE_LEN);
+            expect($after)->not->toBe($before);
+
+            // The CSRF cookie object itself now carries the rotated value —
+            // i.e. a Set-Cookie with the new token would be emitted.
+            expect($cookies->get(Session::CSRF_TOKEN)->getValue())->toBe($after);
+            expect($cookies->get(Session::CSRF_TOKEN)->getValue())->not->toBe($before);
+        });
+
+        it('does NOT change the CSRF token when rotate() is never called', function (): void {
+            $cookies = new Cookies();
+            $session = buildSessionWithCookies($cookies);
+
+            $first = $session->touchCSRF();
+            $again = $session->peekCSRF();
+
+            expect($again)->toBe($first);
         });
     });
 });
