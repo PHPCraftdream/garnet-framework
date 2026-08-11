@@ -306,6 +306,120 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Admin\Spec {
             });
         });
 
+        describe('::handle — /__garnet/logout (auth + CSRF required)', function (): void {
+            it('rejects an unauthenticated POST with 401 and does NOT delete the token file', function (): void {
+                AdminAuth::saveToken('t');
+                AdminAuth::activateToken('t');
+                // Deliberately no cookie set — unauthenticated caller.
+
+                $prevMethod = $_SERVER['REQUEST_METHOD'] ?? null;
+                $_SERVER['REQUEST_METHOD'] = 'POST';
+
+                ob_start();
+                @AdminApp::handle('/__garnet/logout');
+                $body = ob_get_clean();
+
+                if ($prevMethod === null) {
+                    unset($_SERVER['REQUEST_METHOD']);
+                } else {
+                    $_SERVER['REQUEST_METHOD'] = $prevMethod;
+                }
+
+                expect($body)->toContain('Unauthorized');
+                expect(AdminAuth::readToken())->not->toBeNull();
+            });
+
+            it('rejects an authenticated POST without a valid CSRF token with 403 and does NOT delete the token file', function (): void {
+                AdminAuth::saveToken('t');
+                AdminAuth::activateToken('t');
+                $_COOKIE['garnet_admin'] = 't';
+
+                $prevMethod = $_SERVER['REQUEST_METHOD'] ?? null;
+                $_SERVER['REQUEST_METHOD'] = 'POST';
+
+                ob_start();
+                @AdminApp::handle('/__garnet/logout');
+                $body = ob_get_clean();
+
+                if ($prevMethod === null) {
+                    unset($_SERVER['REQUEST_METHOD']);
+                } else {
+                    $_SERVER['REQUEST_METHOD'] = $prevMethod;
+                }
+
+                expect($body)->toContain('Bad CSRF token');
+                expect(AdminAuth::readToken())->not->toBeNull();
+            });
+
+            it('accepts a real CSRF token via the same check handleExecTicket uses (unit under test: AdminAuth::checkCsrfToken)', function (): void {
+                AdminAuth::saveToken('t');
+                AdminAuth::activateToken('t');
+                $csrf = AdminAuth::csrfToken();
+
+                // handleLogout() reads php://input, which cannot be faked per-call
+                // in a kahlan spec without a stream wrapper (same limitation noted
+                // for handleExecTicket above) — assert the underlying CSRF contract
+                // directly instead, i.e. that a correctly-derived token validates.
+                expect(AdminAuth::checkCsrfToken($csrf))->toBe(true);
+                expect(AdminAuth::checkCsrfToken('wrong'))->toBe(false);
+            });
+        });
+
+        describe('::handle — /__garnet/api/app-use (auth + CSRF + Content-Type required)', function (): void {
+            beforeEach(function (): void {
+                AdminAuth::saveToken('t');
+                AdminAuth::activateToken('t');
+                $_COOKIE['garnet_admin'] = 't';
+                $this->prevMethod = $_SERVER['REQUEST_METHOD'] ?? null;
+                $_SERVER['REQUEST_METHOD'] = 'POST';
+                $this->prevContentType = $_SERVER['CONTENT_TYPE'] ?? null;
+            });
+
+            afterEach(function (): void {
+                if ($this->prevMethod === null) {
+                    unset($_SERVER['REQUEST_METHOD']);
+                } else {
+                    $_SERVER['REQUEST_METHOD'] = $this->prevMethod;
+                }
+
+                if ($this->prevContentType === null) {
+                    unset($_SERVER['CONTENT_TYPE']);
+                } else {
+                    $_SERVER['CONTENT_TYPE'] = $this->prevContentType;
+                }
+            });
+
+            it('rejects a text/plain body (CORS-simple, no preflight) with 415 before touching CSRF/app switching', function (): void {
+                $_SERVER['CONTENT_TYPE'] = 'text/plain';
+
+                ob_start();
+                @AdminApp::handle('/__garnet/api/app-use');
+                $body = ob_get_clean();
+
+                expect($body)->toContain('Unsupported content type');
+            });
+
+            it('rejects an application/json body without a matching CSRF token with 403', function (): void {
+                $_SERVER['CONTENT_TYPE'] = 'application/json';
+
+                ob_start();
+                @AdminApp::handle('/__garnet/api/app-use');
+                $body = ob_get_clean();
+
+                expect($body)->toContain('Bad CSRF token');
+            });
+
+            it('the CSRF contract used by app-use accepts the real token and rejects a wrong one (unit under test: AdminAuth::checkCsrfToken)', function (): void {
+                // handleAppUse() reads php://input directly; simulate via the same
+                // underlying check it calls, mirroring the exec-ticket spec above —
+                // end-to-end HTTP body faking is out of scope for kahlan here.
+                $csrf = AdminAuth::csrfToken();
+
+                expect(AdminAuth::checkCsrfToken($csrf))->toBe(true);
+                expect(AdminAuth::checkCsrfToken('wrong'))->toBe(false);
+            });
+        });
+
         // build:watch is a file watcher that never exits by design. Streaming
         // it over the same run-to-completion SSE loop as `build`/`prepare`/
         // `migration` would pin a worker forever (see handleExec's dispatch).

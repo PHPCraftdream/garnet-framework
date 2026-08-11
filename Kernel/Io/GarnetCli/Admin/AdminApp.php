@@ -75,23 +75,17 @@ class AdminApp {
             return;
         }
 
-        // Logout (auth required)
-        if ($path === '/__garnet/logout' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-            AdminAuth::deleteToken();
-            setcookie('garnet_admin', '', [
-                'expires' => time() - 3600,
-                'path' => '/',
-                'httponly' => true,
-                'samesite' => 'Lax',
-            ]);
-            header('Location: /__garnet/');
+        // All other routes require auth
+        if (!self::isAuthenticated()) {
+            self::sendJson(['error' => 'Unauthorized'], 401);
 
             return;
         }
 
-        // All other routes require auth
-        if (!self::isAuthenticated()) {
-            self::sendJson(['error' => 'Unauthorized'], 401);
+        // Logout (auth required, CSRF-checked like every other mutating
+        // admin-console POST — see handleExecTicket() for the same pattern).
+        if ($path === '/__garnet/logout' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            self::handleLogout();
 
             return;
         }
@@ -103,6 +97,26 @@ class AdminApp {
             '/__garnet/api/exec' => self::handleExec(),
             default => self::sendJson(['error' => 'Not found'], 404),
         };
+    }
+
+    private static function handleLogout(): void {
+        $body = json_decode(file_get_contents('php://input'), true);
+        $csrf = (string)($body['csrf'] ?? '');
+
+        if (!AdminAuth::checkCsrfToken($csrf)) {
+            self::sendJson(['error' => 'Bad CSRF token'], 403);
+
+            return;
+        }
+
+        AdminAuth::deleteToken();
+        setcookie('garnet_admin', '', [
+            'expires' => time() - 3600,
+            'path' => '/',
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+        header('Location: /__garnet/');
     }
 
     private static function handleTokenActivation(string $token): void {
@@ -143,7 +157,27 @@ class AdminApp {
             return;
         }
 
+        // text/plain is a CORS "simple request" content type that skips
+        // preflight — trusting it here would let a cross-origin page
+        // smuggle a JSON body past the CSRF check below (same reasoning as
+        // GlobalReqParams::mergeJsonBody()'s Content-Type gate).
+        $contentType = (string)($_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '');
+
+        if (stripos($contentType, 'application/json') !== 0) {
+            self::sendJson(['error' => 'Unsupported content type'], 415);
+
+            return;
+        }
+
         $body = json_decode(file_get_contents('php://input'), true);
+        $csrf = (string)($body['csrf'] ?? '');
+
+        if (!AdminAuth::checkCsrfToken($csrf)) {
+            self::sendJson(['error' => 'Bad CSRF token'], 403);
+
+            return;
+        }
+
         $app = $body['app'] ?? '';
 
         if (empty($app) || !preg_match('#^[A-Za-z_][A-Za-z0-9_]+$#', $app)) {

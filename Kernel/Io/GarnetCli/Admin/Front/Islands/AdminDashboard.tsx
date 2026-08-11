@@ -94,7 +94,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({currentApp, apps,
         fetch('/__garnet/api/app-use', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({app: selectedApp}),
+            body: JSON.stringify({app: selectedApp, csrf: csrfToken}),
         })
             .then(r => r.json())
             .then(data => {
@@ -106,16 +106,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({currentApp, apps,
                 }
             })
             .catch(err => appendOutput('Error: ' + err.message + '\n'));
-    }, [selectedApp, appendOutput]);
+    }, [selectedApp, csrfToken, appendOutput]);
 
     const logout = useCallback(() => {
         // NOTE: raw fetch (not sendPost) — see switchApp comment above. This hits
         // the GarnetCli admin server, not the main app. window.location.href is
         // also acceptable here because we are deliberately leaving the admin SPA.
-        fetch('/__garnet/logout', {method: 'POST'}).then(() => {
+        fetch('/__garnet/logout', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({csrf: csrfToken}),
+        }).then(() => {
             window.location.href = '/__garnet/';
         });
-    }, []);
+    }, [csrfToken]);
 
     const cmdBtn = 'px-4 py-2 text-sm font-medium text-white rounded disabled:opacity-40 disabled:cursor-not-allowed';
 
