@@ -80,7 +80,7 @@ extension-point convention.
 
 - Kernel specs (`Kernel/**/Spec/`) are DB-free. Run via `composer test:kernel`.
 - Bundle specs (`Bundle/**/Spec/`) may touch MySQL. Run via `composer test:bundle` (needs `localhost:3306` matching `TestsInit/TestConfig/db.ini`).
-- CI runs both behind `composer test` (matrix on PHP 8.1/8.2/8.3).
+- CI runs both behind `composer test` (matrix on PHP 8.1/8.2/8.3/8.4/8.5).
 
 ## Common operations
 
