@@ -385,13 +385,12 @@ jobs:
       # because they need a real MySQL database (session_data, accounts,
       # mail_log rows via mysql2) and this job runs DB-free with no MySQL
       # service configured. Wiring those in is a separate follow-up (add a
-      # MySQL service + run migrations first — note: a pre-existing,
-      # unrelated migration-bootstrap issue was found this session where a
-      # brand-new DB's `db_migration` tracking table isn't auto-created by
-      # `php garnet migration`; investigate that before wiring a DB-backed
-      # CI job). Do NOT add these specs to this DB-free job without that
-      # MySQL service; doing so will make it red for a reason that isn't a
-      # code bug.
+      # MySQL service + run migrations first — note: migration self-bootstrap
+      # works fine, proven by the vendored-app-mode job; the remaining blocker
+      # for consent-csrf.spec.ts specifically is the React island lazy-load
+      # issue, not migrations). Do NOT add these specs to this DB-free job
+      # without that MySQL service; doing so will make it red for a reason that
+      # isn't a code bug.
       - name: Serve + Playwright smoke suite
         working-directory: ${{ runner.temp }}/CiApp
         env:
@@ -503,7 +502,7 @@ jobs:
         run: php garnet build:check
 
   vendored-app-mode:
-    name: Vendored app-mode — config:init → build → serve → DB smoke
+    name: Vendored app-mode — config:init → build → serve → DB smoke + framework-bundle specs (raw-HTTP only)
     runs-on: ubuntu-latest
     # See the e2e job above for why Env::isDevDir() needs an explicit
     # override in CI. This job's whole point is exercising the app as a
@@ -651,7 +650,13 @@ jobs:
       # exists — DB + HTTP together end to end, addressing T4. No other CI
       # job runs DB + HTTP together.
       #
-      # Why raw HTTP instead of the framework-bundle Playwright specs
+      # After the inline smoke, this job runs the raw-HTTP-only framework-bundle
+      # specs (email-link-csrf.spec.ts, cookie-samesite.spec.ts). These don't
+      # require the React UI and thus aren't blocked by the chunk-loading issue.
+      # consent-csrf.spec.ts still uses UI selectors and remains excluded until
+      # the React island lazy-load issue is resolved.
+      #
+      # Why raw HTTP instead of the full framework-bundle Playwright specs
       # (magic-link.spec.ts etc.): those drive the Auth2 React island
       # through the UI, but the island is lazy-loaded via a dynamic
       # import() (see Bundle/Front/EntryPoints/Auth.ts) that — investigated
@@ -731,5 +736,19 @@ jobs:
             echo "--- PHP error log (if any) ---" >&2
             find WorkDir -iname "*.log" -exec sh -c 'echo "== {} =="; cat "{}"' \; 2>/dev/null || true
           fi
+
+          # Run the raw-HTTP framework-bundle specs (email-link-csrf, cookie-samesite)
+          # These use playwright.request.newContext() and don't need the React UI.
+          if [ "$status" = "0" ]; then
+            echo "Running raw-HTTP framework-bundle specs."
+            npm --prefix Tests test -- \
+              specs/framework-bundle/email-link-csrf.spec.ts \
+              specs/framework-bundle/cookie-samesite.spec.ts || status=$?
+            if [ "$status" != "0" ]; then
+              echo "--- PHP error log (if any) ---" >&2
+              find WorkDir -iname "*.log" -exec sh -c 'echo "== {} =="; cat "{}"' \; 2>/dev/null || true
+            fi
+          fi
+
           kill "$SERVER_PID" 2>/dev/null || true
           exit $status
