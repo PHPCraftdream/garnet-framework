@@ -3,6 +3,14 @@
 namespace PHPCraftdream\Garnet\Kernel\Core\HCalendar {
     use DateTime;
 
+    /**
+     * Time-slot availability filter for calendar dates.
+     *
+     * Determines which dates in a range are available or restricted based on
+     * Hebrew calendar rules (Shabbat, holidays, fast days). The name "slot"
+     * refers to generic calendar time-slot filtering (availability intervals),
+     * not a booking-domain object. This is framework-generic calendar functionality.
+     */
     class SlotDateFilter {
         /**
          * Analyze a date range and split into available and restricted dates.
