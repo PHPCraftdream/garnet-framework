@@ -206,12 +206,18 @@ export class PageLoader {
         // Case 2: remove __GARNET_* state scripts the server stopped emitting
         // and clear their globals. By convention each script id equals its
         // own window global name (see HtmlLayout.en/ru.twig).
-        for (const el of Array.from(document.querySelectorAll('script[id]'))) {
-            if (!el.id.startsWith('__GARNET_') || incomingStateIds.has(el.id)) {
-                continue;
+        // Skip this sweep entirely when the incoming response carries NO state scripts at all
+        // (self-contained error/maintenance pages). If ANY state scripts are present (even just
+        // __GARNET_CSRF__/__GARNET_PREFIX__), the sweep runs to handle legitimate partial removal
+        // (e.g. __GARNET_USER__/__GARNET_ACCOUNT_ID__ after logout).
+        if (incomingStateIds.size > 0) {
+            for (const el of Array.from(document.querySelectorAll('script[id]'))) {
+                if (!el.id.startsWith('__GARNET_') || incomingStateIds.has(el.id)) {
+                    continue;
+                }
+                el.remove();
+                (window as unknown as Record<string, unknown>)[el.id] = undefined;
             }
-            el.remove();
-            (window as unknown as Record<string, unknown>)[el.id] = undefined;
         }
 
         return PageLoader.loadStyles(stylesToLoad)
