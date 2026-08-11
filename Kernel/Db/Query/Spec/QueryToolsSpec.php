@@ -272,6 +272,52 @@ describe('QueryTools', function (): void {
             $result = QueryTools::buildSql($sql, [1, 2, 3]);
             expect($result)->toBe('SELECT * FROM users WHERE id IN ("1", "2", "3")');
         });
+
+        it('prevents cross-pass re-substitution (B4) - :name in positional value stays literal', function (): void {
+            // F1 bug: :id inside a positional value should NOT be re-expanded
+            $sql = 'SELECT ? , :id';
+            $args = [0 => 'inject :id here', 'id' => 99];
+            $result = QueryTools::buildSql($sql, $args);
+            // The :id inside the positional value must stay literal, not become "99"
+            expect($result)->toBe('SELECT "inject :id here" , "99"');
+        });
+
+        it('prevents string-break via re-substitution (B5) - collision detected correctly', function (): void {
+            // F1 bug: :role inside positional value must not be re-expanded
+            $sql = 'WHERE a = ? AND b = :role';
+            $args = [0 => ':role injected', 'role' => 'SECRET'];
+            $result = QueryTools::buildSql($sql, $args);
+            // The positional value's :role must stay literal, SECRET must not escape outside quotes
+            expect($result)->toBe('WHERE a = ":role injected" AND b = "SECRET"');
+        });
+
+        it('preserves ? character inside values without recounting', function (): void {
+            // Verify ? inside a value is not re-counted as a placeholder (existing behavior B3)
+            $sql = 'WHERE a = ? AND b = ?';
+            $result = QueryTools::buildSql($sql, ['has?mark', 'second']);
+            expect($result)->toBe('WHERE a = "has?mark" AND b = "second"');
+        });
+
+        it('preserves :name substring with no matching key as literal', function (): void {
+            // Verify :name with no matching key stays literal (existing behavior B6)
+            $sql = 'WHERE a = ?';
+            $result = QueryTools::buildSql($sql, ['text :role more']);
+            expect($result)->toBe('WHERE a = "text :role more"');
+        });
+
+        it('does not re-expand named value containing its own key', function (): void {
+            // Verify named value containing its own key stays literal (existing behavior B7)
+            $sql = 'WHERE a = :x';
+            $result = QueryTools::buildSql($sql, ['x' => 'hi :x recurse']);
+            expect($result)->toBe('WHERE a = "hi :x recurse"');
+        });
+
+        it('converts NULL to keyword not string for both ? and :name', function (): void {
+            // Verify NULL handling for both placeholder types (existing behavior B8)
+            $sql = 'WHERE a = ? AND b = :n';
+            $result = QueryTools::buildSql($sql, [0 => null, 'n' => null]);
+            expect($result)->toBe('WHERE a = NULL AND b = NULL');
+        });
     });
 
     describe('fieldVal()', function (): void {

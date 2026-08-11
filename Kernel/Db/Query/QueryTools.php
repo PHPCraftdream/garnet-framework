@@ -279,41 +279,71 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
                 return $sql;
             }
 
-            $index = -1;
+            $index = 0;
+            $result = '';
+            $lastEnd = 0;
 
-            $sql = preg_replace_callback('/[?]/', function () use (&$args, &$index, $link) {
-                $index += 1;
+            // Single-pass tokenization: find ? and :name in one scan over the
+            // original template, never re-scanning substituted output. This prevents
+            // cross-pass re-substitution bugs where a positional value containing
+            // ":name" could be re-expanded by a later named-placeholder pass.
+            if (preg_match_all('#(\?)|(:(\w+))#is', $sql, $matches, PREG_OFFSET_CAPTURE)) {
+                foreach ($matches[0] as $i => [$fullMatch, $matchPos]) {
+                    // Append literal text before this match
+                    $result .= substr($sql, $lastEnd, $matchPos - $lastEnd);
+                    $lastEnd = $matchPos + strlen($fullMatch);
 
-                $isset = array_key_exists($index, $args);
+                    // Determine if this is a ? or :name placeholder
+                    $isQuestionMark = $matches[1][$i][0] !== '';
 
-                if ($isset && $args[$index] === null) {
-                    return 'NULL';
+                    if ($isQuestionMark) {
+                        // Positional placeholder ?
+                        $isset = array_key_exists($index, $args);
+
+                        if ($isset && $args[$index] === null) {
+                            $result .= 'NULL';
+                        } elseif ($isset) {
+                            $result .= '"' . static::escapeSqlParam($args[$index], $link) . '"';
+                        } else {
+                            $result .= '?';
+                        }
+
+                        $index += 1;
+                    } else {
+                        // Named placeholder :name
+                        $name = $matches[3][$i][0];
+                        $key = $name;
+                        $isset = array_key_exists($key, $args);
+
+                        if ($isset && $args[$key] === null) {
+                            $result .= 'NULL';
+                        } elseif ($isset) {
+                            $result .= '"' . static::escapeSqlParam($args[$key], $link) . '"';
+                        } else {
+                            // Try with : prefix (supports both 'name' and ':name' keys)
+                            $key = ':' . $name;
+
+                            if (array_key_exists($key, $args)) {
+                                if ($args[$key] === null) {
+                                    $result .= 'NULL';
+                                } else {
+                                    $result .= '"' . static::escapeSqlParam($args[$key], $link) . '"';
+                                }
+                            } else {
+                                // No matching key, leave placeholder literal
+                                $result .= $fullMatch;
+                            }
+                        }
+                    }
                 }
 
-                return $isset ? '"' . static::escapeSqlParam($args[$index], $link) . '"' : '?';
-            }, $sql);
+                // Append remaining text after last match
+                $result .= substr($sql, $lastEnd);
 
-            $sql = preg_replace_callback('/:([a-zA-Z_][a-zA-Z0-9_]*)/', function ($matches) use ($args, $link) {
-                $key = $matches[1];
-                $isset = array_key_exists($key, $args);
+                return $result;
+            }
 
-                if ($isset && $args[$key] === null) {
-                    return 'NULL';
-                }
-
-                if ($isset) {
-                    return '"' . static::escapeSqlParam($args[$key], $link) . '"';
-                }
-
-                $key = ':' . $key;
-
-                if (array_key_exists($key, $args)) {
-                    return '"' . static::escapeSqlParam($args[$key], $link) . '"';
-                }
-
-                return $matches[0];
-            }, $sql);
-
+            // No placeholders found, return original
             return $sql;
         }
 
