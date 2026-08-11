@@ -477,8 +477,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
          * and the one-click magic-login controller (FwMagicLoginController),
          * which logs the user in from a token validated independently of any
          * session. Called via `static::` (not self::) so app-level overrides of
-         * sendSuccessLogin() (e.g. IrabiAuthMiddleware's consent-journal audit
-         * write) still fire correctly through late static binding.
+         * sendSuccessLogin() still fire correctly through late static binding.
          *
          * $consentPdAt/$consentMarketingAt let a caller seed the session's
          * consent timestamps before completing login — needed by the magic-login

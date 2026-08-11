@@ -206,12 +206,12 @@ final class GarnetTestRemoteCommand {
     /**
      * Resolve the local Playwright specs dir.
      *
-     * App-mode (composer-vendored framework, e.g. IRabi): GARNET_ROOT is the
+     * App-mode (composer-vendored framework): GARNET_ROOT is the
      * vendored package dir under vendor/ — it never held app tests and, per
      * .gitattributes' `/tests/ export-ignore`, the framework's own tests/
      * doesn't even ship in the Packagist dist archive. The app's real specs
      * live in `<appDir>/Tests` (capital T — see Templates/Application/Tests
-     * and Apps/IRabi/Tests). GarnetRunner::$appDir is the app root in
+     * and Apps/MyApp/Tests). GarnetRunner::$appDir is the app root in
      * app-mode and equals $frameworkDir in legacy/framework-repo dev
      * checkout, where the framework's own lowercase tests/ (used only for
      * the framework's own Playwright specs) is still meaningful.

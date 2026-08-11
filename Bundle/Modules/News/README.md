@@ -4,7 +4,7 @@ Event-driven notification feed with broadcast and personal delivery.
 Broadcast events are visible to all users except the actor; personal events
 target a single recipient.
 
-> **Backend-only module.** This module ships a service class, controllers, tables, and validation logic — no bundled frontend and no routes wired into the framework's router. The consuming app is expected to subclass `FwNewsService`/`FwNewsController`, register its own route, and build its own React UI to render the feed, the same pattern the reference app IRabi follows.
+> **Backend-only module.** This module ships a service class, controllers, tables, and validation logic — no bundled frontend and no routes wired into the framework's router. The consuming app is expected to subclass `FwNewsService`/`FwNewsController`, register its own route, and build its own React UI to render the feed.
 
 ## Tables
 

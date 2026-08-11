@@ -379,7 +379,7 @@ class GarnetBundleCommand {
 
         // App-mode's run_cmd.php scaffold (Templates/Application/run_cmd.php,
         // and every app:create'd app's own copy) hardcodes
-        // `IRabi::setPublicDirInit(__DIR__ . '/WorkDir/public/')` — a local-
+        // `<App>::setPublicDirInit(__DIR__ . '/WorkDir/public/')` — a local-
         // dev convenience stub, always an empty directory (public/ isn't
         // meaningful for CLI commands like migrate/cron, only for web
         // requests), that WorkDir is entirely excluded from this app-dir

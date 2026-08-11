@@ -22,17 +22,16 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Controllers {
      */
     abstract class FwMagicLoginController extends FrameworkController {
         /**
-         * @return class-string EmailAuthMiddleware (or an app-level subclass,
-         * e.g. IrabiAuthMiddleware) — completeLogin() is invoked through this
-         * class so an app-level override of sendSuccessLogin() still fires
-         * via late static binding.
+         * @return class-string EmailAuthMiddleware (or an app-level subclass)
+         * — completeLogin() is invoked through this class so an app-level
+         * override of sendSuccessLogin() still fires via late static binding.
          */
         abstract protected static function authMiddlewareClass(): string;
 
         /**
          * Turns the return_uri stored on the token (a relative path, e.g.
          * "/first-step/token~INVITE") into the final redirect target — the
-         * app prepends its own base_url/route-prefix (e.g. via IRabi::url()).
+         * app prepends its own base_url/route-prefix.
          */
         abstract protected static function buildRedirectUrl(string $returnUri): string;
 

@@ -109,8 +109,8 @@ refactor for all non-colliding inputs.
 ### F2 — `sql_mode` never enforced (`NO_BACKSLASH_ESCAPES`) (MEDIUM–HIGH, config-dependent)
 
 **Applies: conditionally.** Grep across `Kernel/Db/**` and every `db.ini`
-(framework templates, `TestsInit/TestConfig`, and `Apps/IRabi/WorkDir/**`)
-found **no `sql_mode`, no `SET SESSION sql_mode`, and no `NO_BACKSLASH_ESCAPES`**
+(framework templates, `TestsInit/TestConfig`) found **no `sql_mode`,
+no `SET SESSION sql_mode`, and no `NO_BACKSLASH_ESCAPES`**
 anywhere. `DbPool::newLink()` (DbPool.php:110-131) sets only `set_charset('utf8mb4')`
 and optionally runs `options[MYSQL_ATTR_INIT_COMMAND]`, which in every config is
 `SET NAMES 'utf8mb4'` — never a `sql_mode` change.
@@ -148,7 +148,7 @@ enabled, a double-quoted token is parsed as an **identifier** (like a backtick
 name), *not* a string literal. Under that mode `WHERE a = "O\'Brien"` would try to
 resolve `O'Brien` as a column/identifier — at best an error ("Unknown column"),
 at worst a semantic change. No config in this repo enables `ANSI_QUOTES` (grep
-found none in `Kernel/Db/**` or `Apps/IRabi`'s db config), so this is breakage-on-
+found none in `Kernel/Db/**`), so this is breakage-on-
 misconfiguration, not an exploit on default MySQL.
 
 **Interaction with F2:** enforcing/stripping `ANSI_QUOTES` at connect (F2's

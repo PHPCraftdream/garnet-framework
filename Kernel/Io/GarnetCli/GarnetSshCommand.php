@@ -420,7 +420,7 @@ class GarnetSshCommand {
     php garnet ssh "make build" --cd-remote --env=NODE_ENV=production
     php garnet ssh:put dist/app.tar.gz
     php garnet ssh:put dist/app.tar.gz /srv/releases/app.tar.gz
-    php garnet ssh:put dist/IRabi/garnet-framework "garnet-framework-2026-05-21" --cd-remote
+    php garnet ssh:put dist/my-app/garnet-framework "garnet-framework-2026-05-21" --cd-remote
     php garnet ssh:get /srv/app/logs/error.log ./error.log
     php garnet ssh:test
     php garnet ssh "uptime" --dry-run

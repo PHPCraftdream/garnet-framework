@@ -2,7 +2,7 @@
 
 Full-featured support ticket system with user-facing and admin-facing controllers, file attachments, internal comments, assignment tracking, and auto-context capture.
 
-> **Backend-only module.** This module ships controllers, tables, and validation logic — no bundled frontend and no routes wired into the framework's router. The consuming app is expected to subclass `FwSupportController`/`FwSupportAdminController`, register its own routes, and build its own React UI on top (see `getSideMenu`/`getMainMenu` and the abstract methods below), the same pattern the reference app IRabi follows.
+> **Backend-only module.** This module ships controllers, tables, and validation logic — no bundled frontend and no routes wired into the framework's router. The consuming app is expected to subclass `FwSupportController`/`FwSupportAdminController`, register its own routes, and build its own React UI on top (see `getSideMenu`/`getMainMenu` and the abstract methods below).
 
 ## Tables
 

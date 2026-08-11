@@ -9,7 +9,7 @@ name: CI
 # has no `repositories` entry — `composer install` pulls
 # phpcraftdream/garnet-framework straight from Packagist, same as any
 # other dependency. No framework sibling checkout, no repository
-# patching needed. Modeled on a real app's working CI (IRabi).
+# patching needed.
 on:
   push:
     branches: ['*']

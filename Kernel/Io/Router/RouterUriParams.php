@@ -30,7 +30,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router {
          * {@see fromGlobals()} never consults this list, it's a
          * URL-building/rendering helper. Real consumers are app-side link
          * builders (e.g. `Bundle/Utils/HtmlLayout.php`, an app's
-         * `IRabi.php`-style bootstrap) that need to render clean URLs for
+         * bootstrap class) that need to render clean URLs for
          * public-facing routes (landing, static pages, webhooks) even when
          * the rest of the app sits under e.g. /system.
          *

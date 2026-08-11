@@ -111,9 +111,8 @@ that already implements `getEntityConfig()`, `getGridInfo()`,
 `Updater::validateByFieldsInfo` / `processUploadPhoto`). You subclass it
 and override the field lists plus `getFieldsInfo()`. The only real
 implementation in the framework today is `AccountEntity`
-(`Kernel/Db/Entity/Account/AccountEntity.php`), extended by
-`UserEntityConfig` in IRabi — read both together, the subclass shows
-what an app is expected to add on top.
+(`Kernel/Db/Entity/Account/AccountEntity.php`) — an app's own
+`UserEntityConfig` subclass shows what it's expected to add on top.
 
 ```php
 <?php declare(strict_types=1);
@@ -277,22 +276,18 @@ class DashboardAccountsController extends FwAccountsController
 }
 ```
 
-(This is, almost verbatim, IRabi's real
-`Apps/IRabi/Dashboard/Controllers/DashboardAccountsController.php`.)
+(This is the shape of a real app's `DashboardAccountsController.php`.)
 
 **If your entity isn't accounts**, there's no shortcut — write your own
 abstract controller with the same shape (`getEntityConfig()`, list,
 save, delete handlers), swapping `Account::get`/`Account::getAccounts`
 for `Products::get($id)` / `Products::get()->select(...)`. For anything
 beyond simple flat CRUD (tabs, filters, joined lookups), skip
-`IEntityConfig` and build the page like
-`Apps/IRabi/Dashboard/Controllers/DashboardBookingsController.php`
-does: `PaginationHelper::fetchPage()` + a hand-rolled payload builder +
-`AdminGrid`/`GridConfig::make()` on the frontend (see
-`Framework/Bundle/Front/Common/` per the Reuse-over-reinvention rules)
-— that's what the framework's own bigger admin pages (bookings,
-finance, balances) actually do, and none of them go through
-`IEntityConfig`.
+`IEntityConfig` and build the page directly with
+`PaginationHelper::fetchPage()` + a hand-rolled payload builder +
+`AdminGrid`/`GridConfig::make()` on the frontend — that's what the
+framework's own bigger admin pages actually do, and none of them go
+through `IEntityConfig`.
 
 ## 4. Register the admin route
 

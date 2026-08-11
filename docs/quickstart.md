@@ -13,7 +13,7 @@ so pick the one that matches your goal rather than mixing steps from both:
 | **Use when** | Building a real app that consumes Garnet as a normal dependency | Contributing to/developing the framework itself, or trying Garnet quickly without a real project setup |
 | **How** | `composer require phpcraftdream/garnet-framework` in your own app, or `php bin/garnet app:create` scaffolds this wiring for you | Clone `garnet-framework`, then `php bin/garnet app:create MyApp` inside the checkout |
 | **Framework location** | `vendor/phpcraftdream/garnet-framework/`, a normal versioned package | A sibling/child checkout resolved via a Composer path repository (symlink/NTFS junction) |
-| **In production** | Yes — this is how real apps (e.g. IRabi) consume the framework | No — this is a dev-only convenience, not meant to ship |
+| **In production** | Yes — this is how real apps consume the framework | No — this is a dev-only convenience, not meant to ship |
 | **CI coverage** | The `vendored-app-mode` job (config:init → build → serve → DB smoke, against the real Packagist-style dependency) | The `zero-config` job (setup → app:create → build) plus the broader `e2e` suite |
 
 This page (the rest of `quickstart.md`) documents the **path-repo flow** —

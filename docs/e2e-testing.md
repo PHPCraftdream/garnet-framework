@@ -26,8 +26,7 @@ e.g. `admin/`, `user/`, `expert/`, `cross-role/`) and `helpers/` (shared
 fixtures, login flows, DB access, everything specs import instead of
 reimplementing). The `Templates/Application` scaffold ships (or is
 gaining, as this doc is written) the same `Tests/helpers/` foundation —
-this section describes the general pattern, grounded in IRabi's
-`Tests/helpers/` as the stable reference implementation.
+this section describes the general pattern.
 
 ### The `scoped-test` fixture
 
@@ -74,9 +73,8 @@ those two paths — `generateAdminToken()` + `adminLogin(page, token?)`
 admin`) and `accountLogin(page, login)` (drives the real email-code
 flow via `helpers/auth.ts`'s `registerAccount`/`loginAccount`). There
 is no `roleLogin(page, role)`/dev-login-shortcut abstraction here —
-that's an app-level convenience an app with its own role model (like
-the reference app IRabi) builds on top once it has more than one kind
-of account to test as.
+that's an app-level convenience an app with its own role model builds
+on top once it has more than one kind of account to test as.
 
 `helpers/auth.ts` carries the lower-level building blocks
 (`tickPdConsent`, `registerAccount`, `loginAccount`, `clearTestData`)

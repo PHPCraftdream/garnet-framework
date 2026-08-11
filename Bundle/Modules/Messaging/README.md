@@ -2,7 +2,7 @@
 
 1-to-1 private messaging system with conversations, messages, file attachments, and read tracking.
 
-> **Backend-only module.** This module ships controllers, tables, and validation logic — no bundled frontend and no routes wired into the framework's router. The consuming app is expected to subclass `FwImController`, register its own route, and build its own React island component (`im-page`) on top, the same pattern the reference app IRabi follows.
+> **Backend-only module.** This module ships controllers, tables, and validation logic — no bundled frontend and no routes wired into the framework's router. The consuming app is expected to subclass `FwImController`, register its own route, and build its own React island component (`im-page`) on top.
 
 ## Tables
 
