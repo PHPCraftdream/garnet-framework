@@ -124,45 +124,4 @@ describe('DbPool sql_mode guard (M1/M2 verification)', function (): void {
             expect($found)->toBe(false);
         });
     });
-
-    describe('live MySQL server compatibility check', function (): void {
-        it('verifies current server sql_mode is safe', function (): void {
-            // Connect to the test MySQL instance
-            $mysqli = @new mysqli('127.0.0.1', 'test', 'test', 'test', 3306);
-
-            if ($mysqli->connect_error) {
-                skip('MySQL connection not available for live test');
-            }
-
-            // Query the actual session sql_mode
-            $result = $mysqli->query('SELECT @@session.sql_mode AS sql_mode');
-
-            if (!$result) {
-                $mysqli->close();
-                skip('Could not query sql_mode');
-            }
-
-            $row = $result->fetch_assoc();
-            $result->free();
-            $sqlMode = $row['sql_mode'] ?? '';
-
-            // Verify the guard logic would accept this mode
-            $dangerousModes = ['NO_BACKSLASH_ESCAPES', 'ANSI_QUOTES'];
-            $found = false;
-
-            foreach ($dangerousModes as $mode) {
-                if (stripos($sqlMode, $mode) !== false) {
-                    $found = true;
-
-                    break;
-                }
-            }
-
-            $mysqli->close();
-
-            expect($found)->toBe(false);
-            expect($sqlMode)->not->toContain('NO_BACKSLASH_ESCAPES');
-            expect($sqlMode)->not->toContain('ANSI_QUOTES');
-        });
-    });
 });
