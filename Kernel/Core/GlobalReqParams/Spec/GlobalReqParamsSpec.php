@@ -357,7 +357,6 @@ describe('GlobalReqParams', function (): void {
         beforeEach(function (): void {
             $ref = new ReflectionClass(GlobalReqParams::class);
             $method = $ref->getMethod('mergeJsonBody');
-            $method->setAccessible(true);
             $this->callMergeJsonBody = static fn (array $post, string $contentType, string $rawBody): array => $method->invoke(null, $post, $contentType, $rawBody);
         });
 
@@ -411,7 +410,6 @@ describe('GlobalReqParams', function (): void {
         it('clears the cached currentPost() snapshot', function (): void {
             $ref = new ReflectionClass(GlobalReqParams::class);
             $prop = $ref->getProperty('post');
-            $prop->setAccessible(true);
             $prop->setValue(null, ['stale' => 'from-previous-request']);
 
             expect($prop->getValue())->toBe(['stale' => 'from-previous-request']);

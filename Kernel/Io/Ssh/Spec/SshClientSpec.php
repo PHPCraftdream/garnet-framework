@@ -205,7 +205,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Ssh\Spec {
         describe('::tempKeyDir (C9)', function (): void {
             $callTempKeyDir = function (SshClient $client): string {
                 $method = new ReflectionMethod(SshClient::class, 'tempKeyDir');
-                $method->setAccessible(true);
 
                 return $method->invoke($client);
             };
