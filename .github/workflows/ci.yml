@@ -560,8 +560,19 @@ jobs:
       # exercises EmailAuthMiddleware end to end against the real MySQL
       # service (session_data + accounts rows via mysql2), addressing T4 —
       # no other CI job runs DB + HTTP together.
+      #
+      # PW_WORKER_ISOLATION=0: the scoped-test helpers default to a
+      # per-worker `test_worker_N_*` table namespace, which only exists
+      # once a template has been cloned via the app's test:provision CLI
+      # command (see Application.php::defineMigrationClass). This job runs
+      # a single spec on a single worker against tables the migration step
+      # above already created under the plain `db_*` prefix, so isolation
+      # is unnecessary — disabling it targets those tables directly instead
+      # of a `test_worker_0_*` namespace nothing has provisioned.
       - name: Serve + DB-backed Playwright smoke
         working-directory: ${{ runner.temp }}/TestApp
+        env:
+          PW_WORKER_ISOLATION: '0'
         run: |
           php garnet serve > /tmp/garnet-serve.log 2>&1 &
           SERVER_PID=$!
