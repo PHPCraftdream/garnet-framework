@@ -4,10 +4,11 @@ import {useConfirm} from '@common/hooks/useConfirm';
 import {ConfirmModal} from '@common/Components/ConfirmModal';
 import {I18nFramework as I18n} from '@framework/I18nGen/I18nFramework';
 
-const ROLES = ['admin', 'owner', 'moderator', 'expert', 'user'] as const;
+const DEFAULT_ROLES = ['admin', 'owner', 'moderator', 'user'] as const;
 
 interface Props {
     floating?: boolean;
+    roles?: readonly string[];
 }
 
 interface DevLoginResponse {
@@ -15,7 +16,7 @@ interface DevLoginResponse {
     redirect?: string;
 }
 
-export const DevLoginButtons: React.FC<Props> = ({floating = false}) => {
+export const DevLoginButtons: React.FC<Props> = ({floating = false, roles = DEFAULT_ROLES}) => {
     const [loading, setLoading] = React.useState<string | null>(null);
     const [resetting, setResetting] = React.useState(false);
     const {confirmState, confirm, handleConfirm, handleCancel} = useConfirm();
@@ -86,7 +87,7 @@ export const DevLoginButtons: React.FC<Props> = ({floating = false}) => {
 
     const buttons = (
         <>
-            {ROLES.map(role => (
+            {roles.map(role => (
                 <button
                     key={role}
                     type="button"
