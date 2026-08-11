@@ -99,9 +99,29 @@ const MAINTENANCE_PAGE_HTML = `
  * the require() calls and replaces loadStyles/swapBody with no-ops.
  */
 function getRealPageLoaderCode(): string {
-	// process.cwd() is Templates/Application/Tests
-	// Bundle/ is at the framework root (3 levels up from Tests)
-	const realPath = resolve(process.cwd(), '../../../Bundle/Front/Common/Dom/PageLoader.ts');
+	// Find the framework root by looking for Bundle/Front/Common/Dom/PageLoader.ts
+	// Try multiple potential root locations
+	let realPath: string | null = null;
+	const candidates = [
+		resolve(process.cwd(), '../../../Bundle/Front/Common/Dom/PageLoader.ts'), // From Tests/
+		resolve(process.cwd(), '../../Bundle/Front/Common/Dom/PageLoader.ts'),    // From Application/Tests/
+		resolve(__dirname, '../../../../../Bundle/Front/Common/Dom/PageLoader.ts'),  // From specs/smoke/
+	];
+
+	for (const candidate of candidates) {
+		try {
+			readFileSync(candidate, 'utf8');
+			realPath = candidate;
+			break;
+		} catch {
+			continue;
+		}
+	}
+
+	if (!realPath) {
+		throw new Error(`Could not find PageLoader.ts. Tried: ${candidates.join(', ')}`);
+	}
+
 	const tsCode = readFileSync(realPath, 'utf8');
 
 	// Use esbuild to transpile TypeScript to JavaScript
