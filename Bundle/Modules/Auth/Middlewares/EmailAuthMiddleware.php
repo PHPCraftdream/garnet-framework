@@ -191,19 +191,19 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
          * @throws Exception
          */
         public static function checkCSRF(IGlobalReqParams $globals): bool {
-            $postToken = $globals->readPostValue(static::CSRF_TOKEN, false);
+            $postToken = $globals->readPostValue(static::CSRF_TOKEN, null);
 
-            if (!$postToken) {
+            if ($postToken === null || $postToken === '') {
                 return false;
             }
 
             $sessionToken = Session::touchCSRF_();
 
-            if (!$sessionToken) {
+            if ($sessionToken === '') {
                 return false;
             }
 
-            return hash_equals($sessionToken, $postToken);
+            return hash_equals($sessionToken, (string)$postToken);
         }
 
         /**

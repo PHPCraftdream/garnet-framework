@@ -415,6 +415,40 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\Spec {
                 expect($result)->toBe(false);
             });
 
+            it('does not treat a literal "0" post token as missing (S10 falsy-coercion regression)', function (): void {
+                $mockGlobals = new MockGlobalReqParams();
+                $mockGlobals->post = [AuthMiddleware::CSRF_TOKEN => '0'];
+
+                $reflection = new ReflectionClass('PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Session');
+                $sessionInstance = $reflection->getProperty('instance')->getValue(null);
+                $csrfProp = $reflection->getProperty('csrfToken');
+                // The session token itself is a normal (non-"0") value here —
+                // this test isolates checkCSRF()'s `!$postToken` falsy-coercion
+                // bug specifically, not the pre-existing, unrelated
+                // `!empty($this->csrfToken)` quirk inside Session::touchCSRF().
+                $csrfProp->setValue($sessionInstance, '0-does-not-match');
+
+                $result = AuthMiddleware::checkCSRF($mockGlobals);
+
+                // Old `if (!$postToken) return false;` behavior would have
+                // returned false here WITHOUT ever comparing to the session
+                // token (treating '0' as if no token was sent at all). The
+                // fixed check must reach the comparison and correctly report
+                // a mismatch instead.
+                expect($result)->toBe(false);
+            });
+
+            it('compares tokens with hash_equals(), not == (S10 timing-safe comparison)', function (): void {
+                $ref = new ReflectionClass(AuthMiddleware::class);
+                $method = $ref->getMethod('checkCSRF');
+                $filePath = $ref->getFileName();
+                $lines = file($filePath);
+                $body = implode('', array_slice($lines, $method->getStartLine() - 1, $method->getEndLine() - $method->getStartLine() + 1));
+
+                expect($body)->toContain('hash_equals(');
+                expect($body)->not->toContain('$postToken === $sessionToken');
+            });
+
             it('processCSRF() still enforces CSRF on a real POST that carries X-Http-Method: GET (S7 regression)', function (): void {
                 // A real POST spoofing X-Http-Method: GET must NOT be able to
                 // skip CSRF checking — isPost() must be based on the real

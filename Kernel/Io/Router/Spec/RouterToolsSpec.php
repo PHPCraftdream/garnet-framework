@@ -100,6 +100,12 @@ describe('RouterTools', function (): void {
             expect(RouterTools::checkUriPathFile('..../pa!th/..//..../to/fi!le.php'))->toBe(false);
         });
 
+        it('rejects backslash-based traversal on Windows (S13 — check must run after separator normalization)', function (): void {
+            expect(RouterTools::checkUriPathFile('..\\path'))->toBe(false);
+            expect(RouterTools::checkUriPathFile('path\\..\\file'))->toBe(false);
+            expect(RouterTools::checkUriPathFile('assets\\..\\..\\etc\\passwd'))->toBe(false);
+        });
+
         it('accepts valid URIs', function (): void {
             expect(RouterTools::checkUriPathFile('/main/?q=request'))->toBe(true);
             expect(RouterTools::checkUriPathFile('hello/world/~method/a/b/c/'))->toBe(true);

@@ -2,6 +2,8 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Core\GlobalReqParams {
     use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
+    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+    use Throwable;
 
     class GlobalReqParams implements IGlobalReqParams {
         protected function __construct(
@@ -44,20 +46,41 @@ namespace PHPCraftdream\Garnet\Kernel\Core\GlobalReqParams {
                 return static::$post;
             }
 
-            $post = $_POST;
-            $jsonPost = file_get_contents('php://input');
-
-            if (!empty($jsonPost)) {
-                $postData = (array)json_decode($jsonPost);
-
-                if (!empty($postData)) {
-                    $post = [...$post, ...$postData];
-                }
-            }
+            $contentType = (string)($_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '');
+            $post = static::mergeJsonBody($_POST, $contentType, (string)file_get_contents('php://input'));
 
             static::$post = $post;
 
             return $post;
+        }
+
+        /**
+         * Merges a JSON request body into $post — only when `$contentType`
+         * actually declares `application/json`. `text/plain` is a CORS
+         * "simple request" content type that skips preflight, so trusting
+         * it here would let a cross-origin page smuggle a JSON body past
+         * CSRF/origin checks that assume preflight already ran. A top-level
+         * JSON array is dropped rather than merged: it can't be reshaped
+         * into the associative $post shape without silently mangling it
+         * (renumbered/flattened keys).
+         *
+         * @param array $post
+         * @param string $contentType
+         * @param string $rawBody
+         * @return array
+         */
+        protected static function mergeJsonBody(array $post, string $contentType, string $rawBody): array {
+            if (stripos($contentType, 'application/json') !== 0 || $rawBody === '') {
+                return $post;
+            }
+
+            $postData = json_decode($rawBody, true);
+
+            if (!is_array($postData) || array_is_list($postData)) {
+                return $post;
+            }
+
+            return [...$post, ...$postData];
         }
 
         // --------------------------------------------------------------------------------------------------------------
@@ -177,10 +200,11 @@ namespace PHPCraftdream\Garnet\Kernel\Core\GlobalReqParams {
         }
 
         public function ip(): string {
+            $remoteAddr = $this->_server['REMOTE_ADDR'] ?? '';
             $ipForward = $this->_server['HTTP_X_FORWARDED_FOR'] ?? false;
 
-            if (!$ipForward) {
-                return $this->_server['REMOTE_ADDR'];
+            if (!$ipForward || !static::isTrustedProxy($remoteAddr)) {
+                return $remoteAddr;
             }
 
             if (strpos($ipForward, ',') > 0) {
@@ -189,7 +213,35 @@ namespace PHPCraftdream\Garnet\Kernel\Core\GlobalReqParams {
                 return trim($addr[0]);
             }
 
-            return $this->_server['HTTP_X_FORWARDED_FOR'];
+            return trim($ipForward);
+        }
+
+        /**
+         * X-Forwarded-For is attacker-controlled unless it was set (or
+         * overwritten) by a proxy we actually run in front of the app —
+         * otherwise any client can spoof it (e.g. to fake the IP shown in
+         * a "successful login from IP ..." security email). Only honor it
+         * when REMOTE_ADDR — the actual TCP peer — is in app.ini's
+         * `trusted_proxies[]` allowlist. No config / no match => REMOTE_ADDR only.
+         */
+        protected static function isTrustedProxy(string $remoteAddr): bool {
+            if ($remoteAddr === '') {
+                return false;
+            }
+
+            try {
+                $trusted = IniConfig::app()->paramArray('trusted_proxies', []);
+            } catch (Throwable) {
+                return false;
+            }
+
+            foreach ($trusted as $entry) {
+                if ((string)$entry === $remoteAddr) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         // --------------------------------------------------------------------------------------------------------------

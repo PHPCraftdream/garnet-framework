@@ -167,4 +167,101 @@ describe('RateLimit', function (): void {
             removeTmpDir($tmp);
         });
     });
+
+    // -----------------------------------------------------------------------
+    describe('corrupted state file (S11)', function (): void {
+        it('degrades gracefully instead of throwing a TypeError when the state file holds non-integer entries', function (): void {
+            $tmp = makeTmpDir();
+            $key = 'test:corrupted_state';
+            $file = $tmp . DIRECTORY_SEPARATOR . 'rl_' . md5($key) . '.json';
+
+            // Simulates a hand-edited / foreign-format / bit-flipped state
+            // file: strings, null, floats mixed into what should be an int[].
+            file_put_contents($file, json_encode(['not-a-number', null, 1.5, time()]));
+
+            expect(function () use ($key, $tmp): void {
+                RateLimit::hit($key, 5, 60, $tmp);
+            })->not->toThrow();
+
+            removeTmpDir($tmp);
+        });
+
+        it('treats a JSON object (non-array) state file as no prior state', function (): void {
+            $tmp = makeTmpDir();
+            $key = 'test:corrupted_object';
+            $file = $tmp . DIRECTORY_SEPARATOR . 'rl_' . md5($key) . '.json';
+
+            file_put_contents($file, json_encode(['foo' => 'bar']));
+
+            expect(function () use ($key, $tmp): void {
+                $result = RateLimit::hit($key, 5, 60, $tmp);
+                expect($result)->toBeAn('bool');
+            })->not->toThrow();
+
+            removeTmpDir($tmp);
+        });
+
+        it('treats garbage (non-JSON) file content as no prior state', function (): void {
+            $tmp = makeTmpDir();
+            $key = 'test:garbage_content';
+            $file = $tmp . DIRECTORY_SEPARATOR . 'rl_' . md5($key) . '.json';
+
+            file_put_contents($file, '{not valid json!!!');
+
+            expect(RateLimit::hit($key, 5, 60, $tmp))->toBe(true);
+            removeTmpDir($tmp);
+        });
+    });
+
+    // -----------------------------------------------------------------------
+    describe('stale file cleanup (S11)', function (): void {
+        it('removes a state file whose entire window has already expired', function (): void {
+            $tmp = makeTmpDir();
+            $key = 'test:cleanup_expired';
+            $file = $tmp . DIRECTORY_SEPARATOR . 'rl_' . md5($key) . '.json';
+
+            file_put_contents($file, json_encode([time() - 100]));
+            touch($file, time() - 100);
+
+            // windowSec=1: the file's mtime is far older than the window,
+            // so hit() should clean it up before creating a fresh one.
+            RateLimit::hit($key, 5, 1, $tmp);
+
+            $content = json_decode(file_get_contents($file), true);
+            expect(count($content))->toBe(1); // only the new hit remains, old state was purged
+
+            removeTmpDir($tmp);
+        });
+    });
+
+    // -----------------------------------------------------------------------
+    describe('symlink attack resistance (S11)', function (): void {
+        it('refuses to use a state file that is a symlink', function (): void {
+            if (!function_exists('symlink')) {
+                skipIf(true);
+            }
+
+            $tmp = makeTmpDir();
+            $key = 'test:symlink_attack';
+            $file = $tmp . DIRECTORY_SEPARATOR . 'rl_' . md5($key) . '.json';
+            $target = $tmp . DIRECTORY_SEPARATOR . 'evil_target.json';
+
+            file_put_contents($target, 'sensitive-marker-content');
+
+            $linked = @symlink($target, $file);
+
+            if (!$linked) {
+                // No permission to create symlinks in this environment
+                // (e.g. unprivileged Windows) — nothing to assert.
+                skipIf(true);
+            }
+
+            // fail-open (true), but must NOT have touched $target's content.
+            $result = RateLimit::hit($key, 5, 60, $tmp);
+            expect($result)->toBe(true);
+            expect(file_get_contents($target))->toBe('sensitive-marker-content');
+
+            removeTmpDir($tmp);
+        });
+    });
 });

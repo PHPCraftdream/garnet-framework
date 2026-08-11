@@ -35,7 +35,13 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router {
                 return false;
             }
 
-            if (str_contains($uri, '../')) {
+            // Normalize separators BEFORE the traversal check: RouterDevFile::tryFile()
+            // does the same `\`/`/` -> DS normalization further down the pipeline, so a
+            // backslash-based sequence (`..\`) must be caught here too — otherwise on
+            // Windows it would sail through this check and only become `../` afterwards.
+            $normalized = str_replace('\\', '/', $uri);
+
+            if (str_contains($normalized, '../')) {
                 return false;
             }
 

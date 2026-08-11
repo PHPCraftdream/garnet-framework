@@ -1,6 +1,7 @@
 <?php declare(strict_types=1);
 
 use PHPCraftdream\Garnet\Kernel\Core\GlobalReqParams\GlobalReqParams;
+use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
 
 describe('GlobalReqParams', function (): void {
     describe('from()', function (): void {
@@ -289,12 +290,41 @@ describe('GlobalReqParams', function (): void {
     });
 
     describe('ip()', function (): void {
+        afterEach(function (): void {
+            IniConfig::app()->clearRuntimeOverride('trusted_proxies');
+        });
+
         it('returns REMOTE_ADDR', function (): void {
             $params = GlobalReqParams::from(['REMOTE_ADDR' => '192.168.1.100'], [], [], [], []);
             expect($params->ip())->toBe('192.168.1.100');
         });
 
-        it('returns HTTP_X_FORWARDED_FOR when set', function (): void {
+        it('returns empty string when REMOTE_ADDR is not set (S9 — no fallback crash)', function (): void {
+            $params = GlobalReqParams::from([], [], [], [], []);
+            expect($params->ip())->toBe('');
+        });
+
+        it('ignores HTTP_X_FORWARDED_FOR by default — untrusted REMOTE_ADDR (S9 — no trusted-proxy allowlist configured)', function (): void {
+            $params = GlobalReqParams::from([
+                'REMOTE_ADDR' => '192.168.1.1',
+                'HTTP_X_FORWARDED_FOR' => '203.0.113.1',
+            ], [], [], [], []);
+            expect($params->ip())->toBe('192.168.1.1');
+        });
+
+        it('ignores HTTP_X_FORWARDED_FOR when REMOTE_ADDR is not in the trusted_proxies allowlist', function (): void {
+            IniConfig::app()->setRuntimeOverride('trusted_proxies', ['10.0.0.1']);
+
+            $params = GlobalReqParams::from([
+                'REMOTE_ADDR' => '192.168.1.1',
+                'HTTP_X_FORWARDED_FOR' => '203.0.113.1',
+            ], [], [], [], []);
+            expect($params->ip())->toBe('192.168.1.1');
+        });
+
+        it('honors HTTP_X_FORWARDED_FOR when REMOTE_ADDR is a configured trusted proxy', function (): void {
+            IniConfig::app()->setRuntimeOverride('trusted_proxies', ['192.168.1.1']);
+
             $params = GlobalReqParams::from([
                 'REMOTE_ADDR' => '192.168.1.1',
                 'HTTP_X_FORWARDED_FOR' => '203.0.113.1',
@@ -302,7 +332,9 @@ describe('GlobalReqParams', function (): void {
             expect($params->ip())->toBe('203.0.113.1');
         });
 
-        it('returns first IP from comma-separated X_FORWARDED_FOR', function (): void {
+        it('returns first IP from comma-separated X_FORWARDED_FOR when the proxy is trusted', function (): void {
+            IniConfig::app()->setRuntimeOverride('trusted_proxies', ['192.168.1.1']);
+
             $params = GlobalReqParams::from([
                 'REMOTE_ADDR' => '192.168.1.1',
                 'HTTP_X_FORWARDED_FOR' => '203.0.113.1, 198.51.100.1',
@@ -310,12 +342,64 @@ describe('GlobalReqParams', function (): void {
             expect($params->ip())->toBe('203.0.113.1');
         });
 
-        it('trims whitespace from first IP', function (): void {
+        it('trims whitespace from first IP when the proxy is trusted', function (): void {
+            IniConfig::app()->setRuntimeOverride('trusted_proxies', ['192.168.1.1']);
+
             $params = GlobalReqParams::from([
                 'REMOTE_ADDR' => '192.168.1.1',
                 'HTTP_X_FORWARDED_FOR' => '  203.0.113.1  , 198.51.100.1',
             ], [], [], [], []);
             expect($params->ip())->toBe('203.0.113.1');
+        });
+    });
+
+    describe('mergeJsonBody() (S12)', function (): void {
+        beforeEach(function (): void {
+            $ref = new ReflectionClass(GlobalReqParams::class);
+            $method = $ref->getMethod('mergeJsonBody');
+            $method->setAccessible(true);
+            $this->callMergeJsonBody = static fn (array $post, string $contentType, string $rawBody): array => $method->invoke(null, $post, $contentType, $rawBody);
+        });
+
+        it('merges a JSON object body when Content-Type is application/json', function (): void {
+            $result = ($this->callMergeJsonBody)([], 'application/json', '{"a":"1","b":"2"}');
+            expect($result)->toBe(['a' => '1', 'b' => '2']);
+        });
+
+        it('accepts an application/json content type with a charset suffix', function (): void {
+            $result = ($this->callMergeJsonBody)([], 'application/json; charset=utf-8', '{"a":"1"}');
+            expect($result)->toBe(['a' => '1']);
+        });
+
+        it('ignores a text/plain body even if it contains valid JSON (CORS simple-request smuggling)', function (): void {
+            $result = ($this->callMergeJsonBody)(['x' => 'y'], 'text/plain', '{"a":"1"}');
+            expect($result)->toBe(['x' => 'y']);
+        });
+
+        it('ignores a body with no Content-Type header', function (): void {
+            $result = ($this->callMergeJsonBody)(['x' => 'y'], '', '{"a":"1"}');
+            expect($result)->toBe(['x' => 'y']);
+        });
+
+        it('produces plain arrays for nested JSON objects, not stdClass', function (): void {
+            $result = ($this->callMergeJsonBody)([], 'application/json', '{"a":{"nested":"1"}}');
+            expect($result['a'])->toBeAn('array');
+            expect($result['a'])->toBe(['nested' => '1']);
+        });
+
+        it('drops a top-level JSON array instead of mangling it into $post', function (): void {
+            $result = ($this->callMergeJsonBody)(['x' => 'y'], 'application/json', '[1,2,3]');
+            expect($result)->toBe(['x' => 'y']);
+        });
+
+        it('leaves $post untouched for an empty body', function (): void {
+            $result = ($this->callMergeJsonBody)(['x' => 'y'], 'application/json', '');
+            expect($result)->toBe(['x' => 'y']);
+        });
+
+        it('leaves $post untouched for invalid JSON', function (): void {
+            $result = ($this->callMergeJsonBody)(['x' => 'y'], 'application/json', '{not valid json');
+            expect($result)->toBe(['x' => 'y']);
         });
     });
 

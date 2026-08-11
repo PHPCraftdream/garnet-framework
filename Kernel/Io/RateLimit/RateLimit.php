@@ -1,9 +1,21 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Io\RateLimit {
+    use PHPCraftdream\Garnet\Kernel\Io\Logs\Logger;
+
     /**
      * Sliding-window rate limiter backed by temp files.
      * Thread-safe via exclusive file locking (flock).
+     *
+     * Fail-open policy: when the backing store is unusable (fds exhausted,
+     * lock unavailable, a symlink attack detected, …) `hit()` allows the
+     * request rather than rejecting it. This is a deliberate choice for a
+     * RATE LIMIT specifically — availability wins over strict limiting,
+     * since the alternative (fail-closed) turns any storage hiccup into a
+     * hard outage for every legitimate user sharing that limiter. Unlike
+     * the old behavior, every fail-open path now logs via Logger::SYSTEM_LOGGER
+     * (falling back to error_log() if that logger isn't configured yet), so
+     * the fallback is visible instead of silent.
      */
     class RateLimit {
         /**
@@ -21,14 +33,47 @@ namespace PHPCraftdream\Garnet\Kernel\Io\RateLimit {
             $file = self::filePath($key, $tmpDir);
             $now = time();
 
+            // Opportunistic cleanup: a stale state file for THIS key whose
+            // whole window has already expired is deleted before use, so a
+            // long-lived attacker rotating through many keys (e.g. random
+            // emails) doesn't leave inodes behind forever. This only ever
+            // touches the file for the key being hit right now — no directory
+            // scan, no cron dependency.
+            self::cleanupIfExpired($file, $now, $windowSec);
+
+            // Refuse to operate on a symlink: a shared temp dir is
+            // world-writable, so an attacker could pre-create
+            // rl_<md5(guessable-key)>.json as a symlink pointing anywhere
+            // writable by this process, turning fopen('c+') into an
+            // arbitrary-file-write/truncate primitive.
+            if (is_link($file)) {
+                self::logFailure('Refusing to use rate-limit file, symlink detected: ' . $file);
+
+                return true; // fail-open: see class-level note on fail-open policy
+            }
+
             $fp = @fopen($file, 'c+');
 
             if ($fp === false) {
+                self::logFailure('Rate-limit storage unavailable (fopen failed): ' . $file);
+
                 return true; // fail-open: storage unavailable
+            }
+
+            // Re-check after opening — TOCTOU window between is_link() and
+            // fopen() could still be raced, but fstat()'ing the open handle
+            // and comparing against a fresh lstat() catches a symlink that
+            // was swapped in between the two calls.
+            if (!self::openedPathIsSafe($fp, $file)) {
+                fclose($fp);
+                self::logFailure('Refusing to use rate-limit file, unsafe path after open: ' . $file);
+
+                return true; // fail-open: see class-level note on fail-open policy
             }
 
             if (!flock($fp, LOCK_EX)) {
                 fclose($fp);
+                self::logFailure('Rate-limit lock could not be acquired: ' . $file);
 
                 return true; // fail-open: can't lock
             }
@@ -74,7 +119,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\RateLimit {
 
             $now = time();
             $cutoff = $now - $windowSec;
-            $active = array_values(array_filter($decoded, static fn (int $t): bool => $t > $cutoff));
+            $active = self::filterActiveTimestamps($decoded, $cutoff);
 
             if (count($active) < $maxHits) {
                 return 0;
@@ -110,7 +155,83 @@ namespace PHPCraftdream\Garnet\Kernel\Io\RateLimit {
 
             $cutoff = $now - $windowSec;
 
-            return array_values(array_filter($decoded, static fn (int $t): bool => $t > $cutoff));
+            return self::filterActiveTimestamps($decoded, $cutoff);
+        }
+
+        /**
+         * Coerce a decoded state array into valid unix timestamps before
+         * ever handing entries to a strictly-typed `int $t` comparison —
+         * a corrupted/hand-edited/foreign-format state file must degrade
+         * to "no prior state" (entry dropped) rather than throw a TypeError
+         * under strict_types=1 and 500 every subsequent request for that key.
+         *
+         * @param array $decoded
+         * @param int   $cutoff
+         * @return int[]
+         */
+        private static function filterActiveTimestamps(array $decoded, int $cutoff): array {
+            $active = [];
+
+            foreach ($decoded as $entry) {
+                if (!is_int($entry) && !(is_string($entry) && ctype_digit($entry))) {
+                    continue;
+                }
+
+                $t = (int)$entry;
+
+                if ($t > $cutoff) {
+                    $active[] = $t;
+                }
+            }
+
+            return $active;
+        }
+
+        /**
+         * Delete a rate-limit state file whose entire window has already
+         * elapsed, so a caller hitting the same (or a never-repeated) key
+         * doesn't leave a dead inode behind indefinitely. Best-effort: any
+         * failure here just leaves the stale file for the next attempt.
+         */
+        private static function cleanupIfExpired(string $file, int $now, int $windowSec): void {
+            if (is_link($file) || !is_file($file)) {
+                return;
+            }
+
+            $mtime = @filemtime($file);
+
+            if ($mtime === false || ($now - $mtime) <= $windowSec) {
+                return;
+            }
+
+            @unlink($file);
+        }
+
+        /**
+         * Confirms the handle we actually opened still points at a plain
+         * file at the expected path — guards the TOCTOU gap between the
+         * is_link() pre-check and fopen().
+         */
+        private static function openedPathIsSafe(mixed $fp, string $expectedPath): bool {
+            if (is_link($expectedPath)) {
+                return false;
+            }
+
+            $stat = fstat($fp);
+
+            return $stat !== false && ($stat['mode'] & 0o170000) === 0o100000; // S_IFREG
+        }
+
+        private static function logFailure(string $message): void {
+            $logger = Logger::silentGet(Logger::SYSTEM_LOGGER);
+
+            if ($logger !== null) {
+                $logger->append('rate_limit', $message);
+
+                return;
+            }
+
+            error_log('[RateLimit] ' . $message);
         }
     }
 }
