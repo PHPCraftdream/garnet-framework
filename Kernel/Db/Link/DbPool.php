@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Db\Link {
+    use mysqli_sql_exception;
     use PHPCraftdream\Garnet\Kernel\Core\Benchmark\BenchmarkLog;
     use PHPCraftdream\Garnet\Kernel\Db\Query\QueryTools;
     use PHPCraftdream\Garnet\Kernel\Exceptions\DbException;
@@ -97,6 +98,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
         /**
          * @return IDbMySQLiLink
          * @throws IniConfigException
+         * @throws DbException
          */
         public function newLink(): IDbMySQLiLink {
             $config = IniConfig::db();
@@ -154,18 +156,30 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
             //
             // This guard runs AFTER MYSQL_ATTR_INIT_COMMAND so it observes the
             // final, actually-active session mode (not the mode before init_command).
-            $sqlModeResult = $mysqli->query('SELECT @@session.sql_mode AS sql_mode');
-
-            if (!$sqlModeResult) {
-                // Fail-closed: if the probe query fails for ANY reason
-                // (connection error, desync, revoked privileges, proxy interference,
-                // or an un-drained result set from a result-returning init command),
-                // refuse to establish the connection rather than handing it out unguarded.
+            //
+            // Since PHP 8.1, mysqli defaults to MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT,
+            // meaning a failing query throws mysqli_sql_exception instead of returning false.
+            // We catch both exception and false-return (defense-in-depth for apps that
+            // explicitly disable error reporting via mysqli_report(MYSQLI_REPORT_OFF)).
+            try {
+                $sqlModeResult = $mysqli->query('SELECT @@session.sql_mode AS sql_mode');
+            } catch (mysqli_sql_exception $e) {
                 $mysqli->close();
 
                 throw new DbException(
-                    'Refusing to establish DB connection: could not verify sql_mode (probe query failed)'
+                    'Refusing to establish DB connection: could not verify sql_mode (probe query failed)',
+                    0,
+                    $e
                 );
+            }
+
+            if (!$sqlModeResult) {
+                // Defense-in-depth for the (currently unreachable, since mysqli defaults to
+                // exception-throwing on error) case where mysqli error reporting has been
+                // disabled by the application (mysqli_report(MYSQLI_REPORT_OFF)).
+                $mysqli->close();
+
+                throw new DbException('Refusing to establish DB connection: could not verify sql_mode (probe query failed)');
             }
 
             $row = $sqlModeResult->fetch_assoc();
