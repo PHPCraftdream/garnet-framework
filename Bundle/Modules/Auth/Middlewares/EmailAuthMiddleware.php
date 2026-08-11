@@ -628,7 +628,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
                 ], status: 200);
             }
 
-            if ($postCodeStr === $sessionCode) {
+            if (hash_equals($sessionCode, $postCodeStr)) {
                 static::completeLogin($globals, $sessionEmail);
 
                 return ControllerTools::JSON(['success' => true], status: 200);

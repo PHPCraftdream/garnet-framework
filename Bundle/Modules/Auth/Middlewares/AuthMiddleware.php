@@ -426,7 +426,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
                 ], status: 200);
             }
 
-            if ($postCodeStr === $sessionCode) {
+            if (hash_equals($sessionCode, $postCodeStr)) {
                 // Rotate the session identifier on the anonymous->authenticated
                 // transition so a pre-login cookie value (possibly planted by
                 // an attacker before the victim logged in) can never carry
