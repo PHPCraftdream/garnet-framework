@@ -422,6 +422,18 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
                 // over into an authenticated session (session fixation).
                 $session->rotate();
                 $session->setValue(static::PHASE_KEY, static::PHASE_DONE);
+                // auth_login was only READ into $sessionData on the PRIOR
+                // request (sendCode()), never re-setValue()'d in THIS one.
+                // flush() persists ONLY $changedValues to the new post-rotate
+                // row (see Session::rotate() docblock) — a merely-read value
+                // is dropped across the rotation boundary. Without this line
+                // auth_login survives in memory for the rest of this request
+                // (so touchAccount()/sendSuccessLogin() succeed and the
+                // {success:true} response goes out) but is absent from the
+                // new row, so Account::fromSession() returns null on the
+                // user's VERY NEXT request: logged out right after login.
+                // Mirrors EmailAuthMiddleware::completeLogin() ordering.
+                $session->setValue(Account::SESSION_AUTH_LOGIN, $sessionEmail);
 
                 $session->unsetValues([
                     static::SESSION_AUTH_CODE,
