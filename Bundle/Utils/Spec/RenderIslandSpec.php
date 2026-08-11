@@ -54,5 +54,21 @@ describe('RenderIsland', function (): void {
             $html2 = RenderIsland::render('component', ['id' => 2]);
             expect($html1)->not->toBe($html2);
         });
+
+        it('escapes HTML special characters in props (<, >, &) as hex entities', function (): void {
+            $props = ['html' => '<script>alert(1)</script>', 'tag' => '<div>', 'amp' => 'a&b'];
+            $html = RenderIsland::render('widget', $props);
+
+            // Verify raw <, >, & are NOT present in the output
+            expect($html)->not->toContain('<script>');
+            expect($html)->not->toContain('</script>');
+            expect($html)->not->toContain('<div>');
+            expect($html)->not->toContain('a&b');
+
+            // Verify hex-encoded versions ARE present (PHP uses uppercase \uXXXX)
+            expect($html)->toContain('\u003Cscript\u003Ealert(1)\u003C\/script\u003E');
+            expect($html)->toContain('\u003Cdiv\u003E');
+            expect($html)->toContain('a\u0026b');
+        });
     });
 });

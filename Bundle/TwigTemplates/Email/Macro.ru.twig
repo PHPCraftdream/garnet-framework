@@ -77,13 +77,13 @@
 {% macro button_common_s() %}display:inline-table;padding:6px 15px;text-decoration:none;border-radius:4px;{% endmacro %}
 
 {% macro button_main(label, href) %}
-    <a href="{{ href | raw }}" style="{{ _self.button_common_s() }}background-color:{{ _self.right_color() }};color:{{ _self.body_bg() }};">
+    <a href="{{ href }}" style="{{ _self.button_common_s() }}background-color:{{ _self.right_color() }};color:{{ _self.body_bg() }};">
         {{ label }}
     </a>
 {% endmacro %}
 
 {% macro button_secondary(label, href) %}
-    <a href="{{ href | raw }}" style="{{ _self.button_common_s() }}background-color:{{ _self.bottom_color() }};color:{{ _self.right_color() }};">
+    <a href="{{ href }}" style="{{ _self.button_common_s() }}background-color:{{ _self.bottom_color() }};color:{{ _self.right_color() }};">
         {{ label }}
     </a>
 {% endmacro %}

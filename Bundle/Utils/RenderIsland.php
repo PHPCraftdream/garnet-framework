@@ -12,7 +12,7 @@ class RenderIsland {
      * @param array  $props      Props array (auto-encoded to JSON)
      */
     public static function render(string $className, array $props = []): string {
-        $propsJson = json_encode($props, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE);
+        $propsJson = json_encode($props, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
 
         return Twig::get()->render('Layout/Island.twig', [
             'class_name' => $className,
