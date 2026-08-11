@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {Menu, X, LogOut, Wallet, Mail, MessagesSquare, User} from 'lucide-react';
-import {MenuItem, UtilityClusterData} from './types';
+import {MenuItem, UtilityClusterData, LiveBadgeConfig} from './types';
 import {menuIconMap} from '@common/Utils/LucideIcons';
 import {ThemeToggle} from '@common/Components/ThemeToggle';
 import {sendPost} from '@common/Api/sendPost';
@@ -14,6 +14,7 @@ export interface MobileMenuProps {
     sideItems: MenuItem[];
     utility?: UtilityClusterData;
     brand?: string;
+    liveBadgeConfig?: LiveBadgeConfig;
 }
 
 const formatRub = (amount: number): string =>
@@ -40,13 +41,13 @@ const MenuLink: React.FC<{item: MenuItem; testIdPrefix: string}> = ({item, testI
     );
 };
 
-export const MobileMenu: React.FC<MobileMenuProps> = ({topItems, sideItems, utility, brand}) => {
+export const MobileMenu: React.FC<MobileMenuProps> = ({topItems, sideItems, utility, brand, liveBadgeConfig}) => {
     const live = useLiveCounts();
     const hasItems = (topItems && topItems.length > 0) || (sideItems && sideItems.length > 0);
     if (!hasItems) return null;
 
-    // Bookings live in topItems; overlay the live bookings badge + utility counts.
-    const applied = applyLiveCounts(topItems, utility, live);
+    // Overlay live badges + utility counts onto top items.
+    const applied = applyLiveCounts(topItems, utility, live, liveBadgeConfig);
     topItems = applied.items;
     utility = applied.util;
 

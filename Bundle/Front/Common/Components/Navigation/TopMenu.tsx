@@ -16,11 +16,11 @@ function handleLogout() {
     });
 }
 
-export const TopMenu: React.FC<TopMenuProps> = ({menuItems, utility}) => {
+export const TopMenu: React.FC<TopMenuProps> = ({menuItems, utility, liveBadgeConfig}) => {
     const live = useLiveCounts();
     if (!menuItems || menuItems.length === 0) return null;
 
-    const {items, util} = applyLiveCounts(menuItems, utility, live);
+    const {items, util} = applyLiveCounts(menuItems, utility, live, liveBadgeConfig);
     menuItems = items;
     utility = util;
 

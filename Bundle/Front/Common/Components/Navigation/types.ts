@@ -8,6 +8,11 @@ export interface MenuItem {
     badge?: number;
 }
 
+export interface LiveBadgeConfig {
+    /** Menu item ID to badge with pending-bookings count. */
+    pendingBookingsItemId?: string;
+}
+
 export interface UtilityClusterData {
     unreadMessages: number;
     unreadSupport: number;
@@ -25,9 +30,11 @@ export interface UtilityClusterData {
 export interface TopMenuProps {
     menuItems: MenuItem[];
     utility?: UtilityClusterData;
+    liveBadgeConfig?: LiveBadgeConfig;
 }
 
 export interface SidebarMenuProps {
     menuItems: MenuItem[];
     hasTopMenu?: boolean;
+    liveBadgeConfig?: LiveBadgeConfig;
 }

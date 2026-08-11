@@ -1,4 +1,4 @@
-import {MenuItem, UtilityClusterData} from './types';
+import {MenuItem, UtilityClusterData, LiveBadgeConfig} from './types';
 import {LiveCounts} from '@common/Utils/liveCounts';
 
 /**
@@ -12,13 +12,14 @@ export const applyLiveCounts = (
     menuItems: MenuItem[],
     utility: UtilityClusterData | undefined,
     live: LiveCounts | null,
+    config?: LiveBadgeConfig,
 ): {items: MenuItem[]; util: UtilityClusterData | undefined} => {
     if (!live) {
         return {items: menuItems, util: utility};
     }
 
     const items = menuItems.map(item =>
-        item.id === 'bookings'
+        (config?.pendingBookingsItemId && item.id === config.pendingBookingsItemId)
             ? {...item, badge: live.bookingsPending}
             : item,
     );
