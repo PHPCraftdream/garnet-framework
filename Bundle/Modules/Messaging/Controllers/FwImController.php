@@ -87,6 +87,13 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Controllers {
             return FwImReadStatus::class;
         }
 
+        /**
+         * Return the URL to redirect unauthenticated users to.
+         */
+        protected static function getRegisterUrl(): string {
+            return '/register';
+        }
+
         // -- Internals --------------------------------------------------------------
 
         public static function renderContent(string $content, string $url): string {
@@ -163,7 +170,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Controllers {
             $account = Account::fromSession();
 
             if (!$account) {
-                return ControllerTools::redirect('/register');
+                return ControllerTools::redirect(static::getRegisterUrl());
             }
 
             $accountId = (int)$account->id();

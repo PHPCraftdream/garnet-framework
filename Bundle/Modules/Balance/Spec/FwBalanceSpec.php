@@ -3,6 +3,7 @@
 namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Spec {
     use Closure;
     use PHPCraftdream\Garnet\Bundle\Modules\Balance\Controllers\FwBalanceAdminController;
+    use PHPCraftdream\Garnet\Bundle\Modules\Balance\Controllers\FwBalanceController;
     use PHPCraftdream\Garnet\Bundle\Modules\Balance\Tables\FwAccountBalance;
     use PHPCraftdream\Garnet\Bundle\Modules\Balance\Tables\FwBalanceLedger;
     use PHPCraftdream\Garnet\Kernel\Db\Query\QueryEx;
@@ -151,6 +152,38 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Spec {
 
         protected static function buildGridConfig(): array {
             return [];
+        }
+    }
+
+    // ---------------------------------------------------------------------------
+    // Concrete test-only controller subclass for getRegisterUrl() testing
+    // ---------------------------------------------------------------------------
+
+    class TestBalanceController extends FwBalanceController {
+        protected static function balanceTable(): FwAccountBalance {
+            return TestAccountBalance::get();
+        }
+
+        protected static function ledgerTable(): FwBalanceLedger {
+            return TestBalanceLedger::get();
+        }
+
+        protected static function getSideMenu(string $url): array {
+            return [];
+        }
+
+        protected static function getMainMenu(string $url): array {
+            return [];
+        }
+
+        public static function exposeGetRegisterUrl(): string {
+            return static::getRegisterUrl();
+        }
+    }
+
+    class TestBalanceControllerWithCustomRegisterUrl extends TestBalanceController {
+        protected static function getRegisterUrl(): string {
+            return '/custom-register';
         }
     }
 
@@ -648,6 +681,20 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Balance\Spec {
                 $result = $this->method->invoke(null, $account);
                 expect($result)->toBe('owner');
             });
+        });
+    });
+
+    // ---------------------------------------------------------------------------
+
+    describe('FwBalanceController::getRegisterUrl()', function (): void {
+        it('returns /register by default', function (): void {
+            $result = TestBalanceController::exposeGetRegisterUrl();
+            expect($result)->toBe('/register');
+        });
+
+        it('returns custom URL when overridden in subclass', function (): void {
+            $result = TestBalanceControllerWithCustomRegisterUrl::exposeGetRegisterUrl();
+            expect($result)->toBe('/custom-register');
         });
     });
 }

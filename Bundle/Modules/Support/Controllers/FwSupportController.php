@@ -36,6 +36,13 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Controllers {
         abstract protected static function getMainMenu(string $url): array;
 
         /**
+         * Return the URL to redirect unauthenticated users to.
+         */
+        protected static function getRegisterUrl(): string {
+            return '/register';
+        }
+
+        /**
          * Return the SupportTickets table instance.
          */
         abstract protected static function ticketsTable(): DbTable;
@@ -138,7 +145,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Controllers {
             $account = Account::fromSession();
 
             if (!$account) {
-                return ControllerTools::redirect('/register');
+                return ControllerTools::redirect(static::getRegisterUrl());
             }
 
             $accountId = (int)$account->id();

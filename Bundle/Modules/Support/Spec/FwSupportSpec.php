@@ -243,6 +243,10 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Spec {
         public static function exposedEnrichWithAttachments(array &$messages): void {
             static::enrichWithAttachments($messages);
         }
+
+        public static function exposeGetRegisterUrl(): string {
+            return static::getRegisterUrl();
+        }
     }
 
     class TestSupportAdminController extends FwSupportAdminController {
@@ -609,6 +613,25 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Spec {
             $ref = new ReflectionClass(FwSupportAdminController::class);
             $const = $ref->getConstant('UPLOAD_SUBDIR');
             expect($const)->toBe('support');
+        });
+    });
+
+    // -------------------------------------------------------------------------
+
+    describe('FwSupportController::getRegisterUrl()', function (): void {
+        it('returns /register by default', function (): void {
+            $result = TestSupportController::exposeGetRegisterUrl();
+            expect($result)->toBe('/register');
+        });
+
+        it('returns custom URL when overridden in subclass', function (): void {
+            class TestSupportControllerWithCustomRegisterUrl extends TestSupportController {
+                protected static function getRegisterUrl(): string {
+                    return '/custom-register';
+                }
+            }
+            $result = TestSupportControllerWithCustomRegisterUrl::exposeGetRegisterUrl();
+            expect($result)->toBe('/custom-register');
         });
     });
 

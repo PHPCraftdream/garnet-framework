@@ -3,6 +3,7 @@
 namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Spec {
     use Closure;
     use LogicException;
+    use PHPCraftdream\Garnet\Bundle\Modules\Messaging\Controllers\FwImController;
     use PHPCraftdream\Garnet\Bundle\Modules\Messaging\Tables\FwImConversations;
     use PHPCraftdream\Garnet\Kernel\Db\Tables\DbTable;
     use ReflectionClass;
@@ -402,6 +403,59 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Spec {
                 expect($id1)->toBe($id2);
                 expect(count($this->table->insertCalls))->toBe(1);
             });
+        });
+    });
+
+    // ---------------------------------------------------------------------------
+    // Test-only controller subclasses for getRegisterUrl() testing
+    // ---------------------------------------------------------------------------
+
+    class TestImController extends FwImController {
+        protected static function getUploadDir(): string {
+            return sys_get_temp_dir();
+        }
+
+        protected static function getSideMenu(string $url): array {
+            return [];
+        }
+
+        protected static function getMainMenu(string $url): array {
+            return [];
+        }
+
+        protected static function isModeratorCheck(): bool {
+            return false;
+        }
+
+        protected static function searchRecipients(int $accountId, string $query): array {
+            return [];
+        }
+
+        protected static function enrichConversation(array &$conv, int $accountId): void {
+        }
+
+        public static function exposeGetRegisterUrl(): string {
+            return static::getRegisterUrl();
+        }
+    }
+
+    class TestImControllerWithCustomRegisterUrl extends TestImController {
+        protected static function getRegisterUrl(): string {
+            return '/custom-register';
+        }
+    }
+
+    // ---------------------------------------------------------------------------
+
+    describe('FwImController::getRegisterUrl()', function (): void {
+        it('returns /register by default', function (): void {
+            $result = TestImController::exposeGetRegisterUrl();
+            expect($result)->toBe('/register');
+        });
+
+        it('returns custom URL when overridden in subclass', function (): void {
+            $result = TestImControllerWithCustomRegisterUrl::exposeGetRegisterUrl();
+            expect($result)->toBe('/custom-register');
         });
     });
 }
