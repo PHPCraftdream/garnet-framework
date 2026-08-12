@@ -54,6 +54,18 @@ class HtmlLayout {
             $mobileMenuProps['utility'] = $utility;
         }
 
+        // Which top_menu_items entry (matched by its 'id') receives the live
+        // ~counts poll's primaryBadgeCount — see Bundle/Front/Common/Utils/
+        // liveCounts.ts and Navigation/liveBadges.ts::applyLiveCounts(). Optional:
+        // apps that don't set this just keep the server-rendered badge value
+        // (no live update), same as omitting counts_url skips polling entirely.
+        $primaryBadgeItemId = (string)($params['primary_badge_item_id'] ?? '');
+
+        if ($primaryBadgeItemId !== '') {
+            $topMenuProps['liveBadgeConfig'] = ['primaryBadgeItemId' => $primaryBadgeItemId];
+            $mobileMenuProps['liveBadgeConfig'] = ['primaryBadgeItemId' => $primaryBadgeItemId];
+        }
+
         $userPayloadJson = '{}';
 
         if ($accountId > 0) {
