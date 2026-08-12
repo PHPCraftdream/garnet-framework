@@ -7,7 +7,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Account {
     class AccountEntity extends BaseEntity {
         public function selectFields(): array {
             return [
-                'id', 'login', 'login_type', 'name', 'type', 'time_zone', 'about',
+                'id', 'login', 'login_type', 'name', 'time_zone', 'about',
                 'reg_time', 'last_auth_time', 'last_online_time', 'token16',
             ];
         }
@@ -33,10 +33,8 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Account {
                 'last_auth_time',
                 'last_online_time',
                 'name',
-                'type',
                 'time_zone',
                 'about',
-                'photo',
                 'IS_ADMIN',
                 'IS_MODERATOR',
                 'IS_APPROVED',
@@ -46,13 +44,13 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Account {
 
         public function viewFields(): array {
             return [
-                'id', 'name', 'about', 'type',
+                'id', 'name', 'about',
             ];
         }
 
         public function editFields(): array {
             return [
-                'id', 'login', 'name', 'type', 'time_zone', 'about',
+                'id', 'login', 'name', 'time_zone', 'about',
             ];
         }
 
