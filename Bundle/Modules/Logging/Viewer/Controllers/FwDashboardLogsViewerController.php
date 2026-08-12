@@ -118,14 +118,14 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Viewer\Controllers {
          * @return array<int, array<string, mixed>>
          */
         protected static function fetchActions(int $limit = 100): array {
-            return FwLogsActionAdapter::run(static::actionLogTable(), $limit);
+            return FwLogsActionAdapter::run(static::actionLogTable(), $limit, static::isModerator());
         }
 
         /**
          * @return array<int, array<string, mixed>>
          */
         protected static function fetchMails(int $limit = 200): array {
-            return FwLogsMailAdapter::run(static::mailLogTable(), static::isAdmin(), $limit);
+            return FwLogsMailAdapter::run(static::mailLogTable(), static::isAdmin(), $limit, static::isModerator());
         }
 
         // ────────────────── Routes ──────────────────

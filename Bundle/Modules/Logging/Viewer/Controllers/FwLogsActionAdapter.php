@@ -1,15 +1,22 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Viewer\Controllers {
+    use LogicException;
     use PHPCraftdream\Garnet\Bundle\Modules\Logging\Admin\Controllers\FwDashboardLogsController;
     use PHPCraftdream\Garnet\Bundle\Modules\Logging\Admin\Tables\FwAdminActionLog;
 
     /**
      * Composition adapter — exposes FwDashboardLogsController::fetchLogs()
      * to the unified viewer without forcing inheritance.
+     *
+     * The caller's real isModerator() result is threaded through run() and
+     * enforced here, instead of unconditionally reporting true — mirrors
+     * the isAdmin passthrough FwLogsMailAdapter already uses.
      */
     final class FwLogsActionAdapter extends FwDashboardLogsController {
         protected static FwAdminActionLog $table;
+
+        protected static bool $isModerator = false;
 
         protected static function actionLogTable(): FwAdminActionLog {
             return static::$table;
@@ -21,7 +28,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Viewer\Controllers {
         }
 
         protected static function isModerator(): bool {
-            return true; // gating handled by the calling controller
+            return static::$isModerator;
         }
 
         protected static function isOwner(): bool {
@@ -40,9 +47,16 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Viewer\Controllers {
 
         /**
          * @return array<int, array<string, mixed>>
+         * @throws LogicException if $isModerator is false — the calling
+         *     controller must verify isModerator() itself before calling run().
          */
-        public static function run(FwAdminActionLog $table, int $limit): array {
+        public static function run(FwAdminActionLog $table, int $limit, bool $isModerator): array {
+            if (!$isModerator) {
+                throw new LogicException('FwLogsActionAdapter::run() requires isModerator to be true.');
+            }
+
             static::$table = $table;
+            static::$isModerator = $isModerator;
 
             return static::fetchLogs($limit);
         }
