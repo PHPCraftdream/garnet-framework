@@ -110,6 +110,16 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router\Spec {
             file_put_contents($subDir . DIRECTORY_SEPARATOR . 'test.html', '<html>test</html>');
             file_put_contents($subDir . DIRECTORY_SEPARATOR . 'test.js', 'console.log("test");');
             file_put_contents($subDir . DIRECTORY_SEPARATOR . 'index.html', '<html>index</html>');
+            file_put_contents($subDir . DIRECTORY_SEPARATOR . 'test.php', '<?php echo "test"; ?>');
+            file_put_contents($subDir . DIRECTORY_SEPARATOR . 'test.phtml', '<?php echo "test"; ?>');
+            file_put_contents($subDir . DIRECTORY_SEPARATOR . 'test.php3', '<?php echo "test"; ?>');
+            file_put_contents($subDir . DIRECTORY_SEPARATOR . 'test.php4', '<?php echo "test"; ?>');
+            file_put_contents($subDir . DIRECTORY_SEPARATOR . 'test.php5', '<?php echo "test"; ?>');
+            file_put_contents($subDir . DIRECTORY_SEPARATOR . 'test.php7', '<?php echo "test"; ?>');
+            file_put_contents($subDir . DIRECTORY_SEPARATOR . 'test.phps', '<?php echo "test"; ?>');
+            file_put_contents($subDir . DIRECTORY_SEPARATOR . 'test.inc', '<?php echo "test"; ?>');
+            file_put_contents($subDir . DIRECTORY_SEPARATOR . '.env', 'DATABASE_URL=mysql://localhost');
+            file_put_contents($subDir . DIRECTORY_SEPARATOR . 'config.ini', '[database]\nhost=localhost');
         });
 
         afterEach(function (): void {
@@ -290,6 +300,87 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router\Spec {
                 $method = $reflection->getMethod('tryFileByDir');
 
                 $result = $method->invoke($this->router, '', 'test.php');
+
+                expect($result)->toBe(null);
+            });
+
+            it('returns null for .phtml files', function (): void {
+                $reflection = new ReflectionClass($this->router);
+                $method = $reflection->getMethod('tryFileByDir');
+
+                $result = $method->invoke($this->router, '', 'test.phtml');
+
+                expect($result)->toBe(null);
+            });
+
+            it('returns null for .php3 files', function (): void {
+                $reflection = new ReflectionClass($this->router);
+                $method = $reflection->getMethod('tryFileByDir');
+
+                $result = $method->invoke($this->router, '', 'test.php3');
+
+                expect($result)->toBe(null);
+            });
+
+            it('returns null for .php4 files', function (): void {
+                $reflection = new ReflectionClass($this->router);
+                $method = $reflection->getMethod('tryFileByDir');
+
+                $result = $method->invoke($this->router, '', 'test.php4');
+
+                expect($result)->toBe(null);
+            });
+
+            it('returns null for .php5 files', function (): void {
+                $reflection = new ReflectionClass($this->router);
+                $method = $reflection->getMethod('tryFileByDir');
+
+                $result = $method->invoke($this->router, '', 'test.php5');
+
+                expect($result)->toBe(null);
+            });
+
+            it('returns null for .php7 files', function (): void {
+                $reflection = new ReflectionClass($this->router);
+                $method = $reflection->getMethod('tryFileByDir');
+
+                $result = $method->invoke($this->router, '', 'test.php7');
+
+                expect($result)->toBe(null);
+            });
+
+            it('returns null for .phps files', function (): void {
+                $reflection = new ReflectionClass($this->router);
+                $method = $reflection->getMethod('tryFileByDir');
+
+                $result = $method->invoke($this->router, '', 'test.phps');
+
+                expect($result)->toBe(null);
+            });
+
+            it('returns null for .inc files', function (): void {
+                $reflection = new ReflectionClass($this->router);
+                $method = $reflection->getMethod('tryFileByDir');
+
+                $result = $method->invoke($this->router, '', 'test.inc');
+
+                expect($result)->toBe(null);
+            });
+
+            it('returns null for .env files', function (): void {
+                $reflection = new ReflectionClass($this->router);
+                $method = $reflection->getMethod('tryFileByDir');
+
+                $result = $method->invoke($this->router, '', '.env');
+
+                expect($result)->toBe(null);
+            });
+
+            it('returns null for .ini files', function (): void {
+                $reflection = new ReflectionClass($this->router);
+                $method = $reflection->getMethod('tryFileByDir');
+
+                $result = $method->invoke($this->router, '', 'config.ini');
 
                 expect($result)->toBe(null);
             });

@@ -74,7 +74,10 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router {
             $fileDir = $this->filesDirs[$dir];
             $fileName = empty($fileName) ? 'index.html' : $fileName;
 
-            if (strtolower(substr($fileName, -4)) === '.php') {
+            $blockedExtensions = ['.php', '.phtml', '.php3', '.php4', '.php5', '.php7', '.phps', '.inc', '.env', '.ini'];
+            $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+            if (in_array('.' . $fileExt, $blockedExtensions, true)) {
                 return null;
             }
 
