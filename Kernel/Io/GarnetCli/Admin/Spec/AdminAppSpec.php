@@ -390,9 +390,12 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Admin\Spec {
                     ob_start();
                     @AdminApp::handle('/__garnet/assets/' . $good);
                     $body = ob_get_clean();
-                    // Safe filenames pass the whitelist regex at line 414
-                    // Will get 404 if files don't exist, but the response status code should NOT be 400
-                    http_response_code(200); // Reset to avoid affecting other tests
+                    // Safe filenames pass the whitelist regex at line 414 and reach the
+                    // file-lookup branch, which always writes a non-empty body — either
+                    // the real asset (if the dist bundle happens to be built) or the
+                    // "not built" 404 message. The rejected-by-regex branch writes
+                    // nothing at all, so a non-empty body proves the regex let it through.
+                    expect($body)->not->toBe('');
                 }
             });
         });
