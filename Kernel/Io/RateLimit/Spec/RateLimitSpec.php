@@ -101,6 +101,34 @@ describe('RateLimit', function (): void {
             removeTmpDir($tmp);
         });
 
+        it('isolates sliding-window cutoff: allows requests after window expires even with fresh mtime (no cleanup)', function (): void {
+            $tmp = makeTmpDir();
+            $key = 'test:cutoff_isolation';
+
+            // Use a 2-second window for faster testing
+            // Exhaust the limit with 3 hits
+            expect(RateLimit::hit($key, 3, 2, $tmp))->toBe(true);
+            expect(RateLimit::hit($key, 3, 2, $tmp))->toBe(true);
+            expect(RateLimit::hit($key, 3, 2, $tmp))->toBe(true);
+            expect(RateLimit::hit($key, 3, 2, $tmp))->toBe(false);
+
+            // Keep hitting every 0.5 seconds to keep the file mtime fresh
+            // This prevents cleanupIfExpired from deleting the file (mtime always < 2s old)
+            // But the sliding-window cutoff should eventually filter out old timestamps
+            sleep(1);
+            expect(RateLimit::hit($key, 3, 2, $tmp))->toBe(false);
+
+            sleep(1);
+            expect(RateLimit::hit($key, 3, 2, $tmp))->toBe(true);
+
+            // File should still exist (cleanupIfExpired didn't delete it)
+            // because we kept hitting it within the 2-second mtime threshold
+            $file = $tmp . DIRECTORY_SEPARATOR . 'rl_' . md5($key) . '.json';
+            expect(file_exists($file))->toBe(true);
+
+            removeTmpDir($tmp);
+        });
+
         it('maxHits=1: the second request is blocked immediately', function (): void {
             $tmp = makeTmpDir();
             $key = 'test:max1';
@@ -170,7 +198,7 @@ describe('RateLimit', function (): void {
 
     // -----------------------------------------------------------------------
     describe('corrupted state file (S11)', function (): void {
-        it('degrades gracefully instead of throwing a TypeError when the state file holds non-integer entries', function (): void {
+        it('degrades gracefully when the state file holds non-integer entries', function (): void {
             $tmp = makeTmpDir();
             $key = 'test:corrupted_state';
             $file = $tmp . DIRECTORY_SEPARATOR . 'rl_' . md5($key) . '.json';

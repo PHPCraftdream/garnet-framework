@@ -162,8 +162,9 @@ namespace PHPCraftdream\Garnet\Kernel\Io\RateLimit {
          * Coerce a decoded state array into valid unix timestamps before
          * ever handing entries to a strictly-typed `int $t` comparison —
          * a corrupted/hand-edited/foreign-format state file must degrade
-         * to "no prior state" (entry dropped) rather than throw a TypeError
-         * under strict_types=1 and 500 every subsequent request for that key.
+         * gracefully (non-integer entries are dropped) rather than cause
+         * unpredictable behavior or include invalid data in the active
+         * timestamp list.
          *
          * @param array $decoded
          * @param int   $cutoff
