@@ -67,8 +67,8 @@ class AdminApp {
 
         // Serve admin assets (no auth required — static JS/CSS bundle for the
         // login/dashboard UI, no secrets embedded; already gated above by
-        // isDevRequestAllowed() and path-traversal-safe via the filename
-        // whitelist in handleAsset()).
+        // isDevRequestAllowed() and path-traversal-safe via basename() at
+        // handleAsset() line 411, which strips all directory components).
         if (str_starts_with($path, '/__garnet/assets/')) {
             self::handleAsset($path);
 

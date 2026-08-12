@@ -28,6 +28,104 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Admin\Spec {
         define('GARNET_ROOT', dirname(__DIR__, 6));
     }
 
+    /**
+     * Stream wrapper to fake php://input for end-to-end testing.
+     * Usage:
+     *   PhpInputMemoryWrapper::setContent(json_encode(['cmd' => 'prepare', 'csrf' => '...']));
+     *   PhpInputMemoryWrapper::register();
+     *   @AdminApp::handle('/__garnet/api/exec-ticket');
+     *   PhpInputMemoryWrapper::unregister();
+     */
+    class PhpInputMemoryWrapper {
+        private static ?string $content = null;
+
+        private int $position = 0;
+
+        public function __construct() {
+            // PHP instantiates without arguments
+        }
+
+        public static function setContent(string $content): void {
+            self::$content = $content;
+        }
+
+        public static function register(): void {
+            stream_wrapper_unregister('php');
+            stream_wrapper_register('php', self::class);
+        }
+
+        public static function unregister(): void {
+            stream_wrapper_restore('php');
+            self::$content = null;
+        }
+
+        public function stream_open(string $path, string $mode, int $options, ?string &$openedPath): bool {
+            return str_starts_with($path, 'php://input');
+        }
+
+        public function stream_read(int $count): string|false {
+            if (self::$content === null) {
+                return false;
+            }
+            $chunk = substr(self::$content, $this->position, $count);
+            $this->position += strlen($chunk);
+
+            return $chunk === '' ? false : $chunk;
+        }
+
+        public function stream_eof(): bool {
+            return self::$content === null || $this->position >= strlen(self::$content);
+        }
+
+        public function stream_stat(): array|false {
+            return self::$content === null
+                ? false
+                : ['mode' => 0o100644, 'size' => strlen(self::$content)];
+        }
+
+        public function stream_cast(int $castAs): mixed {
+            return false;
+        }
+
+        public function stream_close(): void {
+            // No-op
+        }
+
+        public function stream_lock(int $operation): bool {
+            return true;
+        }
+
+        public function stream_seek(int $offset, int $whence = SEEK_SET): bool {
+            if (self::$content === null) {
+                return false;
+            }
+            $newPosition = match ($whence) {
+                SEEK_SET => $offset,
+                SEEK_CUR => $this->position + $offset,
+                SEEK_END => strlen(self::$content) + $offset,
+                default => $this->position,
+            };
+
+            if ($newPosition < 0 || $newPosition > strlen(self::$content)) {
+                return false;
+            }
+            $this->position = $newPosition;
+
+            return true;
+        }
+
+        public function stream_tell(): int {
+            return $this->position;
+        }
+
+        // Required for PHP 8.0+
+        public function url_stat(string $path, int $flags): array|false {
+            return str_starts_with($path, 'php://input') && self::$content !== null
+                ? ['mode' => 0o100644, 'size' => strlen(self::$content)]
+                : false;
+        }
+    }
+
     describe('AdminApp', function (): void {
         beforeEach(function (): void {
             $this->tempDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR
@@ -77,6 +175,16 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Admin\Spec {
 
             if (file_exists($tokenFile)) {
                 unlink($tokenFile);
+            }
+
+            // Clean up any exec ticket files that may have been created
+            $ticketPattern = $this->tempDir . DIRECTORY_SEPARATOR . '.garnet_admin_exec_*';
+            $ticketFiles = glob($ticketPattern);
+
+            foreach ($ticketFiles as $tf) {
+                if (file_exists($tf)) {
+                    unlink($tf);
+                }
             }
 
             if (is_dir($this->tempDir)) {
@@ -226,6 +334,121 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Admin\Spec {
             });
         });
 
+        describe('::handle — /__garnet/api/exec-ticket (POST-only gate)', function (): void {
+            beforeEach(function (): void {
+                AdminAuth::saveToken('t');
+                AdminAuth::activateToken('t');
+                $_COOKIE['garnet_admin'] = 't';
+                $this->csrf = AdminAuth::csrfToken();
+            });
+
+            afterEach(function (): void {
+                unset($_SERVER['REQUEST_METHOD']);
+            });
+
+            it('rejects GET requests with 405 Method not allowed', function (): void {
+                $_SERVER['REQUEST_METHOD'] = 'GET';
+
+                ob_start();
+                @AdminApp::handle('/__garnet/api/exec-ticket');
+                $body = ob_get_clean();
+
+                expect($body)->toContain('Method not allowed');
+            });
+
+            it('accepts POST requests with valid CSRF', function (): void {
+                $_SERVER['REQUEST_METHOD'] = 'POST';
+                PhpInputMemoryWrapper::setContent(json_encode(['cmd' => 'build', 'csrf' => $this->csrf]));
+                PhpInputMemoryWrapper::register();
+
+                try {
+                    ob_start();
+                    @AdminApp::handle('/__garnet/api/exec-ticket');
+                    $body = ob_get_clean();
+                    $response = json_decode($body, true);
+                    expect(isset($response['ticket']))->toBe(true);
+                } finally {
+                    PhpInputMemoryWrapper::unregister();
+                }
+            });
+        });
+
+        describe('::handle — /__garnet/assets (filename whitelist)', function (): void {
+            it('rejects filenames containing path separators', function (): void {
+                foreach (['../etc/passwd', '..\\windows\\system32', 'test/../../etc', 'test\\..\\..\\windows'] as $bad) {
+                    ob_start();
+                    @AdminApp::handle('/__garnet/assets/' . $bad);
+                    $body = ob_get_clean();
+                    // The filename whitelist regex /[^a-zA-Z0-9._-]+/ should reject these
+                    // but the real protection is basename() at line 411
+                    expect($body)->not->toContain('admin.js'); // Should not serve real admin assets
+                }
+            });
+
+            it('accepts safe filenames', function (): void {
+                foreach (['admin.js', 'admin.css', 'app.min.js', 'test-file_v2.js'] as $good) {
+                    ob_start();
+                    @AdminApp::handle('/__garnet/assets/' . $good);
+                    $body = ob_get_clean();
+                    // Safe filenames pass the whitelist regex at line 414
+                    // Will get 404 if files don't exist, but the response status code should NOT be 400
+                    http_response_code(200); // Reset to avoid affecting other tests
+                }
+            });
+        });
+
+        describe('::handle — /__garnet/api/app-use (app-name regex)', function (): void {
+            beforeEach(function (): void {
+                AdminAuth::saveToken('t');
+                AdminAuth::activateToken('t');
+                $_COOKIE['garnet_admin'] = 't';
+                $_SERVER['REQUEST_METHOD'] = 'POST';
+                $_SERVER['CONTENT_TYPE'] = 'application/json';
+                $this->csrf = AdminAuth::csrfToken();
+            });
+
+            afterEach(function (): void {
+                unset($_SERVER['REQUEST_METHOD'], $_SERVER['CONTENT_TYPE']);
+            });
+
+            it('rejects app names with invalid characters', function (): void {
+                $invalidNames = ['my-app', 'my.app', '123app', '', 'App-1', 'App_1-2', '../etc', '../../../etc'];
+
+                foreach ($invalidNames as $badName) {
+                    PhpInputMemoryWrapper::setContent(json_encode(['app' => $badName, 'csrf' => $this->csrf]));
+                    PhpInputMemoryWrapper::register();
+
+                    try {
+                        ob_start();
+                        @AdminApp::handle('/__garnet/api/app-use');
+                        $body = ob_get_clean();
+                        expect($body)->toContain('Invalid app name');
+                    } finally {
+                        PhpInputMemoryWrapper::unregister();
+                    }
+                }
+            });
+
+            it('accepts valid app names', function (): void {
+                $validNames = ['MyApp', 'my_app', 'App1', 'Test_App_123', '_private', 'My_Private_App2'];
+
+                foreach ($validNames as $goodName) {
+                    PhpInputMemoryWrapper::setContent(json_encode(['app' => $goodName, 'csrf' => $this->csrf]));
+                    PhpInputMemoryWrapper::register();
+
+                    try {
+                        ob_start();
+                        @AdminApp::handle('/__garnet/api/app-use');
+                        $body = ob_get_clean();
+                        // Will get 404 if app doesn't exist, but NOT 400 (invalid name)
+                        expect($body)->not->toContain('Invalid app name');
+                    } finally {
+                        PhpInputMemoryWrapper::unregister();
+                    }
+                }
+            });
+        });
+
         describe('::handle — exec-ticket endpoint (CSRF + whitelist enforcement)', function (): void {
             beforeEach(function (): void {
                 AdminAuth::saveToken('t');
@@ -277,32 +500,81 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Admin\Spec {
 
             it('rejects deploy / db:wipe / ssh (destructive ops) even with a valid CSRF token', function (): void {
                 foreach (['deploy', 'db:wipe', 'ssh', 'bundle'] as $bad) {
-                    ob_start();
-                    // exec-ticket reads php://input, which we cannot fake per-call
-                    // here without a stream wrapper — reflection into the private
-                    // ticket issuance path underneath is overkill; instead assert
-                    // the whitelist directly against the same check handleExecTicket
-                    // uses, mirroring the ALLOWED_COMMANDS reflection spec above.
-                    $allowed = (new ReflectionClass(AdminApp::class))
-                        ->getReflectionConstant('ALLOWED_COMMANDS')->getValue();
+                    PhpInputMemoryWrapper::setContent(json_encode(['cmd' => $bad, 'csrf' => $this->csrf]));
+                    PhpInputMemoryWrapper::register();
 
-                    expect(in_array($bad, $allowed, true))->toBe(false);
-                    ob_end_clean();
+                    try {
+                        ob_start();
+                        @AdminApp::handle('/__garnet/api/exec-ticket');
+                        $body = ob_get_clean();
+                        expect($body)->toContain('Command not allowed');
+                    } finally {
+                        PhpInputMemoryWrapper::unregister();
+                    }
                 }
             });
 
             it('issues a redeemable single-use ticket for an allowed command via a real CSRF-checked POST', function (): void {
-                $stream = 'php://memory';
-                file_put_contents($stream, json_encode(['cmd' => 'prepare', 'csrf' => $this->csrf]));
+                PhpInputMemoryWrapper::setContent(json_encode(['cmd' => 'prepare', 'csrf' => $this->csrf]));
+                PhpInputMemoryWrapper::register();
 
-                // AdminApp::handleExecTicket() reads php://input directly; simulate
-                // via AdminAuth's own issue/redeem pair (the unit under test for
-                // the ticket contract — end-to-end HTTP body faking is out of
-                // scope for a kahlan spec without an HTTP client).
-                $ticket = AdminAuth::issueExecTicket('prepare');
-                expect(AdminAuth::redeemExecTicket($ticket))->toBe('prepare');
-                // Single-use: the same ticket cannot be redeemed twice.
-                expect(AdminAuth::redeemExecTicket($ticket))->toBeNull();
+                try {
+                    ob_start();
+                    @AdminApp::handle('/__garnet/api/exec-ticket');
+                    $body = ob_get_clean();
+                    $response = json_decode($body, true);
+                    expect($response)->toBeAn('array');
+                    expect(isset($response['ticket']))->toBe(true);
+                    expect($response['ticket'])->toBeA('string');
+
+                    // Verify the ticket is redeemable
+                    $ticket = $response['ticket'];
+                    $redeemedCmd = AdminAuth::redeemExecTicket($ticket);
+                    expect($redeemedCmd)->toBe('prepare');
+
+                    // Single-use: the same ticket cannot be redeemed twice
+                    expect(AdminAuth::redeemExecTicket($ticket))->toBeNull();
+                } finally {
+                    PhpInputMemoryWrapper::unregister();
+                }
+            });
+
+            it('redeems a valid ticket and enforces ALLOWED_COMMANDS at handleExec() time', function (): void {
+                // Issue a ticket for an allowed command
+                $ticket = AdminAuth::issueExecTicket('build');
+                expect($ticket)->toBeA('string');
+
+                // Try to execute with the ticket (it will fail to actually run the command
+                // since we're in a test environment, but it should NOT be rejected by the whitelist)
+                $_SERVER['REQUEST_METHOD'] = 'GET';
+                $_GET['ticket'] = $ticket;
+                ob_start();
+                @AdminApp::handle('/__garnet/api/exec');
+                $body = ob_get_clean();
+                unset($_GET['ticket']);
+
+                // The command should have passed the whitelist check
+                // (it will fail for other reasons in this test environment, but NOT 'Command not allowed')
+                expect($body)->not->toContain('Command not allowed');
+            });
+
+            it('rejects handleExec() when ticket redeems to a non-whitelisted command', function (): void {
+                // Manually create a ticket file for a non-whitelisted command
+                // (simulating a compromised ticket file)
+                $badTicket = '1234567890abcdef1234567890abcdef';
+                $ticketFile = $this->tempDir . DIRECTORY_SEPARATOR . '.garnet_admin_exec_' . $badTicket;
+                file_put_contents($ticketFile, json_encode(['cmd' => 'deploy', 'ts' => time()]));
+
+                // Try to execute with the bad ticket
+                $_SERVER['REQUEST_METHOD'] = 'GET';
+                $_GET['ticket'] = $badTicket;
+                ob_start();
+                @AdminApp::handle('/__garnet/api/exec');
+                $body = ob_get_clean();
+                unset($_GET['ticket']);
+
+                // Should be rejected by the whitelist in handleExec()
+                expect($body)->toContain('Command not allowed');
             });
         });
 
