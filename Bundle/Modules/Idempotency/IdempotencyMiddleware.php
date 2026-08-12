@@ -36,12 +36,13 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Idempotency {
      * GET / non-POST requests are passed through untouched. Requests
      * without the header are also untouched (back-compat).
      *
-     * Anonymous requests (no authenticated account) are NOT supported.
-     * For unauthenticated traffic, the idempotency triple degenerates to
-     * (0, key, route), which would cause response leakage between
-     * different anonymous clients who happen to choose the same key.
-     * The middleware passes such requests through without idempotency
-     * protection and logs a warning.
+     * Anonymous requests (no authenticated account) are scoped by client
+     * IP instead of account_id: resolveAccountId() returns a stable,
+     * negative pseudo-id derived from the request IP so the triple never
+     * degenerates to a bare (0, key, route) that every anonymous client
+     * would share. This keeps idempotency protection working for
+     * anonymous flows (e.g. guest checkout) while still isolating two
+     * unrelated anonymous clients that happen to pick the same key.
      */
     class IdempotencyMiddleware {
         public const HEADER_NAME = 'X-Idempotency-Key';
@@ -81,23 +82,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Idempotency {
                 return null;
             }
 
-            $accountId = self::resolveAccountId();
-
-            if ($accountId === 0) {
-                // Anonymous request - idempotency not supported.
-                // The triple would be (0, key, route), which causes response leakage
-                // between different anonymous clients with the same key.
-                $routePath = self::normaliseRoutePath($globals->getUri());
-                error_log(sprintf(
-                    'IdempotencyMiddleware: skipping anonymous request on route %s (key=%s, ip=%s)',
-                    $routePath,
-                    $key,
-                    $globals->ip()
-                ));
-
-                return null;
-            }
-
+            $accountId = self::resolveAccountId($globals);
             $routePath = self::normaliseRoutePath($globals->getUri());
 
             $tableClass = self::$tableClass;
@@ -229,14 +214,31 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Idempotency {
             return $raw;
         }
 
-        private static function resolveAccountId(): int {
+        /**
+         * Authenticated requests are scoped by their real (positive)
+         * account id. Anonymous requests are scoped by a stable,
+         * negative pseudo-id derived from the client IP — never 0 — so
+         * two different anonymous clients choosing the same idempotency
+         * key on the same route don't collide, while repeat requests
+         * from the same anonymous client (retry, double-click) still
+         * hit the same triple and get idempotency protection.
+         */
+        private static function resolveAccountId(IGlobalReqParams $globals): int {
             try {
                 $account = Account::fromSession();
 
-                return $account ? (int)$account->id() : 0;
+                if ($account) {
+                    return (int)$account->id();
+                }
             } catch (Throwable) {
-                return 0;
             }
+
+            return self::anonymousPseudoAccountId($globals->ip());
+        }
+
+        /** Negative range keeps anonymous pseudo-ids disjoint from real (positive) account ids. */
+        private static function anonymousPseudoAccountId(string $ip): int {
+            return -1 - (crc32($ip) % 2000000000);
         }
 
         private static function normaliseRoutePath(string $uri): string {

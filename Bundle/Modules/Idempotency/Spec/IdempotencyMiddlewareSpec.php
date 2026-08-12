@@ -16,6 +16,21 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Idempotency\Spec {
     // In-memory table stub
     // ---------------------------------------------------------------------------
 
+    /**
+     * Records where('col = :bind', ['bind' => $value]) calls so the stub
+     * table below can apply them as exact-match filters.
+     */
+    class FakeIdemQuery {
+        /** @var array<string, mixed> column => required value */
+        public array $conditions = [];
+
+        public function where(string $sql, array $params): void {
+            if (preg_match('/^\s*([a-zA-Z_]+)\s*=/', $sql, $m) && count($params) === 1) {
+                $this->conditions[$m[1]] = reset($params);
+            }
+        }
+    }
+
     class TestIdempotencyKeys extends FwIdempotencyKeys {
         protected string $tableName = 'fw_idempotency_keys_test';
 
@@ -56,18 +71,30 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Idempotency\Spec {
             mixed $value,
             ?Closure $queryCallback = null
         ): ?array {
-            foreach ($this->rows as $row) {
-                if (($row[$fieldName] ?? null) === $value) {
-                    if ($queryCallback !== null) {
-                        // Apply the where-filters from the closure via a simple
-                        // match on 'account_id' and 'route_path' if they are
-                        // provided through the closure's captured vars.
-                        // We replicate the middleware's usage: account_id + route_path.
-                        // The closure captures $accountId and $routePath; we can't
-                        // easily execute it against the in-memory array, so instead
-                        // we let the callers control which rows are in the table.
-                    }
+            $conditions = [];
 
+            if ($queryCallback !== null) {
+                $fakeQuery = new FakeIdemQuery();
+                $queryCallback($fakeQuery);
+                $conditions = $fakeQuery->conditions;
+            }
+
+            foreach ($this->rows as $row) {
+                if (($row[$fieldName] ?? null) !== $value) {
+                    continue;
+                }
+
+                $matchesAll = true;
+
+                foreach ($conditions as $col => $expected) {
+                    if (($row[$col] ?? null) !== $expected) {
+                        $matchesAll = false;
+
+                        break;
+                    }
+                }
+
+                if ($matchesAll) {
                     return $row;
                 }
             }
@@ -149,6 +176,11 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Idempotency\Spec {
         return Mockery::mock(IRouterUriParams::class);
     }
 
+    /** Mirrors IdempotencyMiddleware::anonymousPseudoAccountId() for seeding test rows. */
+    function anonAccountId(string $ip = '127.0.0.1'): int {
+        return -1 - (crc32($ip) % 2000000000);
+    }
+
     // ---------------------------------------------------------------------------
     // Specs
     // ---------------------------------------------------------------------------
@@ -209,9 +241,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Idempotency\Spec {
         // -----------------------------------------------------------------------
         describe('before() — first-request reservation', function (): void {
             it('inserts a row and returns null for a new valid key', function (): void {
-                // NOTE: Unit tests cannot simulate authenticated accounts (Account::fromSession() is static).
-                // In this test environment, account_id=0 is treated as anonymous and skipped.
-                // Integration tests with real auth cover this scenario.
                 $table = setupTable();
                 $key = 'valid-key-1234567890';
                 $globals = makeGlobals(server: [IdempotencyMiddleware::HEADER_SERVER_KEY => $key]);
@@ -219,22 +248,24 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Idempotency\Spec {
                 $result = IdempotencyMiddleware::before($globals, makeParams());
 
                 expect($result)->toBeNull();
-                expect(count($table->insertCalls))->toBe(0); // Skipped as anonymous
+                expect(count($table->insertCalls))->toBe(1);
+                expect($table->insertCalls[0]['idem_key'])->toBe($key);
+                expect($table->insertCalls[0]['http_status'])->toBe(0);
             });
 
             it('sets http_status=0 (in-flight) on the reserved row', function (): void {
-                // NOTE: Skipped in unit tests - see above.
                 $table = setupTable();
                 $key = 'my-unique-key-123456';
                 $globals = makeGlobals(server: [IdempotencyMiddleware::HEADER_SERVER_KEY => $key]);
 
                 IdempotencyMiddleware::before($globals, makeParams());
 
-                expect(count($table->insertCalls))->toBe(0); // Skipped as anonymous
+                $inserted = $table->insertCalls[0];
+                expect($inserted['http_status'])->toBe(0);
+                expect($inserted['finalized_at'])->toBe(0);
             });
 
             it('records the route_path normalised from the URI', function (): void {
-                // NOTE: Skipped in unit tests - see above.
                 $table = setupTable();
                 $globals = makeGlobals(
                     uri: '/api/booking/create',
@@ -243,22 +274,20 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Idempotency\Spec {
 
                 IdempotencyMiddleware::before($globals, makeParams());
 
-                expect(count($table->insertCalls))->toBe(0); // Skipped as anonymous
+                expect($table->insertCalls[0]['route_path'])->toBe('/api/booking/create');
             });
 
             it('accepts keys of exactly 16 characters', function (): void {
-                // NOTE: Skipped in unit tests - see above.
                 $table = setupTable();
                 $globals = makeGlobals(server: [IdempotencyMiddleware::HEADER_SERVER_KEY => 'abcdefgh12345678']);
 
                 $result = IdempotencyMiddleware::before($globals, makeParams());
 
                 expect($result)->toBeNull();
-                expect(count($table->insertCalls))->toBe(0); // Skipped as anonymous
+                expect(count($table->insertCalls))->toBe(1);
             });
 
             it('accepts keys of exactly 64 characters', function (): void {
-                // NOTE: Skipped in unit tests - see above.
                 $table = setupTable();
                 $key = str_repeat('a', 64);
                 $globals = makeGlobals(server: [IdempotencyMiddleware::HEADER_SERVER_KEY => $key]);
@@ -266,44 +295,114 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Idempotency\Spec {
                 $result = IdempotencyMiddleware::before($globals, makeParams());
 
                 expect($result)->toBeNull();
-                expect(count($table->insertCalls))->toBe(0); // Skipped as anonymous
+                expect(count($table->insertCalls))->toBe(1);
+            });
+
+            it('scopes anonymous requests by IP: two different anonymous clients with the same key/route do not collide', function (): void {
+                $table = setupTable();
+                $key = 'shared-anon-key-1234567';
+
+                $clientA = makeGlobals(server: [IdempotencyMiddleware::HEADER_SERVER_KEY => $key], ip: '203.0.113.10');
+                $resultA = IdempotencyMiddleware::before($clientA, makeParams());
+
+                $clientB = makeGlobals(server: [IdempotencyMiddleware::HEADER_SERVER_KEY => $key], ip: '198.51.100.20');
+                $resultB = IdempotencyMiddleware::before($clientB, makeParams());
+
+                // Both reserve independently (no replay/409) and land two distinct rows —
+                // if they collided, the second call would replay/409 off the first's row.
+                expect($resultA)->toBeNull();
+                expect($resultB)->toBeNull();
+                expect(count($table->insertCalls))->toBe(2);
+                expect($table->insertCalls[0]['account_id'])->not->toBe($table->insertCalls[1]['account_id']);
+            });
+
+            it('scopes repeat requests from the same anonymous IP to the same triple (replay still works)', function (): void {
+                $table = setupTable();
+                $key = 'anon-retry-key-12345678';
+
+                $first = makeGlobals(server: [IdempotencyMiddleware::HEADER_SERVER_KEY => $key], ip: '203.0.113.10');
+                IdempotencyMiddleware::before($first, makeParams());
+
+                $retry = makeGlobals(server: [IdempotencyMiddleware::HEADER_SERVER_KEY => $key], ip: '203.0.113.10');
+                $result = IdempotencyMiddleware::before($retry, makeParams());
+
+                // Same IP + same key/route → same triple → in-flight 409, not a second insert.
+                expect(count($table->insertCalls))->toBe(1);
+                expect($result)->not->toBeNull();
             });
         });
 
         // -----------------------------------------------------------------------
         describe('before() — duplicate / replay detection', function (): void {
             it('replays a 200 response for a finalized row', function (): void {
-                // NOTE: Skipped in unit tests - cannot simulate authenticated accounts.
-                // Integration tests with real auth cover this scenario.
                 $table = setupTable();
                 $key = 'replay-key-12345678';
 
+                // Pre-seed a finalized row in the table.
+                $table->rows['1'] = [
+                    'id' => '1',
+                    'account_id' => anonAccountId(),
+                    'idem_key' => $key,
+                    'route_path' => '/api/test',
+                    'http_status' => 200,
+                    'content_type' => 'application/json',
+                    'response_body' => '{"ok":true}',
+                    'created_at' => time() - 10,
+                    'finalized_at' => time() - 5,
+                ];
+
                 $globals = makeGlobals(server: [IdempotencyMiddleware::HEADER_SERVER_KEY => $key]);
                 $response = IdempotencyMiddleware::before($globals, makeParams());
 
-                expect($response)->toBeNull(); // Skipped as anonymous
+                expect($response)->toBeAnInstanceOf(ResponseInterface::class);
+                expect($response->getStatusCode())->toBe(200);
+                expect($response->getHeaderLine('X-Idempotent-Replay'))->toBe('1');
             });
 
             it('returns 409 in-flight response when existing row is not yet finalized', function (): void {
-                // NOTE: Skipped in unit tests - see above.
                 $table = setupTable();
                 $key = 'inflight-key-1234567';
+
+                $table->rows['1'] = [
+                    'id' => '1',
+                    'account_id' => anonAccountId(),
+                    'idem_key' => $key,
+                    'route_path' => '/api/test',
+                    'http_status' => 0,       // still in-flight
+                    'content_type' => null,
+                    'response_body' => null,
+                    'created_at' => time() - 2,
+                    'finalized_at' => 0,
+                ];
 
                 $globals = makeGlobals(server: [IdempotencyMiddleware::HEADER_SERVER_KEY => $key]);
                 $response = IdempotencyMiddleware::before($globals, makeParams());
 
-                expect($response)->toBeNull(); // Skipped as anonymous
+                expect($response)->toBeAnInstanceOf(ResponseInterface::class);
+                expect($response->getStatusCode())->toBe(409);
             });
 
             it('does not insert a new row when a duplicate already exists', function (): void {
-                // NOTE: Skipped in unit tests - see above.
                 $table = setupTable();
                 $key = 'dup-key-1234567890ab';
+
+                $table->rows['1'] = [
+                    'id' => '1',
+                    'account_id' => anonAccountId(),
+                    'idem_key' => $key,
+                    'route_path' => '/api/test',
+                    'http_status' => 200,
+                    'content_type' => 'application/json',
+                    'response_body' => '{}',
+                    'created_at' => time() - 5,
+                    'finalized_at' => time() - 1,
+                ];
 
                 $globals = makeGlobals(server: [IdempotencyMiddleware::HEADER_SERVER_KEY => $key]);
                 IdempotencyMiddleware::before($globals, makeParams());
 
-                expect(count($table->insertCalls))->toBe(0); // Skipped as anonymous
+                // No new insert — only the pre-seeded row exists.
+                expect(count($table->insertCalls))->toBe(0);
             });
         });
 
@@ -317,8 +416,6 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Idempotency\Spec {
             });
 
             it('updates the reserved row with status and body after controller runs', function (): void {
-                // NOTE: Cannot test finalize() in unit tests because it requires a reserved row,
-                // which requires authentication (account_id > 0). Integration tests cover this.
                 $table = setupTable();
                 $key = 'finalize-key-1234567';
                 $globals = makeGlobals(server: [IdempotencyMiddleware::HEADER_SERVER_KEY => $key]);
@@ -332,8 +429,11 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Idempotency\Spec {
 
                 IdempotencyMiddleware::finalize($psr);
 
-                // No update because no row was reserved (anonymous request)
-                expect(count($table->updateCalls))->toBe(0);
+                $updateCall = $table->updateCalls[0]['data'];
+                expect($updateCall['http_status'])->toBe(200);
+                expect($updateCall['content_type'])->toBe('application/json');
+                expect($updateCall['response_body'])->toBe('{"result":"ok"}');
+                expect($updateCall['finalized_at'])->toBeGreaterThan(0);
             });
 
             it('returns the original response object from finalize', function (): void {
