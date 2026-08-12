@@ -12,12 +12,8 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
 
     use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\GarnetTestRemoteCommand;
     use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\GarnetUninstallCommand;
-
-    use function preg_match;
-
     use ReflectionMethod;
 
-    use function strlen;
     use function sys_get_temp_dir;
     use function uniqid;
     use function unlink;
@@ -104,27 +100,10 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
             });
         });
 
-        describe('GarnetUninstallCommand::randToken', function (): void {
-            it('returns a string of the requested length', function (): void {
-                expect(strlen(($this->invoke)(GarnetUninstallCommand::class, 'randToken', [4])))->toBe(4);
-                expect(strlen(($this->invoke)(GarnetUninstallCommand::class, 'randToken', [8])))->toBe(8);
-            });
-
-            it('uses only ambiguity-free uppercase letters (no I, O — confusable with 1, 0)', function (): void {
-                $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-
-                for ($try = 0; $try < 50; $try++) {
-                    $t = ($this->invoke)(GarnetUninstallCommand::class, 'randToken', [10]);
-                    expect((bool)preg_match('/^[' . $alphabet . ']+$/', $t))->toBe(true);
-                }
-            });
-
-            it('produces different values on consecutive calls (entropy)', function (): void {
-                $a = ($this->invoke)(GarnetUninstallCommand::class, 'randToken', [8]);
-                $b = ($this->invoke)(GarnetUninstallCommand::class, 'randToken', [8]);
-                expect($a)->not->toBe($b);
-            });
-        });
+        // randToken() was unified into CliTokens::randToken() (see
+        // Kernel/Io/GarnetCli/Spec/CliTokensSpec.php for coverage) — the
+        // per-command private copies this describe block used to test via
+        // reflection no longer exist.
 
         // ── GarnetServeCommand ────────────────────────────────────────
         // The nginx upstream-config generator (makeUpstreamsConf) was
