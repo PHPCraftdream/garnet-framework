@@ -110,14 +110,20 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Spec {
         }
 
         public function setSameSiteStrict(): ICookie {
+            $this->sameSite = 'Strict';
+
             return $this;
         }
 
         public function setSameSiteLax(): ICookie {
+            $this->sameSite = 'Lax';
+
             return $this;
         }
 
         public function setSameSiteNone(): ICookie {
+            $this->sameSite = 'None';
+
             return $this;
         }
 
@@ -705,6 +711,165 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Spec {
                 $_SERVER['SERVER_PORT'] = '443';
 
                 expect($invokeIsSecure())->toBe(true);
+            });
+        });
+
+        describe('issueNewCookie() security attributes', function (): void {
+            beforeEach(function (): void {
+                $session = Session::get(false);
+
+                // Initialize cookies via reflection
+                $mockCookies = new MockCookies();
+                $reflection = new ReflectionClass($session);
+                $prop = $reflection->getProperty('cookies');
+                $prop->setValue($session, $mockCookies);
+            });
+
+            it('sets HttpOnly=true on the session cookie', function (): void {
+                $session = Session::get(false);
+
+                // Trigger issueNewCookie by calling setValue (which calls touchCookie(true))
+                $session->setValue('test_key', 'test_value');
+
+                $reflection = new ReflectionClass($session);
+                $cookiesProp = $reflection->getProperty('cookies');
+                $mockCookies = $cookiesProp->getValue($session);
+
+                expect($mockCookies->cookies[Session::COOKIE_NAME_SESSION]->getHttpOnly())->toBe(true);
+            });
+
+            it('sets SameSite=Lax on the session cookie', function (): void {
+                $session = Session::get(false);
+
+                // Trigger issueNewCookie by calling setValue (which calls touchCookie(true))
+                $session->setValue('test_key', 'test_value');
+
+                $reflection = new ReflectionClass($session);
+                $cookiesProp = $reflection->getProperty('cookies');
+                $mockCookies = $cookiesProp->getValue($session);
+
+                expect($mockCookies->cookies[Session::COOKIE_NAME_SESSION]->getSameSite())->toBe('Lax');
+            });
+
+            it('sets Secure=true on the session cookie when isSecureRequest() returns true', function (): void {
+                $session = Session::get(false);
+
+                // Simulate HTTPS request
+                $_SERVER['HTTPS'] = 'on';
+
+                // Trigger issueNewCookie by calling setValue (which calls touchCookie(true))
+                $session->setValue('test_key', 'test_value');
+
+                $reflection = new ReflectionClass($session);
+                $cookiesProp = $reflection->getProperty('cookies');
+                $mockCookies = $cookiesProp->getValue($session);
+
+                expect($mockCookies->cookies[Session::COOKIE_NAME_SESSION]->getSecure())->toBe(true);
+
+                unset($_SERVER['HTTPS']);
+            });
+
+            it('sets Secure=false on the session cookie when isSecureRequest() returns false', function (): void {
+                $session = Session::get(false);
+
+                // Simulate non-HTTPS request
+                $_SERVER['SERVER_PORT'] = '80';
+                $_SERVER['HTTP_HOST'] = 'example.com';
+
+                // Trigger issueNewCookie by calling setValue (which calls touchCookie(true))
+                $session->setValue('test_key', 'test_value');
+
+                $reflection = new ReflectionClass($session);
+                $cookiesProp = $reflection->getProperty('cookies');
+                $mockCookies = $cookiesProp->getValue($session);
+
+                expect($mockCookies->cookies[Session::COOKIE_NAME_SESSION]->getSecure())->toBe(false);
+
+                unset($_SERVER['SERVER_PORT'], $_SERVER['HTTP_HOST']);
+            });
+        });
+
+        describe('mintCsrfCookie() security attributes', function (): void {
+            beforeEach(function (): void {
+                // Reset static instance
+                $reflection = new ReflectionClass(Session::class);
+                $prop = $reflection->getProperty('instance');
+                $prop->setValue(null, null);
+
+                $session = Session::get(false);
+
+                // Initialize cookies via reflection
+                $mockCookies = new MockCookies();
+                $reflection = new ReflectionClass($session);
+                $prop = $reflection->getProperty('cookies');
+                $prop->setValue($session, $mockCookies);
+
+                // Clear any cached CSRF token to force minting
+                $csrfTokenProp = $reflection->getProperty('csrfToken');
+                $csrfTokenProp->setValue($session, '');
+            });
+
+            it('sets HttpOnly=true on the CSRF cookie', function (): void {
+                $session = Session::get(false);
+
+                // Trigger mintCsrfCookie by calling touchCSRF()
+                $session->touchCSRF();
+
+                $reflection = new ReflectionClass($session);
+                $cookiesProp = $reflection->getProperty('cookies');
+                $mockCookies = $cookiesProp->getValue($session);
+
+                expect($mockCookies->cookies[Session::CSRF_TOKEN]->getHttpOnly())->toBe(true);
+            });
+
+            it('sets SameSite=Lax on the CSRF cookie', function (): void {
+                $session = Session::get(false);
+
+                // Trigger mintCsrfCookie by calling touchCSRF()
+                $session->touchCSRF();
+
+                $reflection = new ReflectionClass($session);
+                $cookiesProp = $reflection->getProperty('cookies');
+                $mockCookies = $cookiesProp->getValue($session);
+
+                expect($mockCookies->cookies[Session::CSRF_TOKEN]->getSameSite())->toBe('Lax');
+            });
+
+            it('sets Secure=true on the CSRF cookie when isSecureRequest() returns true', function (): void {
+                $session = Session::get(false);
+
+                // Simulate HTTPS request
+                $_SERVER['HTTPS'] = 'on';
+
+                // Trigger mintCsrfCookie by calling touchCSRF()
+                $session->touchCSRF();
+
+                $reflection = new ReflectionClass($session);
+                $cookiesProp = $reflection->getProperty('cookies');
+                $mockCookies = $cookiesProp->getValue($session);
+
+                expect($mockCookies->cookies[Session::CSRF_TOKEN]->getSecure())->toBe(true);
+
+                unset($_SERVER['HTTPS']);
+            });
+
+            it('sets Secure=false on the CSRF cookie when isSecureRequest() returns false', function (): void {
+                $session = Session::get(false);
+
+                // Simulate non-HTTPS request
+                $_SERVER['SERVER_PORT'] = '80';
+                $_SERVER['HTTP_HOST'] = 'example.com';
+
+                // Trigger mintCsrfCookie by calling touchCSRF()
+                $session->touchCSRF();
+
+                $reflection = new ReflectionClass($session);
+                $cookiesProp = $reflection->getProperty('cookies');
+                $mockCookies = $cookiesProp->getValue($session);
+
+                expect($mockCookies->cookies[Session::CSRF_TOKEN]->getSecure())->toBe(false);
+
+                unset($_SERVER['SERVER_PORT'], $_SERVER['HTTP_HOST']);
             });
         });
     });
