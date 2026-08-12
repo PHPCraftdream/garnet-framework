@@ -356,9 +356,15 @@ class GarnetSshCommand {
         }
     }
 
+    private static function fail(string $msg): never {
+        fwrite(STDERR, "\033[31mError:\033[0m {$msg}\n");
+
+        exit(1);
+    }
+
     /**
      * Resolve the deploy runtime directory from deploy.ini (remote_path + runtime_dir).
-     * Returns '' when either value is missing or deploy.ini cannot be read.
+     * Fails with a clear error message when either value is missing or deploy.ini cannot be read.
      */
     private static function runtimeDir(): string {
         try {
@@ -366,9 +372,13 @@ class GarnetSshCommand {
             $base = rtrim($deploy->paramString('remote_path', ''), '/');
             $dir = trim($deploy->paramString('runtime_dir', ''), '/');
 
-            return ($base !== '' && $dir !== '') ? $base . '/' . $dir : '';
-        } catch (Throwable) {
-            return '';
+            if ($base === '' || $dir === '') {
+                self::fail('deploy.ini must define remote_path and runtime_dir.');
+            }
+
+            return $base . '/' . $dir;
+        } catch (Throwable $e) {
+            self::fail('deploy.ini must define remote_path and runtime_dir.');
         }
     }
 
