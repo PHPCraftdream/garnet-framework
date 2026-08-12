@@ -97,7 +97,7 @@ class GarnetDbWipeCommand {
 
         // ── Step 1: generate code ───────────────────────────────────────
         if ($providedCode === null) {
-            $token = self::randToken(14);
+            $token = CliTokens::randToken(14);
             file_put_contents($codeFile, $token);
 
             echo "\033[1;31m================================ STOP! ================================\033[0m" . PHP_EOL;
@@ -178,18 +178,6 @@ class GarnetDbWipeCommand {
 
         echo "\033[32mwipe done — dropped " . count($tables) . " table(s).\033[0m" . PHP_EOL;
         echo '  Next: php garnet migration   (re-create the schema)' . PHP_EOL;
-    }
-
-    private static function randToken(int $len): string {
-        $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
-        $out = '';
-        $max = strlen($alphabet) - 1;
-
-        for ($i = 0; $i < $len; $i++) {
-            $out .= $alphabet[random_int(0, $max)];
-        }
-
-        return $out;
     }
 
     private static function help(): void {

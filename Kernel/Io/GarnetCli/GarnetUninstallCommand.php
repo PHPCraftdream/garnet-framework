@@ -116,7 +116,7 @@ class GarnetUninstallCommand {
             return;
         }
 
-        $token = self::randToken(4);
+        $token = CliTokens::randToken(4);
         echo "  Type \033[1;36m{$token}\033[0m to confirm: ";
         $line = trim((string)fgets(STDIN));
 
@@ -140,21 +140,6 @@ class GarnetUninstallCommand {
 
         echo PHP_EOL . "\033[32mUninstall complete.\033[0m" . PHP_EOL;
         echo '  You can now `rm` any leftover archive (e.g. MyApp.tar.gz) by hand.' . PHP_EOL;
-    }
-
-    /**
-     * Random N-letter token for the typed-confirmation prompt. Uppercase
-     * letters only, no easily-confused chars (I, O).
-     */
-    private static function randToken(int $len): string {
-        $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-        $out = '';
-
-        for ($i = 0; $i < $len; $i++) {
-            $out .= $alphabet[random_int(0, strlen($alphabet) - 1)];
-        }
-
-        return $out;
     }
 
     /**

@@ -2383,22 +2383,11 @@ final class GarnetDeployDiffCommand {
 
             return true;
         }
-        $token = self::randToken(4);
+        $token = CliTokens::randToken(4);
         echo "Type \033[1;36m{$token}\033[0m to confirm: ";
         $entered = trim((string)fgets(STDIN));
 
         return $entered === $token;
-    }
-
-    private static function randToken(int $len): string {
-        $alphabet = 'ABCDEFGHIJKLMNPQRSTUVWXYZ';
-        $out = '';
-
-        for ($i = 0; $i < $len; $i++) {
-            $out .= $alphabet[random_int(0, strlen($alphabet) - 1)];
-        }
-
-        return $out;
     }
 
     // -------------------------------------------------------------------------
