@@ -172,6 +172,8 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Controllers {
 
         // ── API: tickets, messages ───────────────────────────────────
 
+        // NOTE: This method uses POST but is read-only (SELECT only). CSRF is not needed
+        // because the method does not mutate any state — no INSERT/UPDATE/DELETE operations.
         public static function post__tickets(IGlobalReqParams $globals, IRouterUriParams $params): mixed {
             $account = Account::fromSession();
 
@@ -187,6 +189,8 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Controllers {
             return ControllerTools::JSON(['tickets' => array_values($tickets)]);
         }
 
+        // NOTE: This method uses POST but is read-only (SELECT only). CSRF is not needed
+        // because the method does not mutate any state — no INSERT/UPDATE/DELETE operations.
         public static function post__ticketPage(IGlobalReqParams $globals, IRouterUriParams $params): mixed {
             $account = Account::fromSession();
 
@@ -212,6 +216,12 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Controllers {
 
             if (!$account) {
                 return ControllerTools::JSON(['error' => 'Not authenticated'], status: 401);
+            }
+
+            $postCsrf = $globals->readPostValue(Session::CSRF_TOKEN, '');
+
+            if (!hash_equals(Session::touchCSRF_(), (string)$postCsrf)) {
+                return ControllerTools::JSON(['error' => 'CSRF check failed'], status: 403);
             }
 
             $accountId = (int)$account->id();
@@ -443,6 +453,8 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Controllers {
 
         // ── API: unread count ────────────────────────────────────────
 
+        // NOTE: This method uses POST but is read-only (SELECT only). CSRF is not needed
+        // because the method does not mutate any state — no INSERT/UPDATE/DELETE operations.
         public static function post__unreadCount(IGlobalReqParams $globals, IRouterUriParams $params): mixed {
             $account = Account::fromSession();
 

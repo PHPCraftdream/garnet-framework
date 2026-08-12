@@ -658,4 +658,175 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Spec {
             expect($result)->toBe([]);
         });
     });
+
+    // -------------------------------------------------------------------------
+
+    describe('FwSupportController — CSRF protection invariant', function (): void {
+        beforeEach(function (): void {
+            [$this->tickets, $this->messages, $this->attachments] = setupSupportTables();
+        });
+
+        /**
+         * Document and protect the invariant: mutating POST endpoints require CSRF.
+         * post__messages mutates (marks ticket as read) and MUST have CSRF check.
+         */
+        it('post__messages requires CSRF protection because it mutates state', function (): void {
+            // Setup: create a ticket with unread_user = 1
+            $this->tickets->rows = [
+                '1' => ['id' => '1', 'account_id' => '7', 'subject' => 'T', 'status' => 'open',
+                    'assignee_id' => null, 'unread_user' => '1', 'unread_staff' => '0',
+                    'created_at' => 0, 'updated_at' => 0],
+            ];
+
+            // No Kahlan static-mocking precedent exists anywhere in this spec suite for
+            // Account::fromSession()/Session::touchCSRF_() (both are hard static facades
+            // over real session/cookie state), so a true end-to-end 403 assertion would
+            // require inventing new test infrastructure. Falling back to a source-shape
+            // check: the key invariant is that post__messages has the same CSRF check
+            // shape as the already-trusted post__createTicket/post__reply.
+            $ref = new ReflectionClass(FwSupportController::class);
+            $method = $ref->getMethod('post__messages');
+
+            // Get method source code and verify it contains CSRF check
+            $filename = $method->getFileName();
+            $startLine = $method->getStartLine() - 1; // 0-indexed
+            $endLine = $method->getEndLine();
+            $length = $endLine - $startLine + 1;
+
+            $source = file($filename);
+            $methodSource = implode('', array_slice($source, $startLine, $length));
+
+            // Verify CSRF check exists
+            expect(str_contains($methodSource, 'Session::CSRF_TOKEN'))->toBe(true);
+            expect(str_contains($methodSource, 'hash_equals(Session::touchCSRF_'))->toBe(true);
+            expect(str_contains($methodSource, 'CSRF check failed'))->toBe(true);
+
+            // Verify updateByField is called (the mutation)
+            expect(str_contains($methodSource, 'updateByField'))->toBe(true);
+            expect(str_contains($methodSource, 'unread_user'))->toBe(true);
+        });
+
+        /**
+         * Document and protect the invariant: read-only POST endpoints do NOT require CSRF.
+         * post__tickets, post__ticketPage, post__unreadCount are pure SELECT operations.
+         */
+        it('post__tickets is read-only and has no INSERT/UPDATE/DELETE', function (): void {
+            $ref = new ReflectionClass(FwSupportController::class);
+            $method = $ref->getMethod('post__tickets');
+
+            $filename = $method->getFileName();
+            $startLine = $method->getStartLine() - 1;
+            $endLine = $method->getEndLine();
+            $length = $endLine - $startLine + 1;
+
+            $source = file($filename);
+            $methodSource = implode('', array_slice($source, $startLine, $length));
+
+            // No CSRF check (intentional - read-only)
+            expect(str_contains($methodSource, 'Session::CSRF_TOKEN'))->toBe(false);
+
+            // No mutations - only SELECT
+            expect(str_contains($methodSource, '->insert('))->toBe(false);
+            expect(str_contains($methodSource, '->update('))->toBe(false);
+            expect(str_contains($methodSource, 'updateByField('))->toBe(false);
+            expect(str_contains($methodSource, '->delete('))->toBe(false);
+            expect(str_contains($methodSource, 'deleteByField('))->toBe(false);
+            expect(str_contains($methodSource, 'selectByField'))->toBe(true);
+        });
+
+        it('post__ticketPage is read-only and has no INSERT/UPDATE/DELETE', function (): void {
+            $ref = new ReflectionClass(FwSupportController::class);
+            $method = $ref->getMethod('post__ticketPage');
+
+            $filename = $method->getFileName();
+            $startLine = $method->getStartLine() - 1;
+            $endLine = $method->getEndLine();
+            $length = $endLine - $startLine + 1;
+
+            $source = file($filename);
+            $methodSource = implode('', array_slice($source, $startLine, $length));
+
+            // No CSRF check (intentional - read-only)
+            expect(str_contains($methodSource, 'Session::CSRF_TOKEN'))->toBe(false);
+
+            // No mutations - only SELECT via PaginationHelper::fetchPage
+            expect(str_contains($methodSource, '->insert('))->toBe(false);
+            expect(str_contains($methodSource, '->update('))->toBe(false);
+            expect(str_contains($methodSource, 'updateByField('))->toBe(false);
+            expect(str_contains($methodSource, '->delete('))->toBe(false);
+            expect(str_contains($methodSource, 'deleteByField('))->toBe(false);
+            expect(str_contains($methodSource, 'fetchPage'))->toBe(true);
+        });
+
+        it('post__unreadCount is read-only and has no INSERT/UPDATE/DELETE', function (): void {
+            $ref = new ReflectionClass(FwSupportController::class);
+            $method = $ref->getMethod('post__unreadCount');
+
+            $filename = $method->getFileName();
+            $startLine = $method->getStartLine() - 1;
+            $endLine = $method->getEndLine();
+            $length = $endLine - $startLine + 1;
+
+            $source = file($filename);
+            $methodSource = implode('', array_slice($source, $startLine, $length));
+
+            // No CSRF check (intentional - read-only)
+            expect(str_contains($methodSource, 'Session::CSRF_TOKEN'))->toBe(false);
+
+            // No mutations - only SELECT with SUM aggregation
+            expect(str_contains($methodSource, '->insert('))->toBe(false);
+            expect(str_contains($methodSource, '->update('))->toBe(false);
+            expect(str_contains($methodSource, 'updateByField('))->toBe(false);
+            expect(str_contains($methodSource, '->delete('))->toBe(false);
+            expect(str_contains($methodSource, 'deleteByField('))->toBe(false);
+            expect(str_contains($methodSource, 'selectAll'))->toBe(true);
+            expect(str_contains($methodSource, 'SUM'))->toBe(true);
+        });
+
+        /**
+         * Verify that mutating endpoints (createTicket, reply, messages) have CSRF protection.
+         */
+        it('post__createTicket requires CSRF protection', function (): void {
+            $ref = new ReflectionClass(FwSupportController::class);
+            $method = $ref->getMethod('post__createTicket');
+
+            $filename = $method->getFileName();
+            $startLine = $method->getStartLine() - 1;
+            $endLine = $method->getEndLine();
+            $length = $endLine - $startLine + 1;
+
+            $source = file($filename);
+            $methodSource = implode('', array_slice($source, $startLine, $length));
+
+            // Must have CSRF check
+            expect(str_contains($methodSource, 'Session::CSRF_TOKEN'))->toBe(true);
+            expect(str_contains($methodSource, 'hash_equals(Session::touchCSRF_'))->toBe(true);
+            expect(str_contains($methodSource, 'CSRF check failed'))->toBe(true);
+
+            // Must have mutations
+            expect(str_contains($methodSource, 'insert'))->toBe(true);
+        });
+
+        it('post__reply requires CSRF protection', function (): void {
+            $ref = new ReflectionClass(FwSupportController::class);
+            $method = $ref->getMethod('post__reply');
+
+            $filename = $method->getFileName();
+            $startLine = $method->getStartLine() - 1;
+            $endLine = $method->getEndLine();
+            $length = $endLine - $startLine + 1;
+
+            $source = file($filename);
+            $methodSource = implode('', array_slice($source, $startLine, $length));
+
+            // Must have CSRF check
+            expect(str_contains($methodSource, 'Session::CSRF_TOKEN'))->toBe(true);
+            expect(str_contains($methodSource, 'hash_equals(Session::touchCSRF_'))->toBe(true);
+            expect(str_contains($methodSource, 'CSRF check failed'))->toBe(true);
+
+            // Must have mutations
+            expect(str_contains($methodSource, 'insert'))->toBe(true);
+            expect(str_contains($methodSource, 'updateByField'))->toBe(true);
+        });
+    });
 }
