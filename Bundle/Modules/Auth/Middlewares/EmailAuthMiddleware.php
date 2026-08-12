@@ -678,7 +678,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
             // which silently failed whenever the link was opened in a different
             // session than the one that requested the code (e.g. a webmail
             // client's in-app browser).
-            $returnUri = $globals->getUri() ?: '/';
+            $returnUri = static::normalizeReturnUri($globals->getUri() ?: '/');
             $consentPdAt = (string)$session->getValue('consent_pd_at', '');
             $consentMarketingAt = (string)$session->getValue('consent_marketing_at', '');
             $magicToken = FwMagicLoginService::generate($authEmail, $returnUri, $consentPdAt, $consentMarketingAt)['token'];
@@ -747,6 +747,36 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
          */
         protected static function magicLoginUrl(string $magicToken): string {
             return '/magic-login/code~' . $magicToken;
+        }
+
+        /**
+         * Normalize a return URI for safe storage in magic-login tokens.
+         *
+         * Accepts only strictly relative paths (e.g., "/first-step", "/").
+         * Rejects scheme-relative URLs (e.g., "//evil.com/") and absolute URLs.
+         * Also handles backslash normalization for Windows compatibility.
+         * Truncates to 500 characters to match the DB column limit.
+         *
+         * @param string $uri The raw URI from REQUEST_URI
+         * @return string A safe relative path, or "/" if the input is invalid
+         */
+        protected static function normalizeReturnUri(string $uri): string {
+            // Truncate to avoid silent DB truncation (VARCHAR(500) column)
+            if (mb_strlen($uri) > 500) {
+                return '/';
+            }
+
+            // Reject scheme-relative URLs (e.g., //evil.com/) and absolute URLs.
+            // Require a strictly relative path starting with exactly one '/'
+            // followed by a non-'/' character (or just '/' for root).
+            if (!preg_match('#^/([^/\\\\]|$)#', $uri)) {
+                return '/';
+            }
+
+            // Normalize backslashes to forward slashes (Windows compatibility)
+            $uri = str_replace('\\', '/', $uri);
+
+            return $uri;
         }
 
         /**

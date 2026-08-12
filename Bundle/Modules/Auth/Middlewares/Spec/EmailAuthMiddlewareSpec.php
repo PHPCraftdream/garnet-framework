@@ -177,6 +177,87 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\Spec {
         });
 
         // -----------------------------------------------------------------------
+        describe('normalizeReturnUri()', function (): void {
+            it('returns "/" for an empty string', function (): void {
+                $result = callEmailProtected('normalizeReturnUri', ['']);
+                expect($result)->toBe('/');
+            });
+
+            it('returns "/" for a scheme-relative URL', function (): void {
+                $result = callEmailProtected('normalizeReturnUri', ['//evil.com/']);
+                expect($result)->toBe('/');
+            });
+
+            it('returns "/" for "//" (empty scheme-relative)', function (): void {
+                $result = callEmailProtected('normalizeReturnUri', ['//']);
+                expect($result)->toBe('/');
+            });
+
+            it('returns "/" for an absolute URL with scheme', function (): void {
+                $result = callEmailProtected('normalizeReturnUri', ['https://evil.com/']);
+                expect($result)->toBe('/');
+            });
+
+            it('returns "/" for an absolute URL without scheme', function (): void {
+                $result = callEmailProtected('normalizeReturnUri', ['evil.com/path']);
+                expect($result)->toBe('/');
+            });
+
+            it('returns "/" for a URI starting with double slash', function (): void {
+                $result = callEmailProtected('normalizeReturnUri', ['//first-step']);
+                expect($result)->toBe('/');
+            });
+
+            it('returns "/" for a URI with backslashes (UNC path)', function (): void {
+                $result = callEmailProtected('normalizeReturnUri', ['\\\\evil.com\\path']);
+                expect($result)->toBe('/');
+            });
+
+            it('returns "/" for a path starting with backslash', function (): void {
+                $result = callEmailProtected('normalizeReturnUri', ['\\path']);
+                expect($result)->toBe('/');
+            });
+
+            it('returns "/" for a path starting with "///"', function (): void {
+                $result = callEmailProtected('normalizeReturnUri', ['///path']);
+                expect($result)->toBe('/');
+            });
+
+            it('returns "/" for a URI exceeding 500 characters', function (): void {
+                $longUri = '/' . str_repeat('a', 501);
+                $result = callEmailProtected('normalizeReturnUri', [$longUri]);
+                expect($result)->toBe('/');
+            });
+
+            it('returns "/" unchanged (root path)', function (): void {
+                $result = callEmailProtected('normalizeReturnUri', ['/']);
+                expect($result)->toBe('/');
+            });
+
+            it('returns a valid relative path unchanged', function (): void {
+                $result = callEmailProtected('normalizeReturnUri', ['/first-step']);
+                expect($result)->toBe('/first-step');
+            });
+
+            it('returns a complex relative path unchanged', function (): void {
+                $result = callEmailProtected('normalizeReturnUri', ['/first-step/token~INVITE?foo=bar']);
+                expect($result)->toBe('/first-step/token~INVITE?foo=bar');
+            });
+
+            it('normalizes backslashes to forward slashes', function (): void {
+                $result = callEmailProtected('normalizeReturnUri', ['/path\\to\\resource']);
+                expect($result)->toBe('/path/to/resource');
+            });
+
+            it('truncates to exactly 500 characters when at limit', function (): void {
+                $uri = '/' . str_repeat('a', 498);
+                expect(mb_strlen($uri))->toBe(499);
+                $result = callEmailProtected('normalizeReturnUri', [$uri]);
+                expect($result)->toBe($uri);
+            });
+        });
+
+        // -----------------------------------------------------------------------
         describe('static property defaults', function (): void {
             it('$authCodeLen default is 8', function (): void {
                 $ref = new ReflectionClass(EmailAuthMiddleware::class);
