@@ -35,6 +35,13 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Idempotency {
      *
      * GET / non-POST requests are passed through untouched. Requests
      * without the header are also untouched (back-compat).
+     *
+     * Anonymous requests (no authenticated account) are NOT supported.
+     * For unauthenticated traffic, the idempotency triple degenerates to
+     * (0, key, route), which would cause response leakage between
+     * different anonymous clients who happen to choose the same key.
+     * The middleware passes such requests through without idempotency
+     * protection and logs a warning.
      */
     class IdempotencyMiddleware {
         public const HEADER_NAME = 'X-Idempotency-Key';
@@ -75,6 +82,22 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Idempotency {
             }
 
             $accountId = self::resolveAccountId();
+
+            if ($accountId === 0) {
+                // Anonymous request - idempotency not supported.
+                // The triple would be (0, key, route), which causes response leakage
+                // between different anonymous clients with the same key.
+                $routePath = self::normaliseRoutePath($globals->getUri());
+                error_log(sprintf(
+                    'IdempotencyMiddleware: skipping anonymous request on route %s (key=%s, ip=%s)',
+                    $routePath,
+                    $key,
+                    $globals->ip()
+                ));
+
+                return null;
+            }
+
             $routePath = self::normaliseRoutePath($globals->getUri());
 
             $tableClass = self::$tableClass;
@@ -161,7 +184,10 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Idempotency {
             return $response;
         }
 
-        /** Best-effort delete of receipts older than TTL_SECONDS. Wire to cron. */
+        /** Best-effort delete of receipts older than TTL_SECONDS. Wire to cron.
+         *
+         * @return int Number of rows deleted.
+         */
         public static function gc(int $beforeTs): int {
             if (self::$tableClass === null) {
                 return 0;
@@ -169,9 +195,9 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Idempotency {
             $tableClass = self::$tableClass;
             $table = $tableClass::get();
             $name = $table->getTableName();
-            $table->getQueryEx()->ex("DELETE FROM `{$name}` WHERE created_at < ?", [$beforeTs]);
+            $result = $table->getQueryEx()->ex("DELETE FROM `{$name}` WHERE created_at < ?", [$beforeTs]);
 
-            return 0;
+            return is_int($result) ? $result : 0;
         }
 
         // ── Internals ───────────────────────────────────────────────

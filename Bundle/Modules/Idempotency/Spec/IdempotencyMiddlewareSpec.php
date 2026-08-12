@@ -85,6 +85,8 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Idempotency\Spec {
     }
 
     // ---------------------------------------------------------------------------
+
+    // ---------------------------------------------------------------------------
     // Helpers
     // ---------------------------------------------------------------------------
 
@@ -131,13 +133,14 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Idempotency\Spec {
      *
      * @param array<string, mixed> $server  Keys/values for readServerValue().
      */
-    function makeGlobals(bool $isPost = true, string $uri = '/api/test', array $server = []): IGlobalReqParams {
+    function makeGlobals(bool $isPost = true, string $uri = '/api/test', array $server = [], string $ip = '127.0.0.1'): IGlobalReqParams {
         $mock = Mockery::mock(IGlobalReqParams::class);
         $mock->allows('isPost')->andReturn($isPost);
         $mock->allows('getUri')->andReturn($uri);
         $mock->allows('readServerValue')->andReturnUsing(
             fn (string $name, mixed $default = null) => $server[$name] ?? $default
         );
+        $mock->allows('ip')->andReturn($ip);
 
         return $mock;
     }
@@ -378,6 +381,15 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Idempotency\Spec {
                 $result = IdempotencyMiddleware::finalize($psr);
 
                 expect($result)->toBe($psr);
+            });
+        });
+
+        // -----------------------------------------------------------------------
+        describe('gc()', function (): void {
+            it('returns 0 when no table class is configured', function (): void {
+                resetMiddlewareState();
+                $result = IdempotencyMiddleware::gc(time() - 86400);
+                expect($result)->toBe(0);
             });
         });
     });
