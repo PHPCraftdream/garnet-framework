@@ -4,6 +4,19 @@
    ../../../Apps pointed at Framework/Apps (nonexistent), so app-only utility
    classes (e.g. a one-off mb-5 in an island) were never generated. */
 @source "../../../../Apps";
+/* Standalone app layout (composer-vendored framework, the layout `app:create`
+   scaffolds and the one production apps actually run): the framework lives
+   six levels below the app root instead of being its monorepo sibling —
+   <app>/vendor/phpcraftdream/garnet-framework/Bundle/Front/Styles/. Without
+   this second @source, an app-only Tailwind class that's never also used
+   inside the framework's own Front/ tree (e.g. a lone `top-3`/`right-3` on a
+   close button) silently compiles to nothing — the class exists in the
+   markup but has zero CSS backing it, so the element just sits in normal
+   document flow instead of where it's positioned to be. Non-existent @source
+   paths are tolerated (this one is a no-op for the monorepo layout, same as
+   the ../../../../Apps line above is a no-op here), so both layouts coexist
+   safely in one file. */
+@source "../../../../../../";
 @source "../../TwigTemplates";
 @source "../..";
 /* HtmlLayout.php and SidebarMenu/TopMenu classes not reachable via file scan */
