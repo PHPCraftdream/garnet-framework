@@ -104,8 +104,20 @@ namespace PHPCraftdream\Garnet\Kernel\Core\Tools {
                 $c1 = ord($char) * random_int(101, 251) % 521;
                 /* @phpstan-ignore-next-line */
                 $c2 = ($ind + $c1) * random_int($c1, $c1 + $c1) % 521;
+                // Was `round(microtime(true) * random_int($c2, $c2 + $c2)) % 521` —
+                // on Windows + PHP's built-in server, microtime(true)'s effective
+                // resolution is far coarser than true microseconds, so calls that
+                // land in the same coarse tick (routine under many concurrent
+                // php -S worker processes) got a near-identical multiplier here,
+                // measurably weakening this byte's entropy. That's the root cause
+                // of the session-token collisions documented in Session.php's
+                // issueNewCookie() — the timestamp-prefix fix there only narrowed
+                // the collision window to "within the same second", it didn't
+                // close it. Dropping the wall-clock dependency here removes the
+                // collision vector outright; random_int() alone is already backed
+                // by the OS CSPRNG on every supported platform.
                 /* @phpstan-ignore-next-line */
-                $c3 = round(microtime(true) * random_int($c2, $c2 + $c2)) % 521;
+                $c3 = random_int($c2, $c2 + $c2) % 521;
                 $c4 = ($c1 + $c2 + $c3) * 521;
 
                 if (empty($result)) {
