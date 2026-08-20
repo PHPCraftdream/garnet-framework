@@ -1,7 +1,123 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Account {
+    use PHPCraftdream\Garnet\Kernel\Db\Query\QueryEx;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbMySQLiLink;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbPool;
+    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+    use ReflectionClass;
+    use RuntimeException;
+
+    // Records every SQL statement handed to the pool instead of talking to a
+    // real database — lets the spec below assert on the exact WHERE clause
+    // getAllUsersData() builds without requiring a live MySQL connection.
+    class RecordingDbPool implements IDbPool {
+        public array $queries = [];
+
+        public function newLink(): IDbMySQLiLink {
+            throw new RuntimeException('Not implemented in mock');
+        }
+
+        public function getDbConfig(): IniConfig {
+            throw new RuntimeException('Not implemented in mock');
+        }
+
+        public function queryAsync(string $sql, array $args = [], ?callable $callBack = null): IDbMySQLiLink {
+            throw new RuntimeException('Not implemented in mock');
+        }
+
+        public function query(string $sql, array $args = []): array|int|string|bool {
+            $this->queries[] = ['sql' => $sql, 'args' => $args];
+
+            return [];
+        }
+
+        public function poll(): void {
+        }
+
+        public function pollFinishAll(): void {
+        }
+
+        public function getLinksCount(): int {
+            return 0;
+        }
+    }
+
+    function getDbAccountDataTestConfigPath(): string {
+        // __DIR__ is Framework/Kernel/Db/Entity/Account/Spec
+        $frameworkDir = dirname(dirname(dirname(dirname(dirname(__DIR__)))));
+
+        return $frameworkDir . '/TestsInit/TestConfig/db.ini';
+    }
+
     describe('DbAccountData', function (): void {
+        describe('::getAllUsersData() - SQL scoping (P3 follow-up: bound the accounts_data scan)', function (): void {
+            beforeEach(function (): void {
+                $dbConfigPath = getDbAccountDataTestConfigPath();
+                IniConfig::defineDbIni($dbConfigPath);
+
+                // QueryEx::get() is a singleton; inject a QueryEx wired to a
+                // recording IDbPool double instead of swapping DbPool's own
+                // singleton (DbPool::$instance is typed `?DbPool`, so it can't
+                // hold an unrelated IDbPool double — mirrors the pattern used
+                // in Kernel\Db\Query\Spec\QueryExSpec.php).
+                $this->recordingPool = new RecordingDbPool();
+
+                $reflectionQueryEx = new ReflectionClass(QueryEx::class);
+                $propQueryEx = $reflectionQueryEx->getProperty('instance');
+                $propQueryEx->setAccessible(true);
+                $propQueryEx->setValue(null, new QueryEx($this->recordingPool));
+            });
+
+            afterEach(function (): void {
+                $reflectionQueryEx = new ReflectionClass(QueryEx::class);
+                $propQueryEx = $reflectionQueryEx->getProperty('instance');
+                $propQueryEx->setAccessible(true);
+                $propQueryEx->setValue(null, null);
+            });
+
+            it('filters by param name via WHERE ... IN instead of reading the whole table', function (): void {
+                DbAccountData::getAllUsersData(['IS_APPROVED', 'IS_DISABLED']);
+
+                expect(count($this->recordingPool->queries))->toBe(1);
+
+                $sql = $this->recordingPool->queries[0]['sql'];
+                $args = $this->recordingPool->queries[0]['args'];
+
+                expect($sql)->toMatch('/\bWHERE\b/i');
+                expect($sql)->toMatch('/\bparam\b.*\bIN\b/i');
+                expect($args)->toContain('IS_APPROVED');
+                expect($args)->toContain('IS_DISABLED');
+            });
+
+            it('additionally scopes by account_id when a candidate id set is provided', function (): void {
+                DbAccountData::getAllUsersData(['IS_APPROVED'], [101, 102]);
+
+                expect(count($this->recordingPool->queries))->toBe(1);
+
+                $sql = $this->recordingPool->queries[0]['sql'];
+                $args = $this->recordingPool->queries[0]['args'];
+
+                expect($sql)->toMatch('/\baccount_id\b.*\bIN\b/i');
+                expect($args)->toContain(101);
+                expect($args)->toContain(102);
+            });
+
+            it('does not hit the database at all when the account id candidate set is empty', function (): void {
+                $result = DbAccountData::getAllUsersData(['IS_APPROVED'], []);
+
+                expect($result)->toBe([]);
+                expect(count($this->recordingPool->queries))->toBe(0);
+            });
+
+            it('does not hit the database at all when no param names are requested', function (): void {
+                $result = DbAccountData::getAllUsersData([]);
+
+                expect($result)->toBe([]);
+                expect(count($this->recordingPool->queries))->toBe(0);
+            });
+        });
+
         describe('::getAllUsersData() - data filtering and grouping logic', function (): void {
             it('filters numeric strings and converts to integers', function (): void {
                 $testData = ['123', '456', 'not_a_number'];

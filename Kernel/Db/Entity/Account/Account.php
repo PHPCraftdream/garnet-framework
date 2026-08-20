@@ -529,7 +529,15 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Account {
                 return $accounts;
             }
 
-            $accountsData = DbAccountData::getAllUsersData($accountDataFields);
+            // Bound the accounts_data scan to the account ids we actually fetched above,
+            // instead of reading the requested params for every account in the table.
+            $accountIds = array_values(array_unique(array_map(
+                static fn (array $account): mixed => $account['id'] ?? null,
+                $accounts,
+            )));
+            $accountIds = array_values(array_filter($accountIds, static fn ($id): bool => $id !== null));
+
+            $accountsData = DbAccountData::getAllUsersData($accountDataFields, $accountIds);
 
             $accounts = array_map(static function (array $account) use ($accountsData): array {
                 $accountId = $account['id'] ?? null;

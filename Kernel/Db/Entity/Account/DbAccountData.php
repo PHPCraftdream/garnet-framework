@@ -1,6 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Account {
+    use Aura\SqlQuery\Common\SelectInterface;
     use PHPCraftdream\Garnet\Kernel\Core\Tools\StrTools;
     use PHPCraftdream\Garnet\Kernel\Db\Tables\DbTable;
     use PHPCraftdream\Garnet\Kernel\Db\Tables\DbTableBuilderFactory;
@@ -28,8 +29,26 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Account {
             ;
         }
 
-        public static function getAllUsersData(array $names): array {
-            $data = DbAccountData::get()->selectAll();
+        /**
+         * @param array $names Param names to read (filters accounts_data.param via WHERE ... IN).
+         * @param array|null $accountIds Optional bounded set of account ids to read (filters
+         *     accounts_data.account_id via WHERE ... IN). Pass null (default) to read the
+         *     requested params for ALL accounts — existing callers that don't know a candidate
+         *     id set keep working unchanged.
+         * @return array
+         */
+        public static function getAllUsersData(array $names, ?array $accountIds = null): array {
+            if (empty($names) || $accountIds === []) {
+                return [];
+            }
+
+            $data = DbAccountData::get()->selectAll(function (SelectInterface $select) use ($names, $accountIds): void {
+                $select->where('param in (?)', [$names]);
+
+                if ($accountIds !== null) {
+                    $select->where('account_id in (?)', [$accountIds]);
+                }
+            });
             $result = [];
             $namesMap = [];
 
