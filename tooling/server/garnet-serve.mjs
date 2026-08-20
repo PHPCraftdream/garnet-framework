@@ -91,7 +91,10 @@ const PHP_INI = [
 ];
 
 // ── Spawn the php -S worker pool ────────────────────────────────────────────
-/** @type {{ port:number, proc:import('node:child_process').ChildProcess, inflight:number }[]} */
+// A slot is `null` once it has permanently given up (see RESPAWN_MAX_ATTEMPTS
+// below) — indices are never compacted because `X-Test-Worker: <i>` pins a
+// Playwright worker to pool[i] by position.
+/** @type {Array<{ port:number, proc:import('node:child_process').ChildProcess, inflight:number } | null>} */
 const pool = [];
 
 // Respawn backoff: rapid crash loops (e.g. port already in use) back off
@@ -100,6 +103,14 @@ const pool = [];
 const RESPAWN_BASE_DELAY_MS = 200;
 const RESPAWN_MAX_DELAY_MS = 5000;
 const RESPAWN_MAX_ATTEMPTS = 8;
+
+// `php -S` has no readiness/health-check handshake (unlike e.g. a worker
+// that signals `ready` over IPC), so "healthy" is approximated as "stayed
+// up this long without exiting". Once a slot survives this long, its
+// failureCount resets to 0 — otherwise crashes spread across a whole
+// multi-hour dev session (each individually recoverable) would accumulate
+// against the same RESPAWN_MAX_ATTEMPTS ceiling as a true rapid crash loop.
+const RESPAWN_STABLE_MS = 30_000;
 
 function spawnWorker(index, failureCount = 0) {
 	const port = BASE_PORT + index;
@@ -126,14 +137,31 @@ function spawnWorker(index, failureCount = 0) {
 		console.error(`[garnet-serve] failed to spawn PHP worker — check --php-bin: ${PHP_BIN}\n${err.message}`);
 	});
 
+	// No readiness handshake exists for `php -S`, so treat "stayed up for
+	// RESPAWN_STABLE_MS" as the health signal and reset the crash counter.
+	// Cleared on exit below so a worker that dies before the window elapses
+	// doesn't get a spurious reset racing the 'exit' handler.
+	const stableTimer = setTimeout(() => {
+		failureCount = 0;
+	}, RESPAWN_STABLE_MS).unref();
+
 	proc.on('exit', (code, signal) => {
+		clearTimeout(stableTimer);
 		if (shuttingDown) return;
 
 		if (failureCount + 1 >= RESPAWN_MAX_ATTEMPTS) {
 			console.error(
 				`[garnet-serve] worker :${port} exited (code=${code} signal=${signal}) — ` +
-				`${RESPAWN_MAX_ATTEMPTS} consecutive failures, giving up on this slot`,
+				`${RESPAWN_MAX_ATTEMPTS} consecutive failures, giving up on this slot ` +
+				`(removed from pool — remaining workers keep serving)`,
 			);
+			// Null out in place rather than splice(): pool indices are load-
+			// bearing — `X-Test-Worker: <i>` pins a Playwright worker to
+			// pool[i] for DB isolation (see file header). Splicing would
+			// shift every later slot's index and silently repin tests to the
+			// wrong PHP process, which is worse than the 502s this fixes.
+			const i = pool.findIndex((w) => w === entry);
+			if (i >= 0) pool[i] = null;
 			return;
 		}
 
@@ -166,18 +194,21 @@ function pickWorker(req) {
 	const raw = Array.isArray(hdr) ? hdr[0] : hdr;
 
 	if (raw !== undefined && raw !== '') {
-		if (raw === 'template') return pool[0];
+		if (raw === 'template' && pool[0]) return pool[0];
 		const idx = Number(raw);
-		if (Number.isInteger(idx) && idx >= 0 && idx < pool.length) {
+		if (Number.isInteger(idx) && idx >= 0 && idx < pool.length && pool[idx]) {
 			return pool[idx];
 		}
-		// Unknown value falls through to the round-robin pool.
+		// Unknown value, or that slot permanently gave up — fall through to
+		// the round-robin pool rather than proxying to a dead worker.
 	}
 
-	// Least-in-flight (mirrors nginx `least_conn`).
-	let best = pool[0];
+	// Least-in-flight (mirrors nginx `least_conn`), skipping slots that gave
+	// up permanently (pool[i] === null — see RESPAWN_MAX_ATTEMPTS).
+	let best = null;
 	for (const w of pool) {
-		if (w.inflight < best.inflight) best = w;
+		if (!w) continue;
+		if (!best || w.inflight < best.inflight) best = w;
 	}
 	return best;
 }
@@ -279,6 +310,14 @@ function stripHopByHopHeaders(headers) {
 // ── Proxy to a php -S worker ────────────────────────────────────────────────
 function proxy(req, res) {
 	const worker = pickWorker(req);
+	if (!worker) {
+		// Every slot has permanently given up (each hit RESPAWN_MAX_ATTEMPTS).
+		// Extremely unlikely in practice, but fail the request cleanly rather
+		// than throwing on `null.inflight`.
+		res.writeHead(502, { 'Content-Type': 'text/plain; charset=utf-8' });
+		res.end('502 Bad Gateway — no php worker available\n');
+		return;
+	}
 	worker.inflight++;
 
 	// Guard so the decrement can never double-fire — 'close' on the
@@ -355,6 +394,7 @@ function shutdown() {
 	shuttingDown = true;
 	console.log('\n[garnet-serve] shutting down — killing worker pool…');
 	for (const w of pool) {
+		if (!w) continue; // slot already gave up permanently — nothing to kill
 		try { w.proc.kill('SIGKILL'); } catch { /* already gone */ }
 	}
 	server.close(() => process.exit(0));
