@@ -7,6 +7,7 @@ use PHPCraftdream\Garnet\Kernel\Db\Link\DbPool;
 use PHPCraftdream\Garnet\Kernel\Db\Link\NamedLock;
 use PHPCraftdream\Garnet\Kernel\Exceptions\DbException;
 use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+use ReflectionProperty;
 
 describe('NamedLock Integration', function (): void {
     $dbAvailable = false;
@@ -207,6 +208,119 @@ describe('NamedLock Integration', function (): void {
             NamedLock::release($lockName);
 
             expect(true)->toBe(true); // Just verify we got here
+        });
+
+        it('releases on the owning connection even when the pool has another free link busy with an async query (F-01 regression)', function () use (&$dbAvailable): void {
+            if (!$dbAvailable) {
+                return;
+            }
+
+            $lockName = 'test_named_lock_8';
+            NamedLock::release($lockName); // Clean up first
+
+            $pool = DbPool::get();
+
+            // Make sure the pool already has at least one OTHER free link
+            // sitting around before NamedLock acquires anything. Historically,
+            // DbPool::getLink() (used internally by QueryEx, which the old
+            // NamedLock implementation went through) hands out ANY currently
+            // idle link -- so having a decoy free link in the pool is what
+            // let RELEASE_LOCK land on the wrong connection.
+            $decoyLink = $pool->newLink();
+
+            // Acquire the named lock. With the fix, this pins the lock to
+            // whichever connection actually issued GET_LOCK, not to
+            // whatever DbPool::getLink() happens to return later.
+            $acquired = NamedLock::tryAcquire($lockName);
+            expect($acquired)->toBe(true);
+
+            // Now put the decoy link under an in-flight ASYNC query so it is
+            // "busy" for the rest of this test -- this reproduces the
+            // original bug's precondition where the owning connection would
+            // be busy and DbPool::getLink() would silently substitute some
+            // other free connection for RELEASE_LOCK. Here we deliberately
+            // leave the decoy (non-owning) link busy to prove release() does
+            // NOT depend on, or get confused by, pool link availability.
+            $decoyLink->queryAsync('SELECT SLEEP(0.2) AS s');
+            expect($decoyLink->isBusy())->toBe(true);
+
+            // Release must still succeed by routing RELEASE_LOCK to the
+            // exact connection that acquired the lock, regardless of what
+            // else is busy in the pool.
+            $exception = null;
+
+            try {
+                NamedLock::release($lockName);
+            } catch (DbException $e) {
+                $exception = $e;
+            }
+
+            expect($exception)->toBe(null);
+
+            // Drain the decoy's async query so it doesn't leak into other specs.
+            while ($decoyLink->isBusy()) {
+                $decoyLink->poll();
+            }
+
+            // The definitive proof the lock was actually released: a brand
+            // new, independent connection can now acquire the same name.
+            $verifyLink = $pool->newLink();
+            $result = $verifyLink->query('SELECT GET_LOCK(?, 0) AS lk', [$lockName]);
+
+            expect(is_array($result))->toBe(true);
+            expect(isset($result[0]['lk']))->toBe(true);
+            expect((int)$result[0]['lk'])->toBe(1);
+
+            // Clean up
+            $verifyLink->query('SELECT RELEASE_LOCK(?)', [$lockName]);
+        });
+
+        it('throws when RELEASE_LOCK reports this connection did not own the lock', function () use (&$dbAvailable): void {
+            if (!$dbAvailable) {
+                return;
+            }
+
+            $lockName = 'test_named_lock_9';
+            NamedLock::release($lockName); // Clean up first
+
+            $pool = DbPool::get();
+
+            // Acquire the lock via NamedLock (pins it to connection A,
+            // recorded in NamedLock's internal owner map).
+            $acquired = NamedLock::tryAcquire($lockName);
+            expect($acquired)->toBe(true);
+
+            // Take the lock away from connection A without NamedLock's
+            // knowledge: release it directly via the exact link NamedLock
+            // recorded (read via reflection on the protected owner map,
+            // since the public API intentionally does not expose the
+            // pinned connection), then have a second, independent
+            // connection acquire the same name. NamedLock still believes
+            // connection A owns it, so the next NamedLock::release() call
+            // must observe RELEASE_LOCK returning 0 (not the owner) and
+            // surface that as an error instead of silently returning.
+            $ownersProp = new ReflectionProperty(NamedLock::class, 'owners');
+            $ownersProp->setAccessible(true);
+            $owners = $ownersProp->getValue();
+            $ownerLinkA = $owners[$lockName];
+
+            $ownerLinkA->query('SELECT RELEASE_LOCK(?)', [$lockName]);
+
+            $rawLinkB = $pool->newLink();
+            $rawLinkB->query('SELECT GET_LOCK(?, 0) AS lk', [$lockName]);
+
+            $exception = null;
+
+            try {
+                NamedLock::release($lockName);
+            } catch (DbException $e) {
+                $exception = $e;
+            }
+
+            expect($exception)->toBeAnInstanceOf(DbException::class);
+
+            // Clean up: release from the connection that actually holds it.
+            $rawLinkB->query('SELECT RELEASE_LOCK(?)', [$lockName]);
         });
     });
 });
