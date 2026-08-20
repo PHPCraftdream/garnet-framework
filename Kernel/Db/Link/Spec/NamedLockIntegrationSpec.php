@@ -300,7 +300,6 @@ describe('NamedLock Integration', function (): void {
             // must observe RELEASE_LOCK returning 0 (not the owner) and
             // surface that as an error instead of silently returning.
             $ownersProp = new ReflectionProperty(NamedLock::class, 'owners');
-            $ownersProp->setAccessible(true);
             $owners = $ownersProp->getValue();
             $ownerLinkA = $owners[$lockName];
 
