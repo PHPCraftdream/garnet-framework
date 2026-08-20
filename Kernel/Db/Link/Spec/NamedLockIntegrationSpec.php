@@ -116,6 +116,47 @@ describe('NamedLock Integration', function (): void {
             // Clean up
             NamedLock::release($lockName);
         });
+
+        it('stays held until every acquire() has a matching release() (reentrancy hold-count regression)', function () use (&$dbAvailable): void {
+            if (!$dbAvailable) {
+                return;
+            }
+
+            $lockName = 'test_named_lock_reentrancy_holdcount';
+            NamedLock::release($lockName); // Clean up first
+
+            // Acquire the same name twice in this process (e.g. nested
+            // withAccountLock()/recalculate() calls in AccountBalance).
+            $result1 = NamedLock::tryAcquire($lockName);
+            expect($result1)->toBe(true);
+
+            $result2 = NamedLock::tryAcquire($lockName);
+            expect($result2)->toBe(true);
+
+            // First release() must NOT actually free the lock yet -- the
+            // hold count only drops from 2 to 1. Prove it's still held by
+            // trying (and failing) to acquire it from an independent
+            // connection in between the two release() calls.
+            NamedLock::release($lockName);
+
+            $pool = DbPool::get();
+            $probeLink = $pool->newLink();
+            $stillHeld = $probeLink->query('SELECT GET_LOCK(?, 0) AS lk', [$lockName]);
+
+            expect(is_array($stillHeld))->toBe(true);
+            expect((int)($stillHeld[0]['lk'] ?? null))->toBe(0);
+
+            // Second, matching release() must now actually free it.
+            NamedLock::release($lockName);
+
+            $result3 = $probeLink->query('SELECT GET_LOCK(?, 0) AS lk', [$lockName]);
+
+            expect(is_array($result3))->toBe(true);
+            expect((int)($result3[0]['lk'] ?? null))->toBe(1);
+
+            // Clean up
+            $probeLink->query('SELECT RELEASE_LOCK(?)', [$lockName]);
+        });
     });
 
     describe('acquire() with blocking timeout', function () use (&$dbAvailable): void {
@@ -275,6 +316,62 @@ describe('NamedLock Integration', function (): void {
             $verifyLink->query('SELECT RELEASE_LOCK(?)', [$lockName]);
         });
 
+        it('releases cleanly when the OWNING connection itself is busy with an async query (F-01 recommendation 3)', function () use (&$dbAvailable): void {
+            if (!$dbAvailable) {
+                return;
+            }
+
+            $lockName = 'test_named_lock_owner_busy';
+            NamedLock::release($lockName); // Clean up first
+
+            $pool = DbPool::get();
+
+            // Acquire the named lock. This pins it to whichever connection
+            // actually issued GET_LOCK.
+            $acquired = NamedLock::tryAcquire($lockName);
+            expect($acquired)->toBe(true);
+
+            // Get the real owning link via reflection (the public API
+            // intentionally does not expose the pinned connection) and put
+            // THAT SAME connection -- not a decoy -- under an in-flight
+            // async query. This reproduces the actual F-01 scenario: some
+            // unrelated code borrows the owning connection from DbPool's
+            // shared pool (e.g. via DbPool::getLink() for Account::saveData()
+            // -> insertBatchAsync()) while the named lock is held.
+            $ownersProp = new ReflectionProperty(NamedLock::class, 'owners');
+            $owners = $ownersProp->getValue();
+            $ownerLink = $owners[$lockName]['link'];
+
+            $ownerLink->queryAsync('SELECT SLEEP(0.2) AS s');
+            expect($ownerLink->isBusy())->toBe(true);
+
+            // release() must drain the in-flight async work on the owning
+            // connection itself and then complete successfully -- no throw,
+            // no orphaned lock -- instead of hitting query()'s "Link is
+            // busy" DbException.
+            $exception = null;
+
+            try {
+                NamedLock::release($lockName);
+            } catch (DbException $e) {
+                $exception = $e;
+            }
+
+            expect($exception)->toBe(null);
+
+            // Definitive proof the lock was actually released: an
+            // independent connection can now acquire the same name.
+            $verifyLink = $pool->newLink();
+            $result = $verifyLink->query('SELECT GET_LOCK(?, 0) AS lk', [$lockName]);
+
+            expect(is_array($result))->toBe(true);
+            expect(isset($result[0]['lk']))->toBe(true);
+            expect((int)$result[0]['lk'])->toBe(1);
+
+            // Clean up
+            $verifyLink->query('SELECT RELEASE_LOCK(?)', [$lockName]);
+        });
+
         it('throws when RELEASE_LOCK reports this connection did not own the lock', function () use (&$dbAvailable): void {
             if (!$dbAvailable) {
                 return;
@@ -301,7 +398,7 @@ describe('NamedLock Integration', function (): void {
             // surface that as an error instead of silently returning.
             $ownersProp = new ReflectionProperty(NamedLock::class, 'owners');
             $owners = $ownersProp->getValue();
-            $ownerLinkA = $owners[$lockName];
+            $ownerLinkA = $owners[$lockName]['link'];
 
             $ownerLinkA->query('SELECT RELEASE_LOCK(?)', [$lockName]);
 
