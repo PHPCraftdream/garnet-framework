@@ -20,7 +20,37 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
 
         protected static ?DbPool $instance = null;
 
+        /**
+         * @var list<callable(): void> Hooks invoked at the end of
+         *      closeAll(), after every mysqli handle has been closed and
+         *      $links emptied. Lets higher-level classes built on top of
+         *      DbPool (e.g. NamedLock, which pins connections outside the
+         *      normal getLink()-borrows-any-free-link path) discard their
+         *      own references to those now-closed connections without
+         *      DbPool having to know those classes exist. Registered via
+         *      onCloseAll(); intentionally NOT cleared by closeAll() itself
+         *      so the same hook keeps firing on every subsequent closeAll()
+         *      call in a long-running process (e.g. Kahlan running many
+         *      spec files back-to-back against the shared singleton).
+         */
+        protected static array $closeAllHooks = [];
+
         protected function __construct() {
+        }
+
+        /**
+         * Register a callback to run whenever closeAll() closes every
+         * connection this pool holds. See $closeAllHooks for why this
+         * exists instead of DbPool calling into higher-level classes
+         * directly: DbPool is the lower-level primitive here (NamedLock
+         * depends on DbPool, never the other way around), so the
+         * dependency is inverted into a subscription instead.
+         *
+         * @param callable(): void $hook
+         * @return void
+         */
+        public static function onCloseAll(callable $hook): void {
+            static::$closeAllHooks[] = $hook;
         }
 
         public static function get(): IDbPool {
@@ -374,6 +404,12 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
             }
 
             static::$instance->links = [];
+
+            // Let subscribers (e.g. NamedLock) discard their own references
+            // to the connections just closed above. See $closeAllHooks.
+            foreach (static::$closeAllHooks as $hook) {
+                $hook();
+            }
         }
     }
 }

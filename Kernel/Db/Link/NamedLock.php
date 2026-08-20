@@ -20,10 +20,10 @@ use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbMySQLiLink;
  * MySQL scopes advisory locks per-connection, and RELEASE_LOCK issued from
  * any other connection is a silent no-op (returns 0, lock stays held). This
  * class therefore pins each held lock name to the specific IDbMySQLiLink
- * that acquired it (via DbPool::newLink(), never the pool's shared
- * getLink()/QueryEx path, which can hand back a different, currently-free
- * connection on every call) and always routes both GET_LOCK and
- * RELEASE_LOCK for that name through the same link.
+ * that acquired it (via DbPool::newLink() through acquireLink(), never the
+ * pool's shared getLink()/QueryEx path, which can hand back a different,
+ * currently-free connection on every call) and always routes both GET_LOCK
+ * and RELEASE_LOCK for that name through the same link.
  *
  * Because the pinned link is pushed into DbPool's shared pool (newLink()
  * registers it there too), unrelated code elsewhere in the request can
@@ -31,6 +31,19 @@ use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbMySQLiLink;
  * while we hold the named lock. release() therefore drains any in-flight
  * async work on the pinned link (isBusy()/poll()) before issuing
  * RELEASE_LOCK, instead of letting query() throw "Link is busy".
+ *
+ * All distinct lock names acquired by this process share ONE dedicated
+ * connection (self::$sharedLink), opened lazily on the first acquire()
+ * and reused for every subsequent name, instead of opening a brand new
+ * connection per name. This is safe because MySQL's GET_LOCK/RELEASE_LOCK
+ * allow a single connection to hold multiple DIFFERENT named locks at
+ * once (only re-acquiring the SAME name replaces/reentrant-counts on that
+ * connection — see MySQL docs for GET_LOCK); self::$owners is already
+ * keyed per-name, so it naturally supports one connection backing many
+ * held locks simultaneously. Without this, a process taking N distinct
+ * named locks (e.g. a CLI job looping per-account locks) would leak N
+ * never-reclaimed connections into DbPool, pushing toward
+ * max_connections.
  */
 class NamedLock {
     /**
@@ -42,6 +55,73 @@ class NamedLock {
      *      reentrancy/hold-count semantics.
      */
     protected static array $owners = [];
+
+    /**
+     * @var IDbMySQLiLink|null The single connection shared by every
+     *      distinct lock name this process acquires (see class docblock).
+     *      Opened lazily by acquireLink() on first use. Reset to null by
+     *      reset() when it can no longer be assumed usable (e.g. after
+     *      DbPool::closeAll()), so the next acquire() opens a fresh one.
+     */
+    protected static ?IDbMySQLiLink $sharedLink = null;
+
+    /**
+     * @var bool Whether this class has already subscribed to
+     *      DbPool::onCloseAll(). Guards against registering the same
+     *      reset() callback multiple times (e.g. if this class is
+     *      "loaded" more than once in ways that re-run static init logic
+     *      in test processes).
+     */
+    protected static bool $closeAllHookRegistered = false;
+
+    /**
+     * Return the single connection shared across all lock names held by
+     * this process, opening it on first use. See class docblock for why
+     * one connection can safely back multiple distinct named locks.
+     *
+     * Also ensures this class is subscribed to DbPool::onCloseAll() so
+     * that reset() runs whenever the pool's connections are closed out
+     * from under us (see reset()'s docblock).
+     *
+     * @return IDbMySQLiLink
+     */
+    protected static function acquireLink(): IDbMySQLiLink {
+        if (!static::$closeAllHookRegistered) {
+            DbPool::onCloseAll(static function (): void {
+                static::reset();
+            });
+
+            static::$closeAllHookRegistered = true;
+        }
+
+        if (static::$sharedLink === null) {
+            static::$sharedLink = DbPool::get()->newLink();
+        }
+
+        return static::$sharedLink;
+    }
+
+    /**
+     * Discard all tracked lock ownership state without attempting to
+     * RELEASE_LOCK first.
+     *
+     * This is NOT a graceful release: it exists for the case where the
+     * underlying connections may already be closed/unusable (e.g. called
+     * from DbPool::closeAll() via the onCloseAll() hook, or a long-running
+     * CLI worker that reconnects periodically), so issuing RELEASE_LOCK
+     * queries here would itself fail. Clearing $owners and $sharedLink
+     * simply makes this process forget it was ever holding anything, so
+     * the next acquire() for any name starts clean with a fresh
+     * connection. Do NOT call this as a substitute for release() in normal
+     * control flow -- MySQL's own lock accounting is unaffected by this
+     * method; only this process's bookkeeping is reset.
+     *
+     * @return void
+     */
+    public static function reset(): void {
+        static::$owners = [];
+        static::$sharedLink = null;
+    }
 
     /**
      * Try to acquire a named advisory lock in non-blocking mode.
@@ -79,7 +159,7 @@ class NamedLock {
             return true;
         }
 
-        $link = DbPool::get()->newLink();
+        $link = static::acquireLink();
 
         $rows = $link->query('SELECT GET_LOCK(?, ?) AS lk', [$name, $timeoutSec]);
 

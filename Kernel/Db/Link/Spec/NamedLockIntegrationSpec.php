@@ -419,4 +419,103 @@ describe('NamedLock Integration', function (): void {
             $rawLinkB->query('SELECT RELEASE_LOCK(?)', [$lockName]);
         });
     });
+
+    describe('connection reuse across distinct lock names', function () use (&$dbAvailable): void {
+        it('does not grow the pool link count when acquiring N different lock names in sequence', function () use (&$dbAvailable): void {
+            if (!$dbAvailable) {
+                return;
+            }
+
+            $lockNames = [
+                'test_named_lock_reuse_1',
+                'test_named_lock_reuse_2',
+                'test_named_lock_reuse_3',
+                'test_named_lock_reuse_4',
+                'test_named_lock_reuse_5',
+            ];
+
+            foreach ($lockNames as $lockName) {
+                NamedLock::release($lockName); // Clean up first
+            }
+
+            $pool = DbPool::get();
+
+            // Prime the shared link (if not already open from an earlier
+            // test) and record the baseline pool size AFTER that, so this
+            // test only asserts on growth caused by acquiring further
+            // distinct names, not on whether NamedLock's shared link
+            // already happens to exist.
+            NamedLock::tryAcquire($lockNames[0]);
+            $baseline = $pool->getLinksCount();
+
+            // Acquire the remaining names, interleaving so multiple names
+            // are held at once at some point (2, 3 and 4 all held
+            // simultaneously before any release()).
+            expect(NamedLock::tryAcquire($lockNames[1]))->toBe(true);
+            expect(NamedLock::tryAcquire($lockNames[2]))->toBe(true);
+            expect(NamedLock::tryAcquire($lockNames[3]))->toBe(true);
+
+            // Release one while others are still held.
+            NamedLock::release($lockNames[1]);
+
+            expect(NamedLock::tryAcquire($lockNames[4]))->toBe(true);
+
+            expect($pool->getLinksCount())->toBe($baseline);
+
+            // Clean up remaining held locks.
+            NamedLock::release($lockNames[0]);
+            NamedLock::release($lockNames[2]);
+            NamedLock::release($lockNames[3]);
+            NamedLock::release($lockNames[4]);
+        });
+    });
+
+    describe('DbPool::closeAll() integration', function () use (&$dbAvailable): void {
+        it('clears NamedLock::$owners so a subsequent tryAcquire() works cleanly on a fresh connection', function () use (&$dbAvailable): void {
+            if (!$dbAvailable) {
+                return;
+            }
+
+            $lockName = 'test_named_lock_close_all';
+            NamedLock::release($lockName); // Clean up first
+
+            $acquired = NamedLock::tryAcquire($lockName);
+            expect($acquired)->toBe(true);
+
+            $ownersPropBefore = new ReflectionProperty(NamedLock::class, 'owners');
+            $ownersBefore = $ownersPropBefore->getValue();
+
+            expect(isset($ownersBefore[$lockName]))->toBe(true);
+
+            // Simulate the connection lifecycle event this is guarding
+            // against: the pool closes every mysqli handle it knows about,
+            // including the one NamedLock pinned for this lock name.
+            DbPool::closeAll();
+
+            $ownersPropAfter = new ReflectionProperty(NamedLock::class, 'owners');
+            $ownersAfter = $ownersPropAfter->getValue();
+
+            // No stale reference to the now-closed connection should
+            // remain.
+            expect($ownersAfter)->toBe([]);
+
+            // A subsequent tryAcquire() for the same name must work
+            // cleanly on a fresh connection -- no attempt to touch the
+            // closed handle.
+            $exception = null;
+
+            try {
+                $reacquired = NamedLock::tryAcquire($lockName);
+            } catch (DbException $e) {
+                $exception = $e;
+                $reacquired = false;
+            }
+
+            expect($exception)->toBe(null);
+            expect($reacquired)->toBe(true);
+
+            // Clean up.
+            NamedLock::release($lockName);
+        });
+    });
 });
