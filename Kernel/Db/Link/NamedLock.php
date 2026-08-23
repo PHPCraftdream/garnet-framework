@@ -2,6 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Db\Link;
 
+use mysqli_sql_exception;
 use PHPCraftdream\Garnet\Kernel\Exceptions\DbException;
 use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbMySQLiLink;
 
@@ -44,6 +45,16 @@ use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbMySQLiLink;
  * named locks (e.g. a CLI job looping per-account locks) would leak N
  * never-reclaimed connections into DbPool, pushing toward
  * max_connections.
+ *
+ * The shared connection is not liveness-checked on reuse: acquireLink()
+ * only tests self::$sharedLink for null. A link that died naturally on
+ * the server side (wait_timeout expiry, KILL CONNECTION, network drop)
+ * is instead detected reactively, inside acquire(): the mysqli
+ * "connection is gone" error signature on the GET_LOCK query triggers
+ * a discard of all tracking state (MySQL released every lock the dead
+ * session held when it dropped the session) and a single retry on a
+ * freshly opened link. See the catch inside acquire() and
+ * isConnectionGoneException().
  */
 class NamedLock {
     /**
@@ -61,7 +72,9 @@ class NamedLock {
      *      distinct lock name this process acquires (see class docblock).
      *      Opened lazily by acquireLink() on first use. Reset to null by
      *      reset() when it can no longer be assumed usable (e.g. after
-     *      DbPool::closeAll()), so the next acquire() opens a fresh one.
+     *      DbPool::closeAll()), so the next acquire() opens a fresh one;
+     *      acquire() also replaces it reactively when the underlying
+     *      connection has died naturally (see the catch in acquire()).
      */
     protected static ?IDbMySQLiLink $sharedLink = null;
 
@@ -102,6 +115,41 @@ class NamedLock {
     }
 
     /**
+     * Whether $e is the signature of the shared connection being gone,
+     * as surfaced through DbMySQLiLink::query()'s wrapping: the previous
+     * exception is the mysqli driver error CR_SERVER_GONE_ERROR (2006,
+     * "MySQL server has gone away") or CR_SERVER_LOST (2013, "Lost
+     * connection to MySQL server during query") -- what a query sees
+     * after the server dropped the session (wait_timeout expiry,
+     * KILL CONNECTION, network drop).
+     *
+     * Deliberately narrow so acquire()'s retry-once path can never mask
+     * an unrelated failure: it matches neither the wrapper's own
+     * "Link is busy" DbException (which has no previous exception at
+     * all) nor any other mysqli error code. The codes are read off the
+     * previous mysqli_sql_exception (the driver's own classification)
+     * rather than the wrapping DbException.
+     *
+     * This recognizes the default mysqli error mode (PHP 8.1+ throws
+     * mysqli_sql_exception). Apps that explicitly disable mysqli error
+     * reporting see a different shape, which this intentionally does
+     * not match -- the framework does not defend against dead
+     * connections anywhere else either.
+     *
+     * @param DbException $e
+     * @return bool
+     */
+    protected static function isConnectionGoneException(DbException $e): bool {
+        $previous = $e->getPrevious();
+
+        if (!$previous instanceof mysqli_sql_exception) {
+            return false;
+        }
+
+        return in_array($previous->getCode(), [2006, 2013], true);
+    }
+
+    /**
      * Discard all tracked lock ownership state without attempting to
      * RELEASE_LOCK first.
      *
@@ -115,6 +163,23 @@ class NamedLock {
      * connection. Do NOT call this as a substitute for release() in normal
      * control flow -- MySQL's own lock accounting is unaffected by this
      * method; only this process's bookkeeping is reset.
+     *
+     * Deliberately does NOT close the underlying mysqli handle before
+     * nulling $sharedLink, for two reasons:
+     *
+     *  1. Its primary caller is the DbPool::onCloseAll() hook, which
+     *     runs AFTER closeAll() has already closed every handle; closing
+     *     again would throw \Error ("mysqli object is already closed",
+     *     PHP 8.1+) out of the middle of closeAll().
+     *  2. For the manual CLI-worker use case the link stays registered
+     *     in DbPool's shared list (there is no removal API): a locally
+     *     closed handle still looks idle to DbPool::getLink() (isBusy()
+     *     is wrapper state, not connection state), so unrelated queries
+     *     would be handed a dead handle -- and a later closeAll() would
+     *     hit the same double-close \Error. The companion call for
+     *     actually retiring the connection is DbPool::closeAll() itself,
+     *     which closes every handle (releasing all its locks
+     *     server-side) and then triggers this reset via the hook.
      *
      * @return void
      */
@@ -161,7 +226,38 @@ class NamedLock {
 
         $link = static::acquireLink();
 
-        $rows = $link->query('SELECT GET_LOCK(?, ?) AS lk', [$name, $timeoutSec]);
+        try {
+            $rows = $link->query('SELECT GET_LOCK(?, ?) AS lk', [$name, $timeoutSec]);
+        } catch (DbException $e) {
+            // Since every name shares ONE link, a single natural
+            // connection death would otherwise poison locking for the
+            // whole process: every subsequent acquire() for ANY name
+            // would query the dead handle. Retry once on a fresh link,
+            // but ONLY for the well-identified "connection is gone"
+            // mysqli signature -- unrelated failures are rethrown
+            // untouched, since blanket-retrying those could mask real
+            // bugs.
+            if (!static::isConnectionGoneException($e)) {
+                throw $e;
+            }
+
+            // The retry cannot double-hold anything: advisory locks are
+            // per-connection and MySQL released everything the dead
+            // session held when it dropped the session, so the failed
+            // GET_LOCK never took (or no longer holds) effect.
+            //
+            // reset() also discards every $owners entry: they all pin
+            // names to this same dead link (all names share it), and
+            // acquire()'s reentrant fast path above would otherwise
+            // return true for names MySQL no longer holds for us -- the
+            // same stale-bookkeeping lie task #177 guarded release()
+            // against.
+            static::reset();
+
+            $link = static::acquireLink();
+
+            $rows = $link->query('SELECT GET_LOCK(?, ?) AS lk', [$name, $timeoutSec]);
+        }
 
         if (!is_array($rows)) {
             return false;

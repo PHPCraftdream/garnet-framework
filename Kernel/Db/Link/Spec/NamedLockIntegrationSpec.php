@@ -602,6 +602,98 @@ describe('NamedLock Integration', function (): void {
         });
     });
 
+    describe('dead shared link recovery', function () use (&$dbAvailable): void {
+        it('recovers on a fresh connection when the shared link dies server-side, purging stale owners (#180 regression)', function () use (&$dbAvailable): void {
+            if (!$dbAvailable) {
+                return;
+            }
+
+            $lockNameA = 'test_named_lock_dead_recovery_a';
+            $lockNameB = 'test_named_lock_dead_recovery_b';
+
+            NamedLock::release($lockNameA); // Clean up first
+            NamedLock::release($lockNameB); // Clean up first
+
+            $pool = DbPool::get();
+
+            // Acquire lock A through NamedLock: primes the shared link
+            // (if an earlier test has not already) and pins A to it.
+            $acquiredA = NamedLock::tryAcquire($lockNameA);
+            expect($acquiredA)->toBe(true);
+
+            // Read the shared link via reflection (the public API
+            // intentionally does not expose it) and ask MySQL which
+            // server-side connection id it currently is.
+            $sharedProp = new ReflectionProperty(NamedLock::class, 'sharedLink');
+            $sharedLink = $sharedProp->getValue();
+
+            $idRows = $sharedLink->query('SELECT CONNECTION_ID() AS id', []);
+            $connId = (int)($idRows[0]['id'] ?? 0);
+            expect($connId)->toBeGreaterThan(0);
+
+            // Kill the shared connection SERVER-SIDE from an independent
+            // connection. This is the faithful simulation of a natural
+            // death (wait_timeout expiry, KILL CONNECTION, network
+            // drop): the next query on the link sees exactly the
+            // production failure shape, mysqli 2006 "MySQL server has
+            // gone away" (or 2013 "lost connection"). A local
+            // ->close() would produce a different, non-production
+            // failure shape ("mysqli object is already closed").
+            $killer = $pool->newLink();
+            $killer->query("KILL CONNECTION {$connId}", []);
+            usleep(100000); // let the server finish dropping the session
+
+            // A tryAcquire() for a DIFFERENT name must recover: detect
+            // the dead shared link, open a fresh one and get the lock.
+            // Before the fix this threw DbException for every name in
+            // this process from here on.
+            $acquiredB = NamedLock::tryAcquire($lockNameB);
+            expect($acquiredB)->toBe(true);
+
+            // The retry must have happened on a genuinely new link...
+            $newSharedLink = $sharedProp->getValue();
+            expect($newSharedLink === $sharedLink)->toBe(false);
+
+            // ...that really holds B (an independent connection cannot
+            // take it)...
+            $verify = $pool->newLink();
+
+            $resultB = $verify->query('SELECT GET_LOCK(?, 0) AS lk', [$lockNameB]);
+            expect(is_array($resultB))->toBe(true);
+            expect(isset($resultB[0]['lk']))->toBe(true);
+            expect((int)$resultB[0]['lk'])->toBe(0);
+
+            // ...while A's stale bookkeeping must have been purged too:
+            // MySQL auto-released A when it killed the session, so the
+            // independent connection can now take A cleanly.
+            $resultA = $verify->query('SELECT GET_LOCK(?, 0) AS lk', [$lockNameA]);
+            expect(is_array($resultA))->toBe(true);
+            expect(isset($resultA[0]['lk']))->toBe(true);
+            expect((int)$resultA[0]['lk'])->toBe(1);
+
+            // And release() of B must work, routing to the new owning
+            // link.
+            $exception = null;
+
+            try {
+                NamedLock::release($lockNameB);
+            } catch (DbException $e) {
+                $exception = $e;
+            }
+
+            expect($exception)->toBe(null);
+
+            $resultB2 = $verify->query('SELECT GET_LOCK(?, 0) AS lk', [$lockNameB]);
+            expect(is_array($resultB2))->toBe(true);
+            expect(isset($resultB2[0]['lk']))->toBe(true);
+            expect((int)$resultB2[0]['lk'])->toBe(1);
+
+            // Clean up
+            $verify->query('SELECT RELEASE_LOCK(?)', [$lockNameA]);
+            $verify->query('SELECT RELEASE_LOCK(?)', [$lockNameB]);
+        });
+    });
+
     describe('DbPool::closeAll() integration', function () use (&$dbAvailable): void {
         it('clears NamedLock::$owners so a subsequent tryAcquire() works cleanly on a fresh connection', function () use (&$dbAvailable): void {
             if (!$dbAvailable) {
