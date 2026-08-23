@@ -205,7 +205,7 @@ class NamedLock {
      *
      * Because the pinned link is shared-pool-visible, unrelated code may be
      * running an async query on it when this is called. We drain that
-     * in-flight work first (isBusy()/poll()) instead of letting
+     * in-flight work first (via DbPool::pollLinks()) instead of letting
      * RELEASE_LOCK's query() throw "Link is busy" — that failure mode has
      * nothing to do with lock ownership and must not orphan the lock.
      *
@@ -232,11 +232,16 @@ class NamedLock {
      *                      connection (NULL) — either indicates a state bug
      *                      rather than a normal double-release. This is
      *                      deliberately still allowed to throw (unlike the
-     *                      busy-link case above, which is drained and never
-     *                      throws): a "you don't own this lock" result means
+     *                      busy-link case above, which is drained silently
+     *                      and only throws if its bounded drain deadline
+     *                      expires): a "you don't own this lock" result means
      *                      something outside this class already released it
      *                      behind our back, which is a real bug worth
      *                      surfacing loudly rather than swallowing.
+     *                      Separately, draining a busy owning link is
+     *                      bounded by DbPool::pollLinks()' deadline, whose
+     *                      timeout DbException propagates (see the inline
+     *                      comment in release()).
      */
     public static function release(string $name): void {
         $owner = static::$owners[$name] ?? null;
@@ -265,9 +270,29 @@ class NamedLock {
             // unrelated code that borrowed it from DbPool's shared pool
             // before issuing RELEASE_LOCK, so we never hit query()'s
             // "Link is busy" DbException here.
-            while ($link->isBusy()) {
-                $link->poll();
-            }
+            //
+            // Delegated to DbPool::pollLinks() (finishAll=true) instead of
+            // a hand-rolled `while (isBusy()) poll()` loop: poll() wraps a
+            // NON-blocking mysqli_poll(..., 0), so such a loop is a 100%-CPU
+            // busy-spin (~82k iterations/s measured) for the whole duration
+            // of the in-flight query -- and an unbounded hang if the link
+            // never goes idle. pollLinks() waits in a real 50ms kernel-level
+            // mysqli_poll() per iteration and enforces the same bounded
+            // deadline as pollFinishAll().
+            //
+            // If that deadline expires while the link is still busy,
+            // pollLinks()' own purpose-built timeout DbException propagates;
+            // release() does NOT proceed to RELEASE_LOCK on a still-busy
+            // link (that would only trade the clear timeout error for
+            // query()'s opaque "Link is busy"). This follows the existing
+            // precedent: every other pollLinks()/pollFinishAll() caller
+            // (Account::readDataAsyncPollFinishAll(),
+            // Session::readDataAsyncPollFinishAll()) likewise lets the
+            // timeout DbException bubble up and merely declares @throws.
+            // The finally below still drops the $owners entry in that case,
+            // so a timed-out release cannot leave a stale-owner corpse.
+            $links = [$link];
+            DbPool::pollLinks($links);
 
             $rows = $link->query('SELECT RELEASE_LOCK(?) AS lk', [$name]);
 

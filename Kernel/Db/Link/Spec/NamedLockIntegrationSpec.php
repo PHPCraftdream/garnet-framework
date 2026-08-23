@@ -372,6 +372,77 @@ describe('NamedLock Integration', function (): void {
             $verifyLink->query('SELECT RELEASE_LOCK(?)', [$lockName]);
         });
 
+        it('drains a busy owning link without busy-spinning (bounded CPU across SELECT SLEEP(0.3))', function () use (&$dbAvailable): void {
+            if (!$dbAvailable) {
+                return;
+            }
+
+            $lockName = 'test_named_lock_owner_busy_drain_no_spin';
+            NamedLock::release($lockName); // Clean up first
+
+            $pool = DbPool::get();
+
+            $acquired = NamedLock::tryAcquire($lockName);
+            expect($acquired)->toBe(true);
+
+            // Put the OWNING connection under an in-flight async query with
+            // a fixed 0.3s duration, so release() has real work to drain
+            // (same reflection approach as the F-01 test above: the public
+            // API intentionally does not expose the pinned connection).
+            $ownersProp = new ReflectionProperty(NamedLock::class, 'owners');
+            $owners = $ownersProp->getValue();
+            $ownerLink = $owners[$lockName]['link'];
+
+            $ownerLink->queryAsync('SELECT SLEEP(0.3) AS s');
+            expect($ownerLink->isBusy())->toBe(true);
+
+            // Measure wall-clock AND process CPU time across release().
+            // The old drain loop (`while (isBusy()) poll()`) wrapped a
+            // NON-blocking mysqli_poll(..., 0), i.e. a 100%-CPU spin that
+            // burns roughly cpu == elapsed (~0.3s here). The pollLinks()
+            // drain must still take >= ~0.3s of wall time (it genuinely
+            // waits for the query) while consuming almost no CPU.
+            $cpuOf = static fn (array $ru): float => (float)$ru['ru_utime.tv_sec'] + (float)$ru['ru_stime.tv_sec']
+                    + ((float)$ru['ru_utime.tv_usec'] + (float)$ru['ru_stime.tv_usec']) / 1000000.0;
+
+            $cpuBefore = $cpuOf(getrusage());
+            $startWall = microtime(true);
+
+            $exception = null;
+
+            try {
+                NamedLock::release($lockName);
+            } catch (DbException $e) {
+                $exception = $e;
+            }
+
+            $elapsed = microtime(true) - $startWall;
+            $cpuUsed = $cpuOf(getrusage()) - $cpuBefore;
+
+            expect($exception)->toBe(null);
+
+            // The drain genuinely waited out the async query...
+            expect($elapsed)->toBeGreaterThan(0.28);
+
+            // ...without burning CPU while waiting. Against the old
+            // busy-spin this fails loudly (cpuUsed ~= 0.3s); the 0.15s
+            // margin leaves room for the handful of real milliseconds of
+            // RELEASE_LOCK round-trip work plus CI jitter.
+            expect($cpuUsed)->toBeLessThan(0.15);
+
+            // Definitive proof the lock was actually released: an
+            // independent connection can now acquire the same name.
+            $verifyLink = $pool->newLink();
+            $result = $verifyLink->query('SELECT GET_LOCK(?, 0) AS lk', [$lockName]);
+
+            expect(is_array($result))->toBe(true);
+            expect(isset($result[0]['lk']))->toBe(true);
+            expect((int)$result[0]['lk'])->toBe(1);
+
+            // Clean up
+            $verifyLink->query('SELECT RELEASE_LOCK(?)', [$lockName]);
+        });
+
         it('throws when RELEASE_LOCK reports this connection did not own the lock', function () use (&$dbAvailable): void {
             if (!$dbAvailable) {
                 return;
