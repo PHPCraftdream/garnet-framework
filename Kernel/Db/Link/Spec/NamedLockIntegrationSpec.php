@@ -748,7 +748,7 @@ describe('NamedLock Integration', function (): void {
             $ownersProp = new ReflectionProperty(NamedLock::class, 'owners');
             $owners = $ownersProp->getValue();
             $owners[$lockName]['releasePending'] = true;
-            $ownersProp->setValue($owners);
+            $ownersProp->setValue(null, $owners);
 
             // This acquire() must FIRST finish the pending release
             // (RELEASE_LOCK really issued, MySQL hold count back to 0)
