@@ -209,11 +209,21 @@ class NamedLock {
      * RELEASE_LOCK's query() throw "Link is busy" — that failure mode has
      * nothing to do with lock ownership and must not orphan the lock.
      *
-     * The $owners entry for this name is only removed AFTER RELEASE_LOCK
-     * has actually succeeded (or after we've decided not to retry it). If
-     * the query throws for a genuine state error (see below), the entry is
-     * intentionally left in place so a subsequent release() call can retry
-     * rather than silently forgetting a lock that MySQL still holds.
+     * The $owners entry for this name is ALWAYS resolved once release()
+     * reaches the actual RELEASE_LOCK attempt, no matter how that attempt
+     * ends -- success, a 0/NULL "you don't own it" state error, or a
+     * genuine exception thrown by the drain/query itself (e.g. a dead
+     * connection). See the try/finally inside. A stale entry must never
+     * survive a failed release: acquire()'s reentrant fast path trusts it
+     * and would return true WITHOUT a real GET_LOCK, so callers would
+     * believe they hold a lock MySQL never granted them (mutual exclusion
+     * silently void -- unacceptable on money paths like AccountBalance).
+     * Forgetting the entry is the safe direction: the next acquire()
+     * re-issues a real GET_LOCK (instant and reentrant if this connection
+     * still holds the name; correctly refused if someone else does), and a
+     * failed release() could never be retried into success anyway -- 0/NULL
+     * mean MySQL itself knows this connection does not own the lock, and a
+     * dead connection has already had all its locks released by the server.
      *
      * @param string $name The lock name to release.
      * @return void
@@ -244,33 +254,41 @@ class NamedLock {
 
         $link = $owner['link'];
 
-        // Drain any in-flight async query left on this connection by
-        // unrelated code that borrowed it from DbPool's shared pool before
-        // issuing RELEASE_LOCK, so we never hit query()'s "Link is busy"
-        // DbException here.
-        while ($link->isBusy()) {
-            $link->poll();
+        // Everything from here on can fail in ways we cannot recover from
+        // by keeping the $owners entry (see docblock): the drain may throw
+        // on a dead connection, query() may throw ("MySQL server has gone
+        // away" etc.), or the 0/NULL state errors below throw deliberately.
+        // In ALL of those cases the entry must be dropped, never left as a
+        // corpse that acquire()'s reentrant fast path would blindly trust.
+        try {
+            // Drain any in-flight async query left on this connection by
+            // unrelated code that borrowed it from DbPool's shared pool
+            // before issuing RELEASE_LOCK, so we never hit query()'s
+            // "Link is busy" DbException here.
+            while ($link->isBusy()) {
+                $link->poll();
+            }
+
+            $rows = $link->query('SELECT RELEASE_LOCK(?) AS lk', [$name]);
+
+            $first = is_array($rows) ? ($rows[0] ?? null) : null;
+            $raw = is_array($first) ? ($first['lk'] ?? null) : null;
+
+            // RELEASE_LOCK returns: 1 = released, 0 = held by someone else /
+            // not owned by this connection, NULL = lock name did not exist.
+            if ($raw === null) {
+                throw new DbException(
+                    "RELEASE_LOCK('{$name}') returned NULL: lock did not exist on its owning connection"
+                );
+            }
+
+            if ((int)$raw !== 1) {
+                throw new DbException(
+                    "RELEASE_LOCK('{$name}') returned {$raw}: this connection did not own the lock"
+                );
+            }
+        } finally {
+            unset(static::$owners[$name]);
         }
-
-        $rows = $link->query('SELECT RELEASE_LOCK(?) AS lk', [$name]);
-
-        $first = is_array($rows) ? ($rows[0] ?? null) : null;
-        $raw = is_array($first) ? ($first['lk'] ?? null) : null;
-
-        // RELEASE_LOCK returns: 1 = released, 0 = held by someone else / not
-        // owned by this connection, NULL = lock name did not exist.
-        if ($raw === null) {
-            throw new DbException(
-                "RELEASE_LOCK('{$name}') returned NULL: lock did not exist on its owning connection"
-            );
-        }
-
-        if ((int)$raw !== 1) {
-            throw new DbException(
-                "RELEASE_LOCK('{$name}') returned {$raw}: this connection did not own the lock"
-            );
-        }
-
-        unset(static::$owners[$name]);
     }
 }

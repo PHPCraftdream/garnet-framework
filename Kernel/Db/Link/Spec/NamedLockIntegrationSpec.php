@@ -418,6 +418,67 @@ describe('NamedLock Integration', function (): void {
             // Clean up: release from the connection that actually holds it.
             $rawLinkB->query('SELECT RELEASE_LOCK(?)', [$lockName]);
         });
+
+        it('recovers after release() throws: no stale $owners entry, next tryAcquire() does a real GET_LOCK (#177 regression)', function () use (&$dbAvailable): void {
+            if (!$dbAvailable) {
+                return;
+            }
+
+            $lockName = 'test_named_lock_release_throw_recovery';
+            NamedLock::release($lockName); // Clean up first
+
+            $pool = DbPool::get();
+
+            // Acquire via NamedLock: pins the lock to connection A (the
+            // shared link) and records an $owners entry for it.
+            $acquired = NamedLock::tryAcquire($lockName);
+            expect($acquired)->toBe(true);
+
+            // Sabotage the ownership state behind NamedLock's back:
+            // release the lock directly on connection A (read via
+            // reflection, since the public API does not expose the pinned
+            // connection), then have an independent connection B take the
+            // same name. MySQL now holds this lock for B; NamedLock still
+            // believes A owns it.
+            $ownersProp = new ReflectionProperty(NamedLock::class, 'owners');
+            $owners = $ownersProp->getValue();
+            $ownerLinkA = $owners[$lockName]['link'];
+
+            $ownerLinkA->query('SELECT RELEASE_LOCK(?)', [$lockName]);
+
+            $linkB = $pool->newLink();
+            $linkB->query('SELECT GET_LOCK(?, 0) AS lk', [$lockName]);
+
+            // release() must observe RELEASE_LOCK returning 0 (connection
+            // A no longer owns the lock) and throw the state error...
+            $exception = null;
+
+            try {
+                NamedLock::release($lockName);
+            } catch (DbException $e) {
+                $exception = $e;
+            }
+
+            expect($exception)->toBeAnInstanceOf(DbException::class);
+
+            // ...and, critically, must not leave a stale $owners entry
+            // behind. The next tryAcquire() has to issue a REAL GET_LOCK
+            // against MySQL instead of trusting bookkeeping and blindly
+            // returning true. Connection B genuinely holds the lock at
+            // this point, so a real query returns 0 and tryAcquire()
+            // must return false. (Against the bug, the stale entry hits
+            // the reentrant fast path, skips the query entirely, returns
+            // true -- silently voiding mutual exclusion for B.)
+            $reacquired = NamedLock::tryAcquire($lockName);
+
+            expect($reacquired)->toBe(false);
+
+            $ownersAfter = $ownersProp->getValue();
+            expect(isset($ownersAfter[$lockName]))->toBe(false);
+
+            // Clean up: release from the connection that actually holds it.
+            $linkB->query('SELECT RELEASE_LOCK(?)', [$lockName]);
+        });
     });
 
     describe('connection reuse across distinct lock names', function () use (&$dbAvailable): void {
