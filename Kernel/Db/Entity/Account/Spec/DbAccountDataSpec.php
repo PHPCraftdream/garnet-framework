@@ -13,6 +13,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Account {
     // getAllUsersData() builds without requiring a live MySQL connection.
     class RecordingDbPool implements IDbPool {
         public array $queries = [];
+
         public array $rows = [];
 
         public function newLink(): IDbMySQLiLink {
