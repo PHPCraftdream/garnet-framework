@@ -67,14 +67,12 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Account {
 
                 $reflectionQueryEx = new ReflectionClass(QueryEx::class);
                 $propQueryEx = $reflectionQueryEx->getProperty('instance');
-                $propQueryEx->setAccessible(true);
                 $propQueryEx->setValue(null, new QueryEx($this->recordingPool));
             });
 
             afterEach(function (): void {
                 $reflectionQueryEx = new ReflectionClass(QueryEx::class);
                 $propQueryEx = $reflectionQueryEx->getProperty('instance');
-                $propQueryEx->setAccessible(true);
                 $propQueryEx->setValue(null, null);
             });
 
