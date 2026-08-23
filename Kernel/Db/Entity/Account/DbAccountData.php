@@ -66,8 +66,6 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Account {
                 $name = $item['param'];
 
                 if (empty($namesMap[$name])) {
-                    $result[$name] = null;
-
                     continue;
                 }
 

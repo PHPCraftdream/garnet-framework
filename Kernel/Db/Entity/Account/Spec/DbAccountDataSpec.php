@@ -13,6 +13,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Account {
     // getAllUsersData() builds without requiring a live MySQL connection.
     class RecordingDbPool implements IDbPool {
         public array $queries = [];
+        public array $rows = [];
 
         public function newLink(): IDbMySQLiLink {
             throw new RuntimeException('Not implemented in mock');
@@ -29,7 +30,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Account {
         public function query(string $sql, array $args = []): array|int|string|bool {
             $this->queries[] = ['sql' => $sql, 'args' => $args];
 
-            return [];
+            return $this->rows;
         }
 
         public function poll(): void {
@@ -115,6 +116,21 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Account {
 
                 expect($result)->toBe([]);
                 expect(count($this->recordingPool->queries))->toBe(0);
+            });
+
+            it('skips rows whose param matches only case-insensitively (utf8mb4_general_ci) instead of polluting the result with a param-name key', function (): void {
+                // The SQL `WHERE param IN (...)` filter matches case-insensitively under
+                // utf8mb4_general_ci, so MySQL can hand back a row whose `param` differs
+                // from every requested name only by case. The exact $namesMap lookup then
+                // misses it; such a row must be skipped, never written under a param-name key.
+                $this->recordingPool->rows = [
+                    ['account_id' => '101', 'param' => 'IS_APPROVED', 'value' => '1'],
+                    ['account_id' => '102', 'param' => 'is_approved', 'value' => '1'],
+                ];
+
+                $result = DbAccountData::getAllUsersData(['IS_APPROVED']);
+
+                expect($result)->toBe(['101' => ['IS_APPROVED' => 1]]);
             });
         });
 
