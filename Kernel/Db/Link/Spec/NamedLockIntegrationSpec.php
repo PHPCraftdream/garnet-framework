@@ -3,10 +3,12 @@
 namespace PHPCraftdream\Garnet\Kernel\Db\Link\Spec;
 
 use Exception;
+use mysqli_sql_exception;
 use PHPCraftdream\Garnet\Kernel\Db\Link\DbPool;
 use PHPCraftdream\Garnet\Kernel\Db\Link\NamedLock;
 use PHPCraftdream\Garnet\Kernel\Exceptions\DbException;
 use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+use ReflectionMethod;
 use ReflectionProperty;
 
 describe('NamedLock Integration', function (): void {
@@ -550,6 +552,59 @@ describe('NamedLock Integration', function (): void {
             // Clean up: release from the connection that actually holds it.
             $linkB->query('SELECT RELEASE_LOCK(?)', [$lockName]);
         });
+
+        it('completes the release when the drain reaps a FAILED async query and the link is idle again (#184 regression)', function () use (&$dbAvailable): void {
+            if (!$dbAvailable) {
+                return;
+            }
+
+            $lockName = 'test_named_lock_release_drain_error';
+            NamedLock::release($lockName); // Clean up first
+
+            $pool = DbPool::get();
+
+            expect(NamedLock::tryAcquire($lockName))->toBe(true);
+
+            // Unrelated code borrows the OWNING link (read via reflection,
+            // same technique as the tests above) and dispatches an async
+            // query that FAILS server-side (unknown table). The failure
+            // surfaces only when release()'s drain reaps it -- and
+            // DbMySQLiLink::poll() clears the link's busy flag in its
+            // catch BEFORE rethrowing, so the link is actually idle by
+            // the time the drain exception reaches release(). A release
+            // abandoned here (pre-#184 behavior) left MySQL's advisory
+            // hold count permanently un-decremented.
+            $ownersProp = new ReflectionProperty(NamedLock::class, 'owners');
+            $owners = $ownersProp->getValue();
+            $ownerLink = $owners[$lockName]['link'];
+
+            $ownerLink->queryAsync('SELECT * FROM test_named_lock_no_such_table_xyz');
+            expect($ownerLink->isBusy())->toBe(true);
+
+            $exception = null;
+
+            try {
+                NamedLock::release($lockName);
+            } catch (DbException $e) {
+                $exception = $e;
+            }
+
+            // The failed async query was not ours; the release itself must
+            // still complete.
+            expect($exception)->toBe(null);
+
+            // Definitive proof the lock was actually released: an
+            // independent connection can now acquire the same name.
+            $verifyLink = $pool->newLink();
+            $result = $verifyLink->query('SELECT GET_LOCK(?, 0) AS lk', [$lockName]);
+
+            expect(is_array($result))->toBe(true);
+            expect(isset($result[0]['lk']))->toBe(true);
+            expect((int)$result[0]['lk'])->toBe(1);
+
+            // Clean up
+            $verifyLink->query('SELECT RELEASE_LOCK(?)', [$lockName]);
+        });
     });
 
     describe('connection reuse across distinct lock names', function () use (&$dbAvailable): void {
@@ -599,6 +654,193 @@ describe('NamedLock Integration', function (): void {
             NamedLock::release($lockNames[2]);
             NamedLock::release($lockNames[3]);
             NamedLock::release($lockNames[4]);
+        });
+    });
+
+    describe('release-pending policy on a genuine drain timeout (#185)', function () use (&$dbAvailable): void {
+        it('keeps the entry as release-pending on a genuine drain timeout, and a later release() completes it', function () use (&$dbAvailable): void {
+            if (!$dbAvailable) {
+                return;
+            }
+
+            $lockName = 'test_named_lock_release_timeout_pending';
+            NamedLock::release($lockName); // Clean up first
+
+            $pool = DbPool::get();
+
+            expect(NamedLock::tryAcquire($lockName))->toBe(true);
+
+            $ownersProp = new ReflectionProperty(NamedLock::class, 'owners');
+
+            // Genuinely busy for longer than DbPool::pollLinks()' whole
+            // 10s drain deadline: RELEASE_LOCK truly cannot be attempted
+            // while this runs. This test therefore takes ~12s by design.
+            $ownerLink = $ownersProp->getValue()[$lockName]['link'];
+            $ownerLink->queryAsync('SELECT SLEEP(11.5) AS s');
+            expect($ownerLink->isBusy())->toBe(true);
+
+            $exception = null;
+
+            try {
+                NamedLock::release($lockName);
+            } catch (DbException $e) {
+                $exception = $e;
+            }
+
+            // The bounded-deadline timeout still surfaces loudly...
+            expect($exception)->toBeAnInstanceOf(DbException::class);
+            expect($exception->getMessage())->toContain('timed out');
+
+            // ...but the release is PENDING, not silently forgotten: the
+            // entry survives, flagged, still pinned to the busy link.
+            // (Pre-#185 behavior: the entry was dropped outright, leaking
+            // MySQL's hold count forever.)
+            $ownersAfter = $ownersProp->getValue();
+
+            expect(isset($ownersAfter[$lockName]))->toBe(true);
+            expect(($ownersAfter[$lockName]['releasePending'] ?? null))->toBe(true);
+            expect($ownerLink->isBusy())->toBe(true);
+
+            // Once the unrelated work is done (link idle again), a later
+            // release() for the same name completes the pending
+            // RELEASE_LOCK.
+            $drain = [$ownerLink];
+            DbPool::pollLinks($drain);
+            expect($ownerLink->isBusy())->toBe(false);
+
+            $exception = null;
+
+            try {
+                NamedLock::release($lockName);
+            } catch (DbException $e) {
+                $exception = $e;
+            }
+
+            expect($exception)->toBe(null);
+
+            $verifyLink = $pool->newLink();
+            $result = $verifyLink->query('SELECT GET_LOCK(?, 0) AS lk', [$lockName]);
+
+            expect(is_array($result))->toBe(true);
+            expect((int)($result[0]['lk'] ?? null))->toBe(1);
+
+            // Clean up
+            $verifyLink->query('SELECT RELEASE_LOCK(?)', [$lockName]);
+        });
+
+        it('a pending release is flushed by the next acquire() for the same name before re-acquiring', function () use (&$dbAvailable): void {
+            if (!$dbAvailable) {
+                return;
+            }
+
+            $lockName = 'test_named_lock_release_timeout_flush_on_acquire';
+            NamedLock::release($lockName); // Clean up first
+
+            $pool = DbPool::get();
+
+            expect(NamedLock::tryAcquire($lockName))->toBe(true);
+
+            // Simulate the exact state a genuine drain timeout leaves
+            // behind (reproducing a real 10s timeout here would needlessly
+            // double the suite runtime -- the e2e test above proves how
+            // that state arises): the live entry, flagged release-pending,
+            // on an idle link that still holds the lock server-side.
+            $ownersProp = new ReflectionProperty(NamedLock::class, 'owners');
+            $owners = $ownersProp->getValue();
+            $owners[$lockName]['releasePending'] = true;
+            $ownersProp->setValue($owners);
+
+            // This acquire() must FIRST finish the pending release
+            // (RELEASE_LOCK really issued, MySQL hold count back to 0)
+            // and THEN issue a real GET_LOCK...
+            expect(NamedLock::tryAcquire($lockName))->toBe(true);
+
+            $ownersAfter = $ownersProp->getValue();
+
+            expect(isset($ownersAfter[$lockName]))->toBe(true);
+            expect((int)$ownersAfter[$lockName]['count'])->toBe(1);
+            expect(array_key_exists('releasePending', $ownersAfter[$lockName]))->toBe(false);
+
+            // ...so ONE matching release() actually frees it. If acquire()
+            // had blindly taken the reentrant fast path instead (the
+            // pre-#185 behavior), the hold count would be 2, this
+            // release() would only decrement it, and the probe below
+            // would get 0.
+            NamedLock::release($lockName);
+
+            $probe = $pool->newLink();
+            $result = $probe->query('SELECT GET_LOCK(?, 0) AS lk', [$lockName]);
+
+            expect(is_array($result))->toBe(true);
+            expect((int)($result[0]['lk'] ?? null))->toBe(1);
+
+            // Clean up
+            $probe->query('SELECT RELEASE_LOCK(?)', [$lockName]);
+        });
+    });
+
+    describe('drain-before-query on a busy shared link (#186)', function () use (&$dbAvailable): void {
+        it('acquires a genuinely-free lock while the shared link is busy with an unrelated async query', function () use (&$dbAvailable): void {
+            if (!$dbAvailable) {
+                return;
+            }
+
+            $lockNameHeld = 'test_named_lock_acquire_drain_held';
+            $lockNameFree = 'test_named_lock_acquire_drain_free';
+
+            NamedLock::release($lockNameHeld); // Clean up first
+            NamedLock::release($lockNameFree); // Clean up first
+
+            $pool = DbPool::get();
+
+            // Prime the shared link with one acquire/release cycle so
+            // sharedLink exists and is idle, holding nothing.
+            expect(NamedLock::tryAcquire($lockNameHeld))->toBe(true);
+            NamedLock::release($lockNameHeld);
+
+            // Prove the target name is genuinely free via an independent
+            // connection.
+            $probe = $pool->newLink();
+            $free = $probe->query('SELECT GET_LOCK(?, 0) AS lk', [$lockNameFree]);
+
+            expect((int)($free[0]['lk'] ?? null))->toBe(1);
+            $probe->query('SELECT RELEASE_LOCK(?)', [$lockNameFree]);
+
+            // Unrelated code borrows the shared link and leaves it busy.
+            $sharedProp = new ReflectionProperty(NamedLock::class, 'sharedLink');
+            $sharedLink = $sharedProp->getValue();
+
+            $sharedLink->queryAsync('SELECT SLEEP(0.25) AS s');
+            expect($sharedLink->isBusy())->toBe(true);
+
+            // Before #186 this threw DbException('Link is busy') even
+            // though the lock name was free.
+            $exception = null;
+            $acquired = false;
+
+            try {
+                $acquired = NamedLock::tryAcquire($lockNameFree);
+            } catch (DbException $e) {
+                $exception = $e;
+            }
+
+            expect($exception)->toBe(null);
+            expect($acquired)->toBe(true);
+
+            // We really hold it: an independent connection cannot take it.
+            $contended = $probe->query('SELECT GET_LOCK(?, 0) AS lk', [$lockNameFree]);
+
+            expect((int)($contended[0]['lk'] ?? null))->toBe(0);
+
+            NamedLock::release($lockNameFree);
+
+            // ...and releasing actually freed it.
+            $freed = $probe->query('SELECT GET_LOCK(?, 0) AS lk', [$lockNameFree]);
+
+            expect((int)($freed[0]['lk'] ?? null))->toBe(1);
+
+            // Clean up
+            $probe->query('SELECT RELEASE_LOCK(?)', [$lockNameFree]);
         });
     });
 
@@ -692,6 +934,144 @@ describe('NamedLock Integration', function (): void {
             $verify->query('SELECT RELEASE_LOCK(?)', [$lockNameA]);
             $verify->query('SELECT RELEASE_LOCK(?)', [$lockNameB]);
         });
+
+        it('release() treats an already-dead connection as benign: no throw, state fully reset (#187 regression)', function () use (&$dbAvailable): void {
+            if (!$dbAvailable) {
+                return;
+            }
+
+            $lockName = 'test_named_lock_release_dead_connection';
+            NamedLock::release($lockName); // Clean up first
+
+            $pool = DbPool::get();
+
+            expect(NamedLock::tryAcquire($lockName))->toBe(true);
+
+            $sharedProp = new ReflectionProperty(NamedLock::class, 'sharedLink');
+            $sharedLink = $sharedProp->getValue();
+
+            $idRows = $sharedLink->query('SELECT CONNECTION_ID() AS id', []);
+            $connId = (int)($idRows[0]['id'] ?? 0);
+            expect($connId)->toBeGreaterThan(0);
+
+            // Natural-death simulation, same technique as the #180 test
+            // above: KILL from an independent connection produces exactly
+            // the production failure shape (mysqli 2006/2013).
+            $killer = $pool->newLink();
+            $killer->query("KILL CONNECTION {$connId}", []);
+            usleep(100000); // let the server finish dropping the session
+
+            // The server already released every lock that session held --
+            // release() must treat this as already-done, not as an error.
+            $exception = null;
+
+            try {
+                NamedLock::release($lockName);
+            } catch (DbException $e) {
+                $exception = $e;
+            }
+
+            expect($exception)->toBe(null);
+
+            // The dead handle is not carried forward into the next
+            // acquireLink()...
+            expect($sharedProp->getValue())->toBe(null);
+
+            // ...and no stale $owners entries survive (they all pinned to
+            // the dead link).
+            $ownersProp = new ReflectionProperty(NamedLock::class, 'owners');
+            expect($ownersProp->getValue())->toBe([]);
+
+            // The next acquire() opens a fresh connection and gets the
+            // lock cleanly (MySQL freed it when the session died).
+            expect(NamedLock::tryAcquire($lockName))->toBe(true);
+
+            NamedLock::release($lockName);
+
+            $verifyLink = $pool->newLink();
+            $result = $verifyLink->query('SELECT GET_LOCK(?, 0) AS lk', [$lockName]);
+
+            expect((int)($result[0]['lk'] ?? null))->toBe(1);
+
+            // Clean up
+            $verifyLink->query('SELECT RELEASE_LOCK(?)', [$lockName]);
+        });
+
+        it('survives the full compound scenario: busy-link acquire, natural death, benign release, clean re-acquire', function () use (&$dbAvailable): void {
+            if (!$dbAvailable) {
+                return;
+            }
+
+            $lockNameA = 'test_named_lock_compound_a';
+            $lockNameB = 'test_named_lock_compound_b';
+
+            NamedLock::release($lockNameA); // Clean up first
+            NamedLock::release($lockNameB); // Clean up first
+
+            $pool = DbPool::get();
+
+            // 1. acquire(A) succeeds normally on the shared connection.
+            expect(NamedLock::tryAcquire($lockNameA))->toBe(true);
+
+            // 2. Unrelated code borrows the shared link and leaves it
+            //    busy with an in-flight async query.
+            $sharedProp = new ReflectionProperty(NamedLock::class, 'sharedLink');
+            $sharedLink = $sharedProp->getValue();
+
+            $sharedLink->queryAsync('SELECT SLEEP(0.25) AS s');
+            expect($sharedLink->isBusy())->toBe(true);
+
+            // 3. acquire(B), a different name, must drain first and
+            //    succeed despite the busy link.
+            expect(NamedLock::tryAcquire($lockNameB))->toBe(true);
+
+            // 4. The shared connection dies naturally (KILL, faithful
+            //    simulation per the #180 test above) while A and B are
+            //    still logically held per $owners.
+            $idRows = $sharedLink->query('SELECT CONNECTION_ID() AS id', []);
+            $connId = (int)($idRows[0]['id'] ?? 0);
+            expect($connId)->toBeGreaterThan(0);
+
+            $killer = $pool->newLink();
+            $killer->query("KILL CONNECTION {$connId}", []);
+            usleep(100000); // let the server finish dropping the session
+
+            // 5. release(A) treats the dead connection as benign: no
+            //    exception, and all tracking state reset (including B's
+            //    now-meaningless entry).
+            $exception = null;
+
+            try {
+                NamedLock::release($lockNameA);
+            } catch (DbException $e) {
+                $exception = $e;
+            }
+
+            expect($exception)->toBe(null);
+            expect($sharedProp->getValue())->toBe(null);
+
+            $ownersProp = new ReflectionProperty(NamedLock::class, 'owners');
+            expect($ownersProp->getValue())->toBe([]);
+
+            // 6. acquire(A) again: recovers on a fresh connection and
+            //    re-acquires cleanly (MySQL freed A when the session
+            //    died).
+            expect(NamedLock::tryAcquire($lockNameA))->toBe(true);
+
+            // 7. The fresh hold is real: releasing it frees the name for
+            //    an independent connection, and B (freed by the session
+            //    death in step 4) is equally available again.
+            NamedLock::release($lockNameA);
+
+            $verifyLink = $pool->newLink();
+
+            foreach ([$lockNameA, $lockNameB] as $probeName) {
+                $result = $verifyLink->query('SELECT GET_LOCK(?, 0) AS lk', [$probeName]);
+
+                expect((int)($result[0]['lk'] ?? null))->toBe(1);
+                $verifyLink->query('SELECT RELEASE_LOCK(?)', [$probeName]);
+            }
+        });
     });
 
     describe('DbPool::closeAll() integration', function () use (&$dbAvailable): void {
@@ -740,6 +1120,42 @@ describe('NamedLock Integration', function (): void {
 
             // Clean up.
             NamedLock::release($lockName);
+        });
+    });
+
+    describe('isConnectionGoneException()', function (): void {
+        // Unit-level checks (no DB needed): the method classifies the
+        // wrapped mysqli driver error, so a constructed
+        // mysqli_sql_exception carrying the code is a faithful input.
+        $goneCodes = [
+            2006 => 'CR_SERVER_GONE_ERROR',
+            2013 => 'CR_SERVER_LOST',
+            2055 => 'CR_SERVER_LOST_EXTENDED',
+            4031 => 'ER_CLIENT_INTERACTION_TIMEOUT (MySQL 8.0.24+ wait_timeout expiry)',
+        ];
+
+        foreach ($goneCodes as $code => $label) {
+            it("recognizes mysqli error code {$code} ({$label})", function () use ($code): void {
+                $method = new ReflectionMethod(NamedLock::class, 'isConnectionGoneException');
+
+                $e = new DbException('wrapped', 0, new mysqli_sql_exception('gone', $code));
+
+                expect($method->invoke(null, $e))->toBe(true);
+            });
+        }
+
+        it('does not match a DbException with no previous exception (e.g. "Link is busy")', function (): void {
+            $method = new ReflectionMethod(NamedLock::class, 'isConnectionGoneException');
+
+            expect($method->invoke(null, new DbException('Link is busy')))->toBe(false);
+        });
+
+        it('does not match unrelated mysqli error codes', function (): void {
+            $method = new ReflectionMethod(NamedLock::class, 'isConnectionGoneException');
+
+            $e = new DbException('wrapped', 0, new mysqli_sql_exception('Unknown table', 1146));
+
+            expect($method->invoke(null, $e))->toBe(false);
         });
     });
 });

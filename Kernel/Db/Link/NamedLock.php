@@ -29,9 +29,11 @@ use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbMySQLiLink;
  * Because the pinned link is pushed into DbPool's shared pool (newLink()
  * registers it there too), unrelated code elsewhere in the request can
  * borrow that same connection via DbPool::getLink() for an async query
- * while we hold the named lock. release() therefore drains any in-flight
- * async work on the pinned link (isBusy()/poll()) before issuing
- * RELEASE_LOCK, instead of letting query() throw "Link is busy".
+ * while we hold the named lock. Both acquire() and release() therefore
+ * drain any in-flight async work on that link first (via drainLink(),
+ * which delegates to DbPool::pollLinks()) before issuing their own
+ * GET_LOCK / RELEASE_LOCK query, instead of letting query() throw
+ * "Link is busy".
  *
  * All distinct lock names acquired by this process share ONE dedicated
  * connection (self::$sharedLink), opened lazily on the first acquire()
@@ -53,17 +55,39 @@ use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbMySQLiLink;
  * "connection is gone" error signature on the GET_LOCK query triggers
  * a discard of all tracking state (MySQL released every lock the dead
  * session held when it dropped the session) and a single retry on a
- * freshly opened link. See the catch inside acquire() and
- * isConnectionGoneException().
+ * freshly opened link; release() treats the same signature as benign
+ * (the dead session's locks are already gone server-side). See the
+ * catch inside acquire(), release(), and isConnectionGoneException().
  */
 class NamedLock {
     /**
-     * @var array<string, array{link: IDbMySQLiLink, count: int}> Lock name =>
+     * @var array<string, array{link: IDbMySQLiLink, count: int, releasePending?: bool}> Lock name =>
      *      the connection currently holding it plus how many nested
      *      acquire() calls (this process) are holding it, so a matching
      *      number of release() calls is required before RELEASE_LOCK is
      *      actually issued. Mirrors MySQL's own per-connection GET_LOCK
      *      reentrancy/hold-count semantics.
+     *
+     *      releasePending is set only by release() when a genuine drain
+     *      timeout (the link still busy after DbPool::pollLinks()' whole
+     *      bounded deadline) makes RELEASE_LOCK impossible to attempt:
+     *      the entry is kept so the next acquire()/release() for this
+     *      name finishes the RELEASE_LOCK before doing anything else
+     *      (see release()).
+     *
+     *      INVARIANT: every entry's "link" is ALWAYS the same object as
+     *      self::$sharedLink. True today because acquireLink() opens ONE
+     *      connection shared by all names, and reset() is the only code
+     *      that nulls self::$sharedLink, always clearing $owners in the
+     *      same call. Both connection-death recovery paths -- acquire()'s
+     *      retry-once catch and release()'s benign dead-connection path --
+     *      rely on this: they reset() ALL of $owners because every entry
+     *      is equally void once the shared connection dies (MySQL released
+     *      them all when the session dropped). If a future change ever
+     *      reintroduces per-name connections, or anything else that could
+     *      leave $owners entries and self::$sharedLink pointing at
+     *      different links, those reset() calls must be revisited too --
+     *      do not weaken this invariant without updating them.
      */
     protected static array $owners = [];
 
@@ -74,7 +98,9 @@ class NamedLock {
      *      reset() when it can no longer be assumed usable (e.g. after
      *      DbPool::closeAll()), so the next acquire() opens a fresh one;
      *      acquire() also replaces it reactively when the underlying
-     *      connection has died naturally (see the catch in acquire()).
+     *      connection has died naturally (see the catch in acquire()),
+     *      as does release() when it detects the same death (see the
+     *      catch in release()).
      */
     protected static ?IDbMySQLiLink $sharedLink = null;
 
@@ -116,15 +142,19 @@ class NamedLock {
 
     /**
      * Whether $e is the signature of the shared connection being gone,
-     * as surfaced through DbMySQLiLink::query()'s wrapping: the previous
-     * exception is the mysqli driver error CR_SERVER_GONE_ERROR (2006,
-     * "MySQL server has gone away") or CR_SERVER_LOST (2013, "Lost
-     * connection to MySQL server during query") -- what a query sees
-     * after the server dropped the session (wait_timeout expiry,
-     * KILL CONNECTION, network drop).
+     * as surfaced through DbMySQLiLink::query()/poll()'s wrapping: the
+     * previous exception is a mysqli driver error for a dropped
+     * connection -- CR_SERVER_GONE_ERROR (2006, "MySQL server has gone
+     * away"), CR_SERVER_LOST (2013, "Lost connection to MySQL server
+     * during query"), CR_SERVER_LOST_EXTENDED (2055), or
+     * ER_CLIENT_INTERACTION_TIMEOUT (4031, MySQL 8.0.24+ -- the actual
+     * wire-level signature that the most common natural death there,
+     * wait_timeout expiry, produces) -- i.e. what a query sees after the
+     * server dropped the session (wait_timeout expiry, KILL CONNECTION,
+     * network drop).
      *
-     * Deliberately narrow so acquire()'s retry-once path can never mask
-     * an unrelated failure: it matches neither the wrapper's own
+     * Deliberately narrow so the recovery paths can never mask an
+     * unrelated failure: it matches neither the wrapper's own
      * "Link is busy" DbException (which has no previous exception at
      * all) nor any other mysqli error code. The codes are read off the
      * previous mysqli_sql_exception (the driver's own classification)
@@ -146,7 +176,65 @@ class NamedLock {
             return false;
         }
 
-        return in_array($previous->getCode(), [2006, 2013], true);
+        return in_array($previous->getCode(), [2006, 2013, 2055, 4031], true);
+    }
+
+    /**
+     * Drain any in-flight async query left on $link by unrelated code
+     * that borrowed it from DbPool's shared pool, so the caller's own
+     * subsequent sync query() never hits "Link is busy".
+     *
+     * Delegated to DbPool::pollLinks() (finishAll=true) instead of a
+     * hand-rolled `while (isBusy()) poll()` loop: poll() wraps a
+     * NON-blocking mysqli_poll(..., 0), so such a loop is a 100%-CPU
+     * busy-spin (~82k iterations/s measured) for the whole duration of
+     * the in-flight query -- and an unbounded hang if the link never
+     * goes idle. pollLinks() waits in a real 50ms kernel-level
+     * mysqli_poll() per iteration and enforces the same bounded
+     * deadline as pollFinishAll().
+     *
+     * Exactly two failure shapes are rethrown; everything else is
+     * deliberately swallowed:
+     *
+     *  - "Connection gone" (isConnectionGoneException()): rethrown so
+     *    the caller's own connection-death handling fires (acquire():
+     *    reset + retry once on a fresh link; release(): benign, the
+     *    dead session's locks were already freed server-side).
+     *
+     *  - pollLinks()' own deadline timeout (link genuinely still busy
+     *    for the whole deadline): rethrown -- no query can be issued on
+     *    a still-busy link, and that in-flight work belongs to whoever
+     *    borrowed the link, not to us.
+     *
+     *  - Any OTHER DbException -- i.e. pollLinks() propagating poll()'s
+     *    wrap of a FAILED async query (unknown table, deadlock, ...):
+     *    SWALLOWED. DbMySQLiLink::poll() clears the link's busy flag in
+     *    its catch BEFORE rethrowing, so by the time the exception gets
+     *    here the link is idle again: the failure belonged to the
+     *    unrelated async query, not to the connection, and the caller's
+     *    own query is the next real health probe. Treating this shape
+     *    as fatal (as release() did before) abandoned operations that
+     *    would have succeeded -- e.g. it left MySQL's advisory hold
+     *    count permanently un-decremented, denying the lock name to
+     *    every other process forever.
+     *
+     * @param IDbMySQLiLink $link
+     * @return void
+     * @throws DbException The connection is gone, or the drain deadline
+     *                     expired while the link was still busy.
+     */
+    protected static function drainLink(IDbMySQLiLink $link): void {
+        try {
+            $links = [$link];
+
+            DbPool::pollLinks($links);
+        } catch (DbException $e) {
+            if (!static::isConnectionGoneException($e) && !$link->isBusy()) {
+                return;
+            }
+
+            throw $e;
+        }
     }
 
     /**
@@ -163,6 +251,9 @@ class NamedLock {
      * connection. Do NOT call this as a substitute for release() in normal
      * control flow -- MySQL's own lock accounting is unaffected by this
      * method; only this process's bookkeeping is reset.
+     *
+     * $owners and $sharedLink are always cleared together -- see the
+     * INVARIANT on self::$owners for why they must never diverge.
      *
      * Deliberately does NOT close the underlying mysqli handle before
      * nulling $sharedLink, for two reasons:
@@ -209,6 +300,15 @@ class NamedLock {
      * the lock, so a matching number of release() calls is required to
      * actually unlock it (see the $owners docblock).
      *
+     * If this name's entry is flagged releasePending (a previous release()
+     * hit a genuine drain timeout), the pending RELEASE_LOCK is finished
+     * FIRST — acquire() never builds on top of a half-released name.
+     *
+     * Like release(), this drains the shared link (drainLink()) before its
+     * GET_LOCK query, so unrelated in-flight async work on the
+     * shared-pool-visible link cannot make a genuinely-free lock name
+     * spuriously fail with "Link is busy".
+     *
      * @param string $name The lock name (any valid string, scoped to MySQL server).
      * @param int $timeoutSec Maximum seconds to wait for the lock. 0 = non-blocking.
      * @return bool true if the lock was acquired, false if a deadlock error occurred.
@@ -218,15 +318,39 @@ class NamedLock {
         $existing = static::$owners[$name] ?? null;
 
         if ($existing !== null) {
-            $existing['count']++;
-            static::$owners[$name] = $existing;
+            if (!empty($existing['releasePending'])) {
+                // A previous release() for this name hit a genuine drain
+                // timeout and left the RELEASE_LOCK pending. Finish it
+                // BEFORE anything else: the entry's count is 1, so this
+                // runs release()'s full drain + RELEASE_LOCK path. It may
+                // itself throw (another timeout, or the 0/NULL state
+                // errors), which is correct — acquire() must not build
+                // on top of a half-released name. On success the entry
+                // is gone and control falls through to a real GET_LOCK.
+                static::release($name);
+            } else {
+                $existing['count']++;
+                static::$owners[$name] = $existing;
 
-            return true;
+                return true;
+            }
         }
 
         $link = static::acquireLink();
 
         try {
+            // Drain first, mirroring release(): the shared link is
+            // registered in DbPool's shared pool, so unrelated code can
+            // have it busy with an in-flight async query at any moment.
+            // Without this drain, query() below would throw "Link is
+            // busy" — a DbException with NO wrapped previous exception,
+            // so deliberately NOT a connection-gone case for the catch
+            // below — and a genuinely-free lock name would spuriously
+            // fail. drainLink() itself resolves the false-positive-busy
+            // shapes; only the genuine timeout and connection-gone
+            // shapes reach the handling below / the caller.
+            static::drainLink($link);
+
             $rows = $link->query('SELECT GET_LOCK(?, ?) AS lk', [$name, $timeoutSec]);
         } catch (DbException $e) {
             // Since every name shares ONE link, a single natural
@@ -234,9 +358,9 @@ class NamedLock {
             // whole process: every subsequent acquire() for ANY name
             // would query the dead handle. Retry once on a fresh link,
             // but ONLY for the well-identified "connection is gone"
-            // mysqli signature -- unrelated failures are rethrown
-            // untouched, since blanket-retrying those could mask real
-            // bugs.
+            // mysqli signature -- unrelated failures (including the
+            // drain's bounded-deadline timeout) are rethrown untouched,
+            // since blanket-retrying those could mask real bugs.
             if (!static::isConnectionGoneException($e)) {
                 throw $e;
             }
@@ -247,15 +371,17 @@ class NamedLock {
             // GET_LOCK never took (or no longer holds) effect.
             //
             // reset() also discards every $owners entry: they all pin
-            // names to this same dead link (all names share it), and
-            // acquire()'s reentrant fast path above would otherwise
-            // return true for names MySQL no longer holds for us -- the
-            // same stale-bookkeeping lie task #177 guarded release()
-            // against.
+            // names to this same dead link (all names share it — see
+            // the INVARIANT on self::$owners), and acquire()'s reentrant
+            // fast path above would otherwise return true for names
+            // MySQL no longer holds for us -- the same stale-bookkeeping
+            // lie task #177 guarded release() against.
             static::reset();
 
             $link = static::acquireLink();
 
+            // The fresh link was just opened and never borrowed, so no
+            // drain is needed before its query.
             $rows = $link->query('SELECT GET_LOCK(?, ?) AS lk', [$name, $timeoutSec]);
         }
 
@@ -301,25 +427,60 @@ class NamedLock {
      *
      * Because the pinned link is shared-pool-visible, unrelated code may be
      * running an async query on it when this is called. We drain that
-     * in-flight work first (via DbPool::pollLinks()) instead of letting
+     * in-flight work first (via drainLink()) instead of letting
      * RELEASE_LOCK's query() throw "Link is busy" — that failure mode has
      * nothing to do with lock ownership and must not orphan the lock.
      *
-     * The $owners entry for this name is ALWAYS resolved once release()
-     * reaches the actual RELEASE_LOCK attempt, no matter how that attempt
-     * ends -- success, a 0/NULL "you don't own it" state error, or a
-     * genuine exception thrown by the drain/query itself (e.g. a dead
-     * connection). See the try/finally inside. A stale entry must never
-     * survive a failed release: acquire()'s reentrant fast path trusts it
-     * and would return true WITHOUT a real GET_LOCK, so callers would
-     * believe they hold a lock MySQL never granted them (mutual exclusion
-     * silently void -- unacceptable on money paths like AccountBalance).
-     * Forgetting the entry is the safe direction: the next acquire()
-     * re-issues a real GET_LOCK (instant and reentrant if this connection
-     * still holds the name; correctly refused if someone else does), and a
-     * failed release() could never be retried into success anyway -- 0/NULL
-     * mean MySQL itself knows this connection does not own the lock, and a
-     * dead connection has already had all its locks released by the server.
+     * Failure taxonomy for the drain + actual RELEASE_LOCK attempt, every
+     * branch explicit. (A stale $owners entry must never survive into a
+     * state it does not truthfully describe: acquire()'s reentrant fast
+     * path trusts it and would return true WITHOUT a real GET_LOCK, so
+     * callers would believe they hold a lock MySQL never granted them —
+     * mutual exclusion silently void, unacceptable on money paths like
+     * AccountBalance.)
+     *
+     *  - The drain reaps a FAILED async query: the exception says nothing
+     *    about the connection (DbMySQLiLink::poll() clears the busy flag
+     *    before rethrowing, so the link is idle again) and is swallowed
+     *    inside drainLink(); the release proceeds normally and CAN
+     *    succeed. This was #184: abandoning the release here left
+     *    MySQL's hold count permanently un-decremented (the reentrant
+     *    acquire() fast path never re-issues GET_LOCK, so nothing else
+     *    would ever bring the count back down), denying the lock name
+     *    to every other process forever.
+     *
+     *  - "Connection gone" (isConnectionGoneException()), from either
+     *    the drain or the RELEASE_LOCK query itself: the most benign
+     *    possible outcome. The server already released every lock that
+     *    dead session held when the connection dropped, so there is
+     *    nothing left to do. reset() discards ALL tracking state — every
+     *    $owners entry pins to this same dead link (see the INVARIANT on
+     *    self::$owners), so leaving any of them would feed acquire()'s
+     *    reentrant fast path a lie — and nulls $sharedLink so the dead
+     *    handle is not carried forward into the next acquireLink() call.
+     *
+     *  - A genuine drain timeout (the link still busy after pollLinks()'
+     *    whole bounded deadline — RELEASE_LOCK truly cannot be attempted
+     *    safely): the $owners entry is KEPT, flagged releasePending, and
+     *    pollLinks()' timeout DbException propagates. The next acquire()
+     *    or release() for this name finishes the pending RELEASE_LOCK
+     *    before doing anything else, so the hold count can no longer
+     *    drift up silently — but the failure still surfaces loudly.
+     *    Chosen over retiring the whole shared connection because the
+     *    connection is alive (merely busy with someone else's in-flight
+     *    work — not a death, unlike the branch above), any other held
+     *    names on it remain truthfully tracked, and the drastic option
+     *    (DbPool::closeAll()) would also destroy every unrelated pooled
+     *    connection mid-request.
+     *
+     *  - RELEASE_LOCK returning 0 or NULL: state bug — the entry is
+     *    dropped and a DbException thrown (see @throws).
+     *
+     *  - Any other failure of the RELEASE_LOCK query itself: the entry
+     *    is dropped and the exception rethrown — the safe direction
+     *    (the next acquire() re-issues a real GET_LOCK, which is instant
+     *    and reentrant if this connection still holds the name, and
+     *    correctly refused if someone else does).
      *
      * @param string $name The lock name to release.
      * @return void
@@ -328,16 +489,16 @@ class NamedLock {
      *                      connection (NULL) — either indicates a state bug
      *                      rather than a normal double-release. This is
      *                      deliberately still allowed to throw (unlike the
-     *                      busy-link case above, which is drained silently
-     *                      and only throws if its bounded drain deadline
-     *                      expires): a "you don't own this lock" result means
-     *                      something outside this class already released it
-     *                      behind our back, which is a real bug worth
-     *                      surfacing loudly rather than swallowing.
-     *                      Separately, draining a busy owning link is
-     *                      bounded by DbPool::pollLinks()' deadline, whose
-     *                      timeout DbException propagates (see the inline
-     *                      comment in release()).
+     *                      busy-link cases above, which are drained, and
+     *                      the dead-connection case, which is benign): a
+     *                      "you don't own this lock" result means something
+     *                      outside this class already released it behind
+     *                      our back, which is a real bug worth surfacing
+     *                      loudly rather than swallowing. Separately, a
+     *                      genuine drain timeout propagates pollLinks()'
+     *                      bounded-deadline timeout DbException (with the
+     *                      entry kept as release-pending), and any other
+     *                      query failure is rethrown untouched.
      */
     public static function release(string $name): void {
         $owner = static::$owners[$name] ?? null;
@@ -355,61 +516,69 @@ class NamedLock {
 
         $link = $owner['link'];
 
-        // Everything from here on can fail in ways we cannot recover from
-        // by keeping the $owners entry (see docblock): the drain may throw
-        // on a dead connection, query() may throw ("MySQL server has gone
-        // away" etc.), or the 0/NULL state errors below throw deliberately.
-        // In ALL of those cases the entry must be dropped, never left as a
-        // corpse that acquire()'s reentrant fast path would blindly trust.
         try {
             // Drain any in-flight async query left on this connection by
             // unrelated code that borrowed it from DbPool's shared pool
             // before issuing RELEASE_LOCK, so we never hit query()'s
-            // "Link is busy" DbException here.
-            //
-            // Delegated to DbPool::pollLinks() (finishAll=true) instead of
-            // a hand-rolled `while (isBusy()) poll()` loop: poll() wraps a
-            // NON-blocking mysqli_poll(..., 0), so such a loop is a 100%-CPU
-            // busy-spin (~82k iterations/s measured) for the whole duration
-            // of the in-flight query -- and an unbounded hang if the link
-            // never goes idle. pollLinks() waits in a real 50ms kernel-level
-            // mysqli_poll() per iteration and enforces the same bounded
-            // deadline as pollFinishAll().
-            //
-            // If that deadline expires while the link is still busy,
-            // pollLinks()' own purpose-built timeout DbException propagates;
-            // release() does NOT proceed to RELEASE_LOCK on a still-busy
-            // link (that would only trade the clear timeout error for
-            // query()'s opaque "Link is busy"). This follows the existing
-            // precedent: every other pollLinks()/pollFinishAll() caller
-            // (Account::readDataAsyncPollFinishAll(),
-            // Session::readDataAsyncPollFinishAll()) likewise lets the
-            // timeout DbException bubble up and merely declares @throws.
-            // The finally below still drops the $owners entry in that case,
-            // so a timed-out release cannot leave a stale-owner corpse.
-            $links = [$link];
-            DbPool::pollLinks($links);
+            // "Link is busy" DbException here (see drainLink()).
+            static::drainLink($link);
 
             $rows = $link->query('SELECT RELEASE_LOCK(?) AS lk', [$name]);
+        } catch (DbException $e) {
+            if (static::isConnectionGoneException($e)) {
+                // Dead connection — surfaced by either the drain or the
+                // RELEASE_LOCK query itself. MySQL already released every
+                // lock this session held when it dropped it; reset()
+                // clears all tracking state (every entry pins to this
+                // same dead link) and nulls $sharedLink so the next
+                // acquire() opens a fresh connection instead of
+                // rediscovering the death the hard way.
+                static::reset();
 
-            $first = is_array($rows) ? ($rows[0] ?? null) : null;
-            $raw = is_array($first) ? ($first['lk'] ?? null) : null;
-
-            // RELEASE_LOCK returns: 1 = released, 0 = held by someone else /
-            // not owned by this connection, NULL = lock name did not exist.
-            if ($raw === null) {
-                throw new DbException(
-                    "RELEASE_LOCK('{$name}') returned NULL: lock did not exist on its owning connection"
-                );
+                return;
             }
 
-            if ((int)$raw !== 1) {
-                throw new DbException(
-                    "RELEASE_LOCK('{$name}') returned {$raw}: this connection did not own the lock"
-                );
+            if ($link->isBusy()) {
+                // The only still-busy failure shape drainLink() lets
+                // through: a genuine drain timeout. RELEASE_LOCK cannot
+                // be attempted; keep the entry flagged releasePending so
+                // the next acquire()/release() for this name finishes
+                // the release first, and let the bounded-deadline
+                // timeout surface loudly.
+                $owner['releasePending'] = true;
+                static::$owners[$name] = $owner;
+
+                throw $e;
             }
-        } finally {
+
+            // Any other failure (of the RELEASE_LOCK query itself; the
+            // drain's false-positive shapes were already resolved inside
+            // drainLink()): drop the entry — never leave a corpse the
+            // reentrant fast path would blindly trust — and rethrow.
             unset(static::$owners[$name]);
+
+            throw $e;
+        }
+
+        // The attempt itself resolved: the entry must not survive even
+        // if the 0/NULL state checks below throw.
+        unset(static::$owners[$name]);
+
+        $first = is_array($rows) ? ($rows[0] ?? null) : null;
+        $raw = is_array($first) ? ($first['lk'] ?? null) : null;
+
+        // RELEASE_LOCK returns: 1 = released, 0 = held by someone else /
+        // not owned by this connection, NULL = lock name did not exist.
+        if ($raw === null) {
+            throw new DbException(
+                "RELEASE_LOCK('{$name}') returned NULL: lock did not exist on its owning connection"
+            );
+        }
+
+        if ((int)$raw !== 1) {
+            throw new DbException(
+                "RELEASE_LOCK('{$name}') returned {$raw}: this connection did not own the lock"
+            );
         }
     }
 }
