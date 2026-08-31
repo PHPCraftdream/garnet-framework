@@ -201,5 +201,19 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
                 expect($r)->toBe([]);
             });
         });
+
+        describe('::gitTry (public — GarnetDeployFullCommand relies on this exact contract '
+            . 'to advance the deploy-sha marker without risking exit(1) after a deploy already succeeded)', function (): void {
+                it('returns [0, HEAD sha] for a valid command against this repo', function (): void {
+                    [$rc, $out] = GarnetDeployDiffCommand::gitTry(['rev-parse', 'HEAD']);
+                    expect($rc)->toBe(0);
+                    expect(trim($out))->toMatch('/^[0-9a-f]{40}$/');
+                });
+
+                it('returns a non-zero code (never throws/exits) for an invalid git subcommand', function (): void {
+                    [$rc] = GarnetDeployDiffCommand::gitTry(['not-a-real-git-subcommand']);
+                    expect($rc)->not->toBe(0);
+                });
+            });
     });
 }

@@ -1188,8 +1188,14 @@ final class GarnetDeployDiffCommand {
         return $sha;
     }
 
-    /** Writes the sha to `runtime_dir/WorkDir/.deploy-sha` over SSH. Non-fatal on failure. */
-    private static function writeRemoteDeploySha(SshClient $ssh, array $layout, string $sha): void {
+    /**
+     * Writes the sha to `runtime_dir/WorkDir/.deploy-sha` over SSH. Non-fatal
+     * on failure. Also called by GarnetDeployFullCommand after a successful
+     * ship+migrate — that command ships via bundle+atomic-swap, not this
+     * class's own git-diff pipeline, so it has no other way to advance the
+     * marker deploy:diff's own auto-resume selector depends on.
+     */
+    public static function writeRemoteDeploySha(SshClient $ssh, array $layout, string $sha): void {
         $sha = trim($sha);
 
         if ($sha === '') {
@@ -2590,8 +2596,16 @@ final class GarnetDeployDiffCommand {
         return $out;
     }
 
-    /** @return array{int, string} */
-    private static function gitTry(array $args): array {
+    /**
+     * @return array{int, string}
+     *
+     * Also called by GarnetDeployFullCommand — unlike gitOut(), never
+     * exit(1)s, so a caller that must stay non-fatal on a git failure (e.g.
+     * after a deploy already fully succeeded) can check the return code
+     * itself instead of the whole process dying on the way to reporting
+     * success.
+     */
+    public static function gitTry(array $args): array {
         // proc_open with array argv: bypasses shell — no escaping bugs on Windows
         // (escapeshellarg corrupts % and other special chars).
         $argv = array_merge(['git'], $args);

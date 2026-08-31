@@ -268,6 +268,24 @@ class GarnetDeployFullCommand {
         }
         echo PHP_EOL;
 
+        // Advance the deploy-sha marker so a later `deploy:diff` (no
+        // selector) auto-resumes from here instead of re-diffing this whole
+        // release — this command ships via bundle+atomic-swap, bypassing
+        // GarnetDeployDiffCommand's own git-diff pipeline entirely, so
+        // nothing else would ever write this marker for it. Non-fatal by
+        // design (gitTry(), not gitOut()): a release that already fully
+        // shipped and migrated must not exit(1) over a marker bookkeeping
+        // failure at the very last step.
+        [$gitRc, $headSha] = GarnetDeployDiffCommand::gitTry(['rev-parse', 'HEAD']);
+
+        if ($gitRc === 0) {
+            GarnetDeployDiffCommand::writeRemoteDeploySha($ssh, $layout, trim($headSha));
+        } else {
+            echo "\033[33mwarn:\033[0m could not read local HEAD sha to advance the remote deploy-sha marker "
+                . "(git exit {$gitRc}). Run `php garnet deploy:diff --commit=HEAD --apply` once to reseed it, "
+                . 'or the next deploy:diff will re-diff this whole release.' . PHP_EOL;
+        }
+
         echo "\033[32m=== Deploy complete — {$appName} is live at {$layout['remote_path']} ===\033[0m" . PHP_EOL;
     }
 

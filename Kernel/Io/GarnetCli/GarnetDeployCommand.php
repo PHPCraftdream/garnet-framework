@@ -23,6 +23,12 @@ class GarnetDeployCommand {
      *   --skip-backup    run migrations WITHOUT the pre-migration backup (discouraged)
      */
     public static function run(array $args): void {
+        if (in_array('--help', $args, true) || in_array('-h', $args, true) || ($args[0] ?? '') === 'help') {
+            self::help();
+
+            return;
+        }
+
         $appName = GarnetEnv::requireAppName();
         $skipMigrate = in_array('--skip-migrate', $args, true);
         $skipBackup = in_array('--skip-backup', $args, true);
@@ -115,5 +121,39 @@ class GarnetDeployCommand {
 
     private static function step(string $num, string $label): void {
         echo "\033[1;36m[{$num}]\033[0m {$label}" . PHP_EOL;
+    }
+
+    private static function help(): void {
+        echo <<<HELP
+
+  \033[1mphp garnet deploy [flags]\033[0m
+
+  \033[1mWHAT IT DOES\033[0m
+  ────────────────────────────────────────────────────────────────────────
+  Runs the current app's pending DB migrations under a maintenance-mode
+  wrapper, safe by design: Maintenance ON → DB backup → migrations →
+  cache clear → Maintenance OFF. If the backup or a migration fails,
+  maintenance is left ON on purpose so a half-migrated site never goes
+  live — investigate or restore the backup, then re-run.
+
+  This command does NOT ship code — it operates on whatever is already
+  on disk in the CURRENT working directory's app context (its own
+  WorkDir/Config/db.ini). On a production host that means running it
+  from inside the runtime dir over SSH, after the code itself has
+  already been shipped (\033[36mphp garnet deploy:full\033[0m does both in one
+  call; \033[36mphp garnet deploy:diff --apply\033[0m ships code only, then this
+  command applies any pending migration).
+
+  \033[1mFLAGS\033[0m
+  ────────────────────────────────────────────────────────────────────────
+    --skip-migrate   Don't run migrations (also skips the pre-migration
+                      backup, since there's nothing to back up for).
+    --skip-backup    Run migrations WITHOUT the pre-migration backup.
+                      Discouraged — migrations are forward-only, a
+                      backup is the only rollback path.
+
+  --help / -h / help     this message
+HELP;
+        echo PHP_EOL;
     }
 }
