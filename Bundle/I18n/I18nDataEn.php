@@ -39,6 +39,7 @@ namespace PHPCraftdream\Garnet\Bundle\I18n {
             'Auth_EnterSecondCode' => 'Enter the next code from your authenticator app',
             'Auth_FirstCodeVerified' => 'First code verified',
             'Auth_Verifying' => 'Verifying...',
+            'Auth_SendingCode' => 'Sending the code…',
             'Auth_VerifyCode' => 'Verify code',
             'Auth_Complete' => 'Complete registration',
             'Auth_Logout' => 'Logout',

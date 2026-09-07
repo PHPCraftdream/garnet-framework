@@ -103,7 +103,14 @@ export const Auth2Island: React.FC<Partial<IAuthData>> = (props) => {
                 // (e.g. preserving the typed email across a failed request).
                 <div className="flex items-center gap-2 py-4 text-muted" data-test-id="auth-loading">
                     <span className="common-spinner" aria-hidden="true" />
-                    <span>{I18n.Auth_Verifying()}</span>
+                    {/*
+                      * One label used to serve both steps, and on the first
+                      * one it was simply wrong: asking for a code verifies
+                      * nothing — there is nothing to verify yet — so
+                      * "Checking…" left people wondering what was being
+                      * checked and whether they had missed a step.
+                      */}
+                    <span>{isEmailPhase ? I18n.Auth_SendingCode() : I18n.Auth_Verifying()}</span>
                 </div>
             )}
             <form

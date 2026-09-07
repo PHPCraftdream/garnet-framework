@@ -33,6 +33,7 @@ export class I18nDataEN {
     static Auth_EnterSecondCode = 'Enter the next code from your authenticator app';
     static Auth_FirstCodeVerified = 'First code verified';
     static Auth_Verifying = 'Verifying...';
+    static Auth_SendingCode = 'Sending the code…';
     static Auth_VerifyCode = 'Verify code';
     static Auth_Complete = 'Complete registration';
     static Auth_Logout = 'Logout';

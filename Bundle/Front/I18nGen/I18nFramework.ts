@@ -39,6 +39,7 @@ class I18n extends I18nBase {
     Auth_EnterSecondCode: t = (a = []) => this.t('Auth_EnterSecondCode', a);
     Auth_FirstCodeVerified: t = (a = []) => this.t('Auth_FirstCodeVerified', a);
     Auth_Verifying: t = (a = []) => this.t('Auth_Verifying', a);
+    Auth_SendingCode: t = (a = []) => this.t('Auth_SendingCode', a);
     Auth_VerifyCode: t = (a = []) => this.t('Auth_VerifyCode', a);
     Auth_Complete: t = (a = []) => this.t('Auth_Complete', a);
     Auth_Logout: t = (a = []) => this.t('Auth_Logout', a);

@@ -33,6 +33,7 @@ export class I18nDataRU {
     static Auth_EnterSecondCode = 'Введите следующий код из приложения-аутентификатора';
     static Auth_FirstCodeVerified = 'Первый код подтверждён';
     static Auth_Verifying = 'Проверка...';
+    static Auth_SendingCode = 'Отправляем код...';
     static Auth_VerifyCode = 'Проверить код';
     static Auth_Complete = 'Завершить регистрацию';
     static Auth_Logout = 'Выйти';
