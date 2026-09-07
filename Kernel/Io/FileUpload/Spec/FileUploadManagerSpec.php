@@ -223,7 +223,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
                 // No mock: a tempnam() file is never a real HTTP upload, so
                 // is_uploaded_file() genuinely returns false here.
                 $error = $this->fn->invoke(new FileUploadManager($this->tempDir), $file, $rules);
-                expect($error)->toContain('Invalid upload');
+                expect($error)->toContain('Upload_Incomplete');
             });
 
             it('rejects file with empty tmp_name', function (): void {
@@ -242,7 +242,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
                 ];
 
                 $error = $this->fn->invoke(new FileUploadManager($this->tempDir), $file, $rules);
-                expect($error)->toContain('Invalid upload');
+                expect($error)->toContain('Upload_Incomplete');
             });
 
             it('rejects file with UPLOAD_ERR_* error code', function (): void {
@@ -261,7 +261,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
                 ];
 
                 $error = $this->fn->invoke(new FileUploadManager($this->tempDir), $file, $rules);
-                expect($error)->toContain('Upload error');
+                expect($error)->toContain('Upload_Incomplete');
             });
         });
 
@@ -321,8 +321,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
                 ];
 
                 $error = $this->fn->invoke(null, $file, $rules);
-                expect($error)->toContain('File type not allowed');
-                expect($error)->toContain('.php');
+                expect($error)->toContain('Upload_ExtNotAllowed');
             });
 
             it('rejects file exceeding maxFileSize', function (): void {
@@ -341,7 +340,34 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
                 ];
 
                 $error = $this->fn->invoke(null, $file, $rules);
-                expect($error)->toContain('File too large');
+                expect($error)->toContain('Upload_TooLarge');
+            });
+
+            it('rejects an empty file by saying it is empty, not by its MIME type', function (): void {
+                $rules = new UploadRules(
+                    maxFileSize: 1024 * 1024,
+                    maxFilesCount: 5,
+                    allowedTypes: ['text/plain'],
+                    allowedExtensions: ['txt'],
+                );
+
+                // finfo reports a zero-byte file as application/x-empty, which
+                // the MIME check would refuse — correctly, but with a reason
+                // nobody can act on. The empty check has to come first.
+                $emptyFile = tempnam(sys_get_temp_dir(), 'gtest_upload_');
+                file_put_contents($emptyFile, '');
+
+                $file = [
+                    'name' => 'empty.txt',
+                    'tmp_name' => $emptyFile,
+                    'error' => UPLOAD_ERR_OK,
+                    'size' => 0,
+                ];
+
+                $error = $this->fn->invoke(null, $file, $rules);
+                expect($error)->toBe('Upload_Empty');
+
+                unlink($emptyFile);
             });
 
             it('rejects file with disallowed MIME type (detected by finfo)', function (): void {
@@ -364,8 +390,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
                 ];
 
                 $error = $this->fn->invoke(null, $file, $rules);
-                expect($error)->toContain('MIME type not allowed');
-                expect($error)->toContain('text/plain');
+                expect($error)->toContain('Upload_ContentNotAllowed');
 
                 unlink($textFile);
             });
@@ -409,8 +434,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
                 ];
 
                 $error = $this->fn->invoke(null, $file, $rules);
-                expect($error)->toContain('File type not allowed');
-                expect($error)->toContain('.php');
+                expect($error)->toContain('Upload_ExtNotAllowed');
 
                 unlink($phpFile);
             });
@@ -435,8 +459,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
                 ];
 
                 $error = $this->fn->invoke(null, $file, $rules);
-                expect($error)->toContain('File type not allowed');
-                expect($error)->toContain('.svg');
+                expect($error)->toContain('Upload_ExtNotAllowed');
 
                 unlink($svgFile);
             });
@@ -464,8 +487,36 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
                 $result = $manager->storeAll($filesArray, $rules);
 
                 expect($result->errors)->not->toBeEmpty();
-                expect($result->errors[0])->toContain('Too many files');
-                expect($result->errors[0])->toContain('max 2');
+                // i18n is not initialised in the harness, so tr() hands back the
+                // key itself — which is exactly what these assertions check:
+                // which reason was chosen, not how it happens to be worded.
+                expect($result->errors[0])->toContain('Upload_TooManyFiles');
+                expect($result->files)->toBeEmpty();
+            });
+
+            it('names the refused file, so one bad file out of three is identifiable', function (): void {
+                $rules = new UploadRules(
+                    maxFileSize: 1024 * 1024,
+                    maxFilesCount: 5,
+                    allowedTypes: ['text/plain'],
+                    allowedExtensions: ['txt'],
+                );
+
+                $filesArray = [
+                    'name' => ['first.txt', 'second.txt'],
+                    'type' => ['text/plain', 'text/plain'],
+                    'tmp_name' => ['/tmp/a', '/tmp/b'],
+                    'error' => [0, 0],
+                    'size' => [10, 10],
+                ];
+
+                $manager = new FileUploadManager($this->tempDir);
+                $result = $manager->storeAll($filesArray, $rules);
+
+                // "File #0" told the sender nothing: they never saw an index.
+                expect(count($result->errors))->toBe(2);
+                expect($result->errors[0])->toContain('first.txt');
+                expect($result->errors[1])->toContain('second.txt');
             });
         });
 

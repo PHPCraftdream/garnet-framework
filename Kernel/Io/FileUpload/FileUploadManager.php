@@ -2,6 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload {
     use finfo;
+    use PHPCraftdream\Garnet\Bundle\I18n\FwI18n;
     use PHPCraftdream\Garnet\Kernel\Io\Router\Mime;
 
     /**
@@ -49,17 +50,17 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload {
             $normalized = self::normalizeFiles($filesArray);
 
             if (count($normalized) > $rules->maxFilesCount) {
-                return UploadResult::error("Too many files (max {$rules->maxFilesCount})");
+                return UploadResult::error(FwI18n::t('Upload_TooManyFiles', [$rules->maxFilesCount]));
             }
 
             $stored = [];
             $errors = [];
 
-            foreach ($normalized as $i => $file) {
+            foreach ($normalized as $file) {
                 $error = $this->validateFile($file, $rules);
 
                 if ($error !== null) {
-                    $errors[] = "File #{$i} ({$file['name']}): {$error}";
+                    $errors[] = static::rejection($file, $error);
 
                     continue;
                 }
@@ -67,7 +68,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload {
                 $info = $this->storeSingle($file);
 
                 if ($info === null) {
-                    $errors[] = "File #{$i} ({$file['name']}): failed to store";
+                    $errors[] = static::rejection($file, FwI18n::t('Upload_StoreFailed'));
 
                     continue;
                 }
@@ -151,15 +152,28 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload {
 
         // ── Validation ───────────────────────────────────────────────
 
+        /**
+         * Names the rejected file, so a batch of five tells the sender which
+         * one was refused. An index into an array they never saw cannot.
+         */
+        protected static function rejection(array $file, string $reason): string {
+            $name = basename((string)($file['name'] ?? ''));
+
+            // Joined here rather than through a translation template: the
+            // separator carries no language, and a template would take the
+            // file name down with it whenever the key itself is missing.
+            return $name === '' ? $reason : "{$name}: {$reason}";
+        }
+
         protected function validateFile(array $file, UploadRules $rules): ?string {
             // PHP upload error
             if (($file['error'] ?? 0) !== UPLOAD_ERR_OK) {
-                return 'Upload error: ' . ($file['error'] ?? 'unknown');
+                return FwI18n::t('Upload_Incomplete');
             }
 
-            // Empty file
+            // Not an upload at all — a forged path, or a truncated POST.
             if (empty($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
-                return 'Invalid upload';
+                return FwI18n::t('Upload_Incomplete');
             }
 
             return static::validateFileRules($file, $rules);
@@ -179,14 +193,22 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload {
             if ($size > $rules->maxFileSize) {
                 $maxMb = round($rules->maxFileSize / 1024 / 1024, 1);
 
-                return "File too large (max {$maxMb}MB)";
+                return FwI18n::t('Upload_TooLarge', [$maxMb]);
+            }
+
+            // An empty file has no content type to speak of, so finfo reports
+            // it as application/x-empty and the MIME check below refuses it —
+            // correctly, but with a reason nobody can act on. Say the plain
+            // thing instead, before that check ever runs.
+            if ($size <= 0) {
+                return FwI18n::t('Upload_Empty');
             }
 
             // Extension check
             $ext = strtolower(pathinfo($file['name'] ?? '', PATHINFO_EXTENSION));
 
             if (!empty($rules->allowedExtensions) && !in_array($ext, $rules->allowedExtensions, true)) {
-                return "File type not allowed: .{$ext}";
+                return FwI18n::t('Upload_ExtNotAllowed', [$ext]);
             }
 
             // MIME type check (use finfo for real MIME, not client-reported)
@@ -205,7 +227,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload {
                 }
 
                 if (!$allowed) {
-                    return "MIME type not allowed: {$realMime}";
+                    return FwI18n::t('Upload_ContentNotAllowed', [$realMime]);
                 }
             }
 

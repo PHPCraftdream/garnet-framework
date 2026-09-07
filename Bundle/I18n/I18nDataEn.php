@@ -50,6 +50,17 @@ namespace PHPCraftdream\Garnet\Bundle\I18n {
             'Theme_SwitchToDark' => 'Switch to dark mode',
             'Theme_SwitchToLight' => 'Switch to light mode',
 
+            // Attachment refusals. These are read by the person who just
+            // attached the file, not by a developer — hence a file name and a
+            // reason, rather than an array index and a MIME string.
+            'Upload_TooManyFiles' => 'Too many files: at most %s can be attached',
+            'Upload_TooLarge' => 'file is too large, maximum is %s MB',
+            'Upload_Empty' => 'the file is empty',
+            'Upload_ExtNotAllowed' => '.%s files cannot be attached',
+            'Upload_ContentNotAllowed' => 'file contents do not look like an allowed type (%s)',
+            'Upload_Incomplete' => 'the file did not upload completely, please try again',
+            'Upload_StoreFailed' => 'could not save the file',
+
             'Common_FromHasError' => 'Form has errors',
             'Common_IncorrectValue' => 'Incorrect value',
             'Common_Len' => 'Required symbols count - from %s to %s',
