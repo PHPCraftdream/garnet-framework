@@ -8,20 +8,31 @@ export type {ToastType, ToastEventDetail} from './toastEvent';
 export {TOAST_EVENT} from './toastEvent';
 
 interface ToastEntry {
+    id: number;
     message: string;
     type: ToastType;
-    visible: boolean;
 }
 
-type Listener = (entry: ToastEntry) => void;
+type Listener = (entries: ToastEntry[]) => void;
 
-/** Global toast manager — singleton, works across React trees (islands) */
+/**
+ * Toasts stack instead of replacing each other.
+ *
+ * They used to share one slot: `show()` overwrote the current entry, so a
+ * burst — five attachments refused for five different reasons — left only the
+ * last one on screen and destroyed the rest. The information existed and the
+ * display threw it away.
+ */
+const TOAST_TTL_MS = 4000;
+
+/** A runaway loop should not be able to paper over the whole page. */
+const MAX_VISIBLE = 5;
+
 class ToastManagerClass {
     private listeners: Set<Listener> = new Set();
-    private timer: ReturnType<typeof setTimeout> | null = null;
-    private remaining = 0;
-    private startTime = 0;
-    private current: ToastEntry = {message: '', type: 'primary', visible: false};
+    private timers: Map<number, {timer: ReturnType<typeof setTimeout> | null; remaining: number; startedAt: number}> = new Map();
+    private entries: ToastEntry[] = [];
+    private nextId = 1;
 
     constructor() {
         if (typeof window !== 'undefined') {
@@ -33,48 +44,75 @@ class ToastManagerClass {
     }
 
     show(message: string, type: ToastType = 'primary') {
-        this.clearTimer();
-        this.current = {message, type, visible: true};
-        this.notify();
-        this.startTimer(4000);
-    }
+        const id = this.nextId;
+        this.nextId += 1;
 
-    hide() {
-        this.clearTimer();
-        this.current = {...this.current, visible: false};
-        this.notify();
-    }
+        this.entries = [...this.entries, {id, message, type}];
 
-    pause() {
-        if (this.timer) {
-            this.remaining = Math.max(0, this.remaining - (Date.now() - this.startTime));
-            this.clearTimer();
+        while (this.entries.length > MAX_VISIBLE) {
+            const dropped = this.entries[0];
+            this.entries = this.entries.slice(1);
+            this.clearTimer(dropped.id);
         }
+
+        this.notify();
+        this.startTimer(id, TOAST_TTL_MS);
     }
 
-    resume() {
-        if (this.remaining > 0) this.startTimer(this.remaining);
+    hide(id: number) {
+        this.clearTimer(id);
+        this.entries = this.entries.filter(e => e.id !== id);
+        this.notify();
+    }
+
+    /** Hovering holds a toast open — reading a long reason takes longer than 4s. */
+    pause(id: number) {
+        const t = this.timers.get(id);
+
+        if (!t?.timer) return;
+
+        clearTimeout(t.timer);
+        this.timers.set(id, {
+            timer: null,
+            remaining: Math.max(0, t.remaining - (Date.now() - t.startedAt)),
+            startedAt: Date.now(),
+        });
+    }
+
+    resume(id: number) {
+        const t = this.timers.get(id);
+
+        if (!t || t.timer !== null || t.remaining <= 0) return;
+
+        this.startTimer(id, t.remaining);
     }
 
     subscribe(fn: Listener) {
         this.listeners.add(fn);
-        fn(this.current);
+        fn(this.entries);
         return () => { this.listeners.delete(fn); };
     }
 
-    private startTimer(ms: number) {
-        this.clearTimer();
-        this.remaining = ms;
-        this.startTime = Date.now();
-        this.timer = setTimeout(() => this.hide(), ms);
+    private startTimer(id: number, ms: number) {
+        this.clearTimer(id);
+        this.timers.set(id, {
+            timer: setTimeout(() => this.hide(id), ms),
+            remaining: ms,
+            startedAt: Date.now(),
+        });
     }
 
-    private clearTimer() {
-        if (this.timer) { clearTimeout(this.timer); this.timer = null; }
+    private clearTimer(id: number) {
+        const t = this.timers.get(id);
+
+        if (t?.timer) clearTimeout(t.timer);
+
+        this.timers.delete(id);
     }
 
     private notify() {
-        this.listeners.forEach(fn => fn(this.current));
+        const snapshot = this.entries;
+        this.listeners.forEach(fn => fn(snapshot));
     }
 }
 
@@ -107,30 +145,33 @@ const typeClasses: Record<string, string> = {
 
 /** Render ONCE in the layout — subscribes to ToastManager */
 export const GlobalToastRenderer: React.FC = () => {
-    const [entry, setEntry] = React.useState<ToastEntry>({message: '', type: 'primary', visible: false});
+    const [entries, setEntries] = React.useState<ToastEntry[]>([]);
 
-    React.useEffect(() => ToastManager.subscribe(setEntry), []);
+    React.useEffect(() => ToastManager.subscribe(setEntries), []);
 
     return (
-        <div className="toast-container">
-            <div
-                role="alert"
-                aria-live="assertive"
-                aria-atomic="true"
-                className={`toast ${entry.visible ? 'show' : ''} ${typeClasses[entry.type] || 'text-bg-primary'}`}
-                onMouseEnter={() => ToastManager.pause()}
-                onMouseLeave={() => ToastManager.resume()}
-            >
-                <div className="flex items-center">
-                    <div className="toast-body">{entry.message}</div>
-                    <button
-                        type="button"
-                        className="btn-close btn-close-white mr-2 ml-auto"
-                        aria-label="Close"
-                        onClick={() => ToastManager.hide()}
-                    />
+        <div className="toast-container" data-test-id="toast-container">
+            {entries.map(entry => (
+                <div
+                    key={entry.id}
+                    role="alert"
+                    aria-live="assertive"
+                    aria-atomic="true"
+                    className={`toast show ${typeClasses[entry.type] || 'text-bg-primary'}`}
+                    onMouseEnter={() => ToastManager.pause(entry.id)}
+                    onMouseLeave={() => ToastManager.resume(entry.id)}
+                >
+                    <div className="flex items-center">
+                        <div className="toast-body">{entry.message}</div>
+                        <button
+                            type="button"
+                            className="btn-close btn-close-white mr-2 ml-auto"
+                            aria-label="Close"
+                            onClick={() => ToastManager.hide(entry.id)}
+                        />
+                    </div>
                 </div>
-            </div>
+            ))}
         </div>
     );
 };

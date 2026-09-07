@@ -412,7 +412,7 @@ input.custom-date-input::-webkit-inner-spin-button {
 /* ---------- Toast (vanilla JS) ---------- */
 
 .toast-container {
-  @apply fixed bottom-6 z-[100];
+  @apply fixed bottom-6 z-[100] flex flex-col gap-2 items-end;
   right: 5rem;
 }
 
