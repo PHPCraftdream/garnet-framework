@@ -10,13 +10,13 @@ export class I18nDataEN {
     static Auth_CodeSent = 'Code sent';
     static Auth_EmailHint = 'Enter your email, a login code will be sent to it';
     static Auth_EmailRequired = 'Email required';
-    static Auth_ExhaustedInputAttempts = 'Exhausted input attempts';
+    static Auth_ExhaustedInputAttempts = 'No attempts left';
     static Auth_FailCheckCSRF = 'CSRF token validation failed';
     static Auth_IncorrectCode = 'Incorrect code';
     static Auth_RequestCode = 'Request code';
     static Auth_RequestNewCode = 'Request a new code';
     static Auth_Required = 'Authentication required';
-    static Auth_TriesRemains = 'Tries remains: %s';
+    static Auth_TriesRemains = 'Attempts remaining: %s';
     static Auth_Login = 'Login';
     static Auth_LoginRequired = 'Login is required';
     static Auth_LoginPlaceholder = 'Login';
