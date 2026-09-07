@@ -111,13 +111,19 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Controllers {
         }
 
         /**
-         * Store attachments for a message. Returns array of stored attachment records.
+         * Store attachments for a message.
+         *
+         * Rejected files come back as reasons in `errors` instead of vanishing:
+         * a message delivered without the file its author attached, and without
+         * a word about why, leaves the author believing it went along.
+         *
+         * @return array{stored: list<array<string, mixed>>, errors: list<string>}
          */
         private static function handleAttachments(IGlobalReqParams $globals, int $messageId): array {
             $filesData = $globals->readFilesValue('attachments', null);
 
             if (empty($filesData) || empty($filesData['name'])) {
-                return [];
+                return ['stored' => [], 'errors' => []];
             }
 
             $manager = self::getUploadManager();
@@ -139,7 +145,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Controllers {
                 $attachments[] = $attClass::get()->selectOneByField('id', $id);
             }
 
-            return $attachments;
+            return ['stored' => $attachments, 'errors' => $result->errors];
         }
 
         /**
@@ -336,7 +342,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Controllers {
             ]);
 
             // Handle file attachments
-            self::handleAttachments($globals, (int)$messageId);
+            $uploads = self::handleAttachments($globals, (int)$messageId);
 
             // Update conversation last_message_at
             $convsClass::get()->updateByField([
@@ -349,6 +355,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Controllers {
             return ControllerTools::JSON([
                 'success' => true,
                 'conversation_id' => $conversationId,
+                'attachmentErrors' => $uploads['errors'],
             ]);
         }
 

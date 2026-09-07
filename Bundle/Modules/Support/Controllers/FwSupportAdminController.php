@@ -106,11 +106,18 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Controllers {
             return new FileUploadManager(static::getUploadDir(), self::UPLOAD_SUBDIR);
         }
 
-        protected static function handleAttachments(IGlobalReqParams $globals, int $messageId): void {
+        /**
+         * Rejected files come back as reasons rather than vanishing: an answer
+         * that arrives without the file its author attached, and without a word
+         * about why, leaves the author believing it went with it.
+         *
+         * @return list<string>
+         */
+        protected static function handleAttachments(IGlobalReqParams $globals, int $messageId): array {
             $filesData = $globals->readFilesValue('attachments', null);
 
             if (empty($filesData) || empty($filesData['name'])) {
-                return;
+                return [];
             }
 
             $manager = static::getUploadManager();
@@ -129,6 +136,8 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Controllers {
                     'created_at' => $now,
                 ]);
             }
+
+            return $result->errors;
         }
 
         protected static function enrichWithAttachments(array &$messages): void {
@@ -347,7 +356,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Controllers {
                 'created_at' => $now,
             ]);
 
-            static::handleAttachments($globals, (int)$messageId);
+            $attachmentErrors = static::handleAttachments($globals, (int)$messageId);
 
             // Update ticket
             $updates = [
@@ -367,7 +376,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Controllers {
 
             $ticketsTable->updateByField($updates, 'id', $ticketId);
 
-            return ControllerTools::JSON(['success' => true]);
+            return ControllerTools::JSON(['success' => true, 'attachmentErrors' => $attachmentErrors]);
         }
 
         public static function post__internalComment(IGlobalReqParams $globals, IRouterUriParams $params): mixed {
@@ -402,12 +411,12 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Controllers {
                 'created_at' => $now,
             ]);
 
-            static::handleAttachments($globals, (int)$messageId);
+            $attachmentErrors = static::handleAttachments($globals, (int)$messageId);
 
             // Update timestamp only — no status change, no unread change
             $ticketsTable->updateByField(['updated_at' => $now], 'id', $ticketId);
 
-            return ControllerTools::JSON(['success' => true]);
+            return ControllerTools::JSON(['success' => true, 'attachmentErrors' => $attachmentErrors]);
         }
 
         public static function post__changeStatus(IGlobalReqParams $globals, IRouterUriParams $params): mixed {

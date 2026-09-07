@@ -72,13 +72,20 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Controllers {
         }
 
         /**
-         * Store attachments for a message. Returns array of stored attachment records.
+         * Store attachments for a message.
+         *
+         * Rejected files are NOT silently dropped: their reasons come back in
+         * `errors` so the caller can tell the sender. A message that arrives
+         * without the file its author attached, and without a word about why,
+         * is worse than a refusal — the author believes the file went with it.
+         *
+         * @return array{stored: list<array<string, mixed>>, errors: list<string>}
          */
         protected static function handleAttachments(IGlobalReqParams $globals, int $messageId): array {
             $filesData = $globals->readFilesValue('attachments', null);
 
             if (empty($filesData) || empty($filesData['name'])) {
-                return [];
+                return ['stored' => [], 'errors' => []];
             }
 
             $manager = static::getUploadManager();
@@ -100,7 +107,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Controllers {
                 $attachments[] = $table->selectOneByField('id', $id);
             }
 
-            return $attachments;
+            return ['stored' => $attachments, 'errors' => $result->errors];
         }
 
         /**
@@ -339,13 +346,14 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Controllers {
             ]);
 
             // Handle file attachments
-            static::handleAttachments($globals, (int)$messageId);
+            $uploads = static::handleAttachments($globals, (int)$messageId);
 
             $ticket = $ticketsTable->selectOneByField('id', $ticketId);
 
             return ControllerTools::JSON([
                 'success' => true,
                 'ticket' => $ticket,
+                'attachmentErrors' => $uploads['errors'],
             ]);
         }
 
@@ -389,7 +397,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Controllers {
             ]);
 
             // Handle file attachments
-            static::handleAttachments($globals, (int)$messageId);
+            $uploads = static::handleAttachments($globals, (int)$messageId);
 
             $ticketsTable->updateByField([
                 'status' => 'waiting_support',
@@ -397,7 +405,10 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Controllers {
                 'updated_at' => $now,
             ], 'id', $ticketId);
 
-            return ControllerTools::JSON(['success' => true]);
+            return ControllerTools::JSON([
+                'success' => true,
+                'attachmentErrors' => $uploads['errors'],
+            ]);
         }
 
         // ── API: file download ───────────────────────────────────────
