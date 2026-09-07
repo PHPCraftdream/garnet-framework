@@ -246,8 +246,8 @@ export class I18nDataRU {
     static Tz_Mismatch_ProfileLabel = 'В профиле';
     static Tz_Diff_Hours = '%s ч';
     static Tz_Diff_HoursMinutes = '%s ч %s мин';
-    static Tz_Diff_Ahead = '%s впереди браузера';
-    static Tz_Diff_Behind = '%s позади браузера';
+    static Tz_Diff_Ahead = 'опережает браузер на %s';
+    static Tz_Diff_Behind = 'отстаёт от браузера на %s';
     static Tz_Diff_Same = 'без разницы';
     static Consent_PD = 'Я даю согласие на обработку моих персональных данных в соответствии с [Политикой обработки персональных данных](page:privacy)';
     static Consent_PD_Required = 'Без согласия отправить заявку невозможно';

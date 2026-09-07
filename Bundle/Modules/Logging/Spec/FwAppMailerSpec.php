@@ -167,6 +167,25 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Spec\Mailer {
                 $row = $this->logTable->insertCalls[0];
                 expect($row['mail_type'])->toBe('general');
             });
+
+            it('prefers an explicit type over the subject guess', function (): void {
+                // Subject says "Успешная авторизация" — the heuristic would file
+                // a login NOTICE under auth_code, the same type as sending the
+                // code itself, and the mail log would stop telling them apart.
+                FwAppMailer::setNextType('auth_login_notice');
+                $this->mailer->sendHtmlMail('a@example.com', 'Успешная авторизация', '<p>notice</p>');
+                $row = $this->logTable->insertCalls[0];
+                expect($row['mail_type'])->toBe('auth_login_notice');
+            });
+
+            it('consumes the explicit type — the next mail is classified again', function (): void {
+                FwAppMailer::setNextType('auth_login_notice');
+                $this->mailer->sendHtmlMail('a@example.com', 'Успешная авторизация', '<p>notice</p>');
+                $this->mailer->sendHtmlMail('a@example.com', 'Авторизация на сайте', '<p>code</p>');
+
+                expect($this->logTable->insertCalls[0]['mail_type'])->toBe('auth_login_notice');
+                expect($this->logTable->insertCalls[1]['mail_type'])->toBe('auth_code');
+            });
         });
 
         describe('sendHtmlMail() — prod mode, normal address', function (): void {

@@ -6,6 +6,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
     use PHPCraftdream\Garnet\Bundle\I18n\FwI18n;
     use PHPCraftdream\Garnet\Bundle\Modules\Auth\AuthStrategy\AuthConfig;
     use PHPCraftdream\Garnet\Bundle\Modules\Auth\AuthStrategy\AuthStrategyInterface;
+    use PHPCraftdream\Garnet\Bundle\Modules\Logging\Mail\FwAppMailer;
     use PHPCraftdream\Garnet\Bundle\Utils\HtmlLayout;
     use PHPCraftdream\Garnet\Bundle\Utils\RenderIsland;
     use PHPCraftdream\Garnet\Kernel\Core\Tools\DateTools;
@@ -545,7 +546,12 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
             $render = $twig->render('Email/Email.twig', $result);
             $render = HtmlMinify::get()->minify($render);
 
-            $mailer->sendHtmlMail($authEmail, FwI18n::t('Auth'), $render);
+            // Тема — своя, а не общая «Авторизация»: у человека в ящике иначе
+            // два подряд одинаковых письма, и какое из них с кодом, видно
+            // только если открыть оба. Тип задаём явно, потому что догадка по
+            // теме отнесла бы это уведомление к выдаче кодов.
+            FwAppMailer::setNextType('auth_login_notice');
+            $mailer->sendHtmlMail($authEmail, FwI18n::t('Email_Auth_SuccessLogin_Title'), $render);
         }
 
         /**

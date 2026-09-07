@@ -14,8 +14,24 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Mail {
         /** Structured metadata to attach to the next log entry (consumed once). */
         private static array $nextMeta = [];
 
+        /**
+         * Явный тип для следующего письма (тоже одноразовый).
+         *
+         * detectMailType() угадывает тип по теме, и для писем, чьи темы
+         * похожи, угадывает неверно: уведомление «Успешная авторизация»
+         * попадало в журнал как `auth_code` — тем же типом, что и выдача
+         * кода. В журнале писем и в фильтрах админки одно становилось
+         * неотличимо от другого ровно там, где разбирают, когда и откуда
+         * заходили под учётной записью.
+         */
+        private static ?string $nextType = null;
+
         public static function setNextMeta(array $meta): void {
             self::$nextMeta = $meta;
+        }
+
+        public static function setNextType(string $type): void {
+            self::$nextType = $type;
         }
 
         public function __construct(IMailer $inner) {
@@ -27,7 +43,11 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Mail {
         public function sendHtmlMail(string $to, string $subject, string $htmlMessage): void {
             $isDev = IniConfig::app()->paramString('env', 'prod') === 'dev';
             $isTestEmail = str_ends_with(strtolower($to), '.test');
-            $mailType = $this->detectMailType($subject);
+            // Явный тип важнее догадки по теме. Оба одноразовых значения
+            // снимаем здесь же, до любого выхода из метода, — иначе они
+            // протекли бы на следующее письмо.
+            $mailType = self::$nextType ?? $this->detectMailType($subject);
+            self::$nextType = null;
 
             // Resolve account_id by email
             $accountId = $this->resolveAccountId($to);

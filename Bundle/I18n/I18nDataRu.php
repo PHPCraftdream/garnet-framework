@@ -284,8 +284,8 @@ namespace PHPCraftdream\Garnet\Bundle\I18n {
             'Tz_Mismatch_ProfileLabel' => 'В профиле',
             'Tz_Diff_Hours' => '%s ч',
             'Tz_Diff_HoursMinutes' => '%s ч %s мин',
-            'Tz_Diff_Ahead' => '%s впереди браузера',
-            'Tz_Diff_Behind' => '%s позади браузера',
+            'Tz_Diff_Ahead' => 'опережает браузер на %s',
+            'Tz_Diff_Behind' => 'отстаёт от браузера на %s',
             'Tz_Diff_Same' => 'без разницы',
 
             'Consent_PD' => 'Я даю согласие на обработку моих персональных данных в соответствии с [Политикой обработки персональных данных](page:privacy)',
