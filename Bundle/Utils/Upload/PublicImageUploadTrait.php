@@ -1,6 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Bundle\Utils\Upload {
+    use PHPCraftdream\Garnet\Bundle\I18n\FwI18n;
     use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Router\IRouterUriParams;
     use PHPCraftdream\Garnet\Kernel\Io\Router\ControllerTools;
@@ -36,7 +37,7 @@ namespace PHPCraftdream\Garnet\Bundle\Utils\Upload {
             $files = $globals->readFilesValue('file');
 
             if (empty($files) || empty($files['tmp_name'])) {
-                return ControllerTools::JSON(['error' => 'No file uploaded'], status: 400);
+                return ControllerTools::JSON(['error' => FwI18n::t('Upload_Empty')], status: 400);
             }
 
             // Validate: images only
@@ -44,12 +45,12 @@ namespace PHPCraftdream\Garnet\Bundle\Utils\Upload {
             $mime = mime_content_type($files['tmp_name']);
 
             if (!in_array($mime, $allowedMimes, true)) {
-                return ControllerTools::JSON(['error' => 'Only images allowed'], status: 400);
+                return ControllerTools::JSON(['error' => FwI18n::t('Upload_ImagesOnly')], status: 400);
             }
 
             // Max 5MB
             if ($files['size'] > 5 * 1024 * 1024) {
-                return ControllerTools::JSON(['error' => 'File too large (max 5MB)'], status: 400);
+                return ControllerTools::JSON(['error' => FwI18n::t('Upload_TooLarge', [5])], status: 400);
             }
 
             $ext = pathinfo($files['name'], PATHINFO_EXTENSION);
@@ -63,7 +64,7 @@ namespace PHPCraftdream\Garnet\Bundle\Utils\Upload {
             $destPath = $uploadDir . DIRECTORY_SEPARATOR . $storedName;
 
             if (!move_uploaded_file($files['tmp_name'], $destPath)) {
-                return ControllerTools::JSON(['error' => 'Upload failed'], status: 500);
+                return ControllerTools::JSON(['error' => FwI18n::t('Upload_StoreFailed')], status: 500);
             }
 
             $webUrl = static::uploadWebPath() . $storedName;

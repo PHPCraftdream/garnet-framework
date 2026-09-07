@@ -62,6 +62,7 @@ namespace PHPCraftdream\Garnet\Bundle\I18n {
             'Upload_StoreFailed' => 'could not save the file',
             'Upload_NotAnImage' => 'the name promises a picture (.%s), but the contents are not an image',
             'Upload_NotAPdf' => 'the name promises a PDF, but the contents are not one',
+            'Upload_ImagesOnly' => 'only an image can be uploaded here',
 
             'Common_FromHasError' => 'Form has errors',
             'Common_IncorrectValue' => 'Incorrect value',
