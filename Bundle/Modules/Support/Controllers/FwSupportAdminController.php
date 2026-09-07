@@ -217,7 +217,67 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Controllers {
             }
             unset($ticket);
 
+            static::enrichWithAttachmentCounts($tickets);
+
             return $tickets;
+        }
+
+        /**
+         * Whether a ticket carries files was previously discoverable only by
+         * opening it — a queue of two hundred rows gave no way to see which
+         * ones had something to look at.
+         *
+         * Two batched queries rather than one per row: the list is capped at
+         * 200, and a per-row count would be 200 round trips for a column.
+         *
+         * @param array<int, array<string, mixed>> $tickets
+         */
+        protected static function enrichWithAttachmentCounts(array &$tickets): void {
+            $ticketIds = array_values(array_filter(array_map(
+                static fn (array $t): int => (int)($t['id'] ?? 0),
+                $tickets,
+            )));
+
+            if ($ticketIds === []) {
+                return;
+            }
+
+            $messages = static::messagesTable()->selectAll(function (SelectInterface $q) use ($ticketIds): void {
+                $q->resetCols();
+                $q->cols(['id', 'ticket_id']);
+                $q->where('ticket_id IN (?)', [$ticketIds]);
+            });
+
+            $ticketOfMessage = [];
+
+            foreach ($messages as $message) {
+                $ticketOfMessage[(int)$message['id']] = (int)$message['ticket_id'];
+            }
+
+            $counts = [];
+
+            if ($ticketOfMessage !== []) {
+                $attachments = static::attachmentsTable()->selectAll(
+                    function (SelectInterface $q) use ($ticketOfMessage): void {
+                        $q->resetCols();
+                        $q->cols(['message_id']);
+                        $q->where('message_id IN (?)', [array_keys($ticketOfMessage)]);
+                    },
+                );
+
+                foreach ($attachments as $attachment) {
+                    $ticketId = $ticketOfMessage[(int)$attachment['message_id']] ?? 0;
+
+                    if ($ticketId > 0) {
+                        $counts[$ticketId] = ($counts[$ticketId] ?? 0) + 1;
+                    }
+                }
+            }
+
+            foreach ($tickets as &$ticket) {
+                $ticket['attachments_count'] = $counts[(int)($ticket['id'] ?? 0)] ?? 0;
+            }
+            unset($ticket);
         }
 
         public static function post__ticketDetail(IGlobalReqParams $globals, IRouterUriParams $params): mixed {
