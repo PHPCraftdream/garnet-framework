@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {Clock, Check} from 'lucide-react';
 import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
 import {
     resolvedUserTz,
@@ -47,7 +48,7 @@ export const TimezoneNotice: React.FC<Props> = ({warnOnly = false, infoOnly = fa
     return (
         <>
             {!warnOnly && (
-                <Banner variant="info" icon="🕒" dataTestId="tz-banner-info">
+                <Banner variant="info" icon={<Clock size={16} />} dataTestId="tz-banner-info">
                     {t.Tz_Info([userTzName])}
                 </Banner>
             )}
@@ -55,7 +56,7 @@ export const TimezoneNotice: React.FC<Props> = ({warnOnly = false, infoOnly = fa
                 <Banner variant="warn" title={t.Tz_Mismatch_Title()} dataTestId="tz-banner-warn">
                     <div className="tz-mismatch-row">
                         <span className="tz-chip-inline tz-chip-active">
-                            <span className="tz-chip-check" aria-hidden="true">✓</span>
+                            <span className="tz-chip-check" aria-hidden="true"><Check size={12} /></span>
                             <span className="tz-chip-label-text">{t.Tz_Mismatch_Footer([userTzName])}:</span>
                             <span className="tz-chip-time">{nowInUser}</span>
                         </span>

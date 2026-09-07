@@ -1,3 +1,7 @@
+import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
+
+// Plain glyphs, not emoji: emoji are someone else's artwork — a different
+// picture on every platform, coloured whatever the font decides.
 export const gridConfig = () => {
     return {
         search: true,
@@ -8,11 +12,11 @@ export const gridConfig = () => {
         },
         language: {
             search: {
-                placeholder: '🔍 ...'
+                placeholder: t.Grid_Search()
             },
             pagination: {
-                previous: '←️',
-                next: '→️',
+                previous: '‹',
+                next: '›',
                 navigate: (page, pages) => `${page} / ${pages}`,
                 page: (page) => `${page}`,
                 showing: ' ',

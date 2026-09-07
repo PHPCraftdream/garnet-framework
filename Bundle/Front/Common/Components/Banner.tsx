@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {Info, AlertTriangle, Ban, CheckCircle2} from 'lucide-react';
 
 export type BannerVariant = 'info' | 'warn' | 'danger' | 'success';
 
@@ -11,11 +12,14 @@ interface Props {
     dataTestId?: string;
 }
 
-const DEFAULT_ICONS: Record<BannerVariant, string> = {
-    info: 'ℹ️',
-    warn: '⚠️',
-    danger: '⛔',
-    success: '✅',
+// Line icons rather than emoji: emoji render as someone else's artwork —
+// different on every platform, coloured whatever the font decides, and
+// occasionally carrying meaning nobody asked them to carry.
+const DEFAULT_ICONS: Record<BannerVariant, React.ReactNode> = {
+    info: <Info size={16} />,
+    warn: <AlertTriangle size={16} />,
+    danger: <Ban size={16} />,
+    success: <CheckCircle2 size={16} />,
 };
 
 /**
