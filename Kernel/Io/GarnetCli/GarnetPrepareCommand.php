@@ -98,15 +98,22 @@ class GarnetPrepareCommand {
         $link = $pkgDir . DIRECTORY_SEPARATOR . 'node_modules';
         $target = $pkgDir . DIRECTORY_SEPARATOR . 'FrontBuilder' . DIRECTORY_SEPARATOR . 'node_modules';
 
-        // A junction/symlink reports as a directory, so this covers "already
-        // linked" and "someone installed modules here for real" alike.
-        if (is_dir($link) || is_link($link)) {
+        // Порядок важен. Сначала зависимости: ссылка на пустой каталог
+        // выглядит целой (`is_dir()` по ней истинна), поэтому проверка ссылки
+        // первой навсегда закрыла бы путь к починке — сборка продолжала бы
+        // падать на разрешении модулей при формально существующей ссылке.
+        //
+        // composer update сносит каталог пакета целиком, поэтому пропадает не
+        // только ссылка, но и сами модули. Ставим их сами: prepare и есть
+        // документированный шаг подготовки к сборке, и отправлять человека
+        // выполнять одну команду руками — значит оставить грабли на месте.
+        if (!self::hasModules($target) && !self::installFrontBuilderModules(dirname($target))) {
             return;
         }
 
-        if (!is_dir($target)) {
-            fwrite(STDERR, "prepare: FrontBuilder/node_modules отсутствует — сначала выполните `npm ci` в {$pkgDir}/FrontBuilder\n");
-
+        // Junction или симлинк отвечают на is_dir() истиной — этим и покрыты
+        // оба случая: «уже связано» и «сюда кто-то поставил модули всерьёз».
+        if (is_dir($link) || is_link($link)) {
             return;
         }
 
@@ -120,6 +127,58 @@ class GarnetPrepareCommand {
         fwrite(STDERR, $ok
             ? "prepare: восстановлена ссылка node_modules → FrontBuilder/node_modules\n"
             : "prepare: не удалось создать ссылку {$link} → {$target}, сборка может упасть на разрешении модулей\n");
+    }
+
+    /**
+     * Зависимости считаются установленными, только если каталог непустой.
+     *
+     * Проверять существование недостаточно: прерванный или упавший npm
+     * оставляет пустой `node_modules`, и по `is_dir()` он неотличим от
+     * готового. На такой каталог была бы наведена ссылка, а сборка упала бы
+     * ровно тем же «Can't resolve», который здесь и лечится.
+     */
+    private static function hasModules(string $dir): bool {
+        if (!is_dir($dir)) {
+            return false;
+        }
+        $entries = @scandir($dir);
+
+        return $entries !== false && count(array_diff($entries, ['.', '..'])) > 0;
+    }
+
+    /**
+     * `npm ci` в FrontBuilder. Долгая операция, поэтому о ней сообщаем.
+     *
+     * `ci`, а не `install`: lock-файл в пакете есть, и воспроизводимость
+     * сборки важнее возможности подтянуть свежие версии по диапазону.
+     */
+    private static function installFrontBuilderModules(string $frontBuilderDir): bool {
+        if (!is_file($frontBuilderDir . DIRECTORY_SEPARATOR . 'package.json')) {
+            fwrite(STDERR, "prepare: {$frontBuilderDir}/package.json не найден — зависимости сборки не восстановить\n");
+
+            return false;
+        }
+        fwrite(STDERR, "prepare: зависимости сборки отсутствуют, ставлю (npm ci в {$frontBuilderDir}) — это займёт минуту\n");
+
+        // Меняем каталог процессом, а не флагом npm и не `cd` в командной
+        // строке: `--prefix` у `ci` ведёт себя не так, как у `install`, а
+        // синтаксис `cd` различается между cmd и sh.
+        $prevDir = getcwd();
+        chdir($frontBuilderDir);
+        exec('npm ci --no-audit --no-fund 2>&1', $out, $code);
+
+        if ($prevDir !== false) {
+            chdir($prevDir);
+        }
+
+        if ($code !== 0) {
+            fwrite(STDERR, "prepare: npm ci завершился с кодом {$code}\n" . implode("\n", array_slice($out, -5)) . "\n");
+
+            return false;
+        }
+        fwrite(STDERR, "prepare: зависимости сборки установлены\n");
+
+        return true;
     }
 
     private static function makeJunction(string $link, string $target): bool {
