@@ -697,6 +697,14 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
         }
 
         /**
+         * Письмо-уведомление об успешном входе.
+         *
+         * ВНИМАНИЕ: у AuthMiddleware есть свой такой же метод. Эти два класса
+         * не родственники — оба реализуют AuthStrategyInterface напрямую, —
+         * поэтому правка здесь НЕ распространяется туда и наоборот. Меняя
+         * письмо, меняйте оба: расхождение между стратегиями проявится только
+         * у части пользователей и будет выглядеть как невоспроизводимый баг.
+         *
          * @param IGlobalReqParams $globals
          * @param string $authEmail
          * @return void
@@ -728,7 +736,12 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
             $render = $twig->render('Email/Email.twig', $result);
             $render = HtmlMinify::get()->minify($render);
 
-            $mailer->sendHtmlMail($authEmail, FwI18n::t('Auth'), $render);
+            // Тема своя, а не общая «Авторизация»: иначе в ящике два подряд
+            // одинаковых письма, и какое из них с кодом — видно только если
+            // открыть оба. Тип задаём явно: догадка по теме отнесла бы это
+            // уведомление к выдаче кодов и смешала бы их в журнале писем.
+            FwAppMailer::setNextType('auth_login_notice');
+            $mailer->sendHtmlMail($authEmail, FwI18n::t('Email_Auth_SuccessLogin_Title'), $render);
         }
 
         /**
