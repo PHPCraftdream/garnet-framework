@@ -231,6 +231,39 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload {
                 }
             }
 
+            if ($realMime !== false) {
+                return static::checkExtensionMatchesContent($ext, $realMime);
+            }
+
+            return null;
+        }
+
+        /**
+         * An extension is a promise about what the file is. `.jpg` holding
+         * plain text passes both allowlists independently — the extension is
+         * allowed, the detected type is allowed — and lands on the recipient
+         * as a picture that will not open.
+         *
+         * Only formats finfo identifies unambiguously are checked, and only
+         * when the promise is broken outright. Text-ish extensions are left
+         * alone on purpose: finfo calls a .log file anything from text/plain
+         * to application/octet-stream depending on its bytes, and refusing on
+         * that would reject honest files.
+         */
+        protected static function checkExtensionMatchesContent(string $ext, string $realMime): ?string {
+            // No svg: finfo calls the same honest drawing image/svg+xml or
+            // text/xml depending on whether it carries an XML declaration, so
+            // this check would refuse valid files.
+            $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
+
+            if (in_array($ext, $imageExtensions, true) && !str_starts_with($realMime, 'image/')) {
+                return FwI18n::t('Upload_NotAnImage', [$ext]);
+            }
+
+            if ($ext === 'pdf' && $realMime !== 'application/pdf') {
+                return FwI18n::t('Upload_NotAPdf');
+            }
+
             return null;
         }
 

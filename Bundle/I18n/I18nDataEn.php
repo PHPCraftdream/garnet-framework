@@ -60,6 +60,8 @@ namespace PHPCraftdream\Garnet\Bundle\I18n {
             'Upload_ContentNotAllowed' => 'file contents do not look like an allowed type (%s)',
             'Upload_Incomplete' => 'the file did not upload completely, please try again',
             'Upload_StoreFailed' => 'could not save the file',
+            'Upload_NotAnImage' => 'the name promises a picture (.%s), but the contents are not an image',
+            'Upload_NotAPdf' => 'the name promises a PDF, but the contents are not one',
 
             'Common_FromHasError' => 'Form has errors',
             'Common_IncorrectValue' => 'Incorrect value',

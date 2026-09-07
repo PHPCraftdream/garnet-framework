@@ -370,6 +370,51 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
                 unlink($emptyFile);
             });
 
+            it('rejects a text file wearing a .jpg name, though both checks pass alone', function (): void {
+                $rules = new UploadRules(
+                    maxFileSize: 1024 * 1024,
+                    maxFilesCount: 5,
+                    allowedTypes: ['text/plain', 'image/jpeg'],
+                    allowedExtensions: ['txt', 'jpg'],
+                );
+
+                // The extension is allowed and the detected type is allowed —
+                // independently. Together they contradict each other, and the
+                // recipient gets a picture that will not open.
+                $textFile = tempnam(sys_get_temp_dir(), 'gtest_upload_');
+                file_put_contents($textFile, 'not a picture at all');
+
+                $file = [
+                    'name' => 'renamed.jpg',
+                    'tmp_name' => $textFile,
+                    'error' => UPLOAD_ERR_OK,
+                    'size' => 20,
+                ];
+
+                $error = $this->fn->invoke(null, $file, $rules);
+                expect($error)->toContain('Upload_NotAnImage');
+
+                unlink($textFile);
+            });
+
+            it('accepts a .txt file detected as text/plain — the honest case still passes', function (): void {
+                $rules = new UploadRules(
+                    maxFileSize: 1024 * 1024,
+                    maxFilesCount: 5,
+                    allowedTypes: ['text/plain'],
+                    allowedExtensions: ['txt'],
+                );
+
+                $file = [
+                    'name' => 'notes.txt',
+                    'tmp_name' => $this->tempFile,
+                    'error' => UPLOAD_ERR_OK,
+                    'size' => 12,
+                ];
+
+                expect($this->fn->invoke(null, $file, $rules))->toBe(null);
+            });
+
             it('rejects file with disallowed MIME type (detected by finfo)', function (): void {
                 $rules = new UploadRules(
                     maxFileSize: 1024 * 1024,
