@@ -589,13 +589,16 @@ describe('QueryTools', function (): void {
             expect($params[1])->toBe('John');
         });
 
-        it('replaces named parameter with ? when not in args', function (): void {
-            $sql = 'WHERE id = :id';
-            [$newSql, $params] = QueryTools::patchArgsIndexed($sql, ['other' => 'value']);
+        it('refuses a named parameter that is not in args', function (): void {
+            // This used to bind NULL and carry on. Silently: `id = NULL` is
+            // never true, so the query returned nothing and the caller read
+            // that as "no such row" — the failure mode a guard query cannot
+            // survive. A placeholder without a value is now an error.
+            $call = function (): void {
+                QueryTools::patchArgsIndexed('WHERE id = :id', ['other' => 'value']);
+            };
 
-            expect($newSql)->toContain('WHERE id = ?');
-            expect(count($params))->toBe(1);
-            expect($params[0])->toBe(null);
+            expect($call)->toThrow(new DbException());
         });
 
         it('expands arrays for positional parameters', function (): void {

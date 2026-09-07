@@ -124,7 +124,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query\Spec {
                 $mockPool = new MockDbPool();
 
                 allow($mockSelect)->toReceive('getBindValues')->andReturn(['id' => 1]);
-                allow($mockSelect)->toReceive('getStatement')->andReturn('SELECT * FROM users WHERE id = ?');
+                allow($mockSelect)->toReceive('getStatement')->andReturn('SELECT * FROM users WHERE id = :id');
 
                 $queryEx = new QueryEx($mockPool);
                 $result = $queryEx->exSelect($mockSelect);
@@ -138,7 +138,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query\Spec {
                 $mockPool = new MockDbPool();
 
                 allow($mockSelect)->toReceive('getBindValues')->andReturn(['id' => 1]);
-                allow($mockSelect)->toReceive('getStatement')->andReturn('SELECT * FROM users WHERE id = ?');
+                allow($mockSelect)->toReceive('getStatement')->andReturn('SELECT * FROM users WHERE id = :id');
 
                 $callback = function ($result): void {
                 };
@@ -212,7 +212,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query\Spec {
                 };
 
                 allow($mockInsert)->toReceive('getBindValues')->andReturn(['name' => 'John']);
-                allow($mockInsert)->toReceive('getStatement')->andReturn('INSERT INTO users (name) VALUES (?)');
+                allow($mockInsert)->toReceive('getStatement')->andReturn('INSERT INTO users (name) VALUES (:name)');
 
                 $queryEx = new QueryEx($mockPool);
                 $result = $queryEx->exInsert($mockInsert);
@@ -225,7 +225,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query\Spec {
                 $mockPool = new MockDbPool();
 
                 allow($mockInsert)->toReceive('getBindValues')->andReturn(['name' => 'John']);
-                allow($mockInsert)->toReceive('getStatement')->andReturn('INSERT INTO users (name) VALUES (?)');
+                allow($mockInsert)->toReceive('getStatement')->andReturn('INSERT INTO users (name) VALUES (:name)');
 
                 $queryEx = new QueryEx($mockPool);
                 $result = $queryEx->exInsert($mockInsert);
@@ -238,7 +238,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query\Spec {
                 $mockPool = new MockDbPool();
 
                 allow($mockInsert)->toReceive('getBindValues')->andReturn(['name' => 'John']);
-                allow($mockInsert)->toReceive('getStatement')->andReturn('INSERT INTO users (name) VALUES (?)');
+                allow($mockInsert)->toReceive('getStatement')->andReturn('INSERT INTO users (name) VALUES (:name)');
 
                 $queryEx = new QueryEx($mockPool);
                 $queryEx->exInsertAsync($mockInsert);
@@ -259,7 +259,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query\Spec {
                 };
 
                 allow($mockUpdate)->toReceive('getBindValues')->andReturn(['name' => 'Jane', 'id' => 1]);
-                allow($mockUpdate)->toReceive('getStatement')->andReturn('UPDATE users SET name = ? WHERE id = ?');
+                allow($mockUpdate)->toReceive('getStatement')->andReturn('UPDATE users SET name = :name WHERE id = :id');
 
                 $queryEx = new QueryEx($mockPool);
                 $result = $queryEx->exUpdate($mockUpdate);
@@ -273,7 +273,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query\Spec {
                 $mockPool = new MockDbPool();
 
                 allow($mockUpdate)->toReceive('getBindValues')->andReturn(['name' => 'Jane', 'id' => 1]);
-                allow($mockUpdate)->toReceive('getStatement')->andReturn('UPDATE users SET name = ? WHERE id = ?');
+                allow($mockUpdate)->toReceive('getStatement')->andReturn('UPDATE users SET name = :name WHERE id = :id');
 
                 $queryEx = new QueryEx($mockPool);
                 $queryEx->exUpdateAsync($mockUpdate);
@@ -294,7 +294,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query\Spec {
                 };
 
                 allow($mockDelete)->toReceive('getBindValues')->andReturn(['id' => 1]);
-                allow($mockDelete)->toReceive('getStatement')->andReturn('DELETE FROM users WHERE id = ?');
+                allow($mockDelete)->toReceive('getStatement')->andReturn('DELETE FROM users WHERE id = :id');
 
                 $queryEx = new QueryEx($mockPool);
                 $result = $queryEx->exDelete($mockDelete);
@@ -308,7 +308,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query\Spec {
                 $mockPool = new MockDbPool();
 
                 allow($mockDelete)->toReceive('getBindValues')->andReturn(['id' => 1]);
-                allow($mockDelete)->toReceive('getStatement')->andReturn('DELETE FROM users WHERE id = ?');
+                allow($mockDelete)->toReceive('getStatement')->andReturn('DELETE FROM users WHERE id = :id');
 
                 $queryEx = new QueryEx($mockPool);
                 $queryEx->exDeleteAsync($mockDelete);
@@ -323,7 +323,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query\Spec {
                 $mockPool = new MockDbPool();
 
                 allow($mockInsert)->toReceive('getBindValues')->andReturn(['email' => 'test@example.com']);
-                allow($mockInsert)->toReceive('getStatement')->andReturn('INSERT INTO users (email) VALUES (?)');
+                allow($mockInsert)->toReceive('getStatement')->andReturn('INSERT INTO users (email) VALUES (:email)');
 
                 $queryEx = new QueryEx($mockPool);
                 $queryEx->exInsertIgnore($mockInsert);
@@ -337,7 +337,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query\Spec {
                 $mockPool = new MockDbPool();
 
                 allow($mockInsert)->toReceive('getBindValues')->andReturn(['email' => 'test@example.com']);
-                allow($mockInsert)->toReceive('getStatement')->andReturn('INSERT INTO users (email) VALUES (?)');
+                allow($mockInsert)->toReceive('getStatement')->andReturn('INSERT INTO users (email) VALUES (:email)');
 
                 $queryEx = new QueryEx($mockPool);
                 $queryEx->exInsertIgnoreAsync($mockInsert);

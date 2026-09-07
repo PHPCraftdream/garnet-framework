@@ -180,16 +180,58 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
 
         // --------------------------------------------------------------------------------------------------------------
 
+        /**
+         * Rewrites every placeholder in $sql into a positional `?` and returns
+         * the bind values in matching order.
+         *
+         * A placeholder with no value in $args is a FATAL error, not a NULL.
+         * Substituting NULL silently turns `col < ?` into `col < NULL`, which
+         * is never true — the query then returns nothing and the caller reads
+         * that as "no such rows". Guards built on such a query pass by
+         * default: a slot-overlap check finds no overlap, a duplicate check
+         * finds no duplicate. Nothing fails, nothing is logged, and the data
+         * is quietly wrong.
+         *
+         * The usual source is a chain of positional wheres:
+         *
+         *     ->where('a = ?', [$a])->where('b = ?', [$b])
+         *
+         * Aura binds each call's values under its own index starting at 0, so
+         * the second call overwrites the first: one value survives for two
+         * placeholders. Pass named placeholders instead — `:a`/`:b` carry
+         * their own keys and never collide:
+         *
+         *     ->where('a = :a AND b = :b', ['a' => $a, 'b' => $b])
+         *
+         * A deliberately bound null still works: the check is for a MISSING
+         * key, not a null value.
+         *
+         * @throws DbException
+         */
         public static function patchArgsIndexed(string $sql, array $args): array {
             $newArgs = [];
             $currentInd = 0;
 
-            $sql = preg_replace_callback('#(\?)|(:([a-zA-Z_]\w*))#is', function ($matches) use (&$newArgs, &$currentInd, $args) {
+            $sql = preg_replace_callback('#(\?)|(:([a-zA-Z_]\w*))#is', function ($matches) use (&$newArgs, &$currentInd, $args, $sql) {
                 $statement = $matches[3] ?? $matches[0];
                 $isQ = $statement === '?';
                 $key = $isQ ? $currentInd : $statement;
 
-                $value = $args[$key] ?? ($args[':' . $key] ?? null);
+                if (array_key_exists($key, $args)) {
+                    $value = $args[$key];
+                } elseif (array_key_exists(':' . $key, $args)) {
+                    $value = $args[':' . $key];
+                } else {
+                    $where = $isQ ? "positional placeholder #{$currentInd}" : "named placeholder :{$key}";
+
+                    throw new DbException(
+                        "Unbound {$where} in query: {$sql}. "
+                        . 'Every placeholder needs a bind value; a missing one would silently become NULL '
+                        . 'and make the condition never match. A chain of positional wheres '
+                        . "(->where('a = ?', [\$a])->where('b = ?', [\$b])) is the usual cause — each call "
+                        . 'rebinds index 0, so only the last value survives. Use named placeholders instead.'
+                    );
+                }
 
                 if ($isQ) {
                     $currentInd += 1;
