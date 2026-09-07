@@ -54,8 +54,8 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
         });
 
         describe('::serve — access control', function (): void {
-            it('returns 403 JSON when accessCheck returns false', function (): void {
-                $resp = SecureFileServing::serve(
+            it('answers a refused file exactly as it answers a missing one', function (): void {
+                $refused = SecureFileServing::serve(
                     uploadDir: $this->tempDir,
                     subDir: 'support',
                     storedName: 'safe.pdf',
@@ -64,8 +64,20 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload\Spec {
                     accessCheck: fn () => false,
                 );
 
-                expect($resp->getStatusCode())->toBe(403);
-                expect((string)$resp->getBody())->toContain('Access denied');
+                $missing = SecureFileServing::serve(
+                    uploadDir: $this->tempDir,
+                    subDir: 'support',
+                    storedName: 'no-such-file-at-all.pdf',
+                    displayName: 'no-such-file-at-all.pdf',
+                    mimeType: 'application/pdf',
+                    accessCheck: fn () => true,
+                );
+
+                // Two different answers would let anyone count other people's
+                // attachments by walking the id sequence, without opening one.
+                expect($refused->getStatusCode())->toBe(404);
+                expect($refused->getStatusCode())->toBe($missing->getStatusCode());
+                expect((string)$refused->getBody())->toBe((string)$missing->getBody());
             });
 
             it('serves the file with Content-Type and inline disposition when accessCheck returns true', function (): void {

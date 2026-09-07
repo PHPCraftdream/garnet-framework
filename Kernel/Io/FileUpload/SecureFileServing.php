@@ -47,9 +47,17 @@ namespace PHPCraftdream\Garnet\Kernel\Io\FileUpload {
             callable $accessCheck,
             bool $inline = true,
         ): ResponseInterface {
-            // Access control
+            // Access control.
+            //
+            // Answers 404, not 403, and deliberately in the same words a
+            // missing file gets. "Access denied" for someone else's file and
+            // "File not found" for a nonexistent one are two different
+            // sentences, and the difference is itself information: walking the
+            // id sequence counts other people's attachments without opening a
+            // single one. The file stays unreadable either way — but how many
+            // of them exist should not be readable either.
             if (!$accessCheck()) {
-                return ControllerTools::JSON(['error' => 'Access denied'], status: 403);
+                return ControllerTools::JSON(['error' => 'File not found'], status: 404);
             }
 
             // Path traversal protection — reject any directory traversal in subDir
