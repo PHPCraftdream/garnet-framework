@@ -225,6 +225,19 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages\Spec {
         }
 
         /**
+         * Кто «смотрит» страницу в тесте. Настоящая реализация лезет в сессию
+         * через Account::fromSession(); подменяем её парой флагов, чтобы
+         * проверять фильтрацию меню без поднятия сессии и аккаунтов.
+         *
+         * @var array{0: bool, 1: bool}
+         */
+        public static array $viewer = [false, false];
+
+        protected static function viewerFlags(): array {
+            return static::$viewer;
+        }
+
+        /**
          * Override renderVariables to avoid IniConfig/FwAppSettings calls in unit tests.
          * The test ini does not define 'title', so we return content unchanged.
          */
@@ -611,6 +624,83 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages\Spec {
                 $html = TestStaticPagesService::renderBlocksToHtml($blocks, null, false);
                 // gallery block is skipped — no gallery markup
                 expect($html)->not->toContain('sp-gallery-block');
+            });
+        });
+
+        // ---------------------------------------------------------------------
+        describe('menu item visibility', function (): void {
+            beforeEach(function (): void {
+                makeTestInstances();
+                TestStaticPagesService::$viewer = [false, false];
+            });
+
+            afterEach(function (): void {
+                TestStaticPagesService::$viewer = [false, false];
+            });
+
+            $headerWithLoginPair = [
+                'items' => [
+                    ['type' => 'link', 'label' => 'Главная', 'url' => '/'],
+                    ['type' => 'link', 'label' => 'Войти', 'url' => '/system/', 'visibility' => 'guest'],
+                    ['type' => 'link', 'label' => 'Личный кабинет', 'url' => '/system/', 'visibility' => 'auth'],
+                    ['type' => 'link', 'label' => 'Модерация', 'url' => '/moderation', 'visibility' => 'moderator'],
+                ],
+            ];
+
+            it('shows the guest label to an anonymous visitor', function () use ($headerWithLoginPair): void {
+                TestStaticPagesService::$viewer = [false, false];
+                $html = TestStaticPagesService::renderHeaderHtml($headerWithLoginPair);
+
+                expect($html)->toContain('Войти');
+                expect($html)->not->toContain('Личный кабинет');
+            });
+
+            it('shows the authenticated label to a logged-in visitor', function () use ($headerWithLoginPair): void {
+                TestStaticPagesService::$viewer = [true, false];
+                $html = TestStaticPagesService::renderHeaderHtml($headerWithLoginPair);
+
+                expect($html)->toContain('Личный кабинет');
+                expect($html)->not->toContain('>Войти<');
+            });
+
+            it('hides moderator-only items from a plain logged-in visitor', function () use ($headerWithLoginPair): void {
+                TestStaticPagesService::$viewer = [true, false];
+                $html = TestStaticPagesService::renderHeaderHtml($headerWithLoginPair);
+
+                expect($html)->not->toContain('Модерация');
+            });
+
+            it('shows moderator-only items to a moderator', function () use ($headerWithLoginPair): void {
+                TestStaticPagesService::$viewer = [true, true];
+                $html = TestStaticPagesService::renderHeaderHtml($headerWithLoginPair);
+
+                expect($html)->toContain('Модерация');
+            });
+
+            it('keeps items without a visibility field visible to everyone', function () use ($headerWithLoginPair): void {
+                foreach ([[false, false], [true, false], [true, true]] as $viewer) {
+                    TestStaticPagesService::$viewer = $viewer;
+                    expect(TestStaticPagesService::renderHeaderHtml($headerWithLoginPair))->toContain('Главная');
+                }
+            });
+
+            it('filters footer items by the same rule', function (): void {
+                $footer = [
+                    'columns' => [[
+                        'title' => 'Навигация',
+                        'items' => [
+                            ['type' => 'link', 'label' => 'Войти', 'url' => '/system/', 'visibility' => 'guest'],
+                            ['type' => 'link', 'label' => 'Личный кабинет', 'url' => '/system/', 'visibility' => 'auth'],
+                        ],
+                    ]],
+                    'copyright' => '',
+                ];
+
+                TestStaticPagesService::$viewer = [true, false];
+                $html = TestStaticPagesService::renderFooterHtml($footer);
+
+                expect($html)->toContain('Личный кабинет');
+                expect($html)->not->toContain('>Войти<');
             });
         });
 

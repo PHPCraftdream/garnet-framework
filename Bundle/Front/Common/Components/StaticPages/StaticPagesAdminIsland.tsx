@@ -1851,6 +1851,9 @@ interface MenuItemData {
     url?: string;
     slug?: string;
     external?: boolean;
+    // Тот же словарь, что у страниц и блоков: all | guest | auth | moderator.
+    // Пустое значение = виден всем, поэтому старые меню не трогаем.
+    visibility?: string;
 }
 
 const ITEM_TYPES = ['link', 'page', 'divider'] as const;
@@ -1880,12 +1883,16 @@ const MenuItemEditor: React.FC<{
                 value={item.type}
                 onChange={e => {
                     const newType = e.target.value;
+                    // Видимость переживает смену типа: она про то, кому пункт
+                    // показывать, и к тому, ссылка это или страница, отношения
+                    // не имеет — терять её при переключении было бы обидно.
+                    const visibility = item.visibility;
                     if (newType === 'divider') {
                         onChange({type: 'divider'});
                     } else if (newType === 'page') {
-                        onChange({type: 'page', slug: '', label: ''});
+                        onChange({type: 'page', slug: '', label: '', visibility});
                     } else {
-                        onChange({type: 'link', label: item.label ?? '', url: item.url ?? '/', external: false});
+                        onChange({type: 'link', label: item.label ?? '', url: item.url ?? '/', external: false, visibility});
                     }
                 }}
             >
@@ -1939,6 +1946,22 @@ const MenuItemEditor: React.FC<{
             )}
 
             {item.type === 'divider' && <div className="flex-1" />}
+
+            {item.type !== 'divider' && (
+                <select
+                    className="form-select form-select-sm text-xs"
+                    style={{width: 'auto', minWidth: '90px'}}
+                    value={item.visibility || 'all'}
+                    onChange={e => onChange({...item, visibility: e.target.value})}
+                    data-test-id="menu-item-visibility"
+                    title={labels.visibility}
+                >
+                    <option value="all">{labels.visibilityAll}</option>
+                    <option value="guest">{labels.visibilityGuest}</option>
+                    <option value="auth">{labels.visibilityAuth}</option>
+                    <option value="moderator">{labels.visibilityModerator}</option>
+                </select>
+            )}
 
             <button type="button" className="blk-icon-btn" data-test-id="move-up" onClick={() => onMove(-1)} disabled={index === 0} title={labels.moveUp}>&#8593;</button>
             <button type="button" className="blk-icon-btn" data-test-id="move-down" onClick={() => onMove(1)} disabled={index === total - 1} title={labels.moveDown}>&#8595;</button>

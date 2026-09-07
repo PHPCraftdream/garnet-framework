@@ -12,6 +12,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages {
     use PHPCraftdream\Garnet\Bundle\Modules\StaticPages\Tables\FwStaticPages;
     use PHPCraftdream\Garnet\Bundle\Modules\StaticPages\Tables\FwStaticSnippets;
     use PHPCraftdream\Garnet\Bundle\Modules\SystemSettings\FwAppSettings;
+    use PHPCraftdream\Garnet\Kernel\Db\Entity\Account\Account;
     use PHPCraftdream\Garnet\Kernel\Io\IniConfig\AppConfig;
     use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
     use PHPCraftdream\Garnet\Kernel\Io\Twig\Twig;
@@ -640,6 +641,43 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages {
             return $out;
         }
 
+        /**
+         * Кто смотрит страницу прямо сейчас: [вошёл ли, модератор ли].
+         *
+         * Читается из сессии тем же способом, что и в
+         * FwStaticPagesPublicController — снаружи параметром не передаётся
+         * намеренно: шапку и подвал рисуют из мест без контекста авторизации
+         * (оболочка страницы, предпросмотр сниппета в админке), и протаскивать
+         * флаги через всю цепочку значило бы менять сигнатуры ради одного
+         * признака.
+         *
+         * @return array{0: bool, 1: bool}
+         */
+        protected static function viewerFlags(): array {
+            $account = Account::fromSession();
+            $isLoggedIn = (bool)($account && $account->id());
+            $isModerator = $isLoggedIn && ($account->isAdmin() || $account->isOwner() || $account->isModerator());
+
+            return [$isLoggedIn, $isModerator];
+        }
+
+        /**
+         * Показывать ли пункт меню текущему посетителю.
+         *
+         * Словарь тот же, что у страниц и блоков (`all` / `guest` / `auth` /
+         * `moderator`), чтобы в админке не появилось второго правила про то же
+         * самое. Пункт без поля `visibility` виден всем — старые меню
+         * продолжают работать без изменений.
+         */
+        protected static function isItemVisible(array $item, bool $isLoggedIn, bool $isModerator): bool {
+            return match ((string)($item['visibility'] ?? 'all')) {
+                'guest' => !$isLoggedIn,
+                'auth' => $isLoggedIn,
+                'moderator' => $isModerator,
+                default => true,
+            };
+        }
+
         public static function renderHeaderHtml(array $data): string {
             $logo = $data['logo'] ?? null;
             $items = $data['items'] ?? [];
@@ -647,8 +685,12 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages {
             $sticky = !empty($data['sticky']);
 
             $menuItems = [];
+            [$isLoggedIn, $isModerator] = static::viewerFlags();
 
             foreach ($items as $item) {
+                if (!static::isItemVisible($item, $isLoggedIn, $isModerator)) {
+                    continue;
+                }
                 $type = $item['type'] ?? 'link';
 
                 if ($type === 'divider') {
@@ -741,6 +783,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages {
             // StaticPagesFooter.twig) owns the layout switch — exactly
             // 1 column → inline-row meta-footer; 2+ → column grid.
             $renderedCols = [];
+            [$isLoggedIn, $isModerator] = static::viewerFlags();
 
             foreach ($columns as $col) {
                 $title = (string)($col['title'] ?? '');
@@ -748,6 +791,9 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages {
                 $renderedItems = [];
 
                 foreach ($items as $item) {
+                    if (!static::isItemVisible($item, $isLoggedIn, $isModerator)) {
+                        continue;
+                    }
                     $type = $item['type'] ?? 'link';
 
                     if ($type === 'divider') {
