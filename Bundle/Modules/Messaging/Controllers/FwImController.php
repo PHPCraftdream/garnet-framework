@@ -619,7 +619,70 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Controllers {
                 $result[] = $entry;
             }
 
+            static::enrichConversationsWithAttachmentCounts($result);
+
             return $result;
+        }
+
+        /**
+         * Whether a conversation holds files was invisible from the list — the
+         * only way to find out was to open every one of them.
+         *
+         * Two batched queries, not one per row: the per-row work in the loop
+         * above is already the expensive part, and this must not add to it.
+         *
+         * @param array<int, array<string, mixed>> $conversations
+         */
+        private static function enrichConversationsWithAttachmentCounts(array &$conversations): void {
+            $conversationIds = array_values(array_filter(array_map(
+                static fn (array $c): int => (int)($c['id'] ?? 0),
+                $conversations,
+            )));
+
+            if ($conversationIds === []) {
+                return;
+            }
+
+            $msgsClass = static::messagesTable();
+            $messages = $msgsClass::get()->selectAll(
+                function (SelectInterface $q) use ($conversationIds): void {
+                    $q->resetCols();
+                    $q->cols(['id', 'conversation_id']);
+                    $q->where('conversation_id IN (?)', [$conversationIds]);
+                },
+            );
+
+            $conversationOfMessage = [];
+
+            foreach ($messages as $message) {
+                $conversationOfMessage[(int)$message['id']] = (int)$message['conversation_id'];
+            }
+
+            $counts = [];
+
+            if ($conversationOfMessage !== []) {
+                $attClass = static::attachmentsTable();
+                $attachments = $attClass::get()->selectAll(
+                    function (SelectInterface $q) use ($conversationOfMessage): void {
+                        $q->resetCols();
+                        $q->cols(['message_id']);
+                        $q->where('message_id IN (?)', [array_keys($conversationOfMessage)]);
+                    },
+                );
+
+                foreach ($attachments as $attachment) {
+                    $conversationId = $conversationOfMessage[(int)$attachment['message_id']] ?? 0;
+
+                    if ($conversationId > 0) {
+                        $counts[$conversationId] = ($counts[$conversationId] ?? 0) + 1;
+                    }
+                }
+            }
+
+            foreach ($conversations as &$conversation) {
+                $conversation['attachments_count'] = $counts[(int)($conversation['id'] ?? 0)] ?? 0;
+            }
+            unset($conversation);
         }
     }
 }
