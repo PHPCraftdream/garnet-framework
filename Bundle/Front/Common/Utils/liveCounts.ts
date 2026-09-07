@@ -13,6 +13,16 @@ export interface LiveCounts {
     primaryBadgeCount: number;
     unreadIm: number;
     unreadSupport: number;
+    /**
+     * Account balance, or null where the app has no such notion.
+     *
+     * It belongs in the same poll as the badges for the same reason: the header
+     * shows a number baked into the HTML once, and the balance changes from
+     * several places that are not the header — topping up, booking, cancelling,
+     * a refund arriving. Anything that keeps only the top-up form in step would
+     * leave the other three stale.
+     */
+    balance: number | null;
 }
 
 const EVENT = 'garnet:counts';
@@ -42,6 +52,9 @@ const toCounts = (raw: unknown): LiveCounts | null => {
         primaryBadgeCount: Number(r.primaryBadgeCount) || 0,
         unreadIm: Number(r.unreadIm) || 0,
         unreadSupport: Number(r.unreadSupport) || 0,
+        // Absent (an app without balances) stays null; present-but-zero is a
+        // real zero and must not be confused with it.
+        balance: r.balance === undefined || r.balance === null ? null : Number(r.balance) || 0,
     };
 };
 
@@ -135,4 +148,15 @@ export const subscribeLiveCounts = (cb: (counts: LiveCounts) => void): (() => vo
     window.addEventListener(EVENT, handler as EventListener);
     if (latest) cb(latest);
     return () => window.removeEventListener(EVENT, handler as EventListener);
+};
+
+/**
+ * Poll once, right now, ignoring the cross-tab cache.
+ *
+ * For the moment a page has just changed something the header shows — money
+ * moved, a booking was made — and waiting out the interval would leave a
+ * number on screen that the user already knows is wrong.
+ */
+export const refreshLiveCounts = (): void => {
+    poll(true);
 };
