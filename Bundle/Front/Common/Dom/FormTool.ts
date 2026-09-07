@@ -262,6 +262,15 @@ export class FormTool {
             const el = this.fields[field];
 
             if (!el) {
+                // The server has something to say about a field this form does
+                // not own — a photo drawn by the uploader, a field rendered by
+                // an island. Dropping the message left the person staring at a
+                // screen where nothing happened and nothing was said: they
+                // read the silence as success. Showing it in a slightly wrong
+                // place is always better than not showing it.
+                const orphaned = Array.isArray(errors) ? errors : [String(errors)];
+                this.addCommonErrors(orphaned.filter(Boolean));
+
                 continue
             }
 
