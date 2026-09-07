@@ -286,7 +286,52 @@ class GarnetDeployFullCommand {
                 . 'or the next deploy:diff will re-diff this whole release.' . PHP_EOL;
         }
 
+        self::resetOpcacheOnHost($ssh, $remoteRuntime);
+
         echo "\033[32m=== Deploy complete — {$appName} is live at {$layout['remote_path']} ===\033[0m" . PHP_EOL;
+    }
+
+    /**
+     * Сбросить opcache на боевом хосте после подмены файлов.
+     *
+     * Без этого шага полный деплой заканчивается тем, что новые файлы лежат
+     * на диске, а FPM-воркеры продолжают выполнять старый байткод — и это
+     * молчаливо: сайт отвечает 200, «Deploy complete» напечатано, а
+     * поведение прежнее. Так был потерян целый цикл отладки: исправление
+     * писем считалось выкаченным, лежало на проде в правильном виде и не
+     * работало, пока opcache не сбросили руками.
+     *
+     * `deploy:diff` умеет это давно (tryOpcacheReset), но читает
+     * `opcache_token` из ЛОКАЛЬНОГО app.ini — а он на машине разработчика
+     * обычно пуст, и сброс там тоже тихо пропускается. Поэтому здесь токен
+     * читается на самом хосте, рядом с которым он и настроен: секрет не
+     * покидает сервер, и шаг работает независимо от локальной конфигурации.
+     *
+     * Best-effort: неудача печатается, но деплой не валит — файлы уже
+     * доставлены, а воркеры подхватят новый код при своей переработке.
+     */
+    private static function resetOpcacheOnHost(SshClient $ssh, string $remoteRuntime): void {
+        echo "\033[1mopcache reset\033[0m" . PHP_EOL;
+
+        $config = $remoteRuntime . '/WorkDir/Config/app.ini';
+        $remote =
+            'T=$(sed -n "s/^ *opcache_token *= *//p" ' . escapeshellarg($config) . ' | tr -d "\\"[:space:]"); '
+            . 'B=$(sed -n "s/^ *base_url *= *//p" ' . escapeshellarg($config) . ' | tr -d "\\"[:space:]"); '
+            . 'if [ -z "$T" ]; then echo "SKIP no-token"; elif [ -z "$B" ]; then echo "SKIP no-base-url"; else '
+            . 'curl -s -o /dev/null -w "HTTP %{http_code}" -X POST '
+            . '-H "X-Garnet-Opcache-Token: $T" "${B%/}/sys/opcache-reset/~run"; fi';
+
+        $res = $ssh->run($remote);
+        $out = trim((string)$res->stdout);
+
+        if ($res->exitCode === 0 && str_contains($out, 'HTTP 200')) {
+            echo "  \033[32m[OK]\033[0m opcache сброшен ({$out})" . PHP_EOL;
+
+            return;
+        }
+
+        echo "  \033[33m·\033[0m opcache не сброшен: " . ($out !== '' ? $out : "exit {$res->exitCode}")
+            . ' — новый код может не подхватиться, пока воркеры не переработаются' . PHP_EOL;
     }
 
     /**

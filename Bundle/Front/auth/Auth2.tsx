@@ -121,7 +121,12 @@ export const Auth2Island: React.FC<Partial<IAuthData>> = (props) => {
                         autoComplete={inputParams.autoComplete}
                         required
                         ref={inputRef}
-                        data-test-id="auth-login-input"
+                        // Одно поле служит двум разным шагам, и раньше оба
+                        // несли один идентификатор — тест или аналитика не
+                        // могли отличить ввод почты от ввода кода. Имя
+                        // почтовой фазы оставлено прежним: на него завязаны
+                        // существующие тесты, проверяющие форму входа.
+                        data-test-id={isEmailPhase ? 'auth-login-input' : 'auth-code-input'}
                     />
                 </div>
                 <div className={hint?.classes}>{hint?.hint}</div>
