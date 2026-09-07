@@ -42,6 +42,16 @@ export class I18nDataRU {
     static Auth_MagicLink_Error_Used = 'Ссылка уже была использована';
     static Theme_SwitchToDark = 'Переключить на тёмную тему';
     static Theme_SwitchToLight = 'Переключить на светлую тему';
+    static Upload_TooManyFiles = 'Слишком много файлов: можно приложить не больше %s';
+    static Upload_TooLarge = 'файл больше допустимого, максимум %s МБ';
+    static Upload_Empty = 'файл пустой';
+    static Upload_ExtNotAllowed = 'файлы .%s прикладывать нельзя';
+    static Upload_ContentNotAllowed = 'содержимое файла не похоже на разрешённый тип (%s)';
+    static Upload_Incomplete = 'файл не догрузился, попробуйте ещё раз';
+    static Upload_StoreFailed = 'не удалось сохранить файл';
+    static Upload_NotAnImage = 'имя обещает картинку (.%s), но внутри не изображение';
+    static Upload_NotAPdf = 'имя обещает PDF, но внутри не PDF';
+    static Upload_ImagesOnly = 'здесь можно загрузить только изображение';
     static Common_FromHasError = 'На форме имеются ошибки';
     static Common_IncorrectValue = 'Неверное значение';
     static Common_MinLength = 'Слишком короткое знание, необходимо знаков - %s';

@@ -48,6 +48,16 @@ class I18n extends I18nBase {
     Auth_MagicLink_Error_Used: t = (a = []) => this.t('Auth_MagicLink_Error_Used', a);
     Theme_SwitchToDark: t = (a = []) => this.t('Theme_SwitchToDark', a);
     Theme_SwitchToLight: t = (a = []) => this.t('Theme_SwitchToLight', a);
+    Upload_TooManyFiles: t = (a = []) => this.t('Upload_TooManyFiles', a);
+    Upload_TooLarge: t = (a = []) => this.t('Upload_TooLarge', a);
+    Upload_Empty: t = (a = []) => this.t('Upload_Empty', a);
+    Upload_ExtNotAllowed: t = (a = []) => this.t('Upload_ExtNotAllowed', a);
+    Upload_ContentNotAllowed: t = (a = []) => this.t('Upload_ContentNotAllowed', a);
+    Upload_Incomplete: t = (a = []) => this.t('Upload_Incomplete', a);
+    Upload_StoreFailed: t = (a = []) => this.t('Upload_StoreFailed', a);
+    Upload_NotAnImage: t = (a = []) => this.t('Upload_NotAnImage', a);
+    Upload_NotAPdf: t = (a = []) => this.t('Upload_NotAPdf', a);
+    Upload_ImagesOnly: t = (a = []) => this.t('Upload_ImagesOnly', a);
     Common_FromHasError: t = (a = []) => this.t('Common_FromHasError', a);
     Common_IncorrectValue: t = (a = []) => this.t('Common_IncorrectValue', a);
     Common_Len: t = (a = []) => this.t('Common_Len', a);

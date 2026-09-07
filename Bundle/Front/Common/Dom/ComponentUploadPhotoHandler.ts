@@ -71,8 +71,11 @@ export const componentUploadPhotoHandler = (params: IParams): Promise<IResult> =
             if (!readOnly) {
                 photoBlock.get<HTMLElement>('.del-img-btn')?.then((domEl, el) => {
                     el.addEventListener('click', () => {
+                        // Deleting is said outright, not inferred from an empty
+                        // input: handleFileUpload() can now be reached with
+                        // nothing selected for reasons that are not a removal.
                         inputEl.value = null;
-                        uploader.handleFileUpload();
+                        uploader.clearSelection();
                     });
                 });
 

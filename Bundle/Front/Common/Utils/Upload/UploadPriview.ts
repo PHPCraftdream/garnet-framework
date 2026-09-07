@@ -3,6 +3,7 @@ import Cropper from 'cropperjs';
 import 'cropperjs/dist/cropper.min.css';
 import {DomEl} from '@common/Dom/DomEl';
 import {resolveTimeout} from '@common/Utils/ResolveTimeout';
+import {I18nFramework} from '@framework/I18nGen/I18nFramework';
 
 export class ImageUploader {
     protected cropper: Cropper | null = null;
@@ -85,13 +86,38 @@ export class ImageUploader {
         return resolveTimeout<void>(timeout);
     }
 
+    /**
+     * Removal, and ONLY removal — the delete button says this deliberately.
+     *
+     * The server reads "no file and no crop" as "the photo was removed" and
+     * deletes the stored original. That reading is correct for this call and
+     * catastrophic for any other, which is why nothing else may make it.
+     */
+    public clearSelection = (): void => {
+        this.selectedFile = null;
+        this.onChange(null, null);
+    };
+
     public handleFileUpload = (): void => {
         const inputElement = this.fileInput.getEl();
         const file = inputElement.files?.[0];
 
-        if (!file || !file.type.startsWith('image/')) {
-            this.selectedFile = null;
-            this.onChange(null, null);
+        // An empty input is not a request to delete anything. It happens when
+        // the file dialog is dismissed — and it used to emit the very same
+        // signal the delete button emits, so cancelling the dialog wiped the
+        // stored photo without a word.
+        if (!file) {
+            return;
+        }
+
+        // Neither is a file the browser doesn't consider an image. This was the
+        // reported data loss: picking archive.zip removed a perfectly good
+        // profile photo, silently, because "rejected" and "removed" arrived at
+        // the server as the same empty submission.
+        if (!file.type.startsWith('image/')) {
+            this.fileInput.clearErrors();
+            this.fileInput.appendError(I18nFramework.Upload_ImagesOnly());
+            inputElement.value = '';
 
             return;
         }

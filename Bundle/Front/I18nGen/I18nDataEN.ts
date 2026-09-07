@@ -42,6 +42,16 @@ export class I18nDataEN {
     static Auth_MagicLink_Error_Used = 'This link has already been used';
     static Theme_SwitchToDark = 'Switch to dark mode';
     static Theme_SwitchToLight = 'Switch to light mode';
+    static Upload_TooManyFiles = 'Too many files: at most %s can be attached';
+    static Upload_TooLarge = 'file is too large, maximum is %s MB';
+    static Upload_Empty = 'the file is empty';
+    static Upload_ExtNotAllowed = '.%s files cannot be attached';
+    static Upload_ContentNotAllowed = 'file contents do not look like an allowed type (%s)';
+    static Upload_Incomplete = 'the file did not upload completely, please try again';
+    static Upload_StoreFailed = 'could not save the file';
+    static Upload_NotAnImage = 'the name promises a picture (.%s), but the contents are not an image';
+    static Upload_NotAPdf = 'the name promises a PDF, but the contents are not one';
+    static Upload_ImagesOnly = 'only an image can be uploaded here';
     static Common_FromHasError = 'Form has errors';
     static Common_IncorrectValue = 'Incorrect value';
     static Common_Len = 'Required symbols count - from %s to %s';
