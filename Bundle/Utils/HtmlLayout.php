@@ -2,6 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Bundle\Utils;
 
+use PHPCraftdream\Garnet\Kernel\Io\Forms\ImageUpload;
 use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
 use PHPCraftdream\Garnet\Kernel\Io\Router\RouterUriParams;
 use PHPCraftdream\Garnet\Kernel\Io\Twig\Twig;
@@ -19,12 +20,19 @@ class HtmlLayout {
     private const SHELL_MARKERS = ['class="sp-nav', 'class="sp-footer'];
 
     /**
-     * Smallest of the ceilings PHP actually enforces on an upload.
+     * The upload ceiling a person will actually meet: the smallest of what the
+     * application accepts and what PHP permits.
      *
-     * post_max_size caps the whole request and upload_max_filesize each file;
-     * whichever is lower is the one a person will hit. Reported so the client
-     * can refuse a file before sending it, with the number this host really
-     * uses rather than one someone typed into a constant.
+     * Both halves matter and for different reasons. PHP's limits are the hard
+     * floor — over them the request never reaches application code at all, and
+     * arrives looking like an empty submission. The application's limit is the
+     * product decision, and it is usually far lower: this host lets the web
+     * process take 256 MB, which is not an offer anyone should make to someone
+     * picking a profile picture.
+     *
+     * Reported to the page so the client refuses a file before sending it,
+     * using the number this host really enforces rather than one someone typed
+     * into a constant on the other side.
      */
     public static function uploadMaxBytes(): int {
         $toBytes = static function (string $value): int {
@@ -45,12 +53,16 @@ class HtmlLayout {
             };
         };
 
+        // The application's own limit is always present and always positive,
+        // so there is a ceiling to report even when ini_get() tells us nothing.
         $limits = array_filter([
             $toBytes((string)ini_get('upload_max_filesize')),
             $toBytes((string)ini_get('post_max_size')),
         ], static fn (int $v): bool => $v > 0);
 
-        return $limits === [] ? 0 : min($limits);
+        $limits[] = ImageUpload::MAX_UPLOAD_BYTES;
+
+        return min($limits);
     }
 
     public static function render(array $params): string {

@@ -9,6 +9,17 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Forms {
     use PHPCraftdream\Garnet\Kernel\Io\Logs\Logger;
 
     class ImageUpload {
+        /**
+         * What the application is willing to accept as a photo.
+         *
+         * PHP's ceiling is not a product decision. This host lets the web
+         * process take 256 MB per upload; offering that to someone choosing a
+         * profile picture would be an invitation to wait several minutes and
+         * then meet an out-of-memory error in image processing. The number
+         * shown on screen and the number enforced here are this one.
+         */
+        public const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+
         protected int $saveFormat = IMAGETYPE_PNG;
 
         protected int $quality = 90;
@@ -198,6 +209,15 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Forms {
 
             // upload the original and create the crop
             if (!empty($p->uploadTmpFile)) {
+                $size = @filesize($p->uploadTmpFile);
+
+                if ($size !== false && $size > self::MAX_UPLOAD_BYTES) {
+                    $maxMb = (int)floor(self::MAX_UPLOAD_BYTES / 1024 / 1024);
+                    $v->addError($p->fileNameField, FwI18n::t('Upload_TooLarge', [$maxMb]));
+
+                    return;
+                }
+
                 $upl = new ImageUpload($p->uploadTmpFile, $p->fileNameField);
 
                 $photo = $upl->saveSizedToLongSide($p->uploadDir, $longSideSize);
