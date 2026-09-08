@@ -177,6 +177,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Forms {
                     uploadTmpFile: empty($file['tmp_name']) ? null : $file['tmp_name'],
                     prevFileName: $prevObj[$name] ?? null,
                     cropParams: $cropParams,
+                    uploadError: (int)($file['error'] ?? UPLOAD_ERR_OK),
                 );
 
                 ImageUpload::saveImage($uploadParams, $this, 900);

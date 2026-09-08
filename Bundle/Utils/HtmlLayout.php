@@ -18,6 +18,41 @@ class HtmlLayout {
     /** Markers that mean the page body already carries the site shell. */
     private const SHELL_MARKERS = ['class="sp-nav', 'class="sp-footer'];
 
+    /**
+     * Smallest of the ceilings PHP actually enforces on an upload.
+     *
+     * post_max_size caps the whole request and upload_max_filesize each file;
+     * whichever is lower is the one a person will hit. Reported so the client
+     * can refuse a file before sending it, with the number this host really
+     * uses rather than one someone typed into a constant.
+     */
+    public static function uploadMaxBytes(): int {
+        $toBytes = static function (string $value): int {
+            $value = trim($value);
+
+            if ($value === '') {
+                return 0;
+            }
+
+            $unit = strtolower($value[strlen($value) - 1]);
+            $number = (int)$value;
+
+            return match ($unit) {
+                'g' => $number * 1024 * 1024 * 1024,
+                'm' => $number * 1024 * 1024,
+                'k' => $number * 1024,
+                default => $number,
+            };
+        };
+
+        $limits = array_filter([
+            $toBytes((string)ini_get('upload_max_filesize')),
+            $toBytes((string)ini_get('post_max_size')),
+        ], static fn (int $v): bool => $v > 0);
+
+        return $limits === [] ? 0 : min($limits);
+    }
+
     public static function render(array $params): string {
         $accountId = (int)($params['account_id'] ?? 0);
         $topItems = (array)($params['top_menu_items'] ?? []);
@@ -160,6 +195,12 @@ class HtmlLayout {
             // Frontend build id — emitted as a meta tag + window global so the
             // SPA navigator can detect a stale bundle and hard-reload.
             'build_id' => (string)($params['build_id'] ?? ''),
+            // The real upload ceiling, taken from PHP rather than guessed in
+            // the client. A hardcoded number on screen is a promise the server
+            // has not made: this host allows 2 MB, the code said 5, and a
+            // 3 MB photo was silently dropped by the SAPI before any of our
+            // own checks ever ran.
+            'upload_max_bytes' => static::uploadMaxBytes(),
             'user_payload_json' => $userPayloadJson,
             'no_prefix_paths_json' => $noPrefixPathsJson,
             'styles_assets' => (array)($params['styles_assets'] ?? []),

@@ -4,6 +4,7 @@ import 'cropperjs/dist/cropper.min.css';
 import {DomEl} from '@common/Dom/DomEl';
 import {resolveTimeout} from '@common/Utils/ResolveTimeout';
 import {I18nFramework} from '@framework/I18nGen/I18nFramework';
+import {uploadMaxBytes, megabytes} from '@common/Utils/Upload/uploadLimits';
 
 export class ImageUploader {
     protected cropper: Cropper | null = null;
@@ -107,6 +108,21 @@ export class ImageUploader {
         // signal the delete button emits, so cancelling the dialog wiped the
         // stored photo without a word.
         if (!file) {
+            return;
+        }
+
+        // Over PHP's own ceiling the file never reaches our code: the SAPI
+        // drops it and the request arrives with no file at all — which used to
+        // read as a removal and deleted the stored photo. Refusing here means
+        // the person is told the real number instead of losing what they had.
+        const maxBytes = uploadMaxBytes();
+
+        if (maxBytes > 0 && file.size > maxBytes) {
+            this.fileInput.clearErrors();
+            this.fileInput.appendError(I18nFramework.Upload_TooLarge([megabytes(maxBytes)]));
+            inputElement.value = '';
+            this.selectedFile = null;
+
             return;
         }
 

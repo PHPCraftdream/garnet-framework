@@ -50,6 +50,7 @@
 
 {% if lang %}<script id="__GARNET_UI_LANG__">window.__GARNET_UI_LANG__ = "{{ lang }}";</script>{% endif %}
 {% if csrf %}<script id="__GARNET_CSRF__">window.__GARNET_CSRF__ = "{{ csrf }}";</script>{% endif %}
+{% if upload_max_bytes > 0 %}<script id="__GARNET_UPLOAD_MAX__">window.__GARNET_UPLOAD_MAX__ = {{ upload_max_bytes }};</script>{% endif %}
 
 {% if account_id > 0 %}
     <script id="__GARNET_ACCOUNT_ID__">window.__GARNET_ACCOUNT_ID__ = {{ account_id }};</script>

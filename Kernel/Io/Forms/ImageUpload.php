@@ -142,6 +142,17 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Forms {
                 return;
             }
 
+            // An upload PHP itself refused — over upload_max_filesize, cut
+            // short — arrives with no tmp file, which is byte-identical to a
+            // removal request. Answering it as a removal deleted a stored
+            // photo because the replacement was too big: the person lost what
+            // they had for trying to improve it.
+            if ($p->uploadError !== UPLOAD_ERR_OK && $p->uploadError !== UPLOAD_ERR_NO_FILE) {
+                $v->addError($p->fileNameField, FwI18n::t('Upload_Incomplete'));
+
+                return;
+            }
+
             $uploadDir = trim($p->uploadDir, '\\/') . DIRECTORY_SEPARATOR;
             /** @var callable(string): bool $removeFile */
             $removeFile = fn ($file) => is_file($delFile = $uploadDir . $file) && unlink($delFile);

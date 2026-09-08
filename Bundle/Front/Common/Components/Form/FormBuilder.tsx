@@ -11,6 +11,7 @@ import {Validators} from '@common/Dom/GridTable/Validators';
 import {PageEvents} from '@common/Utils/PageEvents';
 import {DomEl} from '@common/Dom/DomEl';
 import {componentUploadPhotoHandler} from '@common/Dom/ComponentUploadPhotoHandler';
+import {uploadMaxBytes, megabytes} from '@common/Utils/Upload/uploadLimits';
 import isString from 'lodash/isString';
 import isObject from 'lodash/isObject';
 import {Loader2} from 'lucide-react';
@@ -156,6 +157,14 @@ const PhotoField: React.FC<{
 
 	if (!value && readOnly) return null;
 
+	// Limits belong next to the control, before a file is chosen. Two people
+	// reported independently that the only way to learn them was to be
+	// refused — and for a while being refused destroyed the photo instead.
+	const maxBytes = uploadMaxBytes();
+	const hint = readOnly || maxBytes <= 0
+		? null
+		: I18nFramework.Upload_ImageHint([megabytes(maxBytes)]);
+
 	return (
 		<div ref={containerRef} className={readOnly ? 'pointer-disabled' : ''}>
 			<input type="file" className="form-control input-file d-none" accept="image/png, image/jpeg, image/jpg, image/gif" />
@@ -181,6 +190,9 @@ const PhotoField: React.FC<{
 					)}
 				</div>
 			</div>
+			{hint && (
+				<p className="text-xs text-muted mt-1" data-test-id="photo-upload-hint">{hint}</p>
+			)}
 		</div>
 	);
 };

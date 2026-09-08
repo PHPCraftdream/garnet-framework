@@ -53,6 +53,7 @@ export class I18nDataEN {
     static Upload_NotAPdf = 'the name promises a PDF, but the contents are not one';
     static Upload_ImagesOnly = 'only an image can be uploaded here';
     static Upload_BrokenImage = 'the file does not open as an image — it may be damaged, or not a picture at all';
+    static Upload_ImageHint = 'JPG, PNG, GIF or WEBP, up to %s MB';
     static Common_FromHasError = 'Form has errors';
     static Common_IncorrectValue = 'Incorrect value';
     static Common_Len = 'Required symbols count - from %s to %s';
