@@ -223,8 +223,25 @@ namespace PHPCraftdream\Garnet\Kernel\Core\AppInit {
             $this->defineConfigs();
             $this->defineLogs();
             $this->defineCache();
+            $this->defineMailer();
             $this->initTwig();
             $this->defineTwigParams();
+        }
+
+        /**
+         * Mailer wiring, needed on EVERY entry point rather than just the web
+         * one.
+         *
+         * It used to live inside defineTwigParams(), which only webInit()
+         * calls — so an app that decorated the mailer to write a send log got
+         * that log for mail sent during a request and nothing at all for mail
+         * sent by cron. The log then answered "what did we send" with silence
+         * rather than an error: every reminder, every notification, absent,
+         * while the auth codes sat there looking complete.
+         *
+         * Empty by default; apps override it.
+         */
+        protected function defineMailer(): void {
         }
 
         /**
@@ -238,6 +255,7 @@ namespace PHPCraftdream\Garnet\Kernel\Core\AppInit {
             $this->defineConfigs();
             $this->defineLogs();
             $this->defineCache();
+            $this->defineMailer();
             $this->initCommands();
             $this->defineMigrationClass();
         }
