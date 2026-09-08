@@ -122,15 +122,38 @@ export class ImageUploader {
             return;
         }
 
-        this.selectedFile = file;
-
         const reader = new FileReader();
 
         reader.onload = (event: ProgressEvent<FileReader>) => {
-            const img = this.previewImage.getEl();
+            const dataUrl = event.target?.result as string;
 
-            img.src = event.target?.result as string;
-            this.selectImageData(img.src);
+            // The browser's `type` comes from the extension, so a text file
+            // named .jpg gets this far. Decoding it is the only way to know.
+            //
+            // Without this check such a file did nothing at all: the cropper
+            // never rendered, so it never fired the crop event, so the form
+            // submitted as if the field had not been touched. The photo
+            // survived and the person was told nothing — an action that
+            // silently amounts to no action is the worst of both answers.
+            const probe = new Image();
+
+            probe.onerror = (): void => {
+                this.fileInput.clearErrors();
+                this.fileInput.appendError(I18nFramework.Upload_BrokenImage());
+                this.fileInput.getEl().value = '';
+                this.selectedFile = null;
+            };
+
+            probe.onload = (): void => {
+                this.selectedFile = file;
+
+                const img = this.previewImage.getEl();
+
+                img.src = dataUrl;
+                this.selectImageData(img.src);
+            };
+
+            probe.src = dataUrl;
         };
 
         reader.readAsDataURL(file);

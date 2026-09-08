@@ -63,6 +63,7 @@ namespace PHPCraftdream\Garnet\Bundle\I18n {
             'Upload_NotAnImage' => 'имя обещает картинку (.%s), но внутри не изображение',
             'Upload_NotAPdf' => 'имя обещает PDF, но внутри не PDF',
             'Upload_ImagesOnly' => 'здесь можно загрузить только изображение',
+            'Upload_BrokenImage' => 'файл не открывается как изображение — возможно, он повреждён или это не картинка',
 
             'Common_FromHasError' => 'На форме имеются ошибки',
             'Common_IncorrectValue' => 'Неверное значение',

@@ -190,13 +190,23 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Forms {
                 $upl = new ImageUpload($p->uploadTmpFile, $p->fileNameField);
 
                 $photo = $upl->saveSizedToLongSide($p->uploadDir, $longSideSize);
-                $v->set($p->fileNameField, $photo);
 
+                // The error is checked BEFORE the field is written.
+                //
+                // saveSizedToLongSide() hands back a generated file name even
+                // when it saved nothing, so writing first pointed the record at
+                // a file that does not exist — losing the previous, valid one.
+                // Today no caller persists a result that carries errors, so the
+                // harm never surfaced; that is the caller's discipline, not this
+                // function's, and it should not be what stands between a failed
+                // upload and a broken record.
                 if (!empty($upl->error)) {
                     $v->addError($p->fileNameField, $upl->error);
 
                     return;
                 }
+
+                $v->set($p->fileNameField, $photo);
 
                 if ($crop === null) {
                     return;

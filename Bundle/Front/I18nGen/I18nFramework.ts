@@ -58,6 +58,7 @@ class I18n extends I18nBase {
     Upload_NotAnImage: t = (a = []) => this.t('Upload_NotAnImage', a);
     Upload_NotAPdf: t = (a = []) => this.t('Upload_NotAPdf', a);
     Upload_ImagesOnly: t = (a = []) => this.t('Upload_ImagesOnly', a);
+    Upload_BrokenImage: t = (a = []) => this.t('Upload_BrokenImage', a);
     Common_FromHasError: t = (a = []) => this.t('Common_FromHasError', a);
     Common_IncorrectValue: t = (a = []) => this.t('Common_IncorrectValue', a);
     Common_Len: t = (a = []) => this.t('Common_Len', a);

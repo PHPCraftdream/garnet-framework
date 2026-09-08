@@ -52,6 +52,7 @@ export class I18nDataRU {
     static Upload_NotAnImage = 'имя обещает картинку (.%s), но внутри не изображение';
     static Upload_NotAPdf = 'имя обещает PDF, но внутри не PDF';
     static Upload_ImagesOnly = 'здесь можно загрузить только изображение';
+    static Upload_BrokenImage = 'файл не открывается как изображение — возможно, он повреждён или это не картинка';
     static Common_FromHasError = 'На форме имеются ошибки';
     static Common_IncorrectValue = 'Неверное значение';
     static Common_MinLength = 'Слишком короткое знание, необходимо знаков - %s';

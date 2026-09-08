@@ -63,6 +63,7 @@ namespace PHPCraftdream\Garnet\Bundle\I18n {
             'Upload_NotAnImage' => 'the name promises a picture (.%s), but the contents are not an image',
             'Upload_NotAPdf' => 'the name promises a PDF, but the contents are not one',
             'Upload_ImagesOnly' => 'only an image can be uploaded here',
+            'Upload_BrokenImage' => 'the file does not open as an image — it may be damaged, or not a picture at all',
 
             'Common_FromHasError' => 'Form has errors',
             'Common_IncorrectValue' => 'Incorrect value',
