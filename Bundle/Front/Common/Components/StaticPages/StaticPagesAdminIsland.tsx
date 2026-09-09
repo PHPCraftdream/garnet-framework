@@ -17,6 +17,8 @@ interface StaticPage {
     id: number;
     slug: string;
     title: string;
+    /** Заголовок с подставленными переменными — только для чтения в списке. */
+    title_rendered?: string;
     is_published: number;
     meta_description: string;
     seo_title?: string;
@@ -58,6 +60,13 @@ interface Labels {
     title: string;
     empty: string;
     create: string;
+    /**
+     * Надпись на кнопке, которая только ОТКРЫВАЕТ форму. Отдельная от `create`,
+     * потому что раньше оба действия — открыть форму и отправить её — назывались
+     * одним словом, и владелец не понимала, почему страница не создаётся (D-110).
+     * Не задана — остаётся прежнее поведение.
+     */
+    createOpen?: string;
     createTitle: string;
     slug: string;
     slugHint: string;
@@ -103,6 +112,8 @@ interface Labels {
     snippets: string;
     snippetsEmpty: string;
     snippetsCreate: string;
+    /** То же разделение, что и `createOpen`, но для компонентов. */
+    snippetsCreateOpen?: string;
     snippetsCreateTitle: string;
     snippetsName: string;
     snippetsSlug: string;
@@ -440,7 +451,7 @@ export const StaticPagesAdminIsland: React.FC<Props> = (props) => {
                         onClick={() => setShowCreateForm(!showCreateForm)}
                         disabled={sending}
                     >
-                        + {labels.create}
+                        + {labels.createOpen || labels.create}
                     </button>
                 )}
             </div>
@@ -510,7 +521,7 @@ export const StaticPagesAdminIsland: React.FC<Props> = (props) => {
                                         return (
                                             <tr key={page.id} className={isOpenInTab ? 'bg-accent-subtle' : ''}>
                                                 <td className="px-4 py-3 font-mono text-xs">{page.slug}</td>
-                                                <td className="px-4 py-3">{page.title}</td>
+                                                <td className="px-4 py-3">{page.title_rendered || page.title}</td>
                                                 <td className="px-4 py-3">
                                                     <button
                                                         type="button"
@@ -1461,7 +1472,7 @@ const BlockEditor: React.FC<BlockEditorProps> =({block, index, total, labels, di
                                                 setShowPagePicker(false);
                                             }}
                                         >
-                                            {p.title || p.slug}
+                                            {p.title_rendered || p.title || p.slug}
                                         </button>
                                     ))}
                                     {pages.filter(p => p.is_published).length === 0 && (
@@ -1695,7 +1706,7 @@ const SnippetsListPanel: React.FC<SnippetsListPanelProps> = ({
                     onClick={() => setShowCreateForm(!showCreateForm)}
                     disabled={sending}
                 >
-                    + {labels.snippetsCreate}
+                    + {labels.snippetsCreateOpen || labels.snippetsCreate}
                 </button>
             </div>
 
@@ -1940,7 +1951,7 @@ const MenuItemEditor: React.FC<{
                 >
                     <option value="">{labels.snippetsSelectPage}</option>
                     {publishedPages.map(p => (
-                        <option key={p.id} value={p.slug}>{p.title || p.slug}</option>
+                        <option key={p.id} value={p.slug}>{p.title_rendered || p.title || p.slug}</option>
                     ))}
                 </select>
             )}

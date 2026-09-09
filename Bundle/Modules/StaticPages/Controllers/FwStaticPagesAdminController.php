@@ -36,6 +36,15 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages\Controllers {
             }
             $pages = static::service()::listPages();
 
+            // Список — витрина, а не поле ввода: в нём заголовок читают, а не
+            // правят. Сырое `{title}` здесь выглядело поломкой. Подставленное
+            // значение отдаём отдельным полем, чтобы форма редактирования
+            // по-прежнему получала то, что реально лежит в базе.
+            foreach ($pages as &$page) {
+                $page['title_rendered'] = static::service()::renderVariables((string)($page['title'] ?? ''));
+            }
+            unset($page);
+
             return ControllerTools::JSON(['pages' => $pages]);
         }
 

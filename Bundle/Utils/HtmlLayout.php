@@ -200,8 +200,14 @@ class HtmlLayout {
             // Endpoint the client polls (~20s) for live nav-badge / widget
             // counters. Optional — apps that don't provide it just skip polling.
             'counts_url' => (string)($params['counts_url'] ?? ''),
-            // Support/contact email shown in the page footer when configured.
+            // Support/contact details shown in the page footer when configured.
+            // All three are optional and independent: the footer appears as soon
+            // as at least one of them is filled in. Documents that promise
+            // "contacts are published in the site footer" must not depend on the
+            // owner having filled in the email specifically.
             'support_email' => (string)($params['support_email'] ?? ''),
+            'support_phone' => (string)($params['support_phone'] ?? ''),
+            'support_telegram' => (string)($params['support_telegram'] ?? ''),
             'support_contact_label' => (string)($params['support_contact_label'] ?? ''),
             'account_id' => $accountId,
             // Frontend build id — emitted as a meta tag + window global so the

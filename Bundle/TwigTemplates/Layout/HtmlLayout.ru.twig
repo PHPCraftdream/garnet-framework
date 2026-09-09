@@ -133,10 +133,20 @@
     </div>
 </div>
 
-{% if support_email %}
+{# Подвал появляется, как только заполнен ХОТЬ ОДИН контакт: документы обещают
+   «контактные данные в подвале сайта», а не «электронную почту в подвале». #}
+{% if support_email or support_phone or support_telegram %}
 <footer class="app-footer" data-test-id="app-footer">
     <span class="app-footer-label">{{ support_contact_label }}</span>
-    <a class="app-footer-email" href="mailto:{{ support_email }}">{{ support_email }}</a>
+    {% if support_email %}
+        <a class="app-footer-email" href="mailto:{{ support_email }}" data-test-id="app-footer-email">{{ support_email }}</a>
+    {% endif %}
+    {% if support_phone %}
+        <a class="app-footer-email" href="tel:{{ support_phone|replace({' ': '', '(': '', ')': '', '-': ''}) }}" data-test-id="app-footer-phone">{{ support_phone }}</a>
+    {% endif %}
+    {% if support_telegram %}
+        <a class="app-footer-email" href="https://t.me/{{ support_telegram|trim('@') }}" target="_blank" rel="noopener noreferrer" data-test-id="app-footer-telegram">{{ support_telegram }}</a>
+    {% endif %}
 </footer>
 {% endif %}
 

@@ -1492,6 +1492,14 @@ body:has(#show--menu:checked) {
   .support-thread-panel { @apply w-full; }
   .support-layout:not(.support-layout-detail) .support-thread-panel { display: none; }
   .support-layout.support-layout-detail .support-list-panel { display: none; }
+
+  /* Плавающие кнопки поддержки и личных сообщений прибиты к правому нижнему
+     углу экрана (`.support-widget-fab`: bottom-4 + h-14 = 4.5rem). Пока поле
+     ввода пустое, форма ответа низкая и её «Отправить» оказывался ровно под
+     ними — видно было «Отправит» (D-116, нашёл user-7 на 390×844). Отступ
+     снизу поднимает ряд действий над этой зоной, не трогая широкие экраны,
+     где плавающие кнопки ни на что не наезжают. */
+  .support-thread-input { padding-bottom: 5.5rem; }
 }
 
 /* Back-to-list button — mobile only (the desktop master/detail shows both). */
