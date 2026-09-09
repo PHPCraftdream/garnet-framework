@@ -4,6 +4,14 @@
    ad-hoc wrapper.
 
    title: page title (variables already substituted upstream)
-   blocks_html: pre-rendered block stream HTML (renderBlocksToHtml) #}
+   blocks_html: pre-rendered block stream HTML (renderBlocksToHtml)
+   is_moderator_view: true when the viewer sees moderator-only blocks/pages
+   that a regular visitor never would (D-119) — the page itself never said
+   so, and staff read that silence as "everyone sees this". #}
+{% if is_moderator_view ?? false %}
+<div class="text-sm p-2 mb-4 rounded-lg bg-surface-alt border border-default" data-test-id="static-page-moderator-banner">
+    Вы видите эту страницу как модератор — часть содержимого скрыта от обычных посетителей.
+</div>
+{% endif %}
 <h1 class="text-2xl font-semibold text-on-surface mb-6">{{ title }}</h1>
 <div class="text-on-surface">{{ blocks_html | raw }}</div>

@@ -51,7 +51,19 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages\Controllers {
             $isMod = $isLoggedIn && ($account->isAdmin() || $account->isOwner() || $account->isModerator());
             $blocksHtml = static::service()::renderBlocksToHtml($page['blocks'] ?? [], $isLoggedIn, $isMod);
 
-            $body = static::service()::renderPageBody($page, $blocksHtml);
+            // D-119: the moderator flag only becomes worth announcing when it
+            // actually changed what's on the page — either the whole page is
+            // moderator-only, or at least one block in it is. A moderator on
+            // an ordinary "all"-visibility page with no such block sees
+            // exactly what anyone else sees; no banner needed there.
+            $hasModeratorOnlyBlock = $isMod && !empty(array_filter(
+                $page['blocks'] ?? [],
+                static fn (array $block): bool => (int)($block['is_hidden'] ?? 0) !== 1
+                    && (string)($block['visibility'] ?? 'all') === 'moderator',
+            ));
+            $isModeratorView = $isMod && ($visibility === 'moderator' || $hasModeratorOnlyBlock);
+
+            $body = static::service()::renderPageBody($page, $blocksHtml, $isModeratorView);
             $content = static::service()::renderPageShell($page, $body);
 
             $layoutParams = TwigParams::init()->get(TwigParams::DEF_LAYOUT_PARAMS, [

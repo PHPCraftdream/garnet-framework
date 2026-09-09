@@ -353,10 +353,11 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages {
          * Resolves `{title}`-style variables in the page title before
          * passing to the template (Twig auto-escapes the output).
          */
-        public static function renderPageBody(array $page, string $blocksHtml): string {
+        public static function renderPageBody(array $page, string $blocksHtml, bool $isModeratorView = false): string {
             return Twig::get()->render('StaticPages/Body.twig', [
                 'title' => static::renderVariables((string)($page['title'] ?? '')),
                 'blocks_html' => $blocksHtml,
+                'is_moderator_view' => $isModeratorView,
             ]);
         }
 
