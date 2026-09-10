@@ -1508,6 +1508,19 @@ body:has(#show--menu:checked) {
   body:has(.support-widget-fab) .main-container { padding-bottom: 5.5rem; }
 }
 
+/* The page-bottom reserve above only clears the FAB from whatever renders at
+   the very end of the page once fully scrolled. It does nothing for content
+   that simply happens to sit at that same fixed screen height mid-page — the
+   news feed's per-row "В архив" button sits flush at the row's own right
+   edge, so on a short viewport (390×844) the third unread card already
+   lands inside the FABs' footprint at rest, no scrolling needed (нашёл
+   expert-2). `.support-im-fab` (right-20 + w-12) sits further out than
+   `.support-widget-fab` (right-4 + w-14) — 5rem + 3rem = 8rem clears both,
+   present or not. */
+@media (max-width: 767px) {
+  body:has(.support-widget-fab) .news-row-actions { margin-right: 8rem; }
+}
+
 /* Back-to-list button — mobile only (the desktop master/detail shows both). */
 .support-back-btn {
   @apply hidden max-md:flex items-center gap-1 w-full px-4 py-2.5 text-sm font-medium text-accent border-b border-default bg-surface-alt text-left;
