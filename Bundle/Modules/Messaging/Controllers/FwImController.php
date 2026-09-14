@@ -587,11 +587,13 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Controllers {
                 });
                 $snippet = '';
                 $lastMessageAt = (int)$conv['last_message_at'];
+                $lastMessageSenderId = 0;
 
                 if (!empty($lastMessages)) {
                     $body = $lastMessages[0]['body'] ?? '';
                     $snippet = mb_strlen($body) > 50 ? mb_substr($body, 0, 50) . '...' : $body;
                     $lastMessageAt = (int)$lastMessages[0]['created_at'];
+                    $lastMessageSenderId = (int)($lastMessages[0]['sender_id'] ?? 0);
                 }
 
                 // Unread count
@@ -610,6 +612,10 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Controllers {
                     'partner_login' => '',
                     'last_message_snippet' => $snippet,
                     'last_message_at' => $lastMessageAt,
+                    // Whether the most recent message in this thread was ours or
+                    // theirs — the list has no other way to tell "I'm waiting on
+                    // a reply" apart from "I already answered".
+                    'last_message_is_mine' => $lastMessageSenderId === $accountId,
                     'unread_count' => $unreadCount,
                 ];
 

@@ -24,6 +24,20 @@ function removeTmpDir(string $dir): void {
     rmdir($dir);
 }
 
+// RateLimit::hit() buckets by time()'s 1-second granularity. A scenario that
+// starts near the tail end of a wall-clock second is already closer to the
+// next tick than intended, so a sleep(N)-based margin that "should" be safe
+// can still land on the wrong side of a bucket boundary under real scheduling
+// jitter — exactly the kind of flake this project's CLAUDE.md says to root-
+// cause, not paper over. Starting from a fresh tick gives each sleep() its
+// full intended second of margin instead of a variable, sometimes-zero one.
+function waitForFreshSecond(): void {
+    $start = time();
+    while (time() === $start) {
+        usleep(10000);
+    }
+}
+
 describe('RateLimit', function (): void {
     // -----------------------------------------------------------------------
     describe('hit()', function (): void {
@@ -92,6 +106,7 @@ describe('RateLimit', function (): void {
             $tmp = makeTmpDir();
             $key = 'test:window_expire';
 
+            waitForFreshSecond();
             RateLimit::hit($key, 1, 1, $tmp);
             expect(RateLimit::hit($key, 1, 1, $tmp))->toBe(false);
 
@@ -106,6 +121,10 @@ describe('RateLimit', function (): void {
             $key = 'test:cutoff_isolation';
 
             // Use a 2-second window for faster testing
+            // Start right after a tick so each sleep(1) below gets its full
+            // intended second of margin before the next time() bucket.
+            waitForFreshSecond();
+
             // Exhaust the limit with 3 hits
             expect(RateLimit::hit($key, 3, 2, $tmp))->toBe(true);
             expect(RateLimit::hit($key, 3, 2, $tmp))->toBe(true);

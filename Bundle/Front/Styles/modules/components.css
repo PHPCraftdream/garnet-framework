@@ -1775,6 +1775,10 @@ body:has(#show--menu:checked) {
   @apply text-xs text-muted truncate flex-1;
 }
 
+.im-conv-you-prefix {
+  @apply font-medium text-on-surface;
+}
+
 .im-conv-time {
   @apply text-xs text-muted shrink-0;
 }
