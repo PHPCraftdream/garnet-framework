@@ -51,6 +51,14 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({topItems, sideItems, util
     topItems = applied.items;
     utility = applied.util;
 
+    // On desktop the utility cluster (messages/support counts) sits inline
+    // in the always-visible top bar. On mobile it's the opposite: the same
+    // cluster only renders once the drawer is open, so the collapsed top
+    // bar gave zero signal that anything was waiting. Total it up here so
+    // the hamburger itself can carry that signal before the drawer opens.
+    const hamburgerUnread = (utility ? (utility.unreadMessages || 0) + (utility.unreadSupport || 0) : 0)
+        + topItems.reduce((sum, item) => sum + (item.badge && item.badge > 0 ? item.badge : 0), 0);
+
     return (
         <>
             <input className="hidden" type="checkbox" id="show--menu" />
@@ -67,6 +75,9 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({topItems, sideItems, util
                 </a>
                 <label htmlFor="show--menu" className="hamburger-btn ml-auto" aria-label="Menu" data-test-id="mobile-menu-toggle">
                     <Menu size={20} aria-hidden="true" />
+                    {hamburgerUnread > 0 && (
+                        <span className="hamburger-unread-dot" data-test-id="mobile-menu-unread-dot" aria-hidden="true" />
+                    )}
                 </label>
             </header>
 

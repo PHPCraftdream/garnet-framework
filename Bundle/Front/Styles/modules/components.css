@@ -627,7 +627,16 @@ input.custom-date-input::-webkit-inner-spin-button {
    Only visible <lg breakpoint; desktop uses TopMenu + SidebarMenu instead. */
 
 .hamburger-btn {
-  @apply inline-flex items-center justify-center w-10 h-10 rounded-md text-on-surface hover:bg-surface-hover transition-colors;
+  @apply relative inline-flex items-center justify-center w-10 h-10 rounded-md text-on-surface hover:bg-surface-hover transition-colors;
+}
+
+/* Collapsed-drawer signal: on desktop the utility cluster (message/support
+   counts) sits inline in the always-visible top bar; on mobile that same
+   cluster only renders once the drawer is open. Without this dot, unread
+   messages/support were invisible until you opened the menu "just in case". */
+.hamburger-unread-dot {
+  @apply absolute top-1.5 right-1.5 w-2 h-2 rounded-full;
+  background: var(--color-warning, #d97706);
 }
 
 /* The island mount wrapper carries no box (display:contents) so the sticky
