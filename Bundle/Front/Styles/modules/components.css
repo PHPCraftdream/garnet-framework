@@ -904,6 +904,12 @@ body:has(#show--menu:checked) {
   color: var(--color-status-gray);
   border-color: var(--color-status-gray);
 }
+/* Когда список отфильтрован по виду (напр. «Свободен»), приглушаем остальные
+   бейджи подсказки пагинатора, чтобы число нужного вида не терялось среди
+   остальных трёх (D-174/D-179). */
+.cal-nav-badge--dim {
+  opacity: 0.35;
+}
 
 .admin-dash-activity-actor {
   @apply font-medium text-on-surface;

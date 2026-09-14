@@ -33,6 +33,7 @@ function removeTmpDir(string $dir): void {
 // full intended second of margin instead of a variable, sometimes-zero one.
 function waitForFreshSecond(): void {
     $start = time();
+
     while (time() === $start) {
         usleep(10000);
     }
