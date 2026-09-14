@@ -605,7 +605,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Controllers {
                 'ticket_id' => $ticketId,
                 'author_id' => $actorId,
                 'body' => $body,
-                'is_internal' => 0,
+                'is_internal' => 1,
                 'msg_type' => 'system',
                 'created_at' => $now,
             ]);
