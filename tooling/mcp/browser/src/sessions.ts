@@ -1,9 +1,9 @@
 import { chromium } from 'playwright';
 import type { Browser, BrowserContext, Page } from 'playwright';
-import { readFileSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
+import { readFileSync, mkdirSync, writeFileSync, unlinkSync } from 'node:fs';
+import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { SessionState, PageSnapshot, TimelineEntry, LogEntry, EnvConfig } from './types.ts';
+import type { SessionState, PageSnapshot, TimelineEntry, LogEntry, EnvConfig, AuthOutcome, DestroyOutcome } from './types.ts';
 import { diffStates, formatDiff } from './diff.ts';
 import { formatTimestamp } from './utils.ts';
 import { bumpActionCounter, getReminder } from './tools/notes.ts';
@@ -174,20 +174,81 @@ export class SessionManager {
     return this.sessions.get(role)?.baseUrl || this.config.baseUrl;
   }
 
-  async destroy(role?: string): Promise<void> {
+  /**
+   * Path a persisted storageState for `role` would live at, namespaced by
+   * this process's personaId so concurrent MCP instances (e.g. separate UAT
+   * persona agents sharing one project-wide AUTH_DIR) never collide on the
+   * same file. Returns null when AUTH_DIR isn't configured (persistence
+   * silently no-ops — same as today's load-only behaviour when unset).
+   */
+  private authPath(role: string): string | null {
+    if (!this.config.authDir) return null;
+    const safeRole = role.replace(/[^a-zA-Z0-9_-]/g, '_') || 'default';
+    return join(this.config.authDir, this.config.personaId, `${safeRole}.json`);
+  }
+
+  /**
+   * Snapshot `role`'s current cookies/localStorage to disk (default), or
+   * delete any previously-saved snapshot (`discard: true`) — the explicit
+   * "log out for real" path a session can only reach by choosing it, never
+   * as a side effect of the MCP process itself exiting between turns.
+   * A save/delete failure never blocks the session from closing — but unlike
+   * the old fire-and-forget version, the caller finds out about it instead of
+   * a tool response that claims success no matter what actually happened.
+   */
+  private async persistAuth(role: string, session: SessionState, discard: boolean): Promise<AuthOutcome> {
+    const path = this.authPath(role);
+    if (!path) return { kind: 'skipped' };
+
+    if (discard) {
+      try {
+        unlinkSync(path);
+        return { kind: 'discarded' };
+      } catch (err) {
+        // ENOENT (nothing to discard) is a normal outcome, not a failure.
+        if ((err as NodeJS.ErrnoException).code === 'ENOENT') return { kind: 'discarded' };
+        return { kind: 'error', message: err instanceof Error ? err.message : String(err) };
+      }
+    }
+
+    try {
+      const state = await session.context.storageState();
+      mkdirSync(dirname(path), { recursive: true });
+      writeFileSync(path, JSON.stringify(state));
+      return { kind: 'saved', path };
+    } catch (err) {
+      return { kind: 'error', message: err instanceof Error ? err.message : String(err) };
+    }
+  }
+
+  /**
+   * Closes session(s) and reports, per role actually found and closed, what
+   * happened to its auth state. An empty array back for an explicit `role`
+   * means there was no such session — distinct from a successful close.
+   */
+  async destroy(role?: string, opts: { discardAuth?: boolean } = {}): Promise<DestroyOutcome[]> {
+    const discard = opts.discardAuth ?? false;
+    const results: DestroyOutcome[] = [];
+
     if (role) {
       const session = this.sessions.get(role);
       if (session) {
+        const auth = await this.persistAuth(role, session, discard);
         await session.context.close().catch(() => {});
         this.sessions.delete(role);
+        results.push({ role, auth });
       }
     } else {
       // Close all sessions
       for (const [name, session] of this.sessions) {
+        const auth = await this.persistAuth(name, session, discard);
         await session.context.close().catch(() => {});
         this.sessions.delete(name);
+        results.push({ role: name, auth });
       }
     }
+
+    return results;
   }
 
   getPage(role: string): Page {

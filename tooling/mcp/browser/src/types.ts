@@ -49,6 +49,22 @@ export interface SessionState {
   baseUrl?: string;
 }
 
+/**
+ * What actually happened to a session's persisted auth state when its
+ * session_close ran — reported back so the tool response can say the true
+ * outcome instead of a blanket "done" regardless of what happened.
+ */
+export type AuthOutcome =
+  | { kind: 'saved'; path: string }
+  | { kind: 'discarded' }
+  | { kind: 'skipped' } // AUTH_DIR not configured — nothing to persist to.
+  | { kind: 'error'; message: string };
+
+export interface DestroyOutcome {
+  role: string;
+  auth: AuthOutcome;
+}
+
 export interface EnvConfig {
   baseUrl: string;
   authDir: string;
@@ -56,6 +72,16 @@ export interface EnvConfig {
   phpErrorLog: string;
   /** The data attribute name used for test IDs (default: "data-test-id"). Set via TESTID_ATTR env var. */
   testidAttr: string;
+  /**
+   * Namespaces persisted storageState files so concurrent MCP instances sharing
+   * the same AUTH_DIR (e.g. multiple UAT persona agents, one server process each,
+   * all launched from the same project-wide .mcp.json) never collide on the same
+   * {role}.json. Defaults to the basename of the spawning process's cwd — for a
+   * persistent-agent-tree persona that cwd is its own cell (.agents/uat/<id>/),
+   * so this resolves to that persona's id with zero extra config. Override via
+   * GARNET_MCP_PERSONA_ID when that default doesn't fit.
+   */
+  personaId: string;
 }
 
 /** MCP tool content block — text */

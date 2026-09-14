@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { resolve } from 'node:path';
+import { basename, resolve } from 'node:path';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
@@ -53,16 +53,24 @@ for (const mod of modules) {
 
 // ── Configuration ────────────────────────────────────────────────────
 
+/** Sanitize a string for safe use as a single path segment (no traversal, no separators). */
+function sanitizeSegment(value: string): string {
+  return value.replace(/[^a-zA-Z0-9_-]/g, '_');
+}
+
 function loadConfig(): EnvConfig {
   const env = process.env;
 
   const rootDir = resolve(import.meta.dirname, '..', '..');
+  const personaId = env.GARNET_MCP_PERSONA_ID || sanitizeSegment(basename(process.cwd())) || 'default';
+
   return {
     baseUrl: env.BASE_URL || env.GARNET_BASE_URL || 'http://localhost',
     authDir: env.AUTH_DIR || env.GARNET_AUTH_DIR || '',
     appDir: env.GARNET_APP_DIR || resolve(rootDir, 'Apps', 'App'),
     phpErrorLog: env.PHP_ERROR_LOG || env.GARNET_PHP_ERROR_LOG || '',
     testidAttr: env.TESTID_ATTR || 'data-test-id',
+    personaId,
   };
 }
 
@@ -148,6 +156,7 @@ async function main(): Promise<void> {
   console.error('garnet-browser-mcp server started');
   console.error(`  Base URL: ${config.baseUrl}`);
   console.error(`  Auth dir: ${config.authDir || '(not set)'}`);
+  console.error(`  Persona id: ${config.personaId}`);
   console.error(`  App dir: ${config.appDir}`);
   console.error(`  Tools: ${allTools.length}`);
 }
