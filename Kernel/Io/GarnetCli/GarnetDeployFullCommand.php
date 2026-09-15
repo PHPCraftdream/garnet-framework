@@ -224,7 +224,9 @@ class GarnetDeployFullCommand {
                 }
                 self::fail('Boot check failed — the host is left in maintenance mode intentionally. Investigate before trusting this release.');
             }
-            echo '  ' . "\033[32m[OK]\033[0m app boots cleanly on the host" . PHP_EOL . PHP_EOL;
+            echo '  ' . "\033[32m[OK]\033[0m app boots cleanly on the host" . PHP_EOL;
+            self::verifyPublishedAssets($ssh, $remoteRuntime);
+            echo PHP_EOL;
         }
 
         // 6. Migrations — triggers the EXISTING, already-safe `php garnet
@@ -310,6 +312,160 @@ class GarnetDeployFullCommand {
      * Best-effort: неудача печатается, но деплой не валит — файлы уже
      * доставлены, а воркеры подхватят новый код при своей переработке.
      */
+    /**
+     * Проверяет, что страница, которую хост теперь отдаёт, ссылается только
+     * на реально выложенные ассеты.
+     *
+     * Зачем отдельно от boot check: `php garnet noop` отвечает на вопрос
+     * «поднимается ли приложение», а не «собирается ли страница целиком».
+     * Инцидент, ради которого этот шаг появился, прошёл мимо всех остальных
+     * сигналов: имя бандла содержит хеш, вычисляемый из исходников в момент
+     * рендера, поэтому выкладка кода меняет то, что страница ПРОСИТ, — а
+     * сам собранный бандл на хост не доехал. В итоге HTML просил
+     * `foreground.<новый хеш>.gen.js`, тот отдавал 404, ни один остров не
+     * гидратировался, и весь личный кабинет был белым ~12 часов. При этом
+     * сервер честно отвечал 200, PHP-ошибок не было, JS-ошибок тоже (скрипт
+     * просто не загрузился), а анонимные страницы продолжали работать —
+     * зелёным оставалось абсолютно всё.
+     *
+     * Проверка идёт С МАШИНЫ ДЕПЛОЯ, а не с хоста: maintenance ещё включён,
+     * и в allow-list внесён именно IP оператора (шаг 2/6), поэтому только
+     * отсюда видно настоящую страницу, а не заглушку. base_url читается на
+     * хосте — там, где он и настроен, как в resetOpcacheOnHost().
+     *
+     * Проверяется анонимная главная: этого достаточно, потому что она тянет
+     * и framework-, и app-бандл — в том самом инциденте она уже ссылалась
+     * на пропавший файл. Провал НЕ снимает maintenance: лучше оставить сайт
+     * закрытым, чем открыть заведомо неработающий кабинет.
+     */
+    private static function verifyPublishedAssets(SshClient $ssh, string $remoteRuntime): void {
+        $config = $remoteRuntime . '/WorkDir/Config/app.ini';
+        $res = $ssh->run(
+            'sed -n "s/^ *base_url *= *//p" ' . escapeshellarg($config) . ' | tr -d "\\"[:space:]"',
+            ['stream' => false],
+        );
+        $baseUrl = rtrim(trim((string)$res->stdout), '/');
+
+        if ($baseUrl === '') {
+            echo "  \033[33m·\033[0m проверка ассетов пропущена: в app.ini на хосте нет base_url" . PHP_EOL;
+
+            return;
+        }
+
+        [$status, $html] = self::httpFetch($baseUrl . '/');
+
+        if ($status !== 200 || $html === '') {
+            self::fail(
+                "Страница {$baseUrl}/ после выкладки ответила HTTP {$status} — проверить ассеты невозможно."
+                . ' Хост намеренно оставлен в maintenance.',
+            );
+        }
+
+        $urls = self::extractAssetUrls($html);
+
+        if ($urls === []) {
+            // Не падаем: приложение может не иметь собранных ассетов вовсе.
+            // Но и молчать нельзя — иначе шаг выглядит пройденным, ничего
+            // не проверив, а именно такая «зелёная пустота» и стоила простоя.
+            echo "  \033[33m·\033[0m на главной не найдено ссылок на /assets/ — проверять нечего" . PHP_EOL;
+
+            return;
+        }
+
+        $broken = [];
+
+        foreach ($urls as $url) {
+            $absolute = str_starts_with($url, 'http') ? $url : $baseUrl . '/' . ltrim($url, '/');
+            [$assetStatus] = self::httpFetch($absolute, headOnly: true);
+
+            if ($assetStatus < 200 || $assetStatus >= 400) {
+                $broken[] = "HTTP {$assetStatus}  {$url}";
+            }
+        }
+
+        if ($broken !== []) {
+            echo "\033[31m  [FAIL] страница ссылается на ассеты, которых на хосте нет:\033[0m" . PHP_EOL;
+
+            foreach ($broken as $line) {
+                echo "    \033[90m{$line}\033[0m" . PHP_EOL;
+            }
+            self::fail(
+                'Выложенные ассеты не совпадают с тем, что просит страница (' . count($broken) . ' из '
+                . count($urls) . ') — почти наверняка код доехал, а собранный фронтенд нет.'
+                . ' Хост намеренно оставлен в maintenance: открывать сайт в таком виде нельзя.',
+            );
+        }
+
+        echo '  ' . "\033[32m[OK]\033[0m все " . count($urls) . ' ассета страницы отдаются хостом' . PHP_EOL;
+    }
+
+    /**
+     * Вытаскивает из HTML всё, что браузер пойдёт грузить из /assets/ —
+     * и скрипты, и стили. Вынесено отдельной чистой функцией, чтобы
+     * поведение можно было закрепить тестом без сети и SSH.
+     *
+     * Намеренно работает регуляркой, а не DOM-парсером: разбирать нужно
+     * ровно одну вещь — значения src/href, — а отдавать сюда весь HTML
+     * произвольного приложения на разбор DOM ради этого избыточно и
+     * добавляет зависимость там, где её сейчас нет.
+     *
+     * @return array<int, string>
+     */
+    private static function extractAssetUrls(string $html): array {
+        preg_match_all('~(?:src|href)\s*=\s*"([^"]*/assets/[^"]+)"~i', $html, $m);
+
+        return array_values(array_unique($m[1]));
+    }
+
+    /**
+     * Минимальный HTTP-запрос без внешних зависимостей: curl-расширение
+     * есть не везде, а внешний бинарник curl тем более. Возвращает
+     * [код ответа, тело]; код 0 означает, что ответа не было вовсе.
+     *
+     * @return array{int, string}
+     */
+    private static function httpFetch(string $url, bool $headOnly = false): array {
+        $context = stream_context_create([
+            'http' => [
+                'method' => $headOnly ? 'HEAD' : 'GET',
+                'timeout' => 15,
+                'follow_location' => 1,
+                'max_redirects' => 5,
+                // Иначе PHP бросает warning и отдаёт false на любом 4xx/5xx,
+                // а нам нужен именно код ответа — 404 здесь не ошибка
+                // выполнения, а искомый результат.
+                'ignore_errors' => true,
+                'header' => "User-Agent: garnet-deploy-full/asset-check\r\n",
+            ],
+        ]);
+
+        // Через поток, а не file_get_contents: тот отдаёт заголовки только
+        // магической переменной $http_response_header, которая появляется в
+        // области видимости сама собой и отсутствует при полном провале
+        // соединения. stream_get_meta_data даёт то же самое явно.
+        $handle = @fopen($url, 'r', false, $context);
+
+        if ($handle === false) {
+            return [0, ''];
+        }
+
+        $meta = stream_get_meta_data($handle);
+        $body = (string)stream_get_contents($handle);
+        fclose($handle);
+
+        $status = 0;
+
+        foreach ($meta['wrapper_data'] ?? [] as $header) {
+            // Редиректов может быть несколько — важен код ПОСЛЕДНЕГО ответа,
+            // поэтому перезаписываем, а не прерываемся на первом.
+            if (is_string($header) && preg_match('~^HTTP/\S+\s+(\d{3})~', $header, $mm)) {
+                $status = (int)$mm[1];
+            }
+        }
+
+        return [$status, $body];
+    }
+
     private static function resetOpcacheOnHost(SshClient $ssh, string $remoteRuntime): void {
         echo "\033[1mopcache reset\033[0m" . PHP_EOL;
 
