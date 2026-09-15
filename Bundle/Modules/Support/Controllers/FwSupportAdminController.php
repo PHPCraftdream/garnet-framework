@@ -413,6 +413,15 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Controllers {
 
             $ticketId = (int)$globals->readPostValue('ticket_id', '0');
             $message = trim((string)$globals->readPostValue('message', ''));
+            // D-188: the client sends how many messages it saw when the
+            // moderator started composing. The 15s poll only catches a
+            // colleague's reply that lands DURING typing; two people
+            // submitting within the same short window both compose against
+            // the same count and neither poll fires in time. Comparing
+            // against the actual count here, in the same request that inserts
+            // the reply, catches the collision no matter how fast it happens.
+            $knownMessageCountRaw = $globals->readPostValue('known_message_count', '');
+            $knownMessageCount = $knownMessageCountRaw === '' ? null : (int)$knownMessageCountRaw;
 
             if (!$ticketId || $message === '') {
                 return ControllerTools::JSON(['error' => 'Invalid params'], status: 400);
@@ -427,6 +436,19 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Controllers {
 
             $account = Account::fromSession();
             $now = time();
+
+            // Не блокируем ответ — коллега уже потратил время на его
+            // составление, и правильный ответ дважды лучше, чем потерянный
+            // ответ ни разу. Клиент вместо этого сразу покажет
+            // предупреждение, а не через 15 секунд опроса.
+            $staleReply = false;
+
+            if ($knownMessageCount !== null) {
+                $actualMessageCount = static::messagesTable()->getCount(function (SelectInterface $q) use ($ticketId): void {
+                    $q->where('ticket_id = ?', [$ticketId]);
+                });
+                $staleReply = $actualMessageCount > $knownMessageCount;
+            }
 
             // Insert staff reply (visible to user)
             $messageId = static::messagesTable()->insert([
@@ -458,7 +480,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Controllers {
 
             $ticketsTable->updateByField($updates, 'id', $ticketId);
 
-            return ControllerTools::JSON(['success' => true, 'attachmentErrors' => $attachmentErrors]);
+            return ControllerTools::JSON(['success' => true, 'attachmentErrors' => $attachmentErrors, 'staleReply' => $staleReply]);
         }
 
         public static function post__internalComment(IGlobalReqParams $globals, IRouterUriParams $params): mixed {

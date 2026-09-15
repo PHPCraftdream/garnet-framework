@@ -34,6 +34,11 @@ const LS_KEY = 'garnet:counts:shared';
 
 let started = false;
 let latest: LiveCounts | null = null;
+// The interval timer, the visibilitychange listener and refreshLiveCounts()
+// can all call poll() within the same tick (e.g. a tab regaining focus right
+// as the interval fires). Without a guard each call passed the shared-cache
+// freshness check independently and fired its own fetch — D-203/D-185.
+let inFlight: Promise<void> | null = null;
 
 const countsUrl = (): string | null => {
     const w = window as unknown as {__GARNET_COUNTS_URL__?: string; __GARNET_PREFIX__?: string};
@@ -98,9 +103,14 @@ const poll = (force = false): void => {
         return;
     }
 
+    // The interval timer, a visibilitychange flip and an explicit
+    // refreshLiveCounts() can all land in the same tick — piggyback on the
+    // request already in flight instead of firing a second one.
+    if (inFlight) return;
+
     const url = countsUrl();
     if (!url) return;
-    fetch(url, {headers: {Accept: 'application/json'}, credentials: 'same-origin'})
+    inFlight = fetch(url, {headers: {Accept: 'application/json'}, credentials: 'same-origin'})
         .then(res => (res.ok ? res.json() : null))
         .then(json => {
             const counts = toCounts(json);
@@ -110,7 +120,8 @@ const poll = (force = false): void => {
         })
         .catch(() => {
             // Network blip — keep the last known values and try again next tick.
-        });
+        })
+        .finally(() => { inFlight = null; });
 };
 
 /**
