@@ -115,5 +115,51 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
                 expect($this->collect->invoke(null, $this->dir))->toBe([]);
             });
         });
+
+        /**
+         * Регрессия на вторую аварию, устроенную уже самим гейтом. Проверка
+         * ассетов получила путь, собранный из `public_name` вместо
+         * `public_dir`: `public_name` — это имя приложения внутри URL
+         * (`/assets/<public_name>/...`), а не каталог на диске. Путь не
+         * существовал, `test -f` не нашёл ни одного файла, гейт отчитался
+         * «9 из 9 ассетов нет» и оставил боевой сайт в maintenance — при
+         * том что выкладка прошла безупречно и все девять файлов лежали на
+         * месте. Ложная тревога такого гейта стоит ровно столько же, сколько
+         * авария, которую он должен был предотвращать.
+         */
+        describe('::remotePublicPath (via reflection)', function (): void {
+            beforeEach(function (): void {
+                $this->remotePublic = new ReflectionMethod(GarnetDeployFullCommand::class, 'remotePublicPath');
+                $this->layout = [
+                    'remote_path' => '/var/www/u1780595/data/www',
+                    'public_dir' => 'slotbook.ru',
+                    'public_name' => 'slotbook',
+                ];
+            });
+
+            it('строит путь из public_dir — каталога, а не из имени в URL ассетов', function (): void {
+                expect($this->remotePublic->invoke(null, $this->layout))
+                    ->toBe('/var/www/u1780595/data/www/slotbook.ru');
+            });
+
+            it('не подставляет public_name: именно это оставило прод в maintenance', function (): void {
+                $path = $this->remotePublic->invoke(null, $this->layout);
+
+                // Два разных утверждения об одном пути: он оканчивается
+                // каталогом и НЕ оканчивается именем приложения. Проверять
+                // только вхождение подстроки мало — '/slotbook' лежит внутри
+                // '/slotbook.ru', и наивная проверка зелена на обоих.
+                expect(str_ends_with($path, '/slotbook.ru'))->toBe(true);
+                expect(str_ends_with($path, '/slotbook'))->toBe(false);
+            });
+
+            it('не удваивает слеш, если remote_path заканчивается на него', function (): void {
+                $layout = $this->layout;
+                $layout['remote_path'] = '/var/www/u1780595/data/www/';
+
+                expect($this->remotePublic->invoke(null, $layout))
+                    ->toBe('/var/www/u1780595/data/www/slotbook.ru');
+            });
+        });
     });
 }

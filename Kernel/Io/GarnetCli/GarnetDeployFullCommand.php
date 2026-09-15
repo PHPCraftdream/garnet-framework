@@ -126,6 +126,13 @@ class GarnetDeployFullCommand {
         $remoteRoot = rtrim($layout['remote_path'], '/');
 
         $remoteRuntime = "{$remoteRoot}/{$layout['runtime_dir']}";
+        // Один раз и на оба применения — выкладку (шаг 3/6) и проверку
+        // ассетов (шаг 5/6). Когда это были два независимых выражения,
+        // проверка досталась `public_name` (имя приложения в URL ассетов,
+        // не каталог), сошлась на несуществующем пути, отчиталась «9 из 9
+        // ассетов нет» и оставила боевой сайт в maintenance при
+        // безупречной выкладке. Расходиться теперь нечему.
+        $remotePublic = self::remotePublicPath($layout);
 
         // 2. Maintenance ON before anything remote gets touched. This is
         // NOT optional/defense-in-depth here — a real production incident
@@ -174,7 +181,7 @@ class GarnetDeployFullCommand {
         // — it only ships the delta — so this merge-only upload (no
         // delete) matches that existing, already-safe precedent.
         self::step('3/6', 'Shipping public (merge, no delete) / framework / app (atomic swap)');
-        self::shipPublicDir($ssh, $distPublic, "{$remoteRoot}/{$layout['public_dir']}");
+        self::shipPublicDir($ssh, $distPublic, $remotePublic);
         self::shipDir($ssh, $distFw, "{$remoteRoot}/{$layout['framework_dir']}", 'framework');
         self::shipDir($ssh, $distAppDir, "{$remoteRoot}/{$layout['app_dir']}", 'app');
         echo PHP_EOL;
@@ -228,7 +235,7 @@ class GarnetDeployFullCommand {
                 self::fail('Boot check failed — the host is left in maintenance mode intentionally. Investigate before trusting this release.');
             }
             echo '  ' . "\033[32m[OK]\033[0m app boots cleanly on the host" . PHP_EOL;
-            self::verifyPublishedAssets($ssh, $distApp, $remoteRoot . '/' . $layout['public_name']);
+            self::verifyPublishedAssets($ssh, $distApp, $remotePublic);
             echo PHP_EOL;
         }
 
@@ -403,6 +410,19 @@ class GarnetDeployFullCommand {
         }
 
         echo '  ' . '[32m[OK][0m все ' . count($assets) . ' ассетов релиза на месте' . PHP_EOL;
+    }
+
+    /**
+     * Каталог docroot на хосте. `public_dir` — именно каталог; `public_name`
+     * рядом с ним в том же массиве — имя приложения внутри URL ассетов
+     * (`/assets/<public_name>/...`), и подстановка второго вместо первого
+     * даёт путь, которого на хосте нет. Один вызов на всю команду, чтобы
+     * выкладка и проверка не могли разойтись.
+     *
+     * @param array{remote_path:string, public_dir:string} $layout
+     */
+    private static function remotePublicPath(array $layout): string {
+        return rtrim($layout['remote_path'], '/') . '/' . $layout['public_dir'];
     }
 
     /**
