@@ -93,6 +93,28 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Controllers {
         abstract protected static function getStatusChangedLabel(): string;
 
         /**
+         * Текст системной строки о смене статуса — той, что видит и сотрудник,
+         * и клиент.
+         *
+         * По умолчанию сохраняется прежнее поведение: «Статус изменён: A → B»
+         * названиями из getStatusLabels(). Это честно для очереди сотрудников и
+         * бесполезно для клиента: названия статусов — внутренняя кухня, и
+         * человек снаружи читает «Ожидание ответа → В работе» как утечку
+         * служебных терминов, а не как новость о своём обращении.
+         *
+         * Приложение может переопределить метод и вернуть свою формулировку, а
+         * вернув null — вовсе не писать сообщение: у части переходов нет
+         * никакого смысла для того, кто обращение написал.
+         */
+        protected static function buildStatusChangeBody(string $oldStatus, string $newStatus): ?string {
+            $statusLabels = static::getStatusLabels();
+            $oldLabel = $statusLabels[$oldStatus] ?? $oldStatus;
+            $newLabel = $statusLabels[$newStatus] ?? $newStatus;
+
+            return static::getStatusChangedLabel() . ": {$oldLabel} \u{2192} {$newLabel}";
+        }
+
+        /**
          * Return the translated string for "Assigned to".
          */
         abstract protected static function getAssignedToLabel(): string;
@@ -508,18 +530,23 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Support\Controllers {
                 'updated_at' => $now,
             ], 'id', $ticketId);
 
-            // Insert system message about status change with translated labels
-            $statusLabels = static::getStatusLabels();
-            $oldLabel = $statusLabels[$oldStatus] ?? $oldStatus;
-            $newLabel = $statusLabels[$newStatus] ?? $newStatus;
-            static::messagesTable()->insert([
-                'ticket_id' => $ticketId,
-                'author_id' => (int)$account->id(),
-                'body' => static::getStatusChangedLabel() . ": {$oldLabel} \u{2192} {$newLabel}",
-                'is_internal' => 0,
-                'msg_type' => 'system',
-                'created_at' => $now,
-            ]);
+            // Системная строка о смене статуса. Её видит не только сотрудник,
+            // но и человек по ту сторону: она пишется с is_internal = 0.
+            // Поэтому текст отдан приложению — только оно знает, какие из его
+            // статусов что-то значат для клиента, а какие являются внутренней
+            // кухней очереди. Вернуть null — не писать сообщение вовсе.
+            $body = static::buildStatusChangeBody($oldStatus, $newStatus);
+
+            if ($body !== null && $body !== '') {
+                static::messagesTable()->insert([
+                    'ticket_id' => $ticketId,
+                    'author_id' => (int)$account->id(),
+                    'body' => $body,
+                    'is_internal' => 0,
+                    'msg_type' => 'system',
+                    'created_at' => $now,
+                ]);
+            }
 
             return ControllerTools::JSON(['success' => true]);
         }
