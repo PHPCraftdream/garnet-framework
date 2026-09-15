@@ -38,63 +38,81 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
 
         /**
          * Регрессия на реальную аварию: выкладка кода сменила хеш в имени
-         * бандла, сам бандл на хост не доехал, страница попросила
-         * `foreground.<новый хеш>.gen.js` → 404 → ни один остров не
-         * гидратировался, и личный кабинет был белым ~12 часов. Всё
-         * остальное при этом оставалось зелёным: сервер отвечал 200,
-         * PHP-ошибок не было, JS-ошибок тоже (скрипт не загрузился), а
-         * анонимные страницы работали.
+         * бандла, сам бандл на хост не доехал, страница попросила файл,
+         * которого нет, получила 404 — ни один остров не гидратировался, и
+         * личный кабинет был белым около 12 часов. Всё остальное при этом
+         * оставалось зелёным: сервер отвечал 200, PHP-ошибок не было,
+         * JS-ошибок тоже (скрипт попросту не загрузился), а анонимные
+         * страницы работали, потому что им хватало других бандлов.
          *
-         * Гейт в деплое собирает ссылки со страницы и требует, чтобы каждая
-         * отдавалась. Здесь закрепляется именно сбор ссылок — та его часть,
-         * которую можно проверить без сети: если он перестанет что-то
-         * замечать, проверка станет молча-зелёной, то есть ровно такой же
-         * бесполезной, как сигналы во время аварии.
+         * Гейт в деплое берёт пути ассетов из Gen-классов собранного релиза
+         * и требует, чтобы каждый файл нашёлся на хосте. Здесь закрепляется
+         * именно сбор путей: если он перестанет что-то замечать, проверка
+         * станет молча-зелёной — то есть ровно такой же бесполезной, как все
+         * сигналы во время аварии.
          */
-        describe('::extractAssetUrls (via reflection)', function (): void {
+        describe('::collectBuiltAssetPaths (via reflection)', function (): void {
             beforeEach(function (): void {
-                $this->extract = new ReflectionMethod(GarnetDeployFullCommand::class, 'extractAssetUrls');
+                $this->collect = new ReflectionMethod(GarnetDeployFullCommand::class, 'collectBuiltAssetPaths');
+                $this->dir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'garnet-gen-' . bin2hex(random_bytes(4));
+                mkdir($this->dir . DIRECTORY_SEPARATOR . 'nested', 0o777, true);
+
+                // Пишет Gen-класс того же вида, что генерирует сборка: набор
+                // статических методов, возвращающих путь к собранному файлу.
+                $this->writeGen = function (string $path, array $assets): void {
+                    $body = '<?php class X {';
+
+                    foreach ($assets as $i => $asset) {
+                        $body .= " public static function a{$i}(): string { return '{$asset}'; }";
+                    }
+                    file_put_contents($path, $body . ' }');
+                };
             });
 
-            it('собирает и скрипты, и стили', function (): void {
-                $html = '<html><head>'
-                    . '<link rel="stylesheet" href="/assets/framework/gen/css/framework.a6d4.gen.css">'
-                    . '</head><body>'
-                    . '<script src="/assets/framework/gen/js/vendor-react.f1d4.gen.js"></script>'
-                    . '<script async src="/assets/myapp/gen/js/foreground.foreground.0424.gen.js"></script>'
-                    . '</body></html>';
+            afterEach(function (): void {
+                array_map('unlink', glob($this->dir . '/nested/*') ?: []);
+                array_map('unlink', glob($this->dir . '/*.php') ?: []);
+                @rmdir($this->dir . DIRECTORY_SEPARATOR . 'nested');
+                @rmdir($this->dir);
+            });
 
-                expect($this->extract->invoke(null, $html))->toBe([
+            it('собирает пути из Gen-классов, включая вложенные каталоги', function (): void {
+                ($this->writeGen)($this->dir . '/FooGen.php', ['/assets/app/gen/js/foreground.foreground.0424.gen.js']);
+                ($this->writeGen)($this->dir . '/nested/BarGen.php', ['/assets/framework/gen/css/framework.a6d4.gen.css']);
+
+                $found = $this->collect->invoke(null, $this->dir);
+                sort($found);
+
+                expect($found)->toBe([
+                    '/assets/app/gen/js/foreground.foreground.0424.gen.js',
                     '/assets/framework/gen/css/framework.a6d4.gen.css',
-                    '/assets/framework/gen/js/vendor-react.f1d4.gen.js',
-                    '/assets/myapp/gen/js/foreground.foreground.0424.gen.js',
                 ]);
             });
 
             it('не теряет бандл приложения — именно его отсутствие и было аварией', function (): void {
-                $html = '<script async src="/assets/myapp/gen/js/foreground.foreground.042499cb.gen.js"></script>';
+                ($this->writeGen)($this->dir . '/AppGen.php', ['/assets/app/gen/js/foreground.foreground.042499cb.gen.js']);
 
-                expect($this->extract->invoke(null, $html))
-                    ->toBe(['/assets/myapp/gen/js/foreground.foreground.042499cb.gen.js']);
+                expect($this->collect->invoke(null, $this->dir))
+                    ->toBe(['/assets/app/gen/js/foreground.foreground.042499cb.gen.js']);
             });
 
-            it('схлопывает повторы: один и тот же файл проверяется один раз', function (): void {
-                $html = '<script src="/assets/a/gen/js/x.gen.js"></script>'
-                    . '<script src="/assets/a/gen/js/x.gen.js"></script>';
+            it('схлопывает повторы: один файл проверяется один раз', function (): void {
+                ($this->writeGen)($this->dir . '/OneGen.php', ['/assets/a/gen/js/x.gen.js']);
+                ($this->writeGen)($this->dir . '/TwoGen.php', ['/assets/a/gen/js/x.gen.js']);
 
-                expect($this->extract->invoke(null, $html))->toBe(['/assets/a/gen/js/x.gen.js']);
+                expect($this->collect->invoke(null, $this->dir))->toBe(['/assets/a/gen/js/x.gen.js']);
             });
 
-            it('игнорирует ссылки вне /assets/ — чужой CDN не наша зона ответственности', function (): void {
-                $html = '<a href="/system/bookings">Брони</a>'
-                    . '<script src="https://cdn.example.com/lib.js"></script>'
-                    . '<script src="/assets/a/gen/js/x.gen.js"></script>';
+            it('игнорирует значения вне /assets/ — это не выкладываемые файлы', function (): void {
+                ($this->writeGen)($this->dir . '/MixedGen.php', ['/assets/a/gen/js/x.gen.js', '/system/bookings']);
 
-                expect($this->extract->invoke(null, $html))->toBe(['/assets/a/gen/js/x.gen.js']);
+                expect($this->collect->invoke(null, $this->dir))->toBe(['/assets/a/gen/js/x.gen.js']);
             });
 
-            it('возвращает пустой список, когда ассетов нет вовсе', function (): void {
-                expect($this->extract->invoke(null, '<html><body>ничего</body></html>'))->toBe([]);
+            it('не заглядывает в файлы, которые не Gen-классы', function (): void {
+                ($this->writeGen)($this->dir . '/Helper.php', ['/assets/a/gen/js/ignored.gen.js']);
+
+                expect($this->collect->invoke(null, $this->dir))->toBe([]);
             });
         });
     });
