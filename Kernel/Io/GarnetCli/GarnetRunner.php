@@ -170,7 +170,11 @@ class GarnetRunner {
             $command === 'db' || str_starts_with($command, 'db:') => GarnetDbWipeCommand::run($command, $args),
             $command === 'ssh' || str_starts_with($command, 'ssh:') => GarnetSshCommand::run($command, $args),
             $command === 'deploy:diff' || $command === 'deploy:diff:help' => GarnetDeployDiffCommand::run($command === 'deploy:diff:help' ? ['help'] : $args),
-            $command === 'deploy:log' => GarnetDeployLogCommand::run($args),
+            $command === 'deploy:log' => (static function () use ($args): void {
+                GarnetDeployLogCommand::run($args);
+
+                exit(0);
+            })(),
             $command === 'deploy:full' => (static function () use ($args): void {
                 GarnetDeployFullCommand::run($args);
 
