@@ -16,12 +16,13 @@ namespace PHPCraftdream\Garnet\Kernel\L0_Core\ErrorCatcher\Spec {
     $runCmd = function (string $cmd): string {
         for ($attempt = 0; $attempt < 3; $attempt++) {
             $result = shell_exec($cmd);
+
             if ($result !== null && $result !== '') {
                 return $result;
             }
         }
 
-        return (string) $result;
+        return (string)$result;
     };
 
     describe('ErrorCatcher', function () use ($runCmd): void {
