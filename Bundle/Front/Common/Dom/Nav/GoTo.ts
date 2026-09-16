@@ -1,4 +1,4 @@
-import {getHtml} from '@common/Api/getHtml';
+import {fetchDocumentPrefetched} from '@common/Dom/Nav/DocumentPrefetch';
 import {PageLoader} from '@common/Dom/PageLoader';
 import {RespError} from '@common/Api/RespError';
 import {showToast} from '@common/Components/GlobalToast';
@@ -31,7 +31,7 @@ export const goTo = (href: string): Promise<void> => {
     const token = ++navToken;
     const superseded = (): boolean => token !== navToken;
 
-    return getHtml(href).then((html) => {
+    return fetchDocumentPrefetched(href).then((html) => {
         if (superseded()) {
             return;
         }

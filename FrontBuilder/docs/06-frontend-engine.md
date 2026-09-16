@@ -201,6 +201,42 @@ window.addEventListener('popstate', () => {
 });
 ```
 
+### DocumentPrefetch (`Common/Dom/Nav/DocumentPrefetch.ts`)
+
+Warms the document `goTo()` will fetch on click, triggered by hover/focus/press
+on an eligible link (`Common/Dom/Nav/IntentTriggers.ts`), backed by a generic
+promise cache (`Common/Api/PrefetchCache.ts`). `GoTo.ts` itself calls
+`fetchDocumentPrefetched(href)` instead of `getHtml(href)` directly — every
+existing `<a href>`/hot-click navigation gets this for free, no per-link
+opt-in.
+
+**Usage memo — read this before wiring anything new into prefetch:**
+
+- **Only ever prefetch an idempotent GET.** `prefetchDocument`/
+  `fetchDocumentPrefetched` call `getHtml()` and nothing else — there is no
+  method parameter on this module's public surface, so a mutation cannot be
+  routed through it even by accident. If a new prefetchable resource is ever
+  added (a JSON endpoint for an in-app action, not a page navigation), give
+  it its **own** `PrefetchCache` instance and its own thin wrapper with the
+  same shape — don't add a method parameter to make one wrapper "flexible".
+  The safety property comes from the wrapper's signature being unable to
+  express a mutation, not from the caller remembering not to ask for one.
+- **Only wire intent triggers to `<a href>` navigation targets**, never to a
+  button or any element whose click performs an action (cancel, delete,
+  submit). `IntentTriggers.ts`'s eligibility filter already limits itself to
+  anchor elements for this reason — don't call `initIntentTriggers`/
+  `initDocumentPrefetchTriggers` pointed at a container of action buttons.
+- **The click handler never needs to check whether prefetch happened.**
+  `fetchDocumentPrefetched(url)` always resolves the same way a plain
+  `getHtml(url)` would: cache hit, cache miss, or a failed prefetch (which is
+  retried transparently instead of surfacing a background error the user
+  never caused) all look identical from the caller's side.
+- **It composes with `useSending` for free.** `fetchDocumentPrefetched`
+  returns a plain `Promise`; wrapping the click handler in
+  `withSending(() => fetchDocumentPrefetched(url).then(...))` gets the same
+  synchronous double-submit guard as any other async action — no special
+  integration code needed on the prefetch side.
+
 ---
 
 ## Form Handling

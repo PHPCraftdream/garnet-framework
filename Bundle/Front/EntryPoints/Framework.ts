@@ -1,6 +1,7 @@
 import {DomObserver} from '@common/Dom/DomObserver';
 import {goTo} from '@common/Dom/Nav/GoTo';
 import {hotClickInit} from '@common/Dom/Nav/HotClickInit';
+import {initDocumentPrefetchTriggers} from '@common/Dom/Nav/DocumentPrefetch';
 import {createElement} from 'react';
 import {createRoot} from 'react-dom/client';
 import {GlobalToastRenderer, showToast} from '@common/Components/GlobalToast';
@@ -51,7 +52,12 @@ window.addEventListener('unhandledrejection', (event) => {
 
 const observer = DomObserver?.init();
 
-observer?.defineAddClassHandler('hot-click-container-init', hotClickInit);
+observer?.defineAddClassHandler('hot-click-container-init', (container: HTMLElement) => {
+    hotClickInit(container);
+    // Same container, same lifetime as hot-click nav — hovering/focusing an
+    // eligible link now warms the document goTo() will fetch on click.
+    initDocumentPrefetchTriggers(container);
+});
 
 window.addEventListener('popstate', () => {
     goTo(window.location.href);
