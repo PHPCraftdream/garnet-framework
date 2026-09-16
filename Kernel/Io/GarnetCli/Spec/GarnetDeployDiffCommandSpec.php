@@ -244,6 +244,55 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
                     $r = ($this->invoke)('publicRowsMissingRemote', [$local, $remote, '/local/Public/assets']);
                     expect($r)->toBe([]);
                 });
+
+            it('matches a rebranded app folder against the host — local assets/<AppName>/ vs '
+                . 'remote assets/<public_name>/, which otherwise re-uploads every app asset every deploy', function (): void {
+                    $local = ['IRabi/gen/js/same.abc.gen.js' => '500:1700000000'];
+                    $remote = ['slotbook/gen/js/same.abc.gen.js' => 500];
+                    $r = ($this->invoke)('publicRowsMissingRemote', [$local, $remote, '/local/Public/assets', 'IRabi', 'slotbook']);
+                    expect($r)->toBe([]);
+                });
+
+            it('still reports a genuinely missing file under a rebranded app folder', function (): void {
+                $local = ['IRabi/gen/js/fresh.abc.gen.js' => '500:1700000000'];
+                $remote = ['slotbook/gen/js/other.def.gen.js' => 500];
+                $r = ($this->invoke)('publicRowsMissingRemote', [$local, $remote, '/local/Public/assets', 'IRabi', 'slotbook']);
+                expect($r)->toHaveLength(1);
+                expect($r[0]['status'])->toBe('A');
+                // rel_remote stays in local form — the destination rebrand is a later step.
+                expect($r[0]['rel_remote'])->toBe('assets/IRabi/gen/js/fresh.abc.gen.js');
+            });
+
+            it('leaves framework assets alone under a rebrand — only the app folder is renamed', function (): void {
+                $local = ['framework/gen/js/fw.abc.gen.js' => '500:1700000000'];
+                $remote = ['framework/gen/js/fw.abc.gen.js' => 500];
+                $r = ($this->invoke)('publicRowsMissingRemote', [$local, $remote, '/local/Public/assets', 'IRabi', 'slotbook']);
+                expect($r)->toBe([]);
+            });
+        });
+
+        describe('::rebrandAssetRel', function (): void {
+            it('renames only the leading app segment', function (): void {
+                expect(($this->invoke)('rebrandAssetRel', ['IRabi/gen/js/a.js', 'IRabi', 'slotbook']))
+                    ->toBe('slotbook/gen/js/a.js');
+            });
+
+            it('matches the app segment case-insensitively — bundle lowercases it, deploy.ini may not', function (): void {
+                expect(($this->invoke)('rebrandAssetRel', ['irabi/gen/js/a.js', 'IRabi', 'slotbook']))
+                    ->toBe('slotbook/gen/js/a.js');
+            });
+
+            it('leaves other roots untouched', function (): void {
+                expect(($this->invoke)('rebrandAssetRel', ['framework/gen/js/a.js', 'IRabi', 'slotbook']))
+                    ->toBe('framework/gen/js/a.js');
+            });
+
+            it('is a no-op when no rebrand is configured', function (): void {
+                expect(($this->invoke)('rebrandAssetRel', ['IRabi/gen/js/a.js', 'IRabi', 'IRabi']))
+                    ->toBe('IRabi/gen/js/a.js');
+                expect(($this->invoke)('rebrandAssetRel', ['IRabi/gen/js/a.js', '', '']))
+                    ->toBe('IRabi/gen/js/a.js');
+            });
         });
 
         describe('::preflightFileLimit (deploy safety cap, #390)', function (): void {

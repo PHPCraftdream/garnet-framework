@@ -305,7 +305,13 @@ final class GarnetDeployDiffCommand {
                 $remoteAssetsRoot = rtrim($layout['remote_path'], '/') . '/'
                     . ($layout['public_dir'] ?? 'public') . '/assets';
                 $remoteAssets = self::remoteAssetsListing($ssh, $remoteAssetsRoot);
-                $missingOnRemote = self::publicRowsMissingRemote($localAssets, $remoteAssets, $assetsSubdir);
+                $missingOnRemote = self::publicRowsMissingRemote(
+                    $localAssets,
+                    $remoteAssets,
+                    $assetsSubdir,
+                    $appName,
+                    $layout['public_name'],
+                );
 
                 // Merge by rel_remote: the local before/after diff wins where
                 // both agree (it has the correct A/M/D status from an actual
@@ -2057,6 +2063,30 @@ final class GarnetDeployDiffCommand {
     }
 
     /**
+     * Map a local asset-relative path (`<AppName>/gen/js/x.js`) to the form it
+     * takes on the host when the deployment rebrands the app folder
+     * (`<public_name>/gen/js/x.js`).
+     *
+     * Only the FIRST segment is touched, and only when it matches the app name
+     * (case-insensitively — `bundle` lowercases it, deploy.ini may not). Paths
+     * under any other root — notably `framework/`, which is never rebranded —
+     * come back unchanged, as does everything when no rebrand is configured.
+     */
+    private static function rebrandAssetRel(string $rel, string $appName, string $publicName): string {
+        if ($appName === '' || $publicName === '' || strcasecmp($appName, $publicName) === 0) {
+            return $rel;
+        }
+        $slash = strpos($rel, '/');
+        $head = $slash === false ? $rel : substr($rel, 0, $slash);
+
+        if (strcasecmp($head, $appName) !== 0) {
+            return $rel;
+        }
+
+        return $publicName . ($slash === false ? '' : substr($rel, $slash));
+    }
+
+    /**
      * Parse `find . -type f -printf '%s %P\n'` output into rel path => size.
      * Split out from remoteAssetsListing() so the parsing itself is testable
      * without an SSH connection.
@@ -2090,15 +2120,32 @@ final class GarnetDeployDiffCommand {
      * for the minority of non-hashed static files (fonts, images copied
      * as-is) whose name doesn't change when their content does.
      *
+     * Local and remote keys do NOT share a namespace when the deployment
+     * rebrands the app's asset folder (deploy.ini `public_name` differs from
+     * the app name): locally the bundles live under `assets/<AppName>/`, on
+     * the host under `assets/<public_name>/`. Comparing the raw keys makes
+     * EVERY app asset look absent remotely, so every deploy re-uploads the
+     * whole app asset set — minutes of SSH round-trips for files the host
+     * already has, on every frontend-touching deploy. Rebrand the local key
+     * before the lookup (framework assets live under `assets/framework/` on
+     * both sides and are unaffected). `rel_remote` stays in the local form:
+     * the destination rebrand happens later in the pipeline.
+     *
      * @param array<string, string> $local  rel path => "size:mtime" (snapshotAssetsDir)
      * @param array<string, int> $remote    rel path => size (remoteAssetsListing)
      */
-    private static function publicRowsMissingRemote(array $local, array $remote, string $assetsSubdir): array {
+    private static function publicRowsMissingRemote(
+        array $local,
+        array $remote,
+        string $assetsSubdir,
+        string $appName = '',
+        string $publicName = '',
+    ): array {
         $rows = [];
 
         foreach ($local as $rel => $sig) {
             $size = (int)explode(':', $sig, 2)[0];
-            $onRemote = $remote[$rel] ?? null;
+            $onRemote = $remote[self::rebrandAssetRel($rel, $appName, $publicName)] ?? null;
 
             if ($onRemote !== null && $onRemote === $size) {
                 continue; // present remotely with the same size — treat as unchanged
