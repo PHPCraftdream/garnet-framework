@@ -304,7 +304,13 @@ final class GarnetDeployDiffCommand {
                 $localAssets = self::snapshotAssetsDir($assetsSubdir);
                 $remoteAssetsRoot = rtrim($layout['remote_path'], '/') . '/'
                     . ($layout['public_dir'] ?? 'public') . '/assets';
-                $remoteAssets = self::remoteAssetsListing($ssh, $remoteAssetsRoot);
+                // Ask the host only about the assets we actually have locally,
+                // in the path form the host stores them under (rebrand applied).
+                $wantedRemote = array_map(
+                    static fn (string $rel): string => self::rebrandAssetRel($rel, $appName, $layout['public_name']),
+                    array_keys($localAssets)
+                );
+                $remoteAssets = self::remoteAssetsSizes($ssh, $remoteAssetsRoot, $wantedRemote);
                 $missingOnRemote = self::publicRowsMissingRemote(
                     $localAssets,
                     $remoteAssets,
@@ -2049,17 +2055,59 @@ final class GarnetDeployDiffCommand {
      * has everything") is how a stale bundle reference survives a deploy.
      * Only ever used to find what's MISSING remotely — never for deletions.
      */
-    private static function remoteAssetsListing(SshClient $ssh, string $remoteDir): array {
-        $dir = escapeshellarg($remoteDir);
-        // cd into the dir first so `find`'s `%P` prints paths relative to it,
-        // matching snapshotAssetsDir()'s own relative-path convention. If the
-        // dir doesn't exist yet, `cd` fails, `find` never runs (short-circuit
-        // before `&&`), and `|| true` turns that into empty output rather
-        // than a non-zero exit SshClient would otherwise have to interpret.
-        $cmd = "cd {$dir} 2>/dev/null && find . -type f -printf '%s %P\\n' 2>/dev/null || true";
-        $res = $ssh->run($cmd, ['stream' => false]);
+    /** Paths per `stat` call — keeps the command line well under any ARG_MAX. */
+    private const REMOTE_STAT_CHUNK = 400;
 
-        return self::parseFindSizeOutput($res->stdout);
+    /**
+     * Sizes of SPECIFIC files under a remote directory, as rel path => size.
+     *
+     * Deliberately asks about exactly the paths we care about instead of
+     * walking the whole remote tree. The tree is not a bounded quantity: the
+     * host accumulates every superseded hashed bundle ever deployed (cleanup
+     * needs a retention policy, see the caller), so a full `find` there costs
+     * more on every deploy and is at the mercy of the host's I/O — measured on
+     * a shared host at seconds one minute and still unfinished after several
+     * of them the next, for a directory of 671 files where only 62 mattered.
+     * A targeted `stat` is bounded by the local asset count instead, and its
+     * output is the handful of lines we actually read.
+     *
+     * Missing files simply produce no line (stderr discarded), which is
+     * exactly the "absent on remote" signal the caller wants. Empty array on
+     * any failure — SSH error, `stat` unavailable, missing directory. That's
+     * the SAFE default: it makes every local file look absent, so the caller
+     * re-uploads. Worst case is a harmless re-upload; the alternative
+     * (assuming the host has everything) is how a stale bundle reference
+     * survives a deploy. Only ever used to find what's MISSING remotely —
+     * never for deletions.
+     *
+     * @param list<string> $relPaths rel paths as the HOST stores them
+     * @return array<string, int> rel path => size
+     */
+    private static function remoteAssetsSizes(SshClient $ssh, string $remoteDir, array $relPaths): array {
+        if ($relPaths === []) {
+            return [];
+        }
+        $dir = escapeshellarg($remoteDir);
+        $out = [];
+
+        foreach (array_chunk($relPaths, self::REMOTE_STAT_CHUNK) as $chunk) {
+            $args = implode(' ', array_map(
+                static fn (string $p): string => escapeshellarg('./' . ltrim($p, './')),
+                $chunk
+            ));
+            // `--` so a path can never be read as an option; 2>/dev/null drops
+            // the per-file "No such file" lines; `|| true` keeps a non-zero
+            // exit (every path missing) from being treated as an SSH failure.
+            $cmd = "cd {$dir} 2>/dev/null && stat -c '%s %n' -- {$args} 2>/dev/null || true";
+            $res = $ssh->run($cmd, ['stream' => false]);
+
+            foreach (self::parseFindSizeOutput($res->stdout) as $path => $size) {
+                // `stat %n` echoes the argument back, i.e. with the './' we added.
+                $out[ltrim($path, './')] = $size;
+            }
+        }
+
+        return $out;
     }
 
     /**

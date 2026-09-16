@@ -271,6 +271,22 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
             });
         });
 
+        describe('::parseFindSizeOutput with stat output (targeted remote probe)', function (): void {
+            it('parses `stat -c "%s %n"` lines the same way as find output — the two share a format '
+                . 'so the targeted probe could replace the full remote walk without a second parser', function (): void {
+                    $r = ($this->invoke)('parseFindSizeOutput', ["10753 ./slotbook/gen/js/a.gen.js\n500 ./framework/gen/js/b.gen.js\n"]);
+                    expect($r)->toBe([
+                        './slotbook/gen/js/a.gen.js' => 10753,
+                        './framework/gen/js/b.gen.js' => 500,
+                    ]);
+                });
+
+            it('yields nothing for a file the host does not have — stat prints only to stderr, '
+                . 'which is exactly the "absent on remote" signal', function (): void {
+                    expect(($this->invoke)('parseFindSizeOutput', ['']))->toBe([]);
+                });
+        });
+
         describe('::rebrandAssetRel', function (): void {
             it('renames only the leading app segment', function (): void {
                 expect(($this->invoke)('rebrandAssetRel', ['IRabi/gen/js/a.js', 'IRabi', 'slotbook']))
