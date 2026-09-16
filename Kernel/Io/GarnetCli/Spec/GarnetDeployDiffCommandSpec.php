@@ -10,6 +10,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
 
     use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\GarnetDeployDiffCommand;
     use ReflectionMethod;
+    use RuntimeException;
 
     if (!defined('GARNET_ROOT')) {
         define('GARNET_ROOT', dirname(__DIR__, 5));
@@ -188,6 +189,104 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
                 $force = ($this->invoke)('parseArgs', [['--frontend']]);
                 expect($force['frontend'])->toBe(true);
             });
+        });
+
+        describe('::parseFindSizeOutput', function (): void {
+            it('parses "size path" lines into rel path => size', function (): void {
+                $r = ($this->invoke)('parseFindSizeOutput', ["101647 gen/js/framework.abc123.gen.js\n2048 gen/css/framework.def456.gen.css\n"]);
+                expect($r)->toBe([
+                    'gen/js/framework.abc123.gen.js' => 101647,
+                    'gen/css/framework.def456.gen.css' => 2048,
+                ]);
+            });
+
+            it('returns an empty array for empty/whitespace-only output (missing remote dir)', function (): void {
+                expect(($this->invoke)('parseFindSizeOutput', ['']))->toBe([]);
+                expect(($this->invoke)('parseFindSizeOutput', ["  \n\n"]))->toBe([]);
+            });
+
+            it('skips lines that do not match the "<digits> <path>" shape', function (): void {
+                $r = ($this->invoke)('parseFindSizeOutput', ["not a valid line\n101 real/file.js\n"]);
+                expect($r)->toBe(['real/file.js' => 101]);
+            });
+        });
+
+        describe('::publicRowsMissingRemote (deploy asset scope, #389)', function (): void {
+            it('marks a file absent from the remote listing as an added row', function (): void {
+                $local = ['gen/js/new.abc.gen.js' => '500:1700000000'];
+                $r = ($this->invoke)('publicRowsMissingRemote', [$local, [], '/local/Public/assets']);
+                expect($r)->toHaveLength(1);
+                expect($r[0]['status'])->toBe('A');
+                expect($r[0]['rel_remote'])->toBe('assets/gen/js/new.abc.gen.js');
+                expect($r[0]['local_abs'])->toBe('/local/Public/assets' . DS . 'gen' . DS . 'js' . DS . 'new.abc.gen.js');
+            });
+
+            it('skips a file present remotely with the same size — the "already shipped" case', function (): void {
+                $local = ['gen/js/same.abc.gen.js' => '500:1700000000'];
+                $remote = ['gen/js/same.abc.gen.js' => 500];
+                $r = ($this->invoke)('publicRowsMissingRemote', [$local, $remote, '/local/Public/assets']);
+                expect($r)->toBe([]);
+            });
+
+            it('marks a file present remotely with a different size as modified — the exact bug this fixes: '
+                . 'local build already up to date, but the size on the host disagrees', function (): void {
+                    $local = ['gen/css/framework.gen.css' => '9999:1700000000'];
+                    $remote = ['gen/css/framework.gen.css' => 111]; // stale/partial upload on the host
+                    $r = ($this->invoke)('publicRowsMissingRemote', [$local, $remote, '/local/Public/assets']);
+                    expect($r)->toHaveLength(1);
+                    expect($r[0]['status'])->toBe('M');
+                });
+
+            it('never emits a delete row for a file present remotely but absent locally — '
+                . 'cleanup of superseded bundles is a separate retention-policy decision', function (): void {
+                    $local = [];
+                    $remote = ['gen/js/old-2026-07.gen.js' => 12345];
+                    $r = ($this->invoke)('publicRowsMissingRemote', [$local, $remote, '/local/Public/assets']);
+                    expect($r)->toBe([]);
+                });
+        });
+
+        describe('::preflightFileLimit (deploy safety cap, #390)', function (): void {
+            it('returns the total when scope is within the limit', function (): void {
+                $cat = ['framework' => [1], 'app' => [1], 'runtime' => [], 'public' => [1]];
+                expect(($this->invoke)('preflightFileLimit', [$cat, 200]))->toBe(3);
+            });
+
+            it('returns the total when scope exactly equals the limit', function (): void {
+                $cat = ['framework' => [1, 2], 'app' => [], 'runtime' => [], 'public' => []];
+                expect(($this->invoke)('preflightFileLimit', [$cat, 2]))->toBe(2);
+            });
+
+            it('aborts loudly instead of silently truncating when scope exceeds the limit', function (): void {
+                $cat = ['framework' => array_fill(0, 150, 1), 'app' => array_fill(0, 100, 1), 'runtime' => [], 'public' => []];
+                $call = fn () => ($this->invoke)('preflightFileLimit', [$cat, 200]);
+                expect($call)->toThrow(new RuntimeException('safety limit: 250 files in scope > limit 200. Pass --limit=N to override.'));
+            });
+        });
+
+        describe('::planBatches (asset-before-code ordering, #390)', function (): void {
+            $layout = [
+                'framework_dir' => 'framework', 'app_dir' => 'app',
+                'runtime_dir' => 'runtime', 'public_dir' => 'public',
+                'remote_path' => '/srv/app', 'public_name' => 'myapp',
+            ];
+            $this->planLayout = $layout;
+
+            it('uploads public (assets) before framework/app/runtime (code) — hashed bundle '
+                . 'names make asset uploads additive, so code must never go live before its assets exist', function (): void {
+                    $cat = [
+                        'framework' => [['status' => 'M', 'path' => 'Framework/x.php', 'old' => null, 'rel_remote' => 'x.php']],
+                        'app' => [['status' => 'M', 'path' => 'Apps/MyApp/x.php', 'old' => null, 'rel_remote' => 'x.php']],
+                        'runtime' => [['status' => 'M', 'path' => 'Apps/MyApp/WorkDir/x.ini', 'old' => null, 'rel_remote' => 'x.ini']],
+                        'public' => [['status' => 'A', 'path' => 'Apps/MyApp/Public/assets/app.abc123.js', 'old' => null, 'rel_remote' => 'assets/app.abc123.js']],
+                    ];
+                    $plan = ($this->invoke)('planBatches', [$cat, $this->planLayout, 'MyApp', ['no_delete' => false]]);
+                    $buckets = array_map(
+                        fn ($u) => str_contains($u['remote'], '/public/') ? 'public' : 'code',
+                        $plan['uploads'],
+                    );
+                    expect($buckets)->toBe(['public', 'code', 'code', 'code']);
+                });
         });
 
         describe('::computeUndeployedGap', function (): void {

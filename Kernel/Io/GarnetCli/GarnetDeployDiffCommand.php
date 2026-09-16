@@ -287,8 +287,49 @@ final class GarnetDeployDiffCommand {
                 echo '  frontend rebuild (pre-snapshot: ' . count($before) . " files)…\n";
                 self::runFrontendBuild();
                 $after = self::snapshotAssetsDir($assetsDir);
-                $cat['public'] = self::publicDeltaRows($before, $after, $assetsDir);
-                echo '  frontend rebuild delta: ' . count($cat['public']) . " file(s)\n";
+                $localDelta = self::publicDeltaRows($before, $after, $assetsDir);
+
+                // The before/after diff only catches what THIS run's rebuild
+                // changed. If the local build was already current (e.g.
+                // `php garnet build` ran by hand before this command, or a
+                // previous deploy:diff attempt rebuilt then failed before
+                // shipping) before == after and the diff is empty — "0 files
+                // to upload" — even though the remote host has never received
+                // them. That gap is exactly how a deploy can ship code
+                // referencing a bundle hash the host doesn't have. Cross-check
+                // the full current local asset set against what the remote
+                // actually has, independent of git and independent of
+                // whether a rebuild just happened.
+                $assetsSubdir = $assetsDir . DS . 'assets';
+                $localAssets = self::snapshotAssetsDir($assetsSubdir);
+                $remoteAssetsRoot = rtrim($layout['remote_path'], '/') . '/'
+                    . ($layout['public_dir'] ?? 'public') . '/assets';
+                $remoteAssets = self::remoteAssetsListing($ssh, $remoteAssetsRoot);
+                $missingOnRemote = self::publicRowsMissingRemote($localAssets, $remoteAssets, $assetsSubdir);
+
+                // Merge by rel_remote: the local before/after diff wins where
+                // both agree (it has the correct A/M/D status from an actual
+                // git-adjacent rebuild). The remote cross-check only ever
+                // contributes A/M — a file present on remote but absent
+                // locally is NOT scheduled for deletion here. Cleaning up
+                // superseded hashed bundles needs an age-based retention
+                // policy (someone's open tab may still reference the old
+                // hash), which is a separate decision, not this command's.
+                $merged = [];
+
+                foreach ($localDelta as $row) {
+                    $merged[$row['rel_remote']] = $row;
+                }
+
+                foreach ($missingOnRemote as $row) {
+                    if (!isset($merged[$row['rel_remote']])) {
+                        $merged[$row['rel_remote']] = $row;
+                    }
+                }
+                $cat['public'] = array_values($merged);
+                echo '  frontend rebuild delta: ' . count($localDelta) . ' file(s) from this rebuild, '
+                    . count($missingOnRemote) . ' file(s) missing on remote regardless -> '
+                    . count($cat['public']) . " total to upload\n";
             }
         }
 
@@ -407,12 +448,7 @@ final class GarnetDeployDiffCommand {
         }
 
         // 6. Preflight on file count
-        $total = count($cat['framework']) + count($cat['app']) + count($cat['runtime']) + count($cat['public']);
-        $limit = $opts['limit'];
-
-        if ($total > $limit) {
-            self::fail("safety limit: {$total} files in scope > limit {$limit}. Pass --limit=N to override.");
-        }
+        $total = self::preflightFileLimit($cat, $opts['limit']);
 
         if ($opts['strict'] && !empty($cat['skip'])) {
             self::fail('--strict: ' . count($cat['skip']) . ' skipped files (use without --strict to proceed).');
@@ -693,12 +729,7 @@ final class GarnetDeployDiffCommand {
         }
 
         // Safety limit
-        $total = count($cat['framework']) + count($cat['app']) + count($cat['runtime']) + count($cat['public']);
-        $limit = $opts['limit'];
-
-        if ($total > $limit) {
-            self::fail("safety limit: {$total} files in scope > limit {$limit}. Pass --limit=N to override.");
-        }
+        $total = self::preflightFileLimit($cat, $opts['limit']);
 
         // Plan batches (no deletes in files mode)
         $plan = self::planBatches($cat, $layout, $appName, array_merge($opts, ['no_delete' => true]));
@@ -941,12 +972,7 @@ final class GarnetDeployDiffCommand {
         }
 
         // Safety limit
-        $total = count($cat['framework']) + count($cat['app']) + count($cat['runtime']) + count($cat['public']);
-        $limit = $opts['limit'];
-
-        if ($total > $limit) {
-            self::fail("safety limit: {$total} files in scope > limit {$limit}. Pass --limit=N to override.");
-        }
+        $total = self::preflightFileLimit($cat, $opts['limit']);
 
         // Rewrite per-app index.php shim
         $shimRewritten = self::rewritePerAppIndexShim($cat, $appName, $layout['runtime_dir']);
@@ -2007,6 +2033,89 @@ final class GarnetDeployDiffCommand {
         return $out;
     }
 
+    /**
+     * List files under a remote directory as relative-path => size (bytes).
+     * Empty array on any failure — missing directory, SSH error, `find`
+     * unavailable. That's the SAFE default here: an empty remote listing
+     * makes every local file look "missing on remote", so the caller uploads
+     * it. Worst case on a false-empty is a harmless re-upload of files the
+     * host already has; the alternative (treating a failed listing as "remote
+     * has everything") is how a stale bundle reference survives a deploy.
+     * Only ever used to find what's MISSING remotely — never for deletions.
+     */
+    private static function remoteAssetsListing(SshClient $ssh, string $remoteDir): array {
+        $dir = escapeshellarg($remoteDir);
+        // cd into the dir first so `find`'s `%P` prints paths relative to it,
+        // matching snapshotAssetsDir()'s own relative-path convention. If the
+        // dir doesn't exist yet, `cd` fails, `find` never runs (short-circuit
+        // before `&&`), and `|| true` turns that into empty output rather
+        // than a non-zero exit SshClient would otherwise have to interpret.
+        $cmd = "cd {$dir} 2>/dev/null && find . -type f -printf '%s %P\\n' 2>/dev/null || true";
+        $res = $ssh->run($cmd, ['stream' => false]);
+
+        return self::parseFindSizeOutput($res->stdout);
+    }
+
+    /**
+     * Parse `find . -type f -printf '%s %P\n'` output into rel path => size.
+     * Split out from remoteAssetsListing() so the parsing itself is testable
+     * without an SSH connection.
+     */
+    private static function parseFindSizeOutput(string $stdout): array {
+        $out = [];
+
+        foreach (explode("\n", trim($stdout)) as $line) {
+            $line = trim($line);
+
+            if ($line === '') {
+                continue;
+            }
+
+            if (!preg_match('/^(\d+)\s+(.+)$/', $line, $m)) {
+                continue;
+            }
+            $out[$m[2]] = (int)$m[1];
+        }
+
+        return $out;
+    }
+
+    /**
+     * Rows for local files that are either absent from the remote listing or
+     * present with a different size. Hashed bundle filenames
+     * (name.<hash>.gen.js) make "absent" equivalent to "content changed" for
+     * the vast majority of what lives under Public/assets/ — a changed file
+     * gets a new name, so a rebuild that produced a new hash is caught by the
+     * name simply not existing remotely yet. The size check is the fallback
+     * for the minority of non-hashed static files (fonts, images copied
+     * as-is) whose name doesn't change when their content does.
+     *
+     * @param array<string, string> $local  rel path => "size:mtime" (snapshotAssetsDir)
+     * @param array<string, int> $remote    rel path => size (remoteAssetsListing)
+     */
+    private static function publicRowsMissingRemote(array $local, array $remote, string $assetsSubdir): array {
+        $rows = [];
+
+        foreach ($local as $rel => $sig) {
+            $size = (int)explode(':', $sig, 2)[0];
+            $onRemote = $remote[$rel] ?? null;
+
+            if ($onRemote !== null && $onRemote === $size) {
+                continue; // present remotely with the same size — treat as unchanged
+            }
+            $relRemote = 'assets/' . $rel;
+            $rows[] = [
+                'status' => $onRemote === null ? 'A' : 'M',
+                'path' => $relRemote, // display only — not a real git-diff path
+                'old' => null,
+                'rel_remote' => $relRemote,
+                'local_abs' => $assetsSubdir . DS . str_replace('/', DS, $rel),
+            ];
+        }
+
+        return $rows;
+    }
+
     /** Convert before/after snapshots into deploy:diff row shape. */
     private static function publicDeltaRows(array $before, array $after, string $assetsDir): array {
         $rows = [];
@@ -2151,7 +2260,12 @@ final class GarnetDeployDiffCommand {
         $appLow = strtolower($appName);
         $rebrandPublicSegment = $layout['public_name'] !== '' && $layout['public_name'] !== $appLow;
 
-        foreach (['framework', 'app', 'runtime', 'public'] as $bucket) {
+        // Public first: hashed bundle filenames make asset uploads additive
+        // and safe to land ahead of the code that will reference them — old
+        // pages keep working on old files. Uploading code (framework/app/
+        // runtime) before its assets exist is the "new code, no assets yet"
+        // window that took prod down for 12h (see #390).
+        foreach (['public', 'framework', 'app', 'runtime'] as $bucket) {
             $base = rtrim($layout['remote_path'], '/') . '/' . $targets[$bucket];
 
             foreach ($cat[$bucket] as $row) {
@@ -2650,6 +2764,20 @@ final class GarnetDeployDiffCommand {
 
     private static function fail(string $msg): void {
         throw new RuntimeException($msg);
+    }
+
+    /**
+     * Abort loudly (never silently truncate) when scope exceeds the safety
+     * cap. A partial deploy that exits 0 is worse than no deploy — #390.
+     */
+    private static function preflightFileLimit(array $cat, int $limit): int {
+        $total = count($cat['framework']) + count($cat['app']) + count($cat['runtime']) + count($cat['public']);
+
+        if ($total > $limit) {
+            self::fail("safety limit: {$total} files in scope > limit {$limit}. Pass --limit=N to override.");
+        }
+
+        return $total;
     }
 
     private static function help(): void {
