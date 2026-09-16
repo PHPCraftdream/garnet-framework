@@ -170,6 +170,7 @@ class GarnetRunner {
             $command === 'db' || str_starts_with($command, 'db:') => GarnetDbWipeCommand::run($command, $args),
             $command === 'ssh' || str_starts_with($command, 'ssh:') => GarnetSshCommand::run($command, $args),
             $command === 'deploy:diff' || $command === 'deploy:diff:help' => GarnetDeployDiffCommand::run($command === 'deploy:diff:help' ? ['help'] : $args),
+            $command === 'deploy:log' => GarnetDeployLogCommand::run($args),
             $command === 'deploy:full' => (static function () use ($args): void {
                 GarnetDeployFullCommand::run($args);
 
@@ -301,6 +302,7 @@ class GarnetRunner {
     db:backup         Dump the whole DB to WorkDir/Backups/ (auto before wipe)
     db:restore        Restore a dump (auto-backs-up the current DB first)
     deploy:diff       Push file changes from a git commit range via SSH
+    deploy:log        Show past deploy runs (timings, what landed, failures)
     cache             Clear all caches (twig + file + opcache)
     cache:twig        Clear WorkDir/TwigCache/ only
     cache:file        Clear WorkDir/FileCache/ only

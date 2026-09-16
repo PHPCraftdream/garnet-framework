@@ -185,12 +185,102 @@ final class GarnetDeployDiffCommand {
         }
     }
 
+    private static ?DeployJournal $journal = null;
+
+    /**
+     * The run journal. Created on first use so every path through the command
+     * — including the early-return modes — records itself without each having
+     * to remember to open one.
+     */
+    private static function journal(array $opts = []): DeployJournal {
+        if (self::$journal === null) {
+            self::$journal = new DeployJournal(
+                self::journalDir(),
+                'deploy:diff',
+                empty($opts['no_log']),
+            );
+        }
+
+        return self::$journal;
+    }
+
+    /**
+     * Tell the operator that a previous run stopped halfway, at the one moment
+     * the information is actionable: just before starting another one.
+     *
+     * A deploy killed between shipping assets and shipping the code that
+     * references them leaves the host in a state that looks fine from the
+     * outside — and the only prior evidence was file timestamps on the host,
+     * read by hand. Warn, don't block: the usual and correct response is to
+     * let this run finish the job.
+     */
+    private static function warnAboutInterruptedRuns(string $currentRunId): void {
+        $unfinished = DeployJournal::findUnfinished(self::journalDir(), $currentRunId);
+
+        if ($unfinished === []) {
+            return;
+        }
+        $last = $unfinished[array_key_last($unfinished)];
+        $landed = DeployJournal::landedCount($last);
+        echo "\033[33m  ! previous run {$last['id']} ({$last['command']}, started {$last['started']}) "
+            . "never finished — {$landed} file(s) reported landed before it stopped.\033[0m\n";
+        echo "\033[33m    The host may be holding a partial deploy; this run should complete it. "
+            . "Details: php garnet deploy:log --run={$last['id']}\033[0m\n";
+    }
+
+    /**
+     * One-line description of what the run was asked to ship, for the journal
+     * header. "which commits was this?" is the first question asked of a
+     * deploy after the fact, and the answer has to survive the terminal.
+     */
+    private static function describeSelectors(array $opts): string {
+        $parts = [];
+
+        foreach (['since', 'from', 'after', 'range', 'branch'] as $key) {
+            if (!empty($opts[$key])) {
+                $parts[] = "--{$key}={$opts[$key]}";
+            }
+        }
+
+        foreach ((array)($opts['commits'] ?? []) as $sha) {
+            $parts[] = "--commit={$sha}";
+        }
+
+        foreach ((array)($opts['files'] ?? []) as $file) {
+            $parts[] = "--file={$file}";
+        }
+
+        if (!empty($opts['full_public'])) {
+            $parts[] = '--full-public';
+        }
+
+        return $parts === [] ? '(none — resuming from remote deploy-sha)' : implode(' ', $parts);
+    }
+
+    /** Where run journals land: <app>/WorkDir/LogJournal/Deploy/. */
+    private static function journalDir(): string {
+        $appName = self::getAppName();
+
+        return GarnetEnv::getAppDir($appName) . DS . 'WorkDir' . DS . 'LogJournal' . DS . 'Deploy';
+    }
+
     private static function doRun(array $opts): void {
         // 1. Bootstrap app so IniConfig::ssh() / ::deploy() work
         self::bootstrapApp();
 
         // 2. Resolve layout (CLI flag → deploy.ini → built-in default → empty)
         $layout = self::resolveLayout($opts);
+
+        $journal = self::journal($opts);
+        self::warnAboutInterruptedRuns($journal->runId());
+        $journal->context([
+            'mode' => $opts['apply'] ? 'apply' : 'dry-run',
+            'selectors' => self::describeSelectors($opts),
+            'host' => self::sshDisplay(),
+            'remote_path' => (string)($layout['remote_path'] ?? ''),
+            'public_dir' => (string)($layout['public_dir'] ?? ''),
+            'public_name' => (string)($layout['public_name'] ?? ''),
+        ]);
 
         // 3. SshClient + preflight
         $ssh = SshClient::fromIniConfig();
@@ -282,10 +372,13 @@ final class GarnetDeployDiffCommand {
             if (!$opts['apply']) {
                 echo "  frontend source changes detected — rebuild will run on --apply.\n";
             } else {
+                $journal = self::journal();
                 $assetsDir = self::resolveAppPublicDir($appName);
                 $before = self::snapshotAssetsDir($assetsDir);
                 echo '  frontend rebuild (pre-snapshot: ' . count($before) . " files)…\n";
+                $journal->phaseStart('frontend rebuild');
                 self::runFrontendBuild();
+                $journal->phaseEnd('frontend rebuild');
                 $after = self::snapshotAssetsDir($assetsDir);
                 $localDelta = self::publicDeltaRows($before, $after, $assetsDir);
 
@@ -310,7 +403,9 @@ final class GarnetDeployDiffCommand {
                     static fn (string $rel): string => self::rebrandAssetRel($rel, $appName, $layout['public_name']),
                     array_keys($localAssets)
                 );
+                $journal->phaseStart('remote asset probe');
                 $remoteAssets = self::remoteAssetsSizes($ssh, $remoteAssetsRoot, $wantedRemote);
+                $journal->phaseEnd('remote asset probe', count($wantedRemote) . ' asked, ' . count($remoteAssets) . ' present');
                 $missingOnRemote = self::publicRowsMissingRemote(
                     $localAssets,
                     $remoteAssets,
@@ -468,6 +563,13 @@ final class GarnetDeployDiffCommand {
 
         // 7. Build batches
         $plan = self::planBatches($cat, $layout, $appName, $opts);
+        $journal->note(sprintf(
+            'planned: %d upload(s), %d delete(s), %d mkdir(s) across %d selected file(s)',
+            count($plan['uploads']),
+            count($plan['deletes']),
+            count($plan['mkdirs']),
+            $total,
+        ));
 
         // 8. Preview
         $warns = self::computeWarnings($diff);
@@ -476,6 +578,7 @@ final class GarnetDeployDiffCommand {
         // 9. Apply or stop at dry-run
         if (!$opts['apply']) {
             echo "\n\033[90m(dry-run — pass --apply to execute)\033[0m\n";
+            $journal->finish(0, 'dry-run, nothing shipped');
 
             exit(0);
         }
@@ -484,11 +587,19 @@ final class GarnetDeployDiffCommand {
 
         if (!self::confirm($opts['yes'])) {
             echo "Aborted.\n";
+            $journal->finish(1, 'aborted at confirmation prompt');
 
             exit(1);
         }
 
+        $journal->phaseStart('upload');
         $result = self::applyBatches($ssh, $plan, $opts['verbose'], $opts['no_delete']);
+        $journal->phaseEnd('upload', sprintf(
+            '%d uploaded, %d deleted, %d failed',
+            $result['uploaded'],
+            $result['deleted'],
+            count($result['errors']),
+        ));
 
         // 10. Final report
         echo "\n";
@@ -498,8 +609,10 @@ final class GarnetDeployDiffCommand {
 
             foreach ($result['errors'] as $err) {
                 echo "  - {$err}\n";
+                $journal->note('error: ' . $err);
             }
             echo "\n\033[31m{$result['uploaded']} uploaded, {$result['deleted']} deleted, " . count($result['errors']) . " failed\033[0m ({$result['duration']}s)\n";
+            $journal->finish(1, count($result['errors']) . ' upload(s) failed');
 
             exit(1);
         }
@@ -509,6 +622,7 @@ final class GarnetDeployDiffCommand {
         // selectors) knows where to resume from. Use the newest sha actually
         // shipped — for a HEAD-deploy that's HEAD; for `--commit=abc` it's abc.
         self::writeRemoteDeploySha($ssh, $layout, $shas[0]);
+        $journal->note('remote deploy-sha → ' . $shas[0]);
 
         if ($opts['reset_opcache']) {
             self::resetRemoteOpcache($ssh, $layout);
@@ -526,6 +640,12 @@ final class GarnetDeployDiffCommand {
             // No-op when no opcache_token is configured.
             self::tryOpcacheReset();
         }
+        $journal->finish($booted ? 0 : 1, sprintf(
+            '%d uploaded, %d deleted; boot check %s',
+            $result['uploaded'],
+            $result['deleted'],
+            $booted ? 'ok' : 'FAILED',
+        ));
 
         exit($booted ? 0 : 1);
     }
@@ -595,6 +715,14 @@ final class GarnetDeployDiffCommand {
 
     private static function doRunFilesMode(array $opts, array $layout, SshClient $ssh): void {
         $appName = self::getAppName();
+        $journal = self::journal($opts);
+        self::warnAboutInterruptedRuns($journal->runId());
+        $journal->context([
+            'mode' => 'files ' . ($opts['apply'] ? 'apply' : 'dry-run'),
+            'selectors' => self::describeSelectors($opts),
+            'host' => self::sshDisplay(),
+            'remote_path' => (string)($layout['remote_path'] ?? ''),
+        ]);
 
         // Warn if git selectors were also passed (they're ignored in files mode)
         $gitSelectors = array_filter([
@@ -774,6 +902,7 @@ final class GarnetDeployDiffCommand {
 
         if (!$opts['apply']) {
             echo "\n\033[90m(dry-run — pass --apply to execute)\033[0m\n";
+            $journal->finish(0, 'dry-run, nothing shipped');
 
             exit(0);
         }
@@ -782,6 +911,7 @@ final class GarnetDeployDiffCommand {
 
         if (!self::confirm($opts['yes'])) {
             echo "Aborted.\n";
+            $journal->finish(1, 'aborted at confirmation prompt');
 
             exit(1);
         }
@@ -797,6 +927,7 @@ final class GarnetDeployDiffCommand {
                 echo "  - {$err}\n";
             }
             echo "\n\033[31m{$result['uploaded']} uploaded, 0 deleted, " . count($result['errors']) . " failed\033[0m ({$result['duration']}s)\n";
+            $journal->finish(1, count($result['errors']) . ' upload(s) failed');
 
             exit(1);
         }
@@ -811,6 +942,11 @@ final class GarnetDeployDiffCommand {
 
         self::syncRemoteRuntimeGarnet($ssh, $layout, $appName);
         $booted = $opts['boot_check'] ? self::remoteBootCheck($ssh, $layout) : true;
+        $journal->finish($booted ? 0 : 1, sprintf(
+            '%d uploaded; boot check %s',
+            $result['uploaded'],
+            $booted ? 'ok' : 'FAILED',
+        ));
 
         exit($booted ? 0 : 1);
     }
@@ -889,6 +1025,14 @@ final class GarnetDeployDiffCommand {
      */
     private static function doRunFullPublicMode(array $opts, array $layout, SshClient $ssh): void {
         $appName = self::getAppName();
+        $journal = self::journal($opts);
+        self::warnAboutInterruptedRuns($journal->runId());
+        $journal->context([
+            'mode' => 'full-public ' . ($opts['apply'] ? 'apply' : 'dry-run'),
+            'selectors' => self::describeSelectors($opts),
+            'host' => self::sshDisplay(),
+            'remote_path' => (string)($layout['remote_path'] ?? ''),
+        ]);
 
         // Warn if git selectors were also passed (they're ignored)
         $gitSelectors = array_filter([
@@ -917,6 +1061,7 @@ final class GarnetDeployDiffCommand {
                 echo "  index.php shim rewritten -> runtime: {$layout['runtime_dir']}\n";
             }
             echo "\n\033[90m(dry-run — pass --apply to execute)\033[0m\n";
+            $journal->finish(0, 'dry-run, nothing shipped');
 
             exit(0);
         }
@@ -1028,6 +1173,7 @@ final class GarnetDeployDiffCommand {
 
         if (!self::confirm($opts['yes'])) {
             echo "Aborted.\n";
+            $journal->finish(1, 'aborted at confirmation prompt');
 
             exit(1);
         }
@@ -1043,6 +1189,7 @@ final class GarnetDeployDiffCommand {
                 echo "  - {$err}\n";
             }
             echo "\n\033[31m{$result['uploaded']} uploaded, 0 deleted, " . count($result['errors']) . " failed\033[0m ({$result['duration']}s)\n";
+            $journal->finish(1, count($result['errors']) . ' upload(s) failed');
 
             exit(1);
         }
@@ -1051,10 +1198,12 @@ final class GarnetDeployDiffCommand {
         // Advance marker to HEAD — host is in a known-good state
         $headSha = trim(self::gitOut(['rev-parse', 'HEAD']));
         self::writeRemoteDeploySha($ssh, $layout, $headSha);
+        $journal->note('remote deploy-sha → ' . $headSha);
 
         if ($opts['reset_opcache']) {
             self::resetRemoteOpcache($ssh, $layout);
         }
+        $journal->finish(0, $result['uploaded'] . ' uploaded (full public re-ship)');
 
         exit(0);
     }
@@ -1484,6 +1633,7 @@ final class GarnetDeployDiffCommand {
             'boot_check' => true,  // post-apply `php garnet noop` smoke; --no-boot-check disables
             'files' => [],   // --file=PATH (repeatable) / --files=A,B,C
             'full_public' => false,
+            'no_log' => false,  // --no-log opts out of the run journal
         ];
 
         $hasDryRun = false;
@@ -1545,6 +1695,12 @@ final class GarnetDeployDiffCommand {
 
             if ($arg === '--no-boot-check') {
                 $opts['boot_check'] = false;
+
+                continue;
+            }
+
+            if ($arg === '--no-log') {
+                $opts['no_log'] = true;
 
                 continue;
             }
@@ -2701,6 +2857,16 @@ final class GarnetDeployDiffCommand {
                 } else {
                     echo "\033[32mOK\033[0m\n";
                     $uploaded += count($chunk);
+                    // Record landed files AS THEY LAND, not in the final
+                    // summary: a run killed mid-flight never reaches the
+                    // summary, and "what is already on the host" is exactly
+                    // what has to be answerable afterwards. A half-shipped
+                    // deploy is the dangerous state — it is how a page ends up
+                    // referencing a bundle that was never uploaded.
+                    self::journal()->note('landed in ' . $rDir . '/: ' . implode(', ', array_map(
+                        static fn (array $u): string => basename((string)$u['remote']),
+                        $chunk,
+                    )));
 
                     // Collect chmod +x targets
                     foreach ($chunk as $up) {
@@ -2991,6 +3157,24 @@ final class GarnetDeployDiffCommand {
   raw — instead it prints a yellow callout pointing you at:
       \033[36mphp garnet bundle\033[0m   then   \033[36mphp garnet ssh:put dist/<App>/<runtime>/garnet …\033[0m
 
+  \033[1mRUN JOURNAL\033[0m  (what happened, kept on disk)
+  ────────────────────────────────────────────────────────────────────────
+  Every run appends to \033[2m<app>/WorkDir/LogJournal/Deploy/<date>.log\033[0m:
+  selectors and target, each phase with its duration (frontend rebuild,
+  remote asset probe, upload), the files that landed as they land, and a
+  final line with the exit code. Lines are flushed immediately, so a run
+  that is killed still leaves a readable tail — and a run with NO final
+  line is, by that absence, an interrupted one.
+
+  The next run says so: it prints a warning naming the interrupted run and
+  how many files it had already shipped, because a deploy that stopped
+  between shipping assets and shipping the code that references them
+  leaves the host in a state that looks fine from outside.
+
+  Read it with \033[36mphp garnet deploy:log\033[0m (\033[36m--n=N\033[0m, \033[36m--run=ID\033[0m). Secrets never
+  reach the file: key material, the \033[36m-i\033[0m identity path and token-ish
+  values are redacted. \033[36m--no-log\033[0m opts out.
+
   \033[1mDEPLOY-SHA MARKER\033[0m  (auto-resume from previous deploy)
   ────────────────────────────────────────────────────────────────────────
   After every successful `--apply`, the newest sha shipped is written to
@@ -3073,6 +3257,7 @@ final class GarnetDeployDiffCommand {
                        returning 500 (e.g. a cherry-picked --commit that skipped
                        a dependency). Disable only when the host can't run the
                        CLI for unrelated reasons.
+    \033[36m--no-log\033[0m           don't write a run journal (see RUN JOURNAL below)
     \033[36m--public-dir=NAME\033[0m / \033[36m--public-name=NAME\033[0m
     \033[36m--framework-dir=NAME\033[0m / \033[36m--app-dir=NAME\033[0m
     \033[36m--runtime-dir=NAME\033[0m
