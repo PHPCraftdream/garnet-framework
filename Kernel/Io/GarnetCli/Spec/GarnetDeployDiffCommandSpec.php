@@ -352,6 +352,67 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
                     );
                     expect($buckets)->toBe(['public', 'code', 'code', 'code']);
                 });
+
+            it('rebrands the asset segment whatever case the app dir uses — a case-sensitive match '
+                . 'shipped assets to assets/<AppName>/ while the *Gen.php beside them pointed at '
+                . 'assets/<public_name>/, i.e. a live page referencing a 404', function (): void {
+                    $cat = [
+                        'framework' => [], 'app' => [], 'runtime' => [],
+                        'public' => [[
+                            'status' => 'A',
+                            'path' => 'Apps/MyApp/Public/assets/MyApp/gen/js/a.abc.gen.js',
+                            'old' => null,
+                            'rel_remote' => 'assets/MyApp/gen/js/a.abc.gen.js',
+                        ]],
+                    ];
+                    $plan = ($this->invoke)('planBatches', [$cat, $this->planLayout, 'MyApp', ['no_delete' => false]]);
+                    expect($plan['uploads'][0]['remote'])->toBe('/srv/app/public/assets/myapp/gen/js/a.abc.gen.js');
+                });
+
+            it('rebrands the upload/ segment the same way', function (): void {
+                $cat = [
+                    'framework' => [], 'app' => [], 'runtime' => [],
+                    'public' => [[
+                        'status' => 'A',
+                        'path' => 'Apps/MyApp/Public/upload/MyApp/x.png',
+                        'old' => null,
+                        'rel_remote' => 'upload/MyApp/x.png',
+                    ]],
+                ];
+                $plan = ($this->invoke)('planBatches', [$cat, $this->planLayout, 'MyApp', ['no_delete' => false]]);
+                expect($plan['uploads'][0]['remote'])->toBe('/srv/app/public/upload/myapp/x.png');
+            });
+
+            it('leaves the path alone when no public_name is configured at all', function (): void {
+                $layout = ['framework_dir' => 'framework', 'app_dir' => 'app',
+                    'runtime_dir' => 'runtime', 'public_dir' => 'public',
+                    'remote_path' => '/srv/app', 'public_name' => ''];
+                $cat = [
+                    'framework' => [], 'app' => [], 'runtime' => [],
+                    'public' => [[
+                        'status' => 'A',
+                        'path' => 'Apps/MyApp/Public/assets/MyApp/gen/js/a.abc.gen.js',
+                        'old' => null,
+                        'rel_remote' => 'assets/MyApp/gen/js/a.abc.gen.js',
+                    ]],
+                ];
+                $plan = ($this->invoke)('planBatches', [$cat, $layout, 'MyApp', ['no_delete' => false]]);
+                expect($plan['uploads'][0]['remote'])->toBe('/srv/app/public/assets/MyApp/gen/js/a.abc.gen.js');
+            });
+
+            it('is idempotent on a segment that already equals public_name', function (): void {
+                $cat = [
+                    'framework' => [], 'app' => [], 'runtime' => [],
+                    'public' => [[
+                        'status' => 'A',
+                        'path' => 'Apps/MyApp/Public/assets/myapp/gen/js/a.abc.gen.js',
+                        'old' => null,
+                        'rel_remote' => 'assets/myapp/gen/js/a.abc.gen.js',
+                    ]],
+                ];
+                $plan = ($this->invoke)('planBatches', [$cat, $this->planLayout, 'MyApp', ['no_delete' => false]]);
+                expect($plan['uploads'][0]['remote'])->toBe('/srv/app/public/assets/myapp/gen/js/a.abc.gen.js');
+            });
         });
 
         describe('::computeUndeployedGap', function (): void {

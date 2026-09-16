@@ -2353,7 +2353,12 @@ final class GarnetDeployDiffCommand {
         $remoteDirs = [];
 
         $appLow = strtolower($appName);
-        $rebrandPublicSegment = $layout['public_name'] !== '' && $layout['public_name'] !== $appLow;
+        // Any configured public_name rebrands, including one that differs from
+        // the app name only in case: `bundle` lowercases `assets/MyApp/` to
+        // `assets/myapp/`, so the host convention is the lowercased form and
+        // the upload must match it. When the segment already equals
+        // public_name the rewrite below simply replaces it with itself.
+        $rebrandPublicSegment = $layout['public_name'] !== '';
 
         // Public first: hashed bundle filenames make asset uploads additive
         // and safe to land ahead of the code that will reference them — old
@@ -2371,8 +2376,19 @@ final class GarnetDeployDiffCommand {
                 // on the host. Mirror that here so files land in the same
                 // place bundle would have put them.
                 if ($bucket === 'public' && $rebrandPublicSegment) {
+                    // Case-insensitive on purpose: the segment appears as the
+                    // app is named on disk (`assets/IRabi/…`), while $appLow is
+                    // lowercased. A case-SENSITIVE match silently did nothing
+                    // for any app whose directory isn't all-lowercase, so the
+                    // assets landed under `assets/IRabi/` while the *Gen.php
+                    // shipped alongside them — rebranded by PublicPathRebrander,
+                    // which does cover both cases — pointed at
+                    // `/assets/<public_name>/`. The result is a live page
+                    // referencing a bundle that 404s: the exact outage #390
+                    // hardened the upload ORDER against, reintroduced through
+                    // the path instead.
                     $rel = preg_replace(
-                        '#(^|/)(assets|upload)/' . preg_quote($appLow, '#') . '(/|$)#',
+                        '#(^|/)(assets|upload)/' . preg_quote($appName, '#') . '(/|$)#i',
                         '$1$2/' . $layout['public_name'] . '$3',
                         $rel,
                     );
