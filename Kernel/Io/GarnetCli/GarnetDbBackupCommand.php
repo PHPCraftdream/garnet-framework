@@ -70,14 +70,14 @@ class GarnetDbBackupCommand {
         [$link, $dbName] = self::boot();
         $path = $out !== null && $out !== '' ? $out : self::autoPath($reason);
 
-        echo "\033[1m=== Garnet DB Backup ===\033[0m" . PHP_EOL;
+        echo '=== Garnet DB Backup ===' . PHP_EOL;
         echo "  database: {$dbName}" . PHP_EOL;
 
         $stats = self::dumpTo($link, $dbName, $path);
 
-        echo "\033[32m  backup written:\033[0m {$path}" . PHP_EOL;
+        echo "  backup written: {$path}" . PHP_EOL;
         echo "  tables: {$stats['tables']}, rows: {$stats['rows']}, size: " . self::humanSize($stats['bytes']) . PHP_EOL;
-        echo PHP_EOL . "  Restore with: \033[1mphp garnet db:restore " . self::shellArg($path) . "\033[0m" . PHP_EOL;
+        echo PHP_EOL . '  Restore with: php garnet db:restore ' . self::shellArg($path) . '' . PHP_EOL;
 
         return $path;
     }
@@ -87,21 +87,21 @@ class GarnetDbBackupCommand {
         $file = $positional[0] ?? null;
 
         if ($file === null || $file === '') {
-            echo "\033[31mError:\033[0m specify a dump file: php garnet db:restore <file>" . PHP_EOL;
+            echo 'Error: specify a dump file: php garnet db:restore <file>' . PHP_EOL;
             self::listBackups();
 
             exit(1);
         }
 
         if (!is_file($file)) {
-            echo "\033[31mError:\033[0m backup file not found: {$file}" . PHP_EOL;
+            echo "Error: backup file not found: {$file}" . PHP_EOL;
 
             exit(1);
         }
 
         [$link, $dbName] = self::boot();
 
-        echo "\033[1m=== Garnet DB Restore ===\033[0m" . PHP_EOL;
+        echo '=== Garnet DB Restore ===' . PHP_EOL;
         echo "  database: {$dbName}" . PHP_EOL;
         echo "  source:   {$file}" . PHP_EOL;
 
@@ -111,20 +111,20 @@ class GarnetDbBackupCommand {
             $safety = self::autoPath('pre-restore');
             echo PHP_EOL . '  Backing up current DB first…' . PHP_EOL;
             $s = self::dumpTo($link, $dbName, $safety);
-            echo "\033[32m  pre-restore snapshot:\033[0m {$safety} (" . self::humanSize($s['bytes']) . ')' . PHP_EOL;
+            echo "  pre-restore snapshot: {$safety} (" . self::humanSize($s['bytes']) . ')' . PHP_EOL;
         } else {
-            echo "\033[33m  --no-backup: skipping the pre-restore snapshot.\033[0m" . PHP_EOL;
+            echo '  --no-backup: skipping the pre-restore snapshot.' . PHP_EOL;
         }
 
         echo PHP_EOL . '  Applying dump…' . PHP_EOL;
         $applied = self::applyDump($link, $file);
-        echo "\033[32m  restore done — {$applied} statement(s) applied from {$file}.\033[0m" . PHP_EOL;
+        echo "  restore done — {$applied} statement(s) applied from {$file}." . PHP_EOL;
     }
 
     private static function listBackups(): void {
         $dir = self::backupsDir();
         $files = is_dir($dir) ? array_merge((array)glob($dir . DS . '*.sql.gz'), (array)glob($dir . DS . '*.sql')) : [];
-        echo "\033[1mBackups in {$dir}:\033[0m" . PHP_EOL;
+        echo "Backups in {$dir}:" . PHP_EOL;
 
         if (empty($files)) {
             echo '  (none)' . PHP_EOL;
@@ -390,7 +390,7 @@ class GarnetDbBackupCommand {
         $runCmd = GarnetEnv::getAppDir($appName) . DS . 'run_cmd.php';
 
         if (!file_exists($runCmd)) {
-            echo "\033[31mError:\033[0m app has no run_cmd.php at {$runCmd}" . PHP_EOL;
+            echo "Error: app has no run_cmd.php at {$runCmd}" . PHP_EOL;
 
             exit(1);
         }
@@ -403,7 +403,7 @@ class GarnetDbBackupCommand {
         $isEnabled = (bool)DbPool::get()->getDbConfig()->paramInt('enabled');
 
         if (!$isEnabled) {
-            echo "\033[31mError:\033[0m database is disabled in config (db.ini → enabled = 1)." . PHP_EOL;
+            echo 'Error: database is disabled in config (db.ini → enabled = 1).' . PHP_EOL;
 
             exit(1);
         }

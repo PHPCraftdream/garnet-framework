@@ -37,7 +37,7 @@ class GarnetMaintenanceCommand {
         ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
         file_put_contents($flagFile, $data);
-        echo "\033[33m⚠ Maintenance mode ON\033[0m" . PHP_EOL;
+        echo '⚠ Maintenance mode ON' . PHP_EOL;
         echo '  Allowed IPs: ' . implode(', ', $ips) . PHP_EOL;
         echo "  Flag: {$flagFile}" . PHP_EOL;
     }
@@ -45,7 +45,7 @@ class GarnetMaintenanceCommand {
     private static function disable(string $flagFile): void {
         if (file_exists($flagFile)) {
             unlink($flagFile);
-            echo "\033[32m✓ Maintenance mode OFF\033[0m" . PHP_EOL;
+            echo '✓ Maintenance mode OFF' . PHP_EOL;
         } else {
             echo 'Maintenance mode was not active.' . PHP_EOL;
         }
@@ -53,13 +53,13 @@ class GarnetMaintenanceCommand {
 
     private static function status(string $flagFile): void {
         if (!file_exists($flagFile)) {
-            echo "\033[32m● Active\033[0m — site is running normally." . PHP_EOL;
+            echo '● Active — site is running normally.' . PHP_EOL;
 
             return;
         }
 
         $data = json_decode(file_get_contents($flagFile), true) ?: [];
-        echo "\033[33m● Maintenance mode ON\033[0m" . PHP_EOL;
+        echo '● Maintenance mode ON' . PHP_EOL;
         echo '  Since: ' . ($data['enabled_at'] ?? '?') . PHP_EOL;
         echo '  Allowed IPs: ' . implode(', ', $data['allowed_ips'] ?? []) . PHP_EOL;
     }

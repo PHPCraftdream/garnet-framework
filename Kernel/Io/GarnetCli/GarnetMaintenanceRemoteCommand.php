@@ -46,18 +46,18 @@ final class GarnetMaintenanceRemoteCommand {
             default => 'php garnet maintenance status',
         };
 
-        echo "\033[1;36m[maintenance:remote]\033[0m {$action} → " . self::host() . PHP_EOL;
+        echo "[maintenance:remote] {$action} → " . self::host() . PHP_EOL;
         $res = $client->run($remoteCmd, ['cwd' => $remoteDir, 'stream' => true]);
 
         if (!$res->ok()) {
-            fwrite(STDERR, "\033[31mError:\033[0m remote maintenance {$action} failed (exit {$res->exitCode}).\n");
+            fwrite(STDERR, "Error: remote maintenance {$action} failed (exit {$res->exitCode}).\n");
 
             exit(1);
         }
 
         if ($action === 'on') {
-            echo "\033[33mNote:\033[0m the box is now serving a 503 page to everyone except the allow-listed IP(s).\n";
-            echo "       Re-open it with: \033[1mphp garnet maintenance:remote off\033[0m\n";
+            echo "Note: the box is now serving a 503 page to everyone except the allow-listed IP(s).\n";
+            echo "       Re-open it with: php garnet maintenance:remote off\n";
         }
 
         exit(0);
@@ -75,7 +75,7 @@ final class GarnetMaintenanceRemoteCommand {
                 $ips = [$detected];
                 echo "  allow-listing your public IP: {$detected}\n";
             } else {
-                fwrite(STDERR, "\033[33mWarning:\033[0m could not detect your public IP — the server will fall back to ITS own IP, which may lock you out. Pass an IP explicitly: maintenance:remote on <ip>\n");
+                fwrite(STDERR, "Warning: could not detect your public IP — the server will fall back to ITS own IP, which may lock you out. Pass an IP explicitly: maintenance:remote on <ip>\n");
             }
         }
 
@@ -129,7 +129,7 @@ final class GarnetMaintenanceRemoteCommand {
     }
 
     private static function fail(string $msg): never {
-        fwrite(STDERR, "\033[31mError:\033[0m {$msg}\n");
+        fwrite(STDERR, "Error: {$msg}\n");
 
         exit(1);
     }

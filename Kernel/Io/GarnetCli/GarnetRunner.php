@@ -94,16 +94,16 @@ class GarnetRunner {
             $type = (new ReflectionClass($e))->getShortName();
             $msg = $e->getMessage();
 
-            fwrite(STDERR, "\n\033[31m\xe2\x9c\x96 {$type}:\033[0m {$msg}\n");
+            fwrite(STDERR, "\n\xe2\x9c\x96 {$type}: {$msg}\n");
 
             if (stripos($msg, 'command not found') !== false || stripos($msg, 'unknown command') !== false) {
-                fwrite(STDERR, "  Run \033[36mphp garnet help\033[0m to see available commands.\n");
+                fwrite(STDERR, "  Run php garnet help to see available commands.\n");
             }
 
             if ($debug) {
                 fwrite(STDERR, "\n" . $e->getTraceAsString() . "\n");
             } else {
-                fwrite(STDERR, "  (re-run with \033[36m--debug\033[0m for full stack trace)\n");
+                fwrite(STDERR, "  (re-run with --debug for full stack trace)\n");
             }
             fwrite(STDERR, "\n");
 

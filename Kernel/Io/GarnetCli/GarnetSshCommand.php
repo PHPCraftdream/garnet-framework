@@ -77,7 +77,7 @@ class GarnetSshCommand {
         [$flags, $positional] = self::parseArgs($args);
 
         if (empty($positional)) {
-            echo "\033[31mError:\033[0m ssh:put requires a <local> path." . PHP_EOL;
+            echo 'Error: ssh:put requires a <local> path.' . PHP_EOL;
 
             exit(1);
         }
@@ -114,7 +114,7 @@ class GarnetSshCommand {
         [$flags, $positional] = self::parseArgs($args);
 
         if (empty($positional)) {
-            echo "\033[31mError:\033[0m ssh:get requires a <remote> path." . PHP_EOL;
+            echo 'Error: ssh:get requires a <remote> path.' . PHP_EOL;
 
             exit(1);
         }
@@ -162,12 +162,12 @@ class GarnetSshCommand {
         }
 
         if (!$result->ok) {
-            echo "\033[31mTest failed\033[0m (exit={$result->raw->exitCode})" . PHP_EOL;
+            echo "Test failed (exit={$result->raw->exitCode})" . PHP_EOL;
 
             exit(1);
         }
 
-        echo "\033[32mConnection OK\033[0m" . PHP_EOL;
+        echo 'Connection OK' . PHP_EOL;
 
         exit(0);
     }
@@ -181,7 +181,7 @@ class GarnetSshCommand {
         $runCmd = GarnetEnv::getAppDir($appName) . DS . 'run_cmd.php';
 
         if (!file_exists($runCmd)) {
-            echo "\033[31mError:\033[0m app has no run_cmd.php at {$runCmd}" . PHP_EOL;
+            echo "Error: app has no run_cmd.php at {$runCmd}" . PHP_EOL;
 
             exit(1);
         }
@@ -305,7 +305,7 @@ class GarnetSshCommand {
             $path = $flags['file'];
 
             if (!is_readable($path)) {
-                echo "\033[31mError:\033[0m cannot read file: {$path}" . PHP_EOL;
+                echo "Error: cannot read file: {$path}" . PHP_EOL;
 
                 exit(1);
             }
@@ -338,26 +338,26 @@ class GarnetSshCommand {
             return;
         }
 
-        fwrite(STDERR, "\033[31mError:\033[0m refusing to run the \033[1mmysql\033[0m client directly over ssh.\n");
+        fwrite(STDERR, "Error: refusing to run the mysql client directly over ssh.\n");
         fwrite(STDERR, "  It leaks DB credentials into shell history and bypasses the framework DB layer.\n\n");
         fwrite(STDERR, "  Use the Garnet SQL command instead:\n");
-        fwrite(STDERR, "    \033[36mlocal :\033[0m php garnet sql \"SELECT … \"\n");
-        fwrite(STDERR, "    \033[36mremote:\033[0m php garnet ssh \"cd <runtime-dir> && php garnet sql 'SELECT … '\"\n");
-        fwrite(STDERR, "    (append \033[1m--json\033[0m for machine-readable output)\n");
+        fwrite(STDERR, "    local : php garnet sql \"SELECT … \"\n");
+        fwrite(STDERR, "    remote: php garnet ssh \"cd <runtime-dir> && php garnet sql 'SELECT … '\"\n");
+        fwrite(STDERR, "    (append --json for machine-readable output)\n");
 
         exit(1);
     }
 
     private static function printDryRun(array $argv): void {
-        echo "\033[1m(dry-run)\033[0m" . PHP_EOL;
+        echo '(dry-run)' . PHP_EOL;
 
         foreach ($argv as $arg) {
-            echo "  \033[36m\$\033[0m " . $arg . PHP_EOL;
+            echo '  $ ' . $arg . PHP_EOL;
         }
     }
 
     private static function fail(string $msg): never {
-        fwrite(STDERR, "\033[31mError:\033[0m {$msg}\n");
+        fwrite(STDERR, "Error: {$msg}\n");
 
         exit(1);
     }
@@ -385,26 +385,26 @@ class GarnetSshCommand {
     private static function help(): void {
         echo <<<HELP
 
-  \033[1mUsage:\033[0m php garnet ssh [options] <command>
+  Usage: php garnet ssh [options] <command>
          php garnet ssh:run / ssh:put / ssh:get / ssh:test / ssh:help
 
-  \033[1mConnection:\033[0m  configured in WorkDir/ConfigDev/ssh.ini (or Config/ssh.ini).
-  Run \033[36mphp garnet config:init --dev\033[0m to create an ini from ConfigExample/.
+  Connection:  configured in WorkDir/ConfigDev/ssh.ini (or Config/ssh.ini).
+  Run php garnet config:init --dev to create an ini from ConfigExample/.
 
-  \033[1mSub-commands:\033[0m
+  Sub-commands:
     ssh / ssh:run  Run a shell command on the remote host.
     ssh:put        Upload a local file (or directory, with -r) via scp.
     ssh:get        Download a remote file via scp.
     ssh:test       Smoke-test connectivity (echo ok; pwd; whoami).
     ssh:help       Show this help.
 
-  \033[1mCommand source for ssh / ssh:run (in priority order):\033[0m
+  Command source for ssh / ssh:run (in priority order):
     1. --file=PATH   read command from file
     2. first arg     literal shell command
     3. stdin         piped/redirected input (when stdin is not a TTY)
     4. (none)        print help and exit 1
 
-  \033[1mFlags:\033[0m
+  Flags:
     --tty,   -t        Force TTY allocation (-t)
     --no-tty,-T        Disable TTY allocation (-T)
     --verbose,-v       Pass -v to ssh (connection debug output)
@@ -418,12 +418,12 @@ class GarnetSshCommand {
                        Auto-detected when <local> is a directory — you only
                        need this flag if you want to force/document intent.
 
-  \033[1mAuto-cd:\033[0m
+  Auto-cd:
     By default, ssh / ssh:run cd's into the deploy runtime directory
     (remote_path/runtime_dir from deploy.ini). Use --home to stay in
     the remote home dir, or --cwd=PATH / --cd-remote to override.
 
-  \033[1mExamples:\033[0m
+  Examples:
     php garnet ssh "uptime"
     echo "ls -la /srv/app" | php garnet ssh
     php garnet ssh --file=scripts/deploy_hook.sh

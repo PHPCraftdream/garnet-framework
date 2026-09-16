@@ -33,7 +33,7 @@ class GarnetDeployCommand {
         $skipMigrate = in_array('--skip-migrate', $args, true);
         $skipBackup = in_array('--skip-backup', $args, true);
 
-        echo "\033[1m=== Garnet Deploy: {$appName} ===\033[0m" . PHP_EOL . PHP_EOL;
+        echo "=== Garnet Deploy: {$appName} ===" . PHP_EOL . PHP_EOL;
 
         // Step 1: Maintenance ON — stays on until everything below succeeds.
         static::step('1/5', 'Maintenance mode ON');
@@ -71,12 +71,12 @@ class GarnetDeployCommand {
         } catch (Throwable $e) {
             // Leave maintenance ON on purpose — surface what happened and how
             // to recover, then re-throw so the deploy exits non-zero.
-            echo PHP_EOL . "\033[31m=== Deploy FAILED: {$e->getMessage()}\033[0m" . PHP_EOL;
-            echo "\033[33m  The site is STILL in maintenance (intentionally).\033[0m" . PHP_EOL;
+            echo PHP_EOL . "=== Deploy FAILED: {$e->getMessage()}" . PHP_EOL;
+            echo '  The site is STILL in maintenance (intentionally).' . PHP_EOL;
             echo '  Investigate, restore the pre-migration backup if needed:' . PHP_EOL;
-            echo "    \033[1mphp garnet db:restore <WorkDir/Backups/...pre-deploy.sql.gz>\033[0m" . PHP_EOL;
+            echo '    php garnet db:restore <WorkDir/Backups/...pre-deploy.sql.gz>' . PHP_EOL;
             echo '  then re-run deploy, or lift manually once fixed:' . PHP_EOL;
-            echo "    \033[1mphp garnet maintenance off\033[0m" . PHP_EOL;
+            echo '    php garnet maintenance off' . PHP_EOL;
 
             throw $e;
         }
@@ -86,7 +86,7 @@ class GarnetDeployCommand {
         GarnetMaintenanceCommand::run(['off']);
         echo PHP_EOL;
 
-        echo "\033[32m=== Deploy complete ===\033[0m" . PHP_EOL;
+        echo '=== Deploy complete ===' . PHP_EOL;
     }
 
     /**
@@ -120,15 +120,15 @@ class GarnetDeployCommand {
     }
 
     private static function step(string $num, string $label): void {
-        echo "\033[1;36m[{$num}]\033[0m {$label}" . PHP_EOL;
+        echo "[{$num}] {$label}" . PHP_EOL;
     }
 
     private static function help(): void {
         echo <<<HELP
 
-  \033[1mphp garnet deploy [flags]\033[0m
+  php garnet deploy [flags]
 
-  \033[1mWHAT IT DOES\033[0m
+  WHAT IT DOES
   ────────────────────────────────────────────────────────────────────────
   Runs the current app's pending DB migrations under a maintenance-mode
   wrapper, safe by design: Maintenance ON → DB backup → migrations →
@@ -140,11 +140,11 @@ class GarnetDeployCommand {
   on disk in the CURRENT working directory's app context (its own
   WorkDir/Config/db.ini). On a production host that means running it
   from inside the runtime dir over SSH, after the code itself has
-  already been shipped (\033[36mphp garnet deploy:full\033[0m does both in one
-  call; \033[36mphp garnet deploy:diff --apply\033[0m ships code only, then this
+  already been shipped (php garnet deploy:full does both in one
+  call; php garnet deploy:diff --apply ships code only, then this
   command applies any pending migration).
 
-  \033[1mFLAGS\033[0m
+  FLAGS
   ────────────────────────────────────────────────────────────────────────
     --skip-migrate   Don't run migrations (also skips the pre-migration
                       backup, since there's nothing to back up for).

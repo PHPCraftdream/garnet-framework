@@ -45,7 +45,7 @@ class GarnetPermsCommand {
         }
 
         if (DIRECTORY_SEPARATOR === '\\') {
-            echo "\033[33mWarning:\033[0m chmod has limited effect on Windows. " .
+            echo 'Warning: chmod has limited effect on Windows. ' .
                  'Run this on the production host.' . PHP_EOL;
         }
 
@@ -71,7 +71,7 @@ class GarnetPermsCommand {
             'public upload' => $publicDir . DS . 'upload',
         ];
 
-        echo "\033[1m=== Garnet Perms Fix ===\033[0m" . PHP_EOL;
+        echo '=== Garnet Perms Fix ===' . PHP_EOL;
         echo '  mode:    0' . decoct($mode) . PHP_EOL;
         echo "  app:     {$appDir}" . PHP_EOL;
         echo "  public:  {$publicDir}" . PHP_EOL . PHP_EOL;
@@ -84,19 +84,19 @@ class GarnetPermsCommand {
                 @mkdir($path, $mode, true);
 
                 if (!is_dir($path)) {
-                    echo "  \033[31mmiss\033[0m  [{$label}] {$path}  (create failed)" . PHP_EOL;
+                    echo "  miss  [{$label}] {$path}  (create failed)" . PHP_EOL;
                     $missCount++;
 
                     continue;
                 }
-                echo "  \033[36mmkdir\033[0m [{$label}] {$path}" . PHP_EOL;
+                echo "  mkdir [{$label}] {$path}" . PHP_EOL;
             }
             [$set, $fail] = self::chmodRecursive($path, $mode);
 
             if ($fail > 0) {
-                echo "  \033[33mwarn\033[0m  [{$label}] {$set} ok, {$fail} failed" . PHP_EOL;
+                echo "  warn  [{$label}] {$set} ok, {$fail} failed" . PHP_EOL;
             } else {
-                echo "  \033[32mok\033[0m    [{$label}] {$set} entries" . PHP_EOL;
+                echo "  ok    [{$label}] {$set} entries" . PHP_EOL;
             }
             $okCount++;
         }

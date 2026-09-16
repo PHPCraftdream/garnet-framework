@@ -109,10 +109,10 @@ class GarnetBundleCommand {
         // if the override somehow fails to take effect.
         if ($makePhar && (int)ini_get('phar.readonly') === 1) {
             if ($alreadyRelaunched) {
-                echo "\033[33mWarning:\033[0m phar.readonly is still 1 after re-exec — skipping phar." . PHP_EOL;
+                echo 'Warning: phar.readonly is still 1 after re-exec — skipping phar.' . PHP_EOL;
                 $makePhar = false;
             } else {
-                echo "\033[33mNote:\033[0m relaunching with phar.readonly=0 (auto)" . PHP_EOL . PHP_EOL;
+                echo 'Note: relaunching with phar.readonly=0 (auto)' . PHP_EOL . PHP_EOL;
                 // App-mode's own ./garnet lives at the app root
                 // (GarnetRunner::$appDir), not under GARNET_ROOT (which in
                 // app-mode is the vendored framework dir) — same reasoning
@@ -235,7 +235,7 @@ class GarnetBundleCommand {
         }
 
         $pad = static fn (string $s, int $w): string => str_pad($s, $w);
-        echo "\033[1m=== Garnet Bundle: {$appName} ===\033[0m" . PHP_EOL;
+        echo "=== Garnet Bundle: {$appName} ===" . PHP_EOL;
         echo "  dist target:   {$distApp}" . PHP_EOL;
         echo '  ' . $pad('public-dir',    14) . ' = ' . $pad($publicDirName,    32) . "({$paramSources['public-dir']})" . PHP_EOL;
         echo '  ' . $pad('framework-dir', 14) . ' = ' . $pad($frameworkDirName, 32) . "({$paramSources['framework-dir']})" . PHP_EOL;
@@ -669,7 +669,7 @@ class GarnetBundleCommand {
 
         // Summary
         [$files, $bytes] = self::statTree($distApp);
-        echo "\033[32m=== Bundle complete ===\033[0m" . PHP_EOL;
+        echo '=== Bundle complete ===' . PHP_EOL;
         echo "  Path:  {$distApp}" . PHP_EOL;
         echo "  Files: {$files}" . PHP_EOL;
         echo '  Size:  ' . self::humanBytes($bytes) . PHP_EOL;
@@ -1230,11 +1230,11 @@ SH;
     }
 
     private static function step(string $num, string $label): void {
-        echo "\033[1;36m[{$num}]\033[0m {$label}" . PHP_EOL;
+        echo "[{$num}] {$label}" . PHP_EOL;
     }
 
     private static function fail(string $msg): void {
-        echo "\033[31mError:\033[0m {$msg}" . PHP_EOL;
+        echo "Error: {$msg}" . PHP_EOL;
 
         exit(1);
     }
@@ -1242,15 +1242,15 @@ SH;
     private static function help(): void {
         echo <<<HELP
 
-  \033[1mphp garnet bundle [flags]\033[0m
+  php garnet bundle [flags]
 
-  \033[1mWHAT IT DOES\033[0m
+  WHAT IT DOES
   ────────────────────────────────────────────────────────────────────────
   Builds a self-contained, portable deploy artifact for the active app:
   4 sibling directories (public / framework / app / runtime), each
   path-agnostic (no hardcoded absolute paths, no dev-only files), ready
   to drop onto a fresh host — first-time install, not an incremental
-  update (use \033[36mgarnet deploy:diff\033[0m for that once a host already
+  update (use garnet deploy:diff for that once a host already
   has a bundle on it).
 
     dist/<AppName>/
@@ -1264,9 +1264,9 @@ SH;
                             _shared_index.php, .env, WorkDir/ skeleton
 
   Works for both source layouts:
-    - \033[1mlegacy monorepo\033[0m — Apps/<App>/ + Framework/ siblings under
+    - legacy monorepo — Apps/<App>/ + Framework/ siblings under
       GARNET_ROOT.
-    - \033[1mstandalone app\033[0m (composer-vendored framework, the layout
+    - standalone app (composer-vendored framework, the layout
       `app:create` scaffolds) — the app is its own root, framework lives
       in vendor/phpcraftdream/garnet-framework/. The framework-dir copy
       is sourced from there specifically (not a separate framework
@@ -1276,7 +1276,7 @@ SH;
       locally-built *Gen.php sitting in that checkout silently ships a
       stale asset-bridge referencing hashes that no longer exist).
 
-  \033[1mFLAGS\033[0m
+  FLAGS
   ────────────────────────────────────────────────────────────────────────
     --skip-build             Skip the rspack production build (assumes
                               Public/assets/ is already built).
@@ -1322,11 +1322,11 @@ SH;
                               matching URL literals in *Gen.php + built
                               JS/CSS/HTML/SVG files.
 
-  Folder-name flags fall back to \033[2mWorkDir/Config*/deploy.ini\033[0m
+  Folder-name flags fall back to WorkDir/Config*/deploy.ini
   (public_dir / framework_dir / app_dir / runtime_dir / public_name) when
   not passed on the CLI, then to the built-in defaults above.
 
-  \033[1mFIRST DEPLOY TO A FRESH HOST\033[0m
+  FIRST DEPLOY TO A FRESH HOST
   ────────────────────────────────────────────────────────────────────────
     php garnet bundle --with-config          # first boot: push real creds too
     php garnet ssh:put dist/<App>/<public-dir>    "<public-dir>"    --cd-remote
@@ -1336,7 +1336,7 @@ SH;
     # then, from inside <runtime-dir> on the host:
     php garnet deploy                         # maintenance → backup → migrate → cache → off
 
-  Once a host has a bundle on it, prefer \033[36mgarnet deploy:diff\033[0m for
+  Once a host has a bundle on it, prefer garnet deploy:diff for
   routine updates — it ships only the delta since the last deploy,
   seconds instead of a full re-upload, and doesn't need the `--with-config`
   question again.

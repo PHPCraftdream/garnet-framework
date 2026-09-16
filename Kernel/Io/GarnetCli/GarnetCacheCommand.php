@@ -35,13 +35,13 @@ class GarnetCacheCommand {
         };
 
         if ($do === null) {
-            fwrite(STDERR, "\033[31mError:\033[0m unknown cache subcommand: {$command}\n");
+            fwrite(STDERR, "Error: unknown cache subcommand: {$command}\n");
             fwrite(STDERR, "  Available: cache, cache:twig, cache:file, cache:opcache\n");
 
             exit(2);
         }
 
-        echo "\033[1m=== Garnet Cache Clear: {$appName} ===\033[0m" . PHP_EOL;
+        echo "=== Garnet Cache Clear: {$appName} ===" . PHP_EOL;
 
         $cleared = 0;
 
@@ -60,24 +60,24 @@ class GarnetCacheCommand {
 
     private static function clearDir(string $dir, string $label): bool {
         if (!is_dir($dir)) {
-            echo "  \033[33m·\033[0m {$label}: directory missing ({$dir})" . PHP_EOL;
+            echo "  · {$label}: directory missing ({$dir})" . PHP_EOL;
 
             return false;
         }
         self::rmdirContents($dir);
-        echo "  \033[32m✓\033[0m {$label} cleared." . PHP_EOL;
+        echo "  ✓ {$label} cleared." . PHP_EOL;
 
         return true;
     }
 
     private static function clearOpcache(): bool {
         if (!function_exists('opcache_reset')) {
-            echo "  \033[33m·\033[0m OPcache: opcache_reset() not available (CLI opcache likely off — restart php-fpm on prod)" . PHP_EOL;
+            echo '  · OPcache: opcache_reset() not available (CLI opcache likely off — restart php-fpm on prod)' . PHP_EOL;
 
             return false;
         }
         opcache_reset();
-        echo "  \033[32m✓\033[0m OPcache reset." . PHP_EOL;
+        echo '  ✓ OPcache reset.' . PHP_EOL;
 
         return true;
     }

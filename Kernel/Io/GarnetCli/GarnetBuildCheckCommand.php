@@ -12,7 +12,7 @@ class GarnetBuildCheckCommand {
         // root in app-mode, GARNET_ROOT/Framework in legacy).
         $frameworkBundleDir = GarnetRunner::$frameworkDir . DS . 'Bundle' . DS;
 
-        echo "\033[1m=== Build Check: {$appName} ===\033[0m" . PHP_EOL . PHP_EOL;
+        echo "=== Build Check: {$appName} ===" . PHP_EOL . PHP_EOL;
 
         $allOk = true;
 
@@ -25,14 +25,14 @@ class GarnetBuildCheckCommand {
             exit(0);
         }
 
-        echo "\033[1m  Gen PHP classes:\033[0m" . PHP_EOL;
+        echo '  Gen PHP classes:' . PHP_EOL;
 
         foreach ($genFiles as $name => $path) {
             if (is_file($path)) {
-                echo "    \033[32m[OK]\033[0m {$name}" . PHP_EOL;
+                echo "    [OK] {$name}" . PHP_EOL;
             } else {
-                echo "    \033[31m[MISSING]\033[0m {$name}" . PHP_EOL;
-                echo "           \033[2m{$path}\033[0m" . PHP_EOL;
+                echo "    [MISSING] {$name}" . PHP_EOL;
+                echo "           {$path}" . PHP_EOL;
                 $allOk = false;
             }
         }
@@ -40,7 +40,7 @@ class GarnetBuildCheckCommand {
         echo PHP_EOL;
 
         // Check referenced asset files from Gen classes
-        echo "\033[1m  Referenced assets:\033[0m" . PHP_EOL;
+        echo '  Referenced assets:' . PHP_EOL;
 
         foreach ($genFiles as $name => $path) {
             if (!is_file($path)) {
@@ -55,12 +55,12 @@ class GarnetBuildCheckCommand {
 
                 if (is_file($filePath)) {
                     $size = filesize($filePath);
-                    echo "    \033[32m[OK]\033[0m {$webPath} \033[2m({$size} bytes)\033[0m" . PHP_EOL;
+                    echo "    [OK] {$webPath} ({$size} bytes)" . PHP_EOL;
                 } elseif (is_file($altPath)) {
                     $size = filesize($altPath);
-                    echo "    \033[32m[OK]\033[0m {$webPath} \033[2m({$size} bytes)\033[0m" . PHP_EOL;
+                    echo "    [OK] {$webPath} ({$size} bytes)" . PHP_EOL;
                 } else {
-                    echo "    \033[31m[MISSING]\033[0m {$webPath}" . PHP_EOL;
+                    echo "    [MISSING] {$webPath}" . PHP_EOL;
                     $allOk = false;
                 }
             }
@@ -69,9 +69,9 @@ class GarnetBuildCheckCommand {
         echo PHP_EOL;
 
         if ($allOk) {
-            echo "\033[32m  [OK] All built assets verified.\033[0m" . PHP_EOL;
+            echo '  [OK] All built assets verified.' . PHP_EOL;
         } else {
-            echo "\033[31m  [ERROR] Some assets are missing. Run the build and commit.\033[0m" . PHP_EOL;
+            echo '  [ERROR] Some assets are missing. Run the build and commit.' . PHP_EOL;
 
             exit(1);
         }

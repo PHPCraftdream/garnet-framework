@@ -71,7 +71,7 @@ class GarnetSnapshotCommand {
 
         self::mkdir($staging);
 
-        echo "\033[1m=== Garnet snapshot:collect ===\033[0m" . PHP_EOL;
+        echo '=== Garnet snapshot:collect ===' . PHP_EOL;
         echo "  staging: {$staging}" . PHP_EOL;
 
         $manifest = ['snapshot created: ' . date('c'), "database: {$dbName}", ''];
@@ -121,7 +121,7 @@ class GarnetSnapshotCommand {
 
         file_put_contents($staging . DS . 'MANIFEST.txt', implode(PHP_EOL, $manifest) . PHP_EOL);
 
-        echo "\033[32m  collected.\033[0m" . PHP_EOL;
+        echo '  collected.' . PHP_EOL;
         // Machine-readable last line for snapshot:pull to parse.
         echo self::DIR_MARKER . $staging . PHP_EOL;
     }
@@ -135,7 +135,7 @@ class GarnetSnapshotCommand {
             $dir = self::latestSnapshotDir();
 
             if ($dir === null) {
-                echo "\033[31mError:\033[0m no snapshot dir given and none found under WorkDir/Snapshots." . PHP_EOL;
+                echo 'Error: no snapshot dir given and none found under WorkDir/Snapshots.' . PHP_EOL;
 
                 exit(1);
             }
@@ -143,7 +143,7 @@ class GarnetSnapshotCommand {
         $dir = rtrim($dir, '/\\');
 
         if (!is_dir($dir)) {
-            echo "\033[31mError:\033[0m not a directory: {$dir}" . PHP_EOL;
+            echo "Error: not a directory: {$dir}" . PHP_EOL;
 
             exit(1);
         }
@@ -161,7 +161,7 @@ class GarnetSnapshotCommand {
         @unlink($tarPath);
         @unlink($archive);
 
-        echo "\033[1m=== Garnet snapshot:pack ===\033[0m" . PHP_EOL;
+        echo '=== Garnet snapshot:pack ===' . PHP_EOL;
         echo "  source:  {$dir}" . PHP_EOL;
 
         // PharData (data archive) is NOT blocked by phar.readonly, so this
@@ -173,12 +173,12 @@ class GarnetSnapshotCommand {
         @unlink($tarPath);
 
         if (!is_file($archive)) {
-            echo "\033[31mError:\033[0m archive was not produced: {$archive}" . PHP_EOL;
+            echo "Error: archive was not produced: {$archive}" . PHP_EOL;
 
             exit(1);
         }
 
-        echo "\033[32m  archive:\033[0m {$archive} (" . self::human((int)filesize($archive)) . ')' . PHP_EOL;
+        echo "  archive: {$archive} (" . self::human((int)filesize($archive)) . ')' . PHP_EOL;
         echo self::ARCHIVE_MARKER . $archive . PHP_EOL;
     }
 
@@ -193,7 +193,7 @@ class GarnetSnapshotCommand {
 
         $runOpts = ['cwd' => $remoteDir, 'stream' => false, 'tty' => false];
 
-        echo "\033[1;36m[1/3 collect]\033[0m gathering snapshot on the server…" . PHP_EOL;
+        echo '[1/3 collect] gathering snapshot on the server…' . PHP_EOL;
         // Forward --with-uploads so `snapshot:pull --with-uploads` can fold the
         // (potentially huge) upload dirs into the remote collect.
         $res = $client->run('php garnet snapshot:collect' . (in_array('--with-uploads', $args, true) ? ' --with-uploads' : ''), $runOpts);
@@ -208,7 +208,7 @@ class GarnetSnapshotCommand {
             self::fail('could not read SNAPSHOT_DIR from remote collect output.');
         }
 
-        echo "\033[1;36m[2/3 pack]\033[0m compressing on the server…" . PHP_EOL;
+        echo '[2/3 pack] compressing on the server…' . PHP_EOL;
         $res = $client->run('php garnet snapshot:pack ' . self::remoteArg($stagingDir), $runOpts);
         echo $res->stdout;
 
@@ -232,7 +232,7 @@ class GarnetSnapshotCommand {
         self::mkdir($outDir);
         $local = $outDir . DS . basename($archive);
 
-        echo "\033[1;36m[3/3 download]\033[0m " . basename($archive) . " → {$local}" . PHP_EOL;
+        echo '[3/3 download] ' . basename($archive) . " → {$local}" . PHP_EOL;
         $res = $client->get($archive, $local, ['stream' => true]);
 
         if (!$res->ok() || !is_file($local)) {
@@ -242,10 +242,10 @@ class GarnetSnapshotCommand {
         if (!$keep) {
             $client->run('rm -rf ' . self::remoteArg($stagingDir) . ' ' . self::remoteArg($archive), $runOpts);
         } else {
-            fwrite(STDERR, "\033[33mNote:\033[0m --keep set; remote staging + archive left in place.\n");
+            fwrite(STDERR, "Note: --keep set; remote staging + archive left in place.\n");
         }
 
-        echo PHP_EOL . "\033[32m=== snapshot ready ===\033[0m" . PHP_EOL;
+        echo PHP_EOL . '=== snapshot ready ===' . PHP_EOL;
         echo "  {$local} (" . self::human((int)filesize($local)) . ')' . PHP_EOL;
     }
 
@@ -300,7 +300,7 @@ class GarnetSnapshotCommand {
     private static function applyDir(string $dir, bool $withConfig, bool $withUploads): void {
         [$link, $dbName, $workDir, $publicDir] = self::bootPaths();
 
-        echo "\033[1m=== Garnet snapshot:apply ===\033[0m" . PHP_EOL;
+        echo '=== Garnet snapshot:apply ===' . PHP_EOL;
         echo "  source:   {$dir}" . PHP_EOL;
         echo "  database: {$dbName}" . PHP_EOL;
 
@@ -353,7 +353,7 @@ class GarnetSnapshotCommand {
             echo '  [config] skipped (pass --with-config to overwrite environment config)' . PHP_EOL;
         }
 
-        echo "\033[32m  applied.\033[0m" . PHP_EOL;
+        echo '  applied.' . PHP_EOL;
     }
 
     // ── 5. deploy (local orchestrator: push a snapshot onto the server) ──────
@@ -381,7 +381,7 @@ class GarnetSnapshotCommand {
         }
 
         // 1. Safety: full snapshot of the CURRENT server state, archive kept.
-        echo "\033[1;36m[1/4 safety]\033[0m snapshotting current server state…" . PHP_EOL;
+        echo '[1/4 safety] snapshotting current server state…' . PHP_EOL;
         // Match the apply's upload scope so the rollback archive is complete.
         $res = $client->run('php garnet snapshot:collect' . ($withUploads ? ' --with-uploads' : ''), $runOpts);
         echo $res->stdout;
@@ -398,11 +398,11 @@ class GarnetSnapshotCommand {
         }
         $rollback = self::parseMarker($res->stdout, self::ARCHIVE_MARKER) ?? self::fail('no SNAPSHOT_ARCHIVE from safety pack.');
         $client->run('rm -rf ' . self::remoteArg($safeDir), $runOpts);
-        echo "\033[33m  rollback archive kept on server:\033[0m {$rollback}" . PHP_EOL;
+        echo "  rollback archive kept on server: {$rollback}" . PHP_EOL;
 
         // 2. Upload the new snapshot.
         $remoteIncoming = $remoteDir . '/WorkDir/Snapshots/incoming_' . basename($archive);
-        echo "\033[1;36m[2/4 upload]\033[0m " . basename($archive) . ' → server…' . PHP_EOL;
+        echo '[2/4 upload] ' . basename($archive) . ' → server…' . PHP_EOL;
         $client->run('mkdir -p ' . self::remoteArg($remoteDir . '/WorkDir/Snapshots'), $runOpts);
         $res = $client->put($archive, $remoteIncoming, ['stream' => true]);
 
@@ -411,7 +411,7 @@ class GarnetSnapshotCommand {
         }
 
         // 3. Apply on the server (snapshot:up unpacks + restores there).
-        echo "\033[1;36m[3/4 apply]\033[0m restoring snapshot on the server…" . PHP_EOL;
+        echo '[3/4 apply] restoring snapshot on the server…' . PHP_EOL;
         $cmd = 'php garnet snapshot:up ' . self::remoteArg($remoteIncoming)
             . ($withConfig ? ' --with-config' : '')
             . ($withUploads ? ' --with-uploads' : '');
@@ -423,21 +423,21 @@ class GarnetSnapshotCommand {
         }
 
         // 4. Cleanup the uploaded archive.
-        echo "\033[1;36m[4/4 cleanup]\033[0m" . PHP_EOL;
+        echo '[4/4 cleanup]' . PHP_EOL;
 
         if (!$keepRemote) {
             $client->run('rm -f ' . self::remoteArg($remoteIncoming), $runOpts);
         }
 
-        echo PHP_EOL . "\033[32m=== snapshot deployed to server ===\033[0m" . PHP_EOL;
-        echo "  rollback (on server): \033[1mphp garnet snapshot:up " . $rollback . "\033[0m" . PHP_EOL;
+        echo PHP_EOL . '=== snapshot deployed to server ===' . PHP_EOL;
+        echo '  rollback (on server): php garnet snapshot:up ' . $rollback . '' . PHP_EOL;
     }
 
     private static function confirm(string $archive): bool {
-        echo "\033[1;31mThis OVERWRITES the server's DB" . "\033[0m and uploads with:" . PHP_EOL;
+        echo "This OVERWRITES the server's DB" . ' and uploads with:' . PHP_EOL;
         echo "  {$archive}" . PHP_EOL;
         echo 'The current server state is snapshotted first (rollback kept).' . PHP_EOL;
-        echo "Type \033[1;36mdeploy\033[0m to proceed: ";
+        echo 'Type deploy to proceed: ';
 
         return trim((string)fgets(STDIN)) === 'deploy';
     }
@@ -454,7 +454,7 @@ class GarnetSnapshotCommand {
         self::bootApp();
 
         if (!(bool)DbPool::get()->getDbConfig()->paramInt('enabled')) {
-            echo "\033[31mError:\033[0m database is disabled (db.ini → enabled = 1)." . PHP_EOL;
+            echo 'Error: database is disabled (db.ini → enabled = 1).' . PHP_EOL;
 
             exit(1);
         }
@@ -620,7 +620,7 @@ class GarnetSnapshotCommand {
     }
 
     private static function fail(string $msg): never {
-        fwrite(STDERR, "\033[31mError:\033[0m {$msg}\n");
+        fwrite(STDERR, "Error: {$msg}\n");
 
         exit(1);
     }

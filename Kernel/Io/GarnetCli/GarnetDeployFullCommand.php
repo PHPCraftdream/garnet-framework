@@ -87,7 +87,7 @@ class GarnetDeployFullCommand {
         // try/catch, falling back to bare defaults that could disagree
         // with $layout above. Passing the flags sidesteps that entirely:
         // CLI flags take precedence over any ini read bundle might attempt.
-        echo "\033[1m=== Garnet Deploy (full): {$appName} ===\033[0m" . PHP_EOL . PHP_EOL;
+        echo "=== Garnet Deploy (full): {$appName} ===" . PHP_EOL . PHP_EOL;
         self::step('1/6', 'Building fresh (php garnet bundle --keep-dir --no-phar)');
         $bundleArgs = [
             '--keep-dir', '--no-phar',
@@ -227,14 +227,14 @@ class GarnetDeployFullCommand {
             $res = $ssh->run($cmd, ['stream' => false]);
 
             if ($res->exitCode !== 0) {
-                echo "\033[31m  [FAIL] the app does NOT boot after this push:\033[0m" . PHP_EOL;
+                echo '  [FAIL] the app does NOT boot after this push:' . PHP_EOL;
 
                 foreach (array_filter(explode("\n", trim($res->stdout . "\n" . $res->stderr))) as $line) {
-                    echo "    \033[90m{$line}\033[0m" . PHP_EOL;
+                    echo "    {$line}" . PHP_EOL;
                 }
                 self::fail('Boot check failed — the host is left in maintenance mode intentionally. Investigate before trusting this release.');
             }
-            echo '  ' . "\033[32m[OK]\033[0m app boots cleanly on the host" . PHP_EOL;
+            echo '  ' . '[OK] app boots cleanly on the host' . PHP_EOL;
             self::verifyPublishedAssets($ssh, $distApp, $remotePublic);
             echo PHP_EOL;
         }
@@ -262,7 +262,7 @@ class GarnetDeployFullCommand {
             if (!$maintOff->ok()) {
                 self::fail("Ship succeeded but could not disable maintenance mode (exit {$maintOff->exitCode}): {$maintOff->stderr}. Run `php garnet maintenance off` on the host manually.");
             }
-            echo "  run \033[36mphp garnet deploy\033[0m from inside {$layout['runtime_dir']}/ on the host when ready to migrate."
+            echo "  run php garnet deploy from inside {$layout['runtime_dir']}/ on the host when ready to migrate."
                 . PHP_EOL;
         } else {
             self::step('6/6', 'Migrating (php garnet deploy on host: maintenance → backup → migrate → cache → off)');
@@ -293,14 +293,14 @@ class GarnetDeployFullCommand {
         if ($gitRc === 0) {
             GarnetDeployDiffCommand::writeRemoteDeploySha($ssh, $layout, trim($headSha));
         } else {
-            echo "\033[33mwarn:\033[0m could not read local HEAD sha to advance the remote deploy-sha marker "
+            echo 'warn: could not read local HEAD sha to advance the remote deploy-sha marker '
                 . "(git exit {$gitRc}). Run `php garnet deploy:diff --commit=HEAD --apply` once to reseed it, "
                 . 'or the next deploy:diff will re-diff this whole release.' . PHP_EOL;
         }
 
         self::resetOpcacheOnHost($ssh, $remoteRuntime);
 
-        echo "\033[32m=== Deploy complete — {$appName} is live at {$layout['remote_path']} ===\033[0m" . PHP_EOL;
+        echo "=== Deploy complete — {$appName} is live at {$layout['remote_path']} ===" . PHP_EOL;
     }
 
     /**
@@ -323,7 +323,7 @@ class GarnetDeployFullCommand {
      * доставлены, а воркеры подхватят новый код при своей переработке.
      */
     private static function resetOpcacheOnHost(SshClient $ssh, string $remoteRuntime): void {
-        echo "\033[1mopcache reset\033[0m" . PHP_EOL;
+        echo 'opcache reset' . PHP_EOL;
 
         $config = $remoteRuntime . '/WorkDir/Config/app.ini';
         $remote =
@@ -337,12 +337,12 @@ class GarnetDeployFullCommand {
         $out = trim((string)$res->stdout);
 
         if ($res->exitCode === 0 && str_contains($out, 'HTTP 200')) {
-            echo "  \033[32m[OK]\033[0m opcache сброшен ({$out})" . PHP_EOL;
+            echo "  [OK] opcache сброшен ({$out})" . PHP_EOL;
 
             return;
         }
 
-        echo "  \033[33m·\033[0m opcache не сброшен: " . ($out !== '' ? $out : "exit {$res->exitCode}")
+        echo '  · opcache не сброшен: ' . ($out !== '' ? $out : "exit {$res->exitCode}")
             . ' — новый код может не подхватиться, пока воркеры не переработаются' . PHP_EOL;
     }
 
@@ -677,11 +677,11 @@ class GarnetDeployFullCommand {
     }
 
     private static function step(string $num, string $label): void {
-        echo "\033[1;36m[{$num}]\033[0m {$label}" . PHP_EOL;
+        echo "[{$num}] {$label}" . PHP_EOL;
     }
 
     private static function fail(string $msg): void {
-        echo "\033[31mError:\033[0m {$msg}" . PHP_EOL;
+        echo "Error: {$msg}" . PHP_EOL;
 
         exit(1);
     }
@@ -689,9 +689,9 @@ class GarnetDeployFullCommand {
     private static function help(): void {
         echo <<<HELP
 
-  \033[1mphp garnet deploy:full [flags]\033[0m
+  php garnet deploy:full [flags]
 
-  \033[1mWHAT IT DOES\033[0m
+  WHAT IT DOES
   ────────────────────────────────────────────────────────────────────────
   One command, start to live: build fresh (same code path as
   `php garnet bundle`), push to an EXISTING host — maintenance mode ON,
@@ -700,7 +700,7 @@ class GarnetDeployFullCommand {
   near-instant rename (never rm -rf'd first), runtime dir's `garnet`
   dispatcher + _shared_index.php synced individually (WorkDir/ — real
   Config/*.ini, DB backups, log journals — never touched), boot check,
-  then \033[36mphp garnet deploy\033[0m (maintenance → backup → migrate
+  then php garnet deploy (maintenance → backup → migrate
   → cache → off) triggered remotely over SSH as the final step —
   maintenance stays ON the whole time until that command (or, with
   --skip-migrate, this one) turns it back off.
@@ -712,7 +712,7 @@ class GarnetDeployFullCommand {
   failure, backup-before-migrate) — same command whether triggered
   remotely by this one or run by hand later.
 
-  \033[1mFLAGS\033[0m
+  FLAGS
   ────────────────────────────────────────────────────────────────────────
     --skip-build       Skip the rspack production build (assumes
                         Public/assets/ is already built fresh).

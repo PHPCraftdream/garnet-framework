@@ -47,14 +47,14 @@ class GarnetMigrateStatusCommand {
         $fsVersion = $migrationClass ? $migrationClass::get()->getCurrentVersion() : 0;
 
         echo "  App:              {$appName}" . PHP_EOL;
-        echo "  Database version: \033[1m{$dbVersion}\033[0m" . PHP_EOL;
-        echo "  Target version:   \033[1m{$fsVersion}\033[0m" . PHP_EOL;
+        echo "  Database version: {$dbVersion}" . PHP_EOL;
+        echo "  Target version:   {$fsVersion}" . PHP_EOL;
 
         if ($dbVersion >= $fsVersion) {
-            echo "\033[32m  [OK] Database is up to date.\033[0m" . PHP_EOL;
+            echo '  [OK] Database is up to date.' . PHP_EOL;
         } else {
             $pending = $fsVersion - $dbVersion;
-            echo "\033[33m  [WARN] {$pending} migration(s) pending.\033[0m" . PHP_EOL;
+            echo "  [WARN] {$pending} migration(s) pending." . PHP_EOL;
         }
     }
 }

@@ -30,7 +30,7 @@ use Throwable;
 class GarnetUninstallCommand {
     public static function run(array $args): void {
         if (in_array('--yes', $args, true) || in_array('-y', $args, true)) {
-            fwrite(STDERR, "\033[31mError:\033[0m --yes / -y is no longer supported. The typed-token confirmation is mandatory by design.\n");
+            fwrite(STDERR, "Error: --yes / -y is no longer supported. The typed-token confirmation is mandatory by design.\n");
 
             exit(2);
         }
@@ -39,7 +39,7 @@ class GarnetUninstallCommand {
         $appDir = getenv('GARNET_APP_DIR');
 
         if ($appDir === false || $appDir === '') {
-            echo "\033[31mError:\033[0m `uninstall` only runs in a bundle layout " .
+            echo 'Error: `uninstall` only runs in a bundle layout ' .
                 '(GARNET_APP_DIR not set). In dev, just delete the repo.' . PHP_EOL;
 
             exit(1);
@@ -49,7 +49,7 @@ class GarnetUninstallCommand {
         $envFile = $appDir . DIRECTORY_SEPARATOR . '.env';
 
         if (!is_file($envFile)) {
-            echo "\033[31mError:\033[0m .env not found at {$envFile}" . PHP_EOL;
+            echo "Error: .env not found at {$envFile}" . PHP_EOL;
 
             exit(1);
         }
@@ -60,7 +60,7 @@ class GarnetUninstallCommand {
         $runtimeDirName = $env['BUNDLE_RUNTIME_DIR'] ?? '';
 
         if ($publicDirName === '' || $fwDirName === '') {
-            echo "\033[31mError:\033[0m .env is missing BUNDLE_PUBLIC_DIR or BUNDLE_FRAMEWORK_DIR. " .
+            echo 'Error: .env is missing BUNDLE_PUBLIC_DIR or BUNDLE_FRAMEWORK_DIR. ' .
                 'Re-bundle with current Garnet to get the metadata, or delete the install manually.' . PHP_EOL;
 
             exit(1);
@@ -79,18 +79,18 @@ class GarnetUninstallCommand {
 
         foreach ($toCheck as $label => $name) {
             if (str_contains($name, '..') || str_contains($name, '/') || str_contains($name, '\\')) {
-                echo "\033[31mError:\033[0m suspicious {$label} dir name in .env: {$name}" . PHP_EOL;
+                echo "Error: suspicious {$label} dir name in .env: {$name}" . PHP_EOL;
 
                 exit(1);
             }
         }
 
         if ($runtimeDirName === '') {
-            echo "\033[33mNote:\033[0m BUNDLE_RUNTIME_DIR not found in .env (legacy bundle). " .
+            echo 'Note: BUNDLE_RUNTIME_DIR not found in .env (legacy bundle). ' .
                 'The runtime folder will not be removed — delete it manually if needed.' . PHP_EOL;
         }
 
-        echo "\033[1m=== Garnet Uninstall ===\033[0m" . PHP_EOL;
+        echo '=== Garnet Uninstall ===' . PHP_EOL;
         echo "  bundle root: {$bundleRoot}" . PHP_EOL;
         echo '  will remove:' . PHP_EOL;
         $targets = [
@@ -117,7 +117,7 @@ class GarnetUninstallCommand {
         }
 
         $token = CliTokens::randToken(4);
-        echo "  Type \033[1;36m{$token}\033[0m to confirm: ";
+        echo "  Type {$token} to confirm: ";
         $line = trim((string)fgets(STDIN));
 
         if ($line !== $token) {
@@ -138,7 +138,7 @@ class GarnetUninstallCommand {
             self::rmrf($path);
         }
 
-        echo PHP_EOL . "\033[32mUninstall complete.\033[0m" . PHP_EOL;
+        echo PHP_EOL . 'Uninstall complete.' . PHP_EOL;
         echo '  You can now `rm` any leftover archive (e.g. MyApp.tar.gz) by hand.' . PHP_EOL;
     }
 

@@ -185,7 +185,7 @@ final class SshClient {
         $identityFile = $this->config->identityFile;
 
         if ($identityKey !== '' && $identityFile !== '') {
-            fwrite(STDERR, "\033[33mWarning:\033[0m ssh.ini: both identity_key and identity_file set; using identity_key\n");
+            fwrite(STDERR, "Warning: ssh.ini: both identity_key and identity_file set; using identity_key\n");
         }
 
         if ($identityKey !== '') {

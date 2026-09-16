@@ -43,7 +43,7 @@ final class GarnetTestRemoteCommand {
         $baseUrl = $flags['base_url'];
 
         if ($baseUrl === '') {
-            fwrite(STDERR, "\033[31mError:\033[0m --base-url=<https://host> is required.\n");
+            fwrite(STDERR, "Error: --base-url=<https://host> is required.\n");
             self::help();
 
             exit(1);
@@ -70,11 +70,11 @@ final class GarnetTestRemoteCommand {
                 return;
             }
             $torndown = true;
-            echo "\n\033[1;36m[teardown]\033[0m dropping remote test scope…\n";
+            echo "\n[teardown] dropping remote test scope…\n";
             $res = $client->run('php garnet test:teardown', ['cwd' => $remoteDir, 'stream' => true]);
 
             if (!$res->ok()) {
-                fwrite(STDERR, "\033[31mWarning:\033[0m remote teardown exited {$res->exitCode} — clean up manually.\n");
+                fwrite(STDERR, "Warning: remote teardown exited {$res->exitCode} — clean up manually.\n");
                 self::hintIfCommandMissing();
             }
         };
@@ -89,7 +89,7 @@ final class GarnetTestRemoteCommand {
 
         // 1. Provision (unless told to reuse an already-provisioned scope).
         if (!$flags['no_provision']) {
-            echo "\033[1;36m[provision]\033[0m building remote test_worker_0 scope…\n";
+            echo "[provision] building remote test_worker_0 scope…\n";
             $res = $client->run('php garnet test:provision', [
                 'cwd' => $remoteDir,
                 'env' => ['GARNET_TEST_TOKEN=' . $token],
@@ -97,7 +97,7 @@ final class GarnetTestRemoteCommand {
             ]);
 
             if (!$res->ok()) {
-                fwrite(STDERR, "\033[31mError:\033[0m remote provision failed (exit {$res->exitCode}). Aborting.\n");
+                fwrite(STDERR, "Error: remote provision failed (exit {$res->exitCode}). Aborting.\n");
                 self::hintIfCommandMissing();
                 // Provision may have planted the token before failing — tear down.
                 $teardown();
@@ -105,7 +105,7 @@ final class GarnetTestRemoteCommand {
                 exit(1);
             }
         } else {
-            fwrite(STDERR, "\033[33mNote:\033[0m --no-provision set; assuming the scope + token already exist.\n");
+            fwrite(STDERR, "Note: --no-provision set; assuming the scope + token already exist.\n");
         }
 
         // 2. Run Playwright locally against the remote box.
@@ -118,13 +118,13 @@ final class GarnetTestRemoteCommand {
             if (!$flags['keep']) {
                 $teardown();
             } else {
-                fwrite(STDERR, "\033[33mNote:\033[0m --keep set; remote scope + token left in place.\n");
+                fwrite(STDERR, "Note: --keep set; remote scope + token left in place.\n");
             }
         }
 
         echo $exitCode === 0
-            ? "\n\033[32m=== Remote UI-test run PASSED ===\033[0m\n"
-            : "\n\033[31m=== Remote UI-test run FAILED (exit {$exitCode}) ===\033[0m\n";
+            ? "\n=== Remote UI-test run PASSED ===\n"
+            : "\n=== Remote UI-test run FAILED (exit {$exitCode}) ===\n";
 
         exit($exitCode);
     }
@@ -144,7 +144,7 @@ final class GarnetTestRemoteCommand {
         if (function_exists('pcntl_async_signals') && function_exists('pcntl_signal')) {
             pcntl_async_signals(true);
             $handler = static function (int $signo) use ($teardown): void {
-                fwrite(STDERR, "\n\033[33mInterrupted (signal {$signo}) — tearing down before exit…\033[0m\n");
+                fwrite(STDERR, "\nInterrupted (signal {$signo}) — tearing down before exit…\n");
                 $teardown();
 
                 exit(130);
@@ -157,7 +157,7 @@ final class GarnetTestRemoteCommand {
 
         if (function_exists('sapi_windows_set_ctrl_handler')) {
             sapi_windows_set_ctrl_handler(static function (int $event) use ($teardown): void {
-                fwrite(STDERR, "\n\033[33mInterrupted (Ctrl-C/Break) — tearing down before exit…\033[0m\n");
+                fwrite(STDERR, "\nInterrupted (Ctrl-C/Break) — tearing down before exit…\n");
                 $teardown();
 
                 exit(130);
@@ -178,7 +178,7 @@ final class GarnetTestRemoteCommand {
      * Templates/Application/Common/Commands/CMDTestProvision.php).
      */
     private static function hintIfCommandMissing(): void {
-        fwrite(STDERR, "\033[33mHint:\033[0m if the output above mentions an unknown/missing command, the "
+        fwrite(STDERR, 'Hint: if the output above mentions an unknown/missing command, the '
             . 'remote app has no `test:provision` / `test:teardown` commands registered. Every app '
             . 'scaffolded from the current app template gets them by default — see '
             . 'Templates/Application/Common/Commands/CMDTestProvision.php in garnet-framework for what '
@@ -196,7 +196,7 @@ final class GarnetTestRemoteCommand {
         $testsDir = self::resolveTestsDir();
 
         if (!is_dir($testsDir)) {
-            fwrite(STDERR, "\033[31mError:\033[0m tests dir not found at {$testsDir}.\n");
+            fwrite(STDERR, "Error: tests dir not found at {$testsDir}.\n");
 
             return 1;
         }
@@ -209,7 +209,7 @@ final class GarnetTestRemoteCommand {
         $cliJs = self::resolvePlaywrightCli($testsDir);
 
         if ($cliJs === null) {
-            fwrite(STDERR, "\033[31mError:\033[0m @playwright/test CLI not found under node_modules.\n");
+            fwrite(STDERR, "Error: @playwright/test CLI not found under node_modules.\n");
 
             return 1;
         }
@@ -226,7 +226,7 @@ final class GarnetTestRemoteCommand {
         // Single scope, single worker — shared hosting must not be hammered.
         $env['PW_WORKERS'] = '1';
 
-        echo "\033[1;36m[playwright]\033[0m {$baseUrl}  (1 worker, token-gated)\n";
+        echo "[playwright] {$baseUrl}  (1 worker, token-gated)\n";
 
         $proc = proc_open(
             $argv,
@@ -349,7 +349,7 @@ final class GarnetTestRemoteCommand {
         $runtimeDir = trim($deploy->paramString('runtime_dir', ''), '/');
 
         if ($remotePath === '' || $runtimeDir === '') {
-            fwrite(STDERR, "\033[31mError:\033[0m deploy.ini must define remote_path and runtime_dir.\n");
+            fwrite(STDERR, "Error: deploy.ini must define remote_path and runtime_dir.\n");
 
             exit(1);
         }
@@ -362,7 +362,7 @@ final class GarnetTestRemoteCommand {
         $runCmd = GarnetEnv::getAppDir($appName) . DS . 'run_cmd.php';
 
         if (!file_exists($runCmd)) {
-            fwrite(STDERR, "\033[31mError:\033[0m app has no run_cmd.php at {$runCmd}\n");
+            fwrite(STDERR, "Error: app has no run_cmd.php at {$runCmd}\n");
 
             exit(1);
         }
@@ -376,13 +376,13 @@ final class GarnetTestRemoteCommand {
     private static function help(): void {
         echo <<<HELP
 
-  \033[1mUsage:\033[0m php garnet test:remote --base-url=<url> [playwright args...]
+  Usage: php garnet test:remote --base-url=<url> [playwright args...]
 
   Orchestrates a UI-test run against an external box: provisions an isolated
   test_worker_0 scope over SSH, runs Playwright locally against it, then tears
   the scope down. SSH params come from ssh.ini (same as `php garnet ssh`).
 
-  \033[1mFlags:\033[0m
+  Flags:
     --base-url=URL    Remote site URL (required), e.g. https://example.com
     --no-provision    Skip provision (reuse an already-provisioned scope)
     --keep            Skip teardown (leave scope + token in place for debugging)

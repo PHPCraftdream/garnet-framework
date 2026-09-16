@@ -53,17 +53,17 @@ final class GarnetDeployLogCommand {
     }
 
     private static function printList(array $runs, string $dir): void {
-        echo "\033[1m=== deploy runs\033[0m \033[90m({$dir})\033[0m\n\n";
+        echo "=== deploy runs ({$dir})\n\n";
 
         foreach ($runs as $run) {
             $verdict = $run['ended']
-                ? ($run['verdict'] === 'ok' ? "\033[32mok\033[0m" : "\033[31m{$run['verdict']}\033[0m")
-                : "\033[33mINTERRUPTED\033[0m";
+                ? ($run['verdict'] === 'ok' ? 'ok' : "{$run['verdict']}")
+                : 'INTERRUPTED';
             $landed = DeployJournal::landedCount($run);
             echo "  {$run['started']}  {$run['id']}  " . str_pad($run['command'], 12)
                 . "  {$verdict}" . ($landed > 0 ? "  ({$landed} file(s) landed)" : '') . "\n";
         }
-        echo "\n\033[90mphp garnet deploy:log --run=<id> for the full record of one run\033[0m\n";
+        echo "\nphp garnet deploy:log --run=<id> for the full record of one run\n";
     }
 
     private static function printOne(array $runs, string $runId): void {
@@ -71,14 +71,14 @@ final class GarnetDeployLogCommand {
             if ($run['id'] !== $runId) {
                 continue;
             }
-            echo "\033[1m=== run {$run['id']}\033[0m | {$run['command']} | started {$run['started']}\n";
+            echo "=== run {$run['id']} | {$run['command']} | started {$run['started']}\n";
 
             foreach ($run['lines'] as $line) {
                 echo $line . "\n";
             }
             echo $run['ended']
                 ? "=== ended: {$run['verdict']}\n"
-                : "\033[33m=== no end record — this run was interrupted\033[0m\n";
+                : "=== no end record — this run was interrupted\n";
 
             return;
         }
@@ -94,18 +94,18 @@ final class GarnetDeployLogCommand {
     private static function printHelp(): void {
         echo <<<TXT
 
-          \033[1mphp garnet deploy:log [flags]\033[0m
+          php garnet deploy:log [flags]
 
           Past deploy runs, newest last: when, which command, what it shipped,
           how it ended. A run shown as INTERRUPTED wrote no end record — it was
           killed or timed out, and the host may be holding a partial deploy.
 
-            \033[36m--n=N\033[0m        show the last N runs (default 10, 0 = all)
-            \033[36m--run=ID\033[0m     print one run in full: phases with durations,
+            --n=N        show the last N runs (default 10, 0 = all)
+            --run=ID     print one run in full: phases with durations,
                          files that landed, errors
 
-          Journal location: \033[2m<app>/WorkDir/LogJournal/Deploy/<date>.log\033[0m
-          Written by every deploy unless it was passed \033[36m--no-log\033[0m.
+          Journal location: <app>/WorkDir/LogJournal/Deploy/<date>.log
+          Written by every deploy unless it was passed --no-log.
 
 
         TXT;

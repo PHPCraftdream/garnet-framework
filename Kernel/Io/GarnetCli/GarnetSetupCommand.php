@@ -39,8 +39,8 @@ class GarnetSetupCommand {
 
         // No npm on PATH → silently degrade the node half instead of failing.
         if (!$skipNpm && !$nodeSuppressed && !self::hasNpm($isWindows)) {
-            echo "  \033[33mnote:\033[0m npm not found on PATH — skipping node setup." . PHP_EOL;
-            echo "        install Node.js, then re-run \033[36mphp garnet setup\033[0m." . PHP_EOL . PHP_EOL;
+            echo '  note: npm not found on PATH — skipping node setup.' . PHP_EOL;
+            echo '        install Node.js, then re-run php garnet setup.' . PHP_EOL . PHP_EOL;
             $skipNpm = true;
             $skipJunction = true;
             $skipPlaywright = true;
@@ -74,7 +74,7 @@ class GarnetSetupCommand {
             exit(0);
         }
 
-        echo "\033[1m=== Garnet setup (framework) ===\033[0m" . PHP_EOL;
+        echo '=== Garnet setup (framework) ===' . PHP_EOL;
         echo "  framework: {$frameworkDir}" . PHP_EOL . PHP_EOL;
 
         if ($doComposer) {
@@ -105,8 +105,8 @@ class GarnetSetupCommand {
             self::skipped('node_modules junction' . ($o['nodeSuppressed'] ? ' (GARNET_SKIP_NODE_SETUP=1)' : ''));
         }
 
-        echo PHP_EOL . "\033[32m  [OK] Framework ready.\033[0m" . PHP_EOL;
-        echo "  Next: scaffold an app with \033[36mphp bin/garnet app:create <Name>\033[0m" . PHP_EOL;
+        echo PHP_EOL . '  [OK] Framework ready.' . PHP_EOL;
+        echo '  Next: scaffold an app with php bin/garnet app:create <Name>' . PHP_EOL;
 
         exit(0);
     }
@@ -126,7 +126,7 @@ class GarnetSetupCommand {
             exit(0);
         }
 
-        echo "\033[1m=== Garnet setup (app) ===\033[0m" . PHP_EOL;
+        echo '=== Garnet setup (app) ===' . PHP_EOL;
         echo "  app:       {$appDir}" . PHP_EOL;
         echo "  framework: {$frameworkDir}" . PHP_EOL . PHP_EOL;
 
@@ -201,8 +201,8 @@ class GarnetSetupCommand {
             self::skipped('node_modules junction (framework)' . ($o['nodeSuppressed'] ? ' (GARNET_SKIP_NODE_SETUP=1)' : ''));
         }
 
-        echo PHP_EOL . "\033[32m  [OK] App ready.\033[0m" . PHP_EOL;
-        echo "  Next: \033[36mphp garnet build\033[0m then \033[36mphp garnet serve\033[0m" . PHP_EOL;
+        echo PHP_EOL . '  [OK] App ready.' . PHP_EOL;
+        echo '  Next: php garnet build then php garnet serve' . PHP_EOL;
 
         exit(0);
     }
@@ -224,7 +224,7 @@ class GarnetSetupCommand {
         echo '  • node_modules junction ... ';
 
         if (!is_dir($target)) {
-            echo "\033[33mskipped\033[0m (FrontBuilder/node_modules missing — run npm install first)" . PHP_EOL;
+            echo 'skipped (FrontBuilder/node_modules missing — run npm install first)' . PHP_EOL;
 
             return;
         }
@@ -238,7 +238,7 @@ class GarnetSetupCommand {
         $linkReal = realpath($link);
 
         if ($linkReal !== false && $norm($linkReal) === $norm($targetReal)) {
-            echo "\033[32malready linked\033[0m" . PHP_EOL;
+            echo 'already linked' . PHP_EOL;
 
             return;
         }
@@ -252,7 +252,7 @@ class GarnetSetupCommand {
             $resolvesElsewhere = $linkReal !== false && $norm($linkReal) !== $norm($link);
 
             if (!is_link($link) && !$resolvesElsewhere) {
-                echo "\033[31mskipped\033[0m (a real node_modules dir exists at the framework root — remove it to enable the junction)" . PHP_EOL;
+                echo 'skipped (a real node_modules dir exists at the framework root — remove it to enable the junction)' . PHP_EOL;
 
                 return;
             }
@@ -269,8 +269,8 @@ class GarnetSetupCommand {
             : @symlink($target, $link);
 
         echo $ok
-            ? "\033[32mlinked\033[0m" . PHP_EOL
-            : "\033[31mfailed\033[0m" . PHP_EOL;
+            ? 'linked' . PHP_EOL
+            : 'failed' . PHP_EOL;
     }
 
     /** Run a shell command in $dir, streaming output; returns the exit code. */
@@ -285,17 +285,17 @@ class GarnetSetupCommand {
 
     /** @param callable():int $fn */
     private static function step(string $label, callable $fn, bool $soft = false): void {
-        echo "\033[1m  → {$label}\033[0m" . PHP_EOL;
+        echo "  → {$label}" . PHP_EOL;
         $code = $fn();
 
         if ($code !== 0) {
             if ($soft) {
-                echo "\033[33m  [warn] '{$label}' failed (exit {$code}) — continuing (soft mode).\033[0m" . PHP_EOL . PHP_EOL;
+                echo "  [warn] '{$label}' failed (exit {$code}) — continuing (soft mode)." . PHP_EOL . PHP_EOL;
 
                 return;
             }
 
-            echo "\033[31m  [ERROR] '{$label}' failed (exit {$code}).\033[0m" . PHP_EOL;
+            echo "  [ERROR] '{$label}' failed (exit {$code})." . PHP_EOL;
 
             exit($code);
         }
@@ -312,6 +312,6 @@ class GarnetSetupCommand {
     }
 
     private static function skipped(string $label): void {
-        echo "  • {$label} ... \033[2mskipped\033[0m" . PHP_EOL;
+        echo "  • {$label} ... skipped" . PHP_EOL;
     }
 }

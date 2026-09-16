@@ -29,7 +29,7 @@ final class GarnetSqlCommand {
         $runCmd = GarnetEnv::getAppDir($appName) . DS . 'run_cmd.php';
 
         if (!file_exists($runCmd)) {
-            fwrite(STDERR, "\033[31mError:\033[0m app has no run_cmd.php at {$runCmd}\n");
+            fwrite(STDERR, "Error: app has no run_cmd.php at {$runCmd}\n");
 
             exit(1);
         }
@@ -76,7 +76,7 @@ final class GarnetSqlCommand {
 
                 exit(1);
             }
-            fwrite(STDERR, "\033[31m✖ MySQL error:\033[0m " . $e->getMessage() . "\n");
+            fwrite(STDERR, '✖ MySQL error: ' . $e->getMessage() . "\n");
 
             exit(1);
         }
