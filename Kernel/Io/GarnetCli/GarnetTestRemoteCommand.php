@@ -62,7 +62,14 @@ final class GarnetTestRemoteCommand {
         // 32 hex chars — matches CMDTestProvision's [A-Za-z0-9_-]{16,128} gate.
         $token = bin2hex(random_bytes(16));
 
-        $teardown = static function () use ($client, $remoteDir): void {
+        // Guards against a double teardown: once from the interrupt handler,
+        // once from the normal finally block below.
+        $torndown = false;
+        $teardown = static function () use ($client, $remoteDir, &$torndown): void {
+            if ($torndown) {
+                return;
+            }
+            $torndown = true;
             echo "\n\033[1;36m[teardown]\033[0m dropping remote test scope…\n";
             $res = $client->run('php garnet test:teardown', ['cwd' => $remoteDir, 'stream' => true]);
 
@@ -71,6 +78,14 @@ final class GarnetTestRemoteCommand {
                 self::hintIfCommandMissing();
             }
         };
+
+        // A plain `finally` around runPlaywright() is NOT enough: Ctrl-C /
+        // a killed terminal delivers SIGINT/CTRL_C straight to this process,
+        // which by default terminates immediately without ever reaching the
+        // finally block — leaving the token + test_worker_0 scope open on a
+        // LIVE box indefinitely. Trap the interrupt on both platforms and
+        // run the same teardown before exiting.
+        self::installInterruptHandler($teardown);
 
         // 1. Provision (unless told to reuse an already-provisioned scope).
         if (!$flags['no_provision']) {
@@ -112,6 +127,42 @@ final class GarnetTestRemoteCommand {
             : "\n\033[31m=== Remote UI-test run FAILED (exit {$exitCode}) ===\033[0m\n";
 
         exit($exitCode);
+    }
+
+    /**
+     * Trap Ctrl-C / a terminated shell so the remote scope is never left
+     * open indefinitely. Unix: pcntl signals (SIGINT/SIGTERM), requires
+     * async signal dispatch since this process never calls `pcntl_signal_dispatch`
+     * itself. Windows: `sapi_windows_set_ctrl_handler` (no pcntl there).
+     * Either mechanism may be unavailable (missing extension / non-CLI
+     * SAPI) — silently skip rather than fail the whole command over a
+     * best-effort safety net.
+     *
+     * @param callable(): void $teardown
+     */
+    private static function installInterruptHandler(callable $teardown): void {
+        if (function_exists('pcntl_async_signals') && function_exists('pcntl_signal')) {
+            pcntl_async_signals(true);
+            $handler = static function (int $signo) use ($teardown): void {
+                fwrite(STDERR, "\n\033[33mInterrupted (signal {$signo}) — tearing down before exit…\033[0m\n");
+                $teardown();
+
+                exit(130);
+            };
+            pcntl_signal(SIGINT, $handler);
+            pcntl_signal(SIGTERM, $handler);
+
+            return;
+        }
+
+        if (function_exists('sapi_windows_set_ctrl_handler')) {
+            sapi_windows_set_ctrl_handler(static function (int $event) use ($teardown): void {
+                fwrite(STDERR, "\n\033[33mInterrupted (Ctrl-C/Break) — tearing down before exit…\033[0m\n");
+                $teardown();
+
+                exit(130);
+            }, true);
+        }
     }
 
     /**
