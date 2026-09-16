@@ -471,7 +471,7 @@ final class GarnetDeployDiffCommand {
 
         // 8. Preview
         $warns = self::computeWarnings($diff);
-        self::printPreview($shas, $cat, $plan, $layout, $ssh, $warns);
+        self::printPreview($shas, $cat, $plan, $layout, $ssh, $warns, $appName);
 
         // 9. Apply or stop at dry-run
         if (!$opts['apply']) {
@@ -765,7 +765,7 @@ final class GarnetDeployDiffCommand {
             foreach ($cat[$bucket] as $row) {
                 $label = str_pad($bucket, 10);
                 echo "  {$label} \033[33mM\033[0m  {$row['path']}\n";
-                $remote = self::remoteFor($row, $layout, $bucket);
+                $remote = self::remoteFor($row, $layout, $bucket, $appName);
                 echo "                  → {$remote}\n";
             }
         }
@@ -1017,7 +1017,7 @@ final class GarnetDeployDiffCommand {
                 $stat = $row['status'];
                 $statusColor = self::statusColor($stat);
                 echo "  {$label} {$statusColor}{$stat}\033[0m  {$row['path']}\n";
-                $remote = self::remoteFor($row, $layout, $bucket);
+                $remote = self::remoteFor($row, $layout, $bucket, $appName);
                 echo "                  → {$remote}\n";
             }
         }
@@ -2376,22 +2376,7 @@ final class GarnetDeployDiffCommand {
                 // on the host. Mirror that here so files land in the same
                 // place bundle would have put them.
                 if ($bucket === 'public' && $rebrandPublicSegment) {
-                    // Case-insensitive on purpose: the segment appears as the
-                    // app is named on disk (`assets/IRabi/…`), while $appLow is
-                    // lowercased. A case-SENSITIVE match silently did nothing
-                    // for any app whose directory isn't all-lowercase, so the
-                    // assets landed under `assets/IRabi/` while the *Gen.php
-                    // shipped alongside them — rebranded by PublicPathRebrander,
-                    // which does cover both cases — pointed at
-                    // `/assets/<public_name>/`. The result is a live page
-                    // referencing a bundle that 404s: the exact outage #390
-                    // hardened the upload ORDER against, reintroduced through
-                    // the path instead.
-                    $rel = preg_replace(
-                        '#(^|/)(assets|upload)/' . preg_quote($appName, '#') . '(/|$)#i',
-                        '$1$2/' . $layout['public_name'] . '$3',
-                        $rel,
-                    );
+                    $rel = self::rebrandPublicRel($rel, $appName, $layout['public_name']);
                 }
 
                 $remote = "{$base}/{$rel}";
@@ -2503,7 +2488,7 @@ final class GarnetDeployDiffCommand {
     // 8. Preview
     // -------------------------------------------------------------------------
 
-    private static function printPreview(array $shas, array $cat, array $plan, array $layout, SshClient $ssh, array $warns): void {
+    private static function printPreview(array $shas, array $cat, array $plan, array $layout, SshClient $ssh, array $warns, string $appName = ''): void {
         $sshCfg = self::sshDisplay();
 
         echo "\033[1m=== deploy:diff preview ===\033[0m\n";
@@ -2535,7 +2520,7 @@ final class GarnetDeployDiffCommand {
                 $label = str_pad($bucket, 10);
                 $stat = $row['status'];
                 echo "  {$label} {$statusColor}{$stat}\033[0m  {$row['path']}\n";
-                $remote = self::remoteFor($row, $layout, $bucket);
+                $remote = self::remoteFor($row, $layout, $bucket, $appName);
                 $arrow = $stat === 'D' ? "rm {$remote}" : $remote;
                 $extra = !empty($row['chmod_x']) ? "  \033[36m(+chmod +x)\033[0m" : '';
                 echo "                  → {$arrow}{$extra}\n";
@@ -2584,15 +2569,48 @@ final class GarnetDeployDiffCommand {
         return $ssh->paramString('user', '?') . '@' . $ssh->paramString('host', '?') . ':' . $ssh->paramInt('port', 22);
     }
 
-    private static function remoteFor(array $row, array $layout, string $bucket): string {
+    private static function remoteFor(array $row, array $layout, string $bucket, string $appName = ''): string {
         $targets = [
             'framework' => $layout['framework_dir'],
             'app' => $layout['app_dir'],
             'runtime' => $layout['runtime_dir'],
             'public' => $layout['public_dir'] ?? 'public',
         ];
+        $rel = $row['rel_remote'];
 
-        return rtrim($layout['remote_path'], '/') . '/' . $targets[$bucket] . '/' . $row['rel_remote'];
+        if ($bucket === 'public') {
+            $rel = self::rebrandPublicRel($rel, $appName, (string)($layout['public_name'] ?? ''));
+        }
+
+        return rtrim($layout['remote_path'], '/') . '/' . $targets[$bucket] . '/' . $rel;
+    }
+
+    /**
+     * Rewrite the `assets/<app>/` (or `upload/<app>/`) segment of a public
+     * path to the name the host uses (`public_name`), mirroring what `bundle`
+     * does on the dist tree.
+     *
+     * Single source of truth on purpose: the upload planner and the dry-run
+     * preview both go through here. They used to compute the destination
+     * independently, and the preview's copy — which skipped the rebrand
+     * entirely — showed a path the deploy never wrote to. That is the one
+     * surface someone inspects BEFORE passing --apply, so a preview that
+     * disagrees with the deploy is worse than no preview.
+     *
+     * Case-insensitive on the app segment: it appears as the app is named on
+     * disk (`assets/IRabi/…`) while deploy.ini's public_name is typically
+     * lowercase. Empty public_name means no rebrand is configured.
+     */
+    private static function rebrandPublicRel(string $rel, string $appName, string $publicName): string {
+        if ($publicName === '' || $appName === '') {
+            return $rel;
+        }
+
+        return (string)preg_replace(
+            '#(^|/)(assets|upload)/' . preg_quote($appName, '#') . '(/|$)#i',
+            '$1$2/' . $publicName . '$3',
+            $rel,
+        );
     }
 
     private static function statusColor(string $s): string {

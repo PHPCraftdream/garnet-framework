@@ -400,6 +400,21 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
                 expect($plan['uploads'][0]['remote'])->toBe('/srv/app/public/assets/MyApp/gen/js/a.abc.gen.js');
             });
 
+            it('shows in the preview exactly where the upload will land — the dry-run is the surface '
+                . 'you inspect before --apply, and its copy of the path used to skip the rebrand '
+                . 'and name a directory the deploy never wrote to', function (): void {
+                    $row = [
+                        'status' => 'A',
+                        'path' => 'Apps/MyApp/Public/assets/MyApp/gen/js/a.abc.gen.js',
+                        'old' => null,
+                        'rel_remote' => 'assets/MyApp/gen/js/a.abc.gen.js',
+                    ];
+                    $cat = ['framework' => [], 'app' => [], 'runtime' => [], 'public' => [$row]];
+                    $plan = ($this->invoke)('planBatches', [$cat, $this->planLayout, 'MyApp', ['no_delete' => false]]);
+                    $shown = ($this->invoke)('remoteFor', [$row, $this->planLayout, 'public', 'MyApp']);
+                    expect($shown)->toBe($plan['uploads'][0]['remote']);
+                });
+
             it('is idempotent on a segment that already equals public_name', function (): void {
                 $cat = [
                     'framework' => [], 'app' => [], 'runtime' => [],
