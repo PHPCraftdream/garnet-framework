@@ -23,6 +23,14 @@ use PHPCraftdream\Garnet\Kernel\Io\Services\Ssh\SshClient;
  * token (and thus the open gate) behind. Pass `--keep` to skip teardown for
  * debugging — then clean up by hand with `php garnet ssh "php garnet test:teardown" --cd-remote`.
  *
+ * The token of a `--keep` run is remembered locally (WorkDir/, gitignored) so
+ * `--no-provision` can reuse it. Without that, `--no-provision` sent a FRESH
+ * token that was never planted on the box: the server then served the run as
+ * ordinary traffic, `.test` auto-login never completed, and the whole thing
+ * died in globalSetup on a login timeout — a failure that looks like anything
+ * but a token mismatch. Teardown forgets the file again; `--token=<secret>`
+ * overrides both.
+ *
  * SSH connection params come from WorkDir/Config[Dev]/ssh.ini (same as
  * `php garnet ssh`). Remote commands run in `remote_path` (the runtime dir
  * that holds the deployed `garnet`).
@@ -61,13 +69,24 @@ final class GarnetTestRemoteCommand {
         // from deploy.ini and pass it as an explicit cwd.
         $remoteDir = self::resolveRemoteRuntimeDir();
 
-        // 32 hex chars — matches CMDTestProvision's [A-Za-z0-9_-]{16,128} gate.
-        $token = bin2hex(random_bytes(16));
+        $tokenFile = self::tokenFile();
+        $chosen = self::chooseToken(
+            $flags['no_provision'],
+            $flags['token'],
+            self::readRememberedToken($tokenFile),
+        );
+
+        if ($chosen['error'] !== '') {
+            fwrite(STDERR, $chosen['error'] . "\n");
+
+            exit(1);
+        }
+        $token = $chosen['token'];
 
         // Guards against a double teardown: once from the interrupt handler,
         // once from the normal finally block below.
         $torndown = false;
-        $teardown = static function () use ($client, $remoteDir, &$torndown): void {
+        $teardown = static function () use ($client, $remoteDir, $tokenFile, &$torndown): void {
             if ($torndown) {
                 return;
             }
@@ -79,6 +98,10 @@ final class GarnetTestRemoteCommand {
                 fwrite(STDERR, "Warning: remote teardown exited {$res->exitCode} — clean up manually.\n");
                 self::hintIfCommandMissing();
             }
+            // The scope is gone, so the remembered token is worthless — and
+            // keeping it would let a later --no-provision run start against a
+            // box that has no scope at all.
+            self::forgetToken($tokenFile);
         };
 
         // A plain `finally` around runPlaywright() is NOT enough: Ctrl-C /
@@ -106,8 +129,12 @@ final class GarnetTestRemoteCommand {
 
                 exit(1);
             }
+            // Remember it only now: before this point the box has no gate,
+            // and a remembered token that was never planted is exactly the
+            // trap this file used to lay.
+            self::rememberToken($tokenFile, $token);
         } else {
-            fwrite(STDERR, "Note: --no-provision set; assuming the scope + token already exist.\n");
+            fwrite(STDERR, "Note: --no-provision set; reusing the token remembered from the provisioning run.\n");
         }
 
         // 2. Run Playwright locally against the remote box.
@@ -185,6 +212,95 @@ final class GarnetTestRemoteCommand {
             . 'scaffolded from the current app template gets them by default — see '
             . 'Templates/Application/Common/Commands/CMDTestProvision.php in garnet-framework for what '
             . "to add (registered via CommandClasses::set() in your app's defineMigrationClass()).\n");
+    }
+
+    /**
+     * Which token this run must carry.
+     *
+     * Three sources, in order: an explicit `--token=`, a freshly minted
+     * secret (a provisioning run plants it), or the one remembered from the
+     * provisioning run (`--no-provision`). The last case is the reason this
+     * method exists: a fresh token there would never have been planted on the
+     * box, and the run would fail far away from the cause — in globalSetup,
+     * on a login timeout, because the server treats an unknown token as
+     * ordinary traffic and never auto-completes the `.test` login.
+     *
+     * @return array{token: string, error: string} error non-empty ⇒ abort
+     */
+    private static function chooseToken(bool $noProvision, string $explicit, string $remembered): array {
+        if ($explicit !== '') {
+            return self::isValidToken($explicit)
+                ? ['token' => $explicit, 'error' => '']
+                : ['token' => '', 'error' => 'Error: --token must be 16-128 chars of [A-Za-z0-9_-].'];
+        }
+
+        if (!$noProvision) {
+            // 32 hex chars — matches CMDTestProvision's [A-Za-z0-9_-]{16,128} gate.
+            return ['token' => bin2hex(random_bytes(16)), 'error' => ''];
+        }
+
+        if ($remembered === '') {
+            return ['token' => '', 'error' => 'Error: --no-provision has no token to reuse. The token is '
+                . 'remembered only by a run that provisioned the scope and kept it (--keep); a teardown '
+                . "forgets it.\n       Either drop --no-provision, or pass --token=<the secret that is "
+                . 'planted on the box>.'];
+        }
+
+        if (!self::isValidToken($remembered)) {
+            return ['token' => '', 'error' => 'Error: the remembered token is malformed — delete '
+                . 'WorkDir/test-remote-token and provision again.'];
+        }
+
+        return ['token' => $remembered, 'error' => ''];
+    }
+
+    /** Same charset gate the remote `test:provision` applies to the token. */
+    private static function isValidToken(string $token): bool {
+        return preg_match('/^[A-Za-z0-9_-]{16,128}$/', $token) === 1;
+    }
+
+    /**
+     * Where the provisioning token is remembered between invocations: the
+     * app's WorkDir, which is runtime-only and gitignored in every app
+     * scaffolded from the template. It holds a live gate into the remote test
+     * scope, so it is written 0600 and deleted on teardown.
+     */
+    private static function tokenFile(): string {
+        $appDir = GarnetEnv::getAppDir(GarnetEnv::requireAppName());
+
+        return $appDir . DS . 'WorkDir' . DS . 'test-remote-token';
+    }
+
+    private static function readRememberedToken(string $file): string {
+        if (!is_file($file)) {
+            return '';
+        }
+
+        return trim((string)file_get_contents($file));
+    }
+
+    private static function rememberToken(string $file, string $token): void {
+        $dir = dirname($file);
+
+        if (!is_dir($dir) && !mkdir($dir, 0o775, true) && !is_dir($dir)) {
+            fwrite(STDERR, "Warning: cannot create {$dir}; --no-provision will have no token to reuse.\n");
+
+            return;
+        }
+
+        if (file_put_contents($file, $token . "\n") === false) {
+            fwrite(STDERR, "Warning: cannot write {$file}; --no-provision will have no token to reuse.\n");
+
+            return;
+        }
+        // Best-effort: no-op on filesystems without POSIX modes (Windows).
+        @chmod($file, 0o600);
+    }
+
+    private static function forgetToken(string $file): void {
+        if (is_file($file)) {
+            @unlink($file);
+        }
     }
 
     /**
@@ -298,7 +414,7 @@ final class GarnetTestRemoteCommand {
     }
 
     /**
-     * @return array{help: bool, keep: bool, no_provision: bool, base_url: string, passthrough: list<string>}
+     * @return array{help: bool, keep: bool, no_provision: bool, base_url: string, token: string, passthrough: list<string>}
      */
     private static function parseFlags(array $args): array {
         $out = [
@@ -306,6 +422,7 @@ final class GarnetTestRemoteCommand {
             'keep' => false,
             'no_provision' => false,
             'base_url' => '',
+            'token' => '',
             'passthrough' => [],
         ];
 
@@ -330,6 +447,12 @@ final class GarnetTestRemoteCommand {
 
             if (str_starts_with($arg, '--base-url=')) {
                 $out['base_url'] = substr($arg, 11);
+
+                continue;
+            }
+
+            if (str_starts_with($arg, '--token=')) {
+                $out['token'] = substr($arg, 8);
 
                 continue;
             }
@@ -386,7 +509,14 @@ final class GarnetTestRemoteCommand {
 
   Flags:
     --base-url=URL    Remote site URL (required), e.g. https://example.com
-    --no-provision    Skip provision (reuse an already-provisioned scope)
+    --no-provision    Skip provision and reuse the scope + token a previous
+                      --keep run left in place (its token is remembered in
+                      WorkDir/test-remote-token). Refuses when there is no
+                      token to reuse — an unplanted token would only surface
+                      much later, as a login timeout in globalSetup.
+    --token=SECRET    Use this token instead of minting/reusing one. With
+                      provisioning it is what gets planted; with
+                      --no-provision it must match what is already on the box.
     --keep            Skip teardown (leave scope + token in place for debugging)
     --help, -h        Show this help
 

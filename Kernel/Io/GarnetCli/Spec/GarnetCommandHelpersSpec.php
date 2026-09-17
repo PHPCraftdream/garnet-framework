@@ -114,7 +114,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
                 $f = ($this->invoke)(GarnetTestRemoteCommand::class, 'parseFlags', [[]]);
                 expect($f)->toBe([
                     'help' => false, 'keep' => false, 'no_provision' => false,
-                    'base_url' => '', 'passthrough' => [],
+                    'base_url' => '', 'token' => '', 'passthrough' => [],
                 ]);
             });
 
@@ -147,6 +147,72 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
                 expect($f['base_url'])->toBe('https://x.test');
                 expect($f['keep'])->toBe(true);
                 expect($f['passthrough'])->toBe(['--project=admin', 'a.spec.ts']);
+            });
+
+            it('parses --token=SECRET and keeps it out of passthrough', function (): void {
+                $f = ($this->invoke)(GarnetTestRemoteCommand::class, 'parseFlags',
+                    [['--token=abcdefghijklmnop', 'a.spec.ts']]);
+                expect($f['token'])->toBe('abcdefghijklmnop');
+                expect($f['passthrough'])->toBe(['a.spec.ts']);
+            });
+        });
+
+        describe('GarnetTestRemoteCommand::chooseToken', function (): void {
+            $choose = fn (bool $noProvision, string $explicit, string $remembered) => ($this->invoke)(
+                GarnetTestRemoteCommand::class,
+                'chooseToken',
+                [$noProvision, $explicit, $remembered],
+            );
+            $this->choose = $choose;
+
+            it('mints a fresh token for a provisioning run', function (): void {
+                $a = ($this->choose)(false, '', '');
+                $b = ($this->choose)(false, '', '');
+                expect($a['error'])->toBe('');
+                expect($a['token'])->toMatch('/^[a-f0-9]{32}$/');
+                // A secret reused across runs would outlive its scope.
+                expect($a['token'])->not->toBe($b['token']);
+            });
+
+            it('ignores a remembered token when it is about to provision', function (): void {
+                // The fresh scope gets a fresh gate; reusing the old secret
+                // would leave the previous one valid on the box.
+                $r = ($this->choose)(false, '', 'rememberedtoken12345');
+                expect($r['token'])->not->toBe('rememberedtoken12345');
+            });
+
+            it('reuses the remembered token under --no-provision', function (): void {
+                $r = ($this->choose)(true, '', 'rememberedtoken12345');
+                expect($r)->toBe(['token' => 'rememberedtoken12345', 'error' => '']);
+            });
+
+            it('refuses --no-provision with nothing to reuse', function (): void {
+                // The bug this whole path exists for: a fresh token here was
+                // never planted, so the run died in globalSetup instead.
+                $r = ($this->choose)(true, '', '');
+                expect($r['token'])->toBe('');
+                expect($r['error'])->toMatch('/no token to reuse/');
+            });
+
+            it('refuses a malformed remembered token', function (): void {
+                $r = ($this->choose)(true, '', 'short');
+                expect($r['token'])->toBe('');
+                expect($r['error'])->toMatch('/malformed/');
+            });
+
+            it('prefers an explicit --token over both other sources', function (): void {
+                expect(($this->choose)(true, 'explicittoken1234567', 'rememberedtoken12345'))
+                    ->toBe(['token' => 'explicittoken1234567', 'error' => '']);
+                expect(($this->choose)(false, 'explicittoken1234567', '')['token'])
+                    ->toBe('explicittoken1234567');
+            });
+
+            it('rejects an explicit token outside the provision charset', function (): void {
+                foreach (['short', 'has spaces in it xx', 'ok-but-then/slash1234'] as $bad) {
+                    $r = ($this->choose)(false, $bad, '');
+                    expect($r['token'])->toBe('');
+                    expect($r['error'])->toMatch('/16-128 chars/');
+                }
             });
         });
     });
