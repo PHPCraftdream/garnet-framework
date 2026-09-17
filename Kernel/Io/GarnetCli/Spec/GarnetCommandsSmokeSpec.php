@@ -7,13 +7,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
 
     use const DIRECTORY_SEPARATOR;
 
-    use function dirname;
-
     use ReflectionClass;
-
-    if (!defined('GARNET_ROOT')) {
-        define('GARNET_ROOT', dirname(__DIR__, 5));
-    }
 
     if (!defined('DS')) {
         define('DS', DIRECTORY_SEPARATOR);

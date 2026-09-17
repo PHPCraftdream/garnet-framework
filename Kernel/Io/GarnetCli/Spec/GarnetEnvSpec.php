@@ -1,21 +1,12 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
-    use function define;
     use function defined;
     use function dirname;
 
     use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\GarnetEnv;
     use RecursiveDirectoryIterator;
     use RecursiveIteratorIterator;
-
-    // GARNET_ROOT is defined by the root `garnet` CLI entry; in a kahlan run
-    // we synthesise it before any spec touches GarnetEnv. The value points at
-    // the repo root so the GARNET_ROOT-based fallback branches resolve to
-    // something concrete (no spec depends on the value contents).
-    if (!defined('GARNET_ROOT')) {
-        define('GARNET_ROOT', dirname(__DIR__, 5));
-    }
 
     describe('GarnetEnv', function (): void {
         // ── Tempdir + env-isolation harness ────────────────────────────

@@ -7,17 +7,12 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
 
     use const DIRECTORY_SEPARATOR;
 
-    use function dirname;
     use function implode;
 
     use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\GarnetRunner;
     use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\PublicPathRebrander;
 
     use function str_ends_with;
-
-    if (!defined('GARNET_ROOT')) {
-        define('GARNET_ROOT', dirname(__DIR__, 5));
-    }
 
     if (!defined('DS')) {
         define('DS', DIRECTORY_SEPARATOR);

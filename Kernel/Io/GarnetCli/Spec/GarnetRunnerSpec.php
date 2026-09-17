@@ -1,9 +1,6 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
-    use function define;
-    use function defined;
-    use function dirname;
     use function is_string;
     use function ob_get_clean;
     use function ob_start;
@@ -11,10 +8,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
     use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\GarnetRunner;
 
     use function strlen;
-
-    if (!defined('GARNET_ROOT')) {
-        define('GARNET_ROOT', dirname(__DIR__, 5));
-    }
 
     describe('GarnetRunner', function (): void {
         describe('::resolveFrameworkDir', function (): void {

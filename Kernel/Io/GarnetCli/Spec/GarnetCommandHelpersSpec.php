@@ -1,12 +1,8 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
-    use function define;
-    use function defined;
-
     use const DIRECTORY_SEPARATOR;
 
-    use function dirname;
     use function file_exists;
     use function file_put_contents;
 
@@ -18,10 +14,6 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
     use function sys_get_temp_dir;
     use function uniqid;
     use function unlink;
-
-    if (!defined('GARNET_ROOT')) {
-        define('GARNET_ROOT', dirname(__DIR__, 5));
-    }
 
     /**
      * Targeted coverage of the testable helper methods inside the larger
