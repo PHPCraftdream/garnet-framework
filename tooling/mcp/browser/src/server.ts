@@ -12,7 +12,7 @@ import { SessionManager } from './sessions.ts';
 import type { EnvConfig, ToolDef, ToolResult } from './types.ts';
 
 import * as sessionTools from './tools/sessions.ts';
-import * as navigationTools from './tools/navigation.ts';
+import * as navigationTools from './tools/navigation/index.ts';
 import * as understandingTools from './tools/understanding.ts';
 import * as loggingTools from './tools/logging.ts';
 import * as smokeTools from './tools/smoke.ts';

@@ -1,6 +1,6 @@
 import { chromium } from 'playwright';
 import type { Browser, BrowserContext, Page } from 'playwright';
-import { readFileSync, mkdirSync, writeFileSync, unlinkSync } from 'node:fs';
+import { readFileSync, readdirSync, mkdirSync, writeFileSync, unlinkSync } from 'node:fs';
 import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { SessionState, PageSnapshot, TimelineEntry, LogEntry, EnvConfig, AuthOutcome, DestroyOutcome } from './types.ts';
@@ -9,7 +9,34 @@ import { formatTimestamp } from './utils.ts';
 import { bumpActionCounter, getReminder } from './tools/notes.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const COLLECTOR_PATH = resolve(__dirname, '..', 'collector', 'debug-collector.js');
+const COLLECTOR_PARTS_DIR = resolve(__dirname, '..', 'collector', 'parts');
+
+/**
+ * Собрать внедряемый скрипт из частей.
+ *
+ * Сборщик попадает в страницу одним скриптом (addInitScript), и все его
+ * части живут в ОДНОМ замыкании: кольцевой буфер, push() и настройки общие.
+ * Поэтому части — это фрагменты, а не модули, и обёртку добавляем здесь, а
+ * не в каждом файле. Порядок — по имени файла; номера в именах существуют
+ * ровно для этого.
+ *
+ * Раньше это был один файл на 802 строки.
+ */
+function buildCollectorScript(): string {
+  const parts = readdirSync(COLLECTOR_PARTS_DIR)
+    .filter((f) => f.endsWith('.js'))
+    .sort();
+
+  if (parts.length === 0) {
+    throw new Error(`[garnet-browser] no collector parts found in ${COLLECTOR_PARTS_DIR}`);
+  }
+
+  const body = parts
+    .map((f) => readFileSync(join(COLLECTOR_PARTS_DIR, f), 'utf-8'))
+    .join('\n');
+
+  return `(function () {\n  'use strict';\n${body}\n})();\n`;
+}
 
 const TIMELINE_MAX = 2000;
 const NETWORK_IDLE_TIMEOUT = 5000;
@@ -23,12 +50,12 @@ export class SessionManager {
 
   constructor(config: EnvConfig) {
     this.config = config;
-    this.collectorScript = readFileSync(COLLECTOR_PATH, 'utf-8');
+    this.collectorScript = buildCollectorScript();
   }
 
-  /** Re-read collector script from disk (hot-reload after edits) */
+  /** Re-read collector parts from disk (hot-reload after edits) */
   reloadCollector(): void {
-    this.collectorScript = readFileSync(COLLECTOR_PATH, 'utf-8');
+    this.collectorScript = buildCollectorScript();
   }
 
   // ── Lifecycle ──────────────────────────────────────────────────────
