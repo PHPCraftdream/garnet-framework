@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace PHPCraftdream\Garnet\Kernel\L0_Core\ErrorCatcher\Errors {
+namespace PHPCraftdream\Garnet\Kernel\Io\Bootstrap\ErrorCatcher\Spec\CmdRunFiles {
     use PHPCraftdream\Garnet\Kernel\Io\Bootstrap\ErrorCatcher\ErrorCatcher;
 
     require_once __DIR__ . '/../../../../../../vendor/autoload.php';

@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 /** @noinspection PhpIllegalPsrClassPathInspection */
 
-namespace PHPCraftdream\Garnet\Kernel\L0_Core\ErrorCatcher\Errors {
+namespace PHPCraftdream\Garnet\Kernel\Io\Bootstrap\ErrorCatcher\Spec\CmdRunFiles {
     require_once __DIR__ . '/../../../../../../vendor/autoload.php';
 
     use Exception;

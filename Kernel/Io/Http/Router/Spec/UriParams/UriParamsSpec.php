@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace PHPCraftdream\Garnet\Kernel\L0_Core\Router\Spec {
+namespace PHPCraftdream\Garnet\Kernel\Io\Http\Router\Spec\UriParams {
     use PHPCraftdream\Garnet\Kernel\Core\Runtime\GlobalReqParams\GlobalReqParams;
     use PHPCraftdream\Garnet\Kernel\Exceptions\Web\RouterException;
     use PHPCraftdream\Garnet\Kernel\Io\Http\Router\RouterUriParams;

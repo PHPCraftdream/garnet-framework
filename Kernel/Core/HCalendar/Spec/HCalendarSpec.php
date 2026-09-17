@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace PHPCraftdream\Garnet\Kernel\L0_Core\HCalendar\Spec {
+namespace PHPCraftdream\Garnet\Kernel\Core\HCalendar\Spec {
     use DateInterval;
     use DateTime;
     use Exception;
