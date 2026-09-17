@@ -209,6 +209,39 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Quality\Spec {
                 expect($fat['Deep'])->toBe(9);
             });
 
+            it('пустой каталог не считает элементом — иначе правило зависит от того, собирали ли фронт', function (): void {
+                // Семь файлов — предел. Восьмой элемент — пустой каталог,
+                // какой materialises время выполнения (Bundle/Front/Assets,
+                // корни кэшей): нарушением он быть не должен.
+                for ($i = 0; $i < 7; $i++) {
+                    file_put_contents($this->root . DIRECTORY_SEPARATOR . 'Deep' . DIRECTORY_SEPARATOR . "F{$i}.php", "x\n");
+                }
+                mkdir($this->root . DIRECTORY_SEPARATOR . 'Deep' . DIRECTORY_SEPARATOR . 'Assets', 0o777, true);
+
+                $res = GarnetSizeCheckCommand::scan($this->root);
+                $counted = array_column($res['dirs'], 'entries', 'path');
+
+                expect(isset($counted['Deep']))->toBe(false);
+                expect(GarnetSizeCheckCommand::isEmptyDir(
+                    $this->root . DIRECTORY_SEPARATOR . 'Deep' . DIRECTORY_SEPARATOR . 'Assets'
+                ))->toBe(true);
+            });
+
+            it('каталог с файлом считает как обычно', function (): void {
+                for ($i = 0; $i < 7; $i++) {
+                    file_put_contents($this->root . DIRECTORY_SEPARATOR . 'Deep' . DIRECTORY_SEPARATOR . "F{$i}.php", "x\n");
+                }
+                $sub = $this->root . DIRECTORY_SEPARATOR . 'Deep' . DIRECTORY_SEPARATOR . 'Assets';
+                mkdir($sub, 0o777, true);
+                file_put_contents($sub . DIRECTORY_SEPARATOR . 'logo.svg', '<svg/>');
+
+                $res = GarnetSizeCheckCommand::scan($this->root);
+                $counted = array_column($res['dirs'], 'entries', 'path');
+
+                expect($counted['Deep'])->toBe(8);
+                expect(GarnetSizeCheckCommand::isEmptyDir($sub))->toBe(false);
+            });
+
             it('корень в нарушители не пишет, а помечает исключённым — с причиной', function (): void {
                 for ($i = 0; $i < 9; $i++) {
                     file_put_contents($this->root . DIRECTORY_SEPARATOR . "Extra{$i}.php", "x\n");

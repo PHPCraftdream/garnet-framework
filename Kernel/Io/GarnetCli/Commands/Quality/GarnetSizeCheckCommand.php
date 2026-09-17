@@ -353,10 +353,27 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Quality {
                 if (self::isGenerated($name)) {
                     continue;
                 }
+
+                if ($entry->isDir() && self::isEmptyDir($entry->getPathname())) {
+                    continue;
+                }
                 $n++;
             }
 
             return $n;
+        }
+
+        /**
+         * Пустой каталог — не решение о раскладке, а след времени
+         * выполнения: `Bundle/Front/Assets` materialises BaseBundleInit
+         * (источник ассетов бандла), каталоги кэшей создаёт первый запуск.
+         * Если их считать, правило начинает зависеть от того, собирали ли
+         * в этом дереве фронт: на чистом клоне каталог зелёный, после
+         * `build` — красный, причём ни одной строки кода не изменилось.
+         * Файлов такой каталог не несёт, так что и скрывать ему нечего.
+         */
+        public static function isEmptyDir(string $dir): bool {
+            return !(new FilesystemIterator($dir, FilesystemIterator::SKIP_DOTS))->valid();
         }
 
         private static function countLines(string $path): int {
