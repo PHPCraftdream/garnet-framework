@@ -37,6 +37,29 @@ async function send(payload: ErrorPayload): Promise<void> {
     }
 }
 
+/**
+ * Report a failure the code handled itself (so it never reaches
+ * `window.onerror`) through the same throttled, deduped channel.
+ *
+ * Exists for the cases where swallowing is the right call for the user but
+ * silence is not right for us: an island whose chunk never arrived, for one.
+ * A generic `unhandledrejection` would say "Loading chunk 1052 failed" and
+ * nothing about WHICH island stayed unmounted.
+ */
+export function reportHandledError(message: string, cause?: unknown): void {
+    if (typeof window === 'undefined') return;
+
+    const err = cause instanceof Error ? cause : undefined;
+    void send({
+        message: message.slice(0, 1024),
+        stack: err?.stack ? err.stack.slice(0, 8192) : undefined,
+        file: undefined,
+        line: 0,
+        col: 0,
+        url: window.location.href,
+    });
+}
+
 export function installJsErrorReporter(): void {
     if (typeof window === 'undefined') return;
 
