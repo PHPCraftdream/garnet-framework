@@ -74,6 +74,48 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli {
             'Migrations/Items' => 'нумерованные миграции: их порядок и есть структура',
         ];
 
+        /** Файл с исключениями, специфичными для конкретного дерева. */
+        public const EXCEPTIONS_FILE = '.size-check.json';
+
+        /**
+         * Исключения для одного дерева: встроенные плюс объявленные в
+         * `.size-check.json` его корня.
+         *
+         * Почему файлом, а не константой здесь: «нумерованные главы аудита»
+         * или «перечислимый набор персон» — решения КОНКРЕТНОГО репозитория,
+         * и фреймворку о них знать неоткуда. Решение остаётся там, где его
+         * приняли, вместе с причиной, а не превращается в молчаливое
+         * исключение в чужом коде.
+         *
+         * Формат: {"dir_exceptions": {"путь/от/корня": "причина"}}.
+         * Причина обязательна: исключение без причины неотличимо от
+         * недоделки, а именно это различие и важно следующему читателю.
+         *
+         * @return array<string, string>
+         */
+        public static function dirExceptions(string $root): array {
+            $file = rtrim(str_replace('\\', '/', $root), '/') . '/' . self::EXCEPTIONS_FILE;
+
+            if (!is_file($file)) {
+                return self::DIR_LIMIT_EXCEPTIONS;
+            }
+            $raw = @file_get_contents($file);
+            $data = is_string($raw) ? json_decode($raw, true) : null;
+
+            if (!is_array($data) || !is_array($data['dir_exceptions'] ?? null)) {
+                return self::DIR_LIMIT_EXCEPTIONS;
+            }
+            $extra = [];
+
+            foreach ($data['dir_exceptions'] as $path => $reason) {
+                if (is_string($path) && is_string($reason) && trim($reason) !== '') {
+                    $extra[$path] = $reason;
+                }
+            }
+
+            return $extra + self::DIR_LIMIT_EXCEPTIONS;
+        }
+
         public static function run(array $args = []): void {
             $json = in_array('--json', $args, true);
             $roots = self::resolveRoots($args);
@@ -156,6 +198,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli {
          */
         public static function scan(string $root): array {
             $root = rtrim(str_replace('\\', '/', $root), '/');
+            $dirExceptions = self::dirExceptions($root);
             $files = [];
             $dirs = [];
             $excluded = [];
@@ -212,8 +255,8 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli {
                     continue;
                 }
 
-                if (isset(self::DIR_LIMIT_EXCEPTIONS[$rel])) {
-                    $excluded[] = ['path' => $rel, 'entries' => $entries, 'reason' => self::DIR_LIMIT_EXCEPTIONS[$rel]];
+                if (isset($dirExceptions[$rel])) {
+                    $excluded[] = ['path' => $rel, 'entries' => $entries, 'reason' => $dirExceptions[$rel]];
 
                     continue;
                 }

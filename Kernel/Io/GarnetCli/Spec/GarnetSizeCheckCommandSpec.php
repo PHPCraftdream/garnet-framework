@@ -61,6 +61,51 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
             });
         });
 
+        describe('::dirExceptions — исключения объявляет сам репозиторий', function (): void {
+            beforeEach(function (): void {
+                $this->root = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'garnet_exc_' . bin2hex(random_bytes(4));
+                mkdir($this->root, 0o777, true);
+                $this->file = $this->root . DIRECTORY_SEPARATOR . GarnetSizeCheckCommand::EXCEPTIONS_FILE;
+            });
+
+            afterEach(function (): void {
+                @unlink($this->file);
+                @rmdir($this->root);
+            });
+
+            it('без файла отдаёт только встроенные', function (): void {
+                expect(GarnetSizeCheckCommand::dirExceptions($this->root))
+                    ->toBe(GarnetSizeCheckCommand::DIR_LIMIT_EXCEPTIONS);
+            });
+
+            it('добавляет объявленные в дереве, не теряя встроенных', function (): void {
+                file_put_contents($this->file, json_encode([
+                    'dir_exceptions' => ['docs/audits/handover' => 'нумерованные главы аудита'],
+                ]));
+                $res = GarnetSizeCheckCommand::dirExceptions($this->root);
+
+                expect($res['docs/audits/handover'])->toBe('нумерованные главы аудита');
+                expect(isset($res['Migrations/Items']))->toBe(true);
+            });
+
+            it('отбрасывает исключение без причины — оно неотличимо от недоделки', function (): void {
+                file_put_contents($this->file, json_encode([
+                    'dir_exceptions' => ['some/dir' => '', 'other/dir' => '   '],
+                ]));
+                $res = GarnetSizeCheckCommand::dirExceptions($this->root);
+
+                expect(isset($res['some/dir']))->toBe(false);
+                expect(isset($res['other/dir']))->toBe(false);
+            });
+
+            it('битый файл не ломает замер', function (): void {
+                file_put_contents($this->file, '{ это не json');
+
+                expect(GarnetSizeCheckCommand::dirExceptions($this->root))
+                    ->toBe(GarnetSizeCheckCommand::DIR_LIMIT_EXCEPTIONS);
+            });
+        });
+
         describe('::scan — на настоящем дереве', function (): void {
             beforeEach(function (): void {
                 $this->root = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'garnet_size_' . bin2hex(random_bytes(4));
