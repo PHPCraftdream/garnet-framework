@@ -1,3 +1,11 @@
+/**
+ * Конструктор форм: собирает поля по описанию сетки и отправляет их.
+ *
+ * Файл называется index, чтобы путь импорта остался прежним —
+ * @common/Components/Form/FormBuilder используют и GridTable, и форма
+ * регистрации приложения, причём GridTable импортирует ещё и тип пропсов.
+ */
+
 import * as React from 'react';
 import {useState, useRef, useEffect, useMemo, useCallback} from 'react';
 import {IDetailsInfo, TGridFieldInfo, TGridSelectField, TValidationMapped} from '@common/Dom/GridTable/Models';
@@ -16,200 +24,18 @@ import isString from 'lodash/isString';
 import isObject from 'lodash/isObject';
 import {Loader2} from 'lucide-react';
 import {Upload, XCircle} from 'lucide-react';
-import {UncontrolledForm, type UncontrolledFormHandle} from './UncontrolledForm';
-import {UncontrolledInput} from './UncontrolledInput';
-import {UncontrolledTextarea} from './UncontrolledTextarea';
-import {UncontrolledSelect} from './UncontrolledSelect';
+import {UncontrolledForm, type UncontrolledFormHandle} from '../UncontrolledForm';
+import {UncontrolledInput} from '../UncontrolledInput';
+import {UncontrolledTextarea} from '../UncontrolledTextarea';
+import {UncontrolledSelect} from '../UncontrolledSelect';
 
-export interface FormBuilderProps {
-	detailsInfo: IDetailsInfo;
-	data: Record<string, unknown>;
-	isNew?: boolean;
-	defaultValues?: Record<string, string | number>;
-	onSuccess: (data: IApiSuccessResponse) => void;
-	onCancel?: () => void;
-	onFail?: () => void;
-	/** Extra content rendered INSIDE the form, just above the submit row. */
-	footer?: React.ReactNode;
-	/** Called before submit; return false to block submission (caller shows its own error). */
-	beforeSubmit?: () => boolean;
-}
+import {FormBuilderProps} from './types';
+import {parseValidation, runFieldValidation} from './validation';
+import {DatalistSelect} from './DatalistSelect';
+import {PhotoField} from './PhotoField';
+import {FormRow} from './FormRow';
 
-// --- Validation ---
-
-const parseValidation = (el: string): TValidationMapped | null => {
-	const params = el.match(/^(\w+)(\[(.+?)])?$/);
-	const name = params?.[1];
-	const args = params?.[3]?.split(',') || [];
-	return name ? {name, args} : null;
-};
-
-const runFieldValidation = (fieldInfo: TGridFieldInfo, value: string, inputEl?: HTMLInputElement): string | true => {
-	const validators: TValidationMapped[] = (fieldInfo?.validation || [])
-		.map((el) => {
-			if (isString(el)) return el;
-			if (isString((el as unknown[])?.[1])) return (el as unknown[])?.[1] as string;
-			return null;
-		})
-		.filter(isString)
-		.map(parseValidation)
-		.filter((v): v is TValidationMapped => isObject(v));
-
-	for (const validator of validators) {
-		if ((Validators as any)[validator.name]) {
-			const result = (Validators as any)[validator.name](value, validator.args, inputEl);
-			if (result !== true) return result as string;
-			continue;
-		}
-
-		const eventObj = {info: validator, value, result: true as boolean | string, el: inputEl};
-		PageEvents.init().emmit(`validate_${validator.name}`, eventObj);
-		if (eventObj.result !== true) return eventObj.result as string;
-	}
-
-	return true;
-};
-
-// --- DatalistSelect (Combobox for large lists, native select for small) ---
-import {Combobox} from '@common/Components/ui/Combobox';
-
-const DatalistSelect: React.FC<{
-	column: string;
-	value: string;
-	items: IDataListItem[];
-	disabled: boolean;
-	onChange: (value: string) => void;
-}> = ({column, value, items, disabled, onChange}) => {
-	// Use searchable Combobox for large option lists (>10 items, e.g. timezones)
-	if (items.length > 10) {
-		return (
-			<Combobox
-				options={items.map(item => ({value: String(item.value), label: item.text}))}
-				value={String(value)}
-				onChange={onChange}
-				placeholder="..."
-				searchPlaceholder="Search..."
-				emptyText="—"
-				testId={`form-field-${column}`}
-			/>
-		);
-	}
-
-	// Native select for small lists
-	return (
-		<select
-			className="form-select"
-			value={value}
-			disabled={disabled}
-			onChange={(e) => onChange(e.target.value)}
-			data-test-id={`form-field-${column}`}
-		>
-			{items.map((item) => (
-				<option key={item.value} value={item.value}>
-					{item.text}
-				</option>
-			))}
-		</select>
-	);
-};
-
-// --- PhotoField ---
-
-const PhotoField: React.FC<{
-	column: string;
-	value: unknown;
-	fieldInfo: TGridFieldInfo;
-	data: Record<string, unknown>;
-	disabled: boolean;
-	onFileChange: (column: string, file: Blob | null, cropInfo: ICropData | null) => void;
-}> = ({column, value, fieldInfo, data, disabled, onFileChange}) => {
-	const containerRef = useRef<HTMLDivElement>(null);
-	const readOnly = fieldInfo.readOnly || disabled;
-
-	useEffect(() => {
-		const el = containerRef.current;
-		if (!el) return;
-
-		const photoBlock = new DomEl(el);
-
-		const crop = (() => {
-			if (!fieldInfo.cropInfo || !fieldInfo.cropName) return false as false;
-			return data[fieldInfo.cropInfo] as undefined | {x: number; y: number; w: number; h: number};
-		})();
-
-		const photo = (() => {
-			if (!value) return null;
-			return (fieldInfo?.uploadPath || '').replace(/({(\w+)})/gi, (_, __, match) => {
-				return (data[match] || 'null') as string;
-			}) + value;
-		})();
-
-		componentUploadPhotoHandler({
-			readOnly: !!readOnly,
-			crop,
-			photoBlock,
-			photo,
-			onChange: (blobData: Blob | null, cropInfo: ICropData) => {
-				onFileChange(column, blobData, crop !== false ? cropInfo : null);
-			},
-		});
-	}, []);
-
-	if (!value && readOnly) return null;
-
-	// Limits belong next to the control, before a file is chosen. Two people
-	// reported independently that the only way to learn them was to be
-	// refused — and for a while being refused destroyed the photo instead.
-	const maxBytes = uploadMaxBytes();
-	const hint = readOnly || maxBytes <= 0
-		? null
-		: I18nFramework.Upload_ImageHint([megabytes(maxBytes)]);
-
-	return (
-		<div ref={containerRef} className={readOnly ? 'pointer-disabled' : ''}>
-			<input type="file" className="form-control input-file d-none" accept="image/png, image/jpeg, image/jpg, image/gif" />
-			{!readOnly && (
-				<button type="button" className="btn btn-light upload-img-btn d-none" title={I18nFramework.Action_Upload()}>
-					<Upload size={18} />
-				</button>
-			)}
-			<div className="crop-block d-none p-3 flex flex-row">
-				<div className="d" style={{maxWidth: '400px', maxHeight: '300px'}}>
-					<img className="image-src max-w-full h-auto" alt="loading" src="data:," />
-				</div>
-				<div className="px-2 flex flex-col">
-					{!readOnly && (
-						<>
-							<button type="button" className="mb-2 btn btn-light change-img-btn" title={I18nFramework.Action_Replace()}>
-								<Upload size={18} />
-							</button>
-							<button type="button" className="btn btn-light del-img-btn" title={I18nFramework.Action_Del()}>
-								<XCircle size={18} />
-							</button>
-						</>
-					)}
-				</div>
-			</div>
-			{hint && (
-				<p className="text-xs text-muted mt-1" data-test-id="photo-upload-hint">{hint}</p>
-			)}
-		</div>
-	);
-};
-
-// --- FormRow ---
-
-const FormRow: React.FC<{label: string; error?: string; align?: 'start' | 'center'; children: React.ReactNode}> = ({label, error, align = 'start', children}) => (
-	<div className={`grid sm:grid-cols-12 gap-x-3 mb-4 ${align === 'center' ? 'items-center' : 'items-start'}`}>
-		<label className="sm:col-span-2 col-form-label main-label">{label || '\u00A0'}</label>
-		<div className="sm:col-span-10">
-			{children}
-			{error && <div className="garnet-form-error small fs-7 text-danger">{error}</div>}
-		</div>
-	</div>
-);
-
-// --- Main FormBuilder ---
+export type {FormBuilderProps};
 
 export const FormBuilder: React.FC<FormBuilderProps> = ({
 	detailsInfo,
