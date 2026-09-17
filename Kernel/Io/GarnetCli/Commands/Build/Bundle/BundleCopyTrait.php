@@ -321,6 +321,12 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Build\Bundle {
                     "__DIR__ . '/../{$frameworkDirName}/vendor/autoload.php'",
                     $orig
                 );
+                $rewritten = str_replace(
+                    "require_once __DIR__ . '/vendor/autoload.php';",
+                    "require_once dirname(__DIR__) . '/{$frameworkDirName}/vendor/autoload.php';\n"
+                    . "require_once __DIR__ . '/vendor/autoload.php';",
+                    $rewritten
+                );
 
                 if ($rewritten !== $orig) {
                     file_put_contents($appAutoload, $rewritten);

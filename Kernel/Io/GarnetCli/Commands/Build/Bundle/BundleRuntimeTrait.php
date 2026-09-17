@@ -170,6 +170,7 @@ putenv("GARNET_APP_DIR={$_app}");
 putenv("GARNET_FRAMEWORK_DIR={$_fw}");
 if ($_wd)  putenv("GARNET_WORKDIR_DIR={$_wd}");
 if ($_pub) putenv("GARNET_PUBLIC_DIR={$_pub}");
+require_once $_fw . '/vendor/autoload.php';
 $_run = $_app . '/run_web.php';
 unset($_gr, $_env, $_fw, $_wd, $_app, $_pub);
 require_once $_run;
