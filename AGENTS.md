@@ -111,6 +111,7 @@ extension-point convention.
 | Run bundle specs (needs MySQL) | `composer test:bundle` |
 | TS typecheck | `cd FrontBuilder && npm run typecheck` |
 | Size and layout rule | `composer size:check` |
+| Imports resolve to files | `composer check:imports` |
 | Lint everything before pushing | `composer ci` |
 
 ### Size and layout rule
@@ -134,6 +135,13 @@ extension-point convention.
   a glob in a config. Grep for those in what you moved, and prove the
   suite still collects the same number of tests — not just that it is
   green.
+- `composer check:imports` (also in `composer ci`) proves every `use`
+  points at the file PSR-4 puts it in. It exists because phpstan only
+  sees the paths listed in phpstan.neon: an app's `run_web.php` is not
+  among them, and a stale import there passed every gate and took
+  production down on the next request. Anything addressed by a STRING —
+  a Twig template name, a class name in config — needs its own check;
+  those are the references no type checker can see.
 
 ## Strict separation: framework vs business
 

@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Build;
+namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Quality;
 
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\GarnetEnv;
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\GarnetRunner;

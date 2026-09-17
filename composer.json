@@ -71,10 +71,12 @@
     "test:bundle": "php vendor/bin/kahlan --spec=Bundle --grep=*Spec.php",
     "test:e2e": "node tooling/scripts/test-e2e.mjs",
     "size:check": "@php bin/garnet size:check .",
+    "check:imports": "@php bin/garnet check:imports .",
     "ci": [
       "@cs:check",
       "@phpstan",
       "@size:check",
+      "@check:imports",
       "@test"
     ]
   }

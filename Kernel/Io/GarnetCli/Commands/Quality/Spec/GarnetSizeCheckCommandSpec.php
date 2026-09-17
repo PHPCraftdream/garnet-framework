@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Build\Spec {
+namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Quality\Spec {
     use FilesystemIterator;
-    use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Build\GarnetSizeCheckCommand;
+    use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Quality\GarnetSizeCheckCommand;
     use RecursiveDirectoryIterator;
     use RecursiveIteratorIterator;
 

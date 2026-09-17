@@ -3,11 +3,9 @@
 namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli;
 
 use Composer\InstalledVersions;
-use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Build\GarnetBuildCheckCommand;
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Build\GarnetBuildCommand;
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Build\GarnetBundleCommand;
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Build\GarnetPrepareCommand;
-use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Build\GarnetSizeCheckCommand;
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Db\GarnetDbBackupCommand;
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Db\GarnetDbWipeCommand;
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Db\GarnetMigrateStatusCommand;
@@ -27,6 +25,9 @@ use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Project\GarnetConfigComman
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Project\GarnetPermsCommand;
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Project\GarnetSetupCommand;
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Project\GarnetUninstallCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Quality\GarnetBuildCheckCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Quality\GarnetCheckImportsCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Quality\GarnetSizeCheckCommand;
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Serve\GarnetAdminCommand;
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Serve\GarnetServeCommand;
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Serve\GarnetServeDebugCommand;
@@ -235,6 +236,10 @@ class GarnetRunner {
                 // и правило нельзя было бы поставить в гейт.
                 GarnetSizeCheckCommand::run($args);
             })(),
+            $command === 'check:imports' => (static function () use ($args): void {
+                // Тот же приём с кодом выхода, что и у size:check.
+                GarnetCheckImportsCommand::run($args);
+            })(),
             $command === 'migrate:status' => (static function (): void {
                 GarnetMigrateStatusCommand::run();
 
@@ -349,6 +354,7 @@ class GarnetRunner {
     ssh:put/get/test  Transfer files / verify connectivity
     build:check       Verify built frontend assets exist
     size:check        Files over the line limit and dirs over 7 entries (exit 1 when any)
+    check:imports     Every `use` must point at the file PSR-4 puts it in (exit 1 when not)
     migrate:status    Show DB version vs target migration version
     test:remote       Run UI tests against a remote box (provision->playwright->teardown)
     snapshot:pull     Download a full prod data snapshot (db+config+logs+uploads)
