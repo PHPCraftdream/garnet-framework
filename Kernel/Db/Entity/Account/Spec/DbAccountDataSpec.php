@@ -142,7 +142,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Account {
                 $testData = ['123', '456', 'not_a_number'];
 
                 foreach ($testData as $value) {
-                    $isInt = \PHPCraftdream\Garnet\Kernel\Core\Tools\StrTools::isIntStr($value);
+                    $isInt = \PHPCraftdream\Garnet\Kernel\Core\Support\Tools\StrTools::isIntStr($value);
                     $converted = $isInt ? intval($value) : $value;
 
                     if ($isInt) {
@@ -276,7 +276,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Account {
                         continue;
                     }
 
-                    $val = \PHPCraftdream\Garnet\Kernel\Core\Tools\StrTools::isIntStr($item['value'])
+                    $val = \PHPCraftdream\Garnet\Kernel\Core\Support\Tools\StrTools::isIntStr($item['value'])
                         ? intval($item['value'])
                         : $item['value'];
                     $id = $item['account_id'];

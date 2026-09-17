@@ -1,9 +1,9 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Io\Http\Cookies {
-    use PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookies;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Core\IGlobalReqParams;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookie;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookies;
     use Psr\Http\Message\RequestInterface;
     use Psr\Http\Message\ResponseInterface;
 

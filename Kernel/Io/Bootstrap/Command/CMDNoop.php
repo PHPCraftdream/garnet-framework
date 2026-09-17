@@ -3,7 +3,7 @@
 namespace PHPCraftdream\Garnet\Kernel\Io\Bootstrap\Command {
     use Aura\Cli\Context;
     use Aura\Cli\Stdio;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\ICommand;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Io\ICommand;
 
     /**
      * Do-nothing command. Used by Garnet-level commands that need to

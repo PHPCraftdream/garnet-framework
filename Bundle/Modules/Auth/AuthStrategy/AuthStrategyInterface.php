@@ -2,8 +2,8 @@
 
 namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\AuthStrategy;
 
-use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
-use PHPCraftdream\Garnet\Kernel\Interfaces\Router\IRouterUriParams;
+use PHPCraftdream\Garnet\Kernel\Interfaces\Core\IGlobalReqParams;
+use PHPCraftdream\Garnet\Kernel\Interfaces\Web\Router\IRouterUriParams;
 use Psr\Http\Message\ResponseInterface;
 
 interface AuthStrategyInterface {

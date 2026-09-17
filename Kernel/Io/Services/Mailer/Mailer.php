@@ -2,7 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Io\Services\Mailer {
     use PHPCraftdream\Garnet\Kernel\Exceptions\Io\IniConfigException;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\IMailer;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Io\IMailer;
     use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
     use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
     use Symfony\Component\Mailer\Mailer as SymfonyMailer;

@@ -5,9 +5,9 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Spec {
     use Kahlan\Plugin\Double;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Session;
     use PHPCraftdream\Garnet\Kernel\Exceptions\Web\SessionException;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookies;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\ISession;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookie;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookies;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Web\ISession;
     use Psr\Http\Message\RequestInterface;
     use Psr\Http\Message\ResponseInterface;
     use ReflectionClass;

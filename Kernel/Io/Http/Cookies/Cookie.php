@@ -3,7 +3,7 @@
 namespace PHPCraftdream\Garnet\Kernel\Io\Http\Cookies {
     use DateTime;
     use DateTimeInterface;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookie;
 
     class Cookie implements ICookie {
         use StringUtilTrait;

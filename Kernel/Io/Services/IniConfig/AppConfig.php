@@ -2,7 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig {
     use PHPCraftdream\Garnet\Kernel\Exceptions\Io\IniConfigException;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\IAppConfig;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Core\IAppConfig;
 
     class AppConfig extends IniConfig implements IAppConfig {
         public const BASE_URL_PARAM = 'base_url';

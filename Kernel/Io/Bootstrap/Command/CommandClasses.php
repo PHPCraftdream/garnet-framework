@@ -3,7 +3,7 @@
 namespace PHPCraftdream\Garnet\Kernel\Io\Bootstrap\Command {
     use PHPCraftdream\Garnet\Kernel\Core\Env\Env;
     use PHPCraftdream\Garnet\Kernel\Exceptions\Io\CommandException;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\ICommand;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Io\ICommand;
     use ReflectionException;
 
     class CommandClasses {

@@ -26,5 +26,5 @@ parameters:
         - '#Unsafe call to private method .* through static#'
         - '#Unsafe access to private (property|constant) .* through static#'
         - '#Match expression does not handle remaining value#'
-        - '#Call to an undefined method PHPCraftdream\\Garnet\\Kernel\\Interfaces\\II18n::#'
+        - '#Call to an undefined method PHPCraftdream\\Garnet\\Kernel\\Interfaces\\Core\\II18n::#'
         - '#Access to an undefined static property#'

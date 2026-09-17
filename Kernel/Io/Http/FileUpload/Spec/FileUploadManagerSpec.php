@@ -11,7 +11,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Http\FileUpload\Spec {
     use function mkdir;
 
     use PHPCraftdream\Garnet\Kernel\Io\Http\FileUpload\FileUploadManager;
-    use PHPCraftdream\Garnet\Kernel\Io\Http\FileUpload\UploadRules;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\FileUpload\Types\UploadRules;
     use RecursiveDirectoryIterator;
     use RecursiveIteratorIterator;
     use ReflectionMethod;

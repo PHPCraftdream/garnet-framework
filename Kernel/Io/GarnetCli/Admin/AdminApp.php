@@ -3,7 +3,7 @@
 namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Admin;
 
 use PHPCraftdream\Garnet\Kernel\Core\Env\Env;
-use PHPCraftdream\Garnet\Kernel\Core\GlobalReqParams\GlobalReqParams;
+use PHPCraftdream\Garnet\Kernel\Core\Runtime\GlobalReqParams\GlobalReqParams;
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\GarnetEnv;
 
 class AdminApp {

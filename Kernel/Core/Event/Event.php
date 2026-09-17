@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Core\Event {
-    use PHPCraftdream\Garnet\Kernel\Interfaces\IEvent;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\IEventObj;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Core\IEvent;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Core\IEventObj;
 
     class Event implements IEvent {
         protected static array $items = [];

@@ -124,7 +124,7 @@ array $rows` and `insertCalls`/`updateCalls` logs the spec asserts against.
 spec authors reach for** — it's used directly in spec files
 (`Kernel/Db/Entity/Session/Spec/SessionCsrfSpec.php`,
 `Bundle/Modules/Idempotency/Spec/IdempotencyMiddlewareSpec.php`). Mockista
-only shows up internally, wrapped by `Kernel/Core/BaseTest/BaseTest.php`
+only shows up internally, wrapped by `Kernel/Core/Support/BaseTest/BaseTest.php`
 (a legacy test helper) — no spec file calls it directly.
 
 A real example from `SessionCsrfSpec.php`, mocking a cookie interface:

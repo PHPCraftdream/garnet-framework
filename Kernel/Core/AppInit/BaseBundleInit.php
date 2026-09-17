@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Core\AppInit {
-    use PHPCraftdream\Garnet\Kernel\Core\Tools\FsTools;
+    use PHPCraftdream\Garnet\Kernel\Core\Support\Tools\FsTools;
     use PHPCraftdream\Garnet\Kernel\Exceptions\CommonException;
     use PHPCraftdream\Garnet\Kernel\Exceptions\Core\BundleException;
     use PHPCraftdream\Garnet\Kernel\Io\Render\I18n\I18nFrontendDumper;

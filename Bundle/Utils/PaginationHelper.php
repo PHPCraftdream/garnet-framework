@@ -4,7 +4,7 @@ namespace PHPCraftdream\Garnet\Bundle\Utils {
     use Closure;
     use PHPCraftdream\Garnet\Kernel\Db\Tables\DbTable;
     use PHPCraftdream\Garnet\Kernel\Db\Tables\PageData;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Core\IGlobalReqParams;
 
     class PaginationHelper {
         // Default page size shared with the frontend (`DEFAULT_PAGE_SIZE` in

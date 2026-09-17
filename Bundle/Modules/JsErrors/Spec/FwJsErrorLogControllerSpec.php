@@ -6,8 +6,8 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\JsErrors\Spec {
     use PHPCraftdream\Garnet\Bundle\Modules\JsErrors\Controllers\FwJsErrorLogController;
     use PHPCraftdream\Garnet\Bundle\Modules\JsErrors\Tables\FwJsErrors;
     use PHPCraftdream\Garnet\Kernel\Db\Tables\DbTable;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\Router\IRouterUriParams;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Core\IGlobalReqParams;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Web\Router\IRouterUriParams;
     use ReflectionClass;
 
     // ---------------------------------------------------------------------------

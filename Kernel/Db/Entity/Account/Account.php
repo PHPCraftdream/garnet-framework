@@ -3,15 +3,15 @@
 namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Account {
     use Aura\Sql\Exception;
     use Aura\SqlQuery\Common\SelectInterface;
-    use PHPCraftdream\Garnet\Kernel\Core\Benchmark\BenchmarkLog;
     use PHPCraftdream\Garnet\Kernel\Core\Event\Event;
+    use PHPCraftdream\Garnet\Kernel\Core\Support\Benchmark\BenchmarkLog;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Session;
     use PHPCraftdream\Garnet\Kernel\Db\Link\DbPool;
     use PHPCraftdream\Garnet\Kernel\Exceptions\Db\DbException;
     use PHPCraftdream\Garnet\Kernel\Exceptions\Io\IniConfigException;
     use PHPCraftdream\Garnet\Kernel\Exceptions\Web\ValidationException;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\IAccount;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\IEventObj;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Core\IEventObj;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Web\IAccount;
 
     class Account implements IAccount {
         public const SESSION_AUTH_LOGIN = 'auth_login';

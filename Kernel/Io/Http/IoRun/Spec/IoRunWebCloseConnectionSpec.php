@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\L4_Modules\Io\Spec {
-    use PHPCraftdream\Garnet\Kernel\Core\GlobalVars\GlobalVars;
+    use PHPCraftdream\Garnet\Kernel\Core\Runtime\GlobalVars\GlobalVars;
 
     describe('IoRunWeb', function (): void {
         it('IoRunWeb::closeConnection', function (): void {

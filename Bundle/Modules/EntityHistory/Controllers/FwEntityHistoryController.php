@@ -5,9 +5,9 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\EntityHistory\Controllers {
     use PHPCraftdream\Garnet\Bundle\Modules\EntityHistory\EntityHistoryService;
     use PHPCraftdream\Garnet\Bundle\Modules\EntityHistory\Tables\FwEntityHistory;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Account\Account;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\Router\IRouterUriParams;
-    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\ControllerTools;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Core\IGlobalReqParams;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Web\Router\IRouterUriParams;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\Controller\ControllerTools;
 
     /**
      * Generic JSON endpoint that returns the recent history of any

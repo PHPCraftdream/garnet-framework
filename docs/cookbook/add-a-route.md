@@ -17,8 +17,8 @@ Say you want `GET /about` to render an About page.
 
 namespace PHPCraftdream\MyApp\Foreground\Controllers;
 
-use PHPCraftdream\Garnet\Kernel\Core\FrameworkController;
-use PHPCraftdream\Garnet\Kernel\Core\GlobalReqParams\GlobalReqParams;
+use PHPCraftdream\Garnet\Kernel\Core\Runtime\FrameworkController;
+use PHPCraftdream\Garnet\Kernel\Core\Runtime\GlobalReqParams\GlobalReqParams;
 use PHPCraftdream\Garnet\Kernel\Io\Http\Router\RouterUriParams;
 use Psr\Http\Message\ResponseInterface;
 

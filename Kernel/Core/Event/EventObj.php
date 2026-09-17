@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Core\Event {
-    use PHPCraftdream\Garnet\Kernel\Interfaces\IEventObj;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Core\IEventObj;
 
     class EventObj implements IEventObj {
         protected bool $executed = false;

@@ -5,7 +5,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Http\IoRun\Spec {
     use PHPCraftdream\Garnet\Kernel\Core\Env\TestScope;
     use PHPCraftdream\Garnet\Kernel\Db\Link\DbPool;
     use PHPCraftdream\Garnet\Kernel\Io\Http\IoRun\IoRunWeb;
-    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\ControllerTools;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\Controller\ControllerTools;
     use ReflectionClass;
 
     /**

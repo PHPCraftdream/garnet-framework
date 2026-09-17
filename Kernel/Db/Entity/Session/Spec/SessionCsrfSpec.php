@@ -4,8 +4,8 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Spec;
 
 use Mockery;
 use PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Session;
-use PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie;
-use PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookies;
+use PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookie;
+use PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookies;
 use PHPCraftdream\Garnet\Kernel\Io\Http\Cookies\Cookies;
 use ReflectionClass;
 

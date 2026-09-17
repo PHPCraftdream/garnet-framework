@@ -4,10 +4,10 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Migration {
     use Aura\Cli\Context;
     use Aura\Cli\Stdio;
     use PHPCraftdream\Garnet\Kernel\Core\Env\Env;
-    use PHPCraftdream\Garnet\Kernel\Core\Tools\StrTools;
+    use PHPCraftdream\Garnet\Kernel\Core\Support\Tools\StrTools;
     use PHPCraftdream\Garnet\Kernel\Exceptions\Db\MigrationException;
     use PHPCraftdream\Garnet\Kernel\Exceptions\Io\IniConfigException;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\ICommand;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Io\ICommand;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Migration\IMigration;
     use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\AppConfig;
     use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;

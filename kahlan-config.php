@@ -2,7 +2,7 @@
 
 use Kahlan\Dir\Dir;
 use Kahlan\Filter\Filters;
-use PHPCraftdream\Garnet\Kernel\Core\GlobalVars\GlobalVars;
+use PHPCraftdream\Garnet\Kernel\Core\Runtime\GlobalVars\GlobalVars;
 
 require_once './TestsInit/init.php';
 

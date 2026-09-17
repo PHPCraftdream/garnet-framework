@@ -2,7 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Io\Http\FileUpload {
     use GuzzleHttp\Psr7\Utils;
-    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\ControllerTools;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\Controller\ControllerTools;
     use Psr\Http\Message\ResponseInterface;
 
     /**

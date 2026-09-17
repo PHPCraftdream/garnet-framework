@@ -1,6 +1,9 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Io\Http\FileUpload {
+    use PHPCraftdream\Garnet\Kernel\Io\Http\FileUpload\Pending\PendingUploadManager;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\FileUpload\Types\UploadedFileInfo;
+
     /**
      * Abstract base for entity-specific upload managers.
      *

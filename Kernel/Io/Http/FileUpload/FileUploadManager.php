@@ -3,7 +3,10 @@
 namespace PHPCraftdream\Garnet\Kernel\Io\Http\FileUpload {
     use finfo;
     use PHPCraftdream\Garnet\Bundle\I18n\FwI18n;
-    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\Mime;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\FileUpload\Types\UploadedFileInfo;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\FileUpload\Types\UploadResult;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\FileUpload\Types\UploadRules;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\Controller\Mime;
 
     /**
      * Reusable file upload manager.

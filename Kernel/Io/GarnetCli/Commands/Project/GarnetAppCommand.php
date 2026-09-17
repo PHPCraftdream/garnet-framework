@@ -3,7 +3,7 @@
 namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Project;
 
 use PHPCraftdream\Garnet\Kernel\Core\Env\Env;
-use PHPCraftdream\Garnet\Kernel\Core\Tools\FsTools;
+use PHPCraftdream\Garnet\Kernel\Core\Support\Tools\FsTools;
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Build\GarnetPrepareCommand;
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\GarnetEnv;
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\GarnetRunner;

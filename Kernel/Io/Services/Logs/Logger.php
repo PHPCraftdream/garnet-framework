@@ -2,7 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Io\Services\Logs {
     use PHPCraftdream\Garnet\Kernel\Exceptions\Io\LoggerException;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\ILogger;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Io\ILogger;
 
     class Logger implements ILogger {
         public const SYSTEM_LOGGER = 'SYSTEM_LOGGER';

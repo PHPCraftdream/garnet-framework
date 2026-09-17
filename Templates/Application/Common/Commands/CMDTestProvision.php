@@ -6,7 +6,7 @@ namespace PHPCraftdream\Application\Common\Commands {
     use PHPCraftdream\Application\Common\Services\TestScopeDbService;
     use PHPCraftdream\Garnet\Kernel\Core\Env\TestScope;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Migration\CMDMigration;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\ICommand;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Io\ICommand;
     use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
 
     /**

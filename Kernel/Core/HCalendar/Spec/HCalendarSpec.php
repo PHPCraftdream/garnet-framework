@@ -5,9 +5,9 @@ namespace PHPCraftdream\Garnet\Kernel\L0_Core\HCalendar\Spec {
     use DateTime;
     use Exception;
     use PHPCraftdream\Garnet\Kernel\Core\HCalendar\HCalendarBase;
-    use PHPCraftdream\Garnet\Kernel\Core\HCalendar\HCalendarGauss;
-    use PHPCraftdream\Garnet\Kernel\Core\HCalendar\HCalendarMonths;
-    use PHPCraftdream\Garnet\Kernel\Core\HCalendar\HCalendarTools;
+    use PHPCraftdream\Garnet\Kernel\Core\HCalendar\Parts\HCalendarGauss;
+    use PHPCraftdream\Garnet\Kernel\Core\HCalendar\Parts\HCalendarMonths;
+    use PHPCraftdream\Garnet\Kernel\Core\HCalendar\Parts\HCalendarTools;
 
     describe('HCalendar', function (): void {
         it('HCalendar 1', function (): void {

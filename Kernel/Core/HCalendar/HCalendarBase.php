@@ -5,6 +5,8 @@ namespace PHPCraftdream\Garnet\Kernel\Core\HCalendar {
     use DateTime;
     use Exception;
     use InvalidArgumentException;
+    use PHPCraftdream\Garnet\Kernel\Core\HCalendar\Parts\HCalendarDayInfo;
+    use PHPCraftdream\Garnet\Kernel\Core\HCalendar\Parts\HCalendarTools;
 
     class HCalendarBase {
         use HCalendarDayInfo;

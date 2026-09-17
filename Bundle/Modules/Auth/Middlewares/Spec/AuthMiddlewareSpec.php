@@ -4,10 +4,10 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\Spec {
     use DateTimeInterface;
     use PHPCraftdream\Garnet\Bundle\Modules\Auth\AuthStrategy\AuthConfig;
     use PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\AuthMiddleware;
-    use PHPCraftdream\Garnet\Kernel\Core\GlobalReqParams\GlobalReqParams;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookies;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
+    use PHPCraftdream\Garnet\Kernel\Core\Runtime\GlobalReqParams\GlobalReqParams;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Core\IGlobalReqParams;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookie;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookies;
     use Psr\Http\Message\ResponseInterface;
     use ReflectionClass;
 

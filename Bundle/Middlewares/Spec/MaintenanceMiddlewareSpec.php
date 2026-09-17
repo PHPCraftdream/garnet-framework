@@ -60,7 +60,7 @@ namespace PHPCraftdream\Garnet\Bundle\Middlewares\Spec {
             });
 
             it('returns REMOTE_ADDR when no X-Forwarded-For', function (): void {
-                $globals = new class() implements \PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams {
+                $globals = new class() implements \PHPCraftdream\Garnet\Kernel\Interfaces\Core\IGlobalReqParams {
                     public function readServerValue(string $name, mixed $default = null): ?string {
                         return null;
                     }
@@ -143,7 +143,7 @@ namespace PHPCraftdream\Garnet\Bundle\Middlewares\Spec {
             });
 
             it('returns first IP from X-Forwarded-For when present', function (): void {
-                $globals = new class() implements \PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams {
+                $globals = new class() implements \PHPCraftdream\Garnet\Kernel\Interfaces\Core\IGlobalReqParams {
                     public function readServerValue(string $name, mixed $default = null): ?string {
                         return null;
                     }
@@ -229,7 +229,7 @@ namespace PHPCraftdream\Garnet\Bundle\Middlewares\Spec {
             });
 
             it('returns empty string when neither header is present', function (): void {
-                $globals = new class() implements \PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams {
+                $globals = new class() implements \PHPCraftdream\Garnet\Kernel\Interfaces\Core\IGlobalReqParams {
                     public function readServerValue(string $name, mixed $default = null): ?string {
                         return null;
                     }

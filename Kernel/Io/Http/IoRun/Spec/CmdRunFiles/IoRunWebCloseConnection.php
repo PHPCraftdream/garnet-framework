@@ -19,7 +19,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Http\Emitter {
 
 namespace PHPCraftdream\Garnet\Kernel\Io\Http\IoRun {
     use PHPCraftdream\Garnet\Kernel\Io\Http\Emitter\Store;
-    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\ControllerTools;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\Controller\ControllerTools;
 
     require_once __DIR__ . '/../../../../../../vendor/autoload.php';
 

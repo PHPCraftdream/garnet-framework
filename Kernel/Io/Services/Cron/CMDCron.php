@@ -3,7 +3,7 @@
 namespace PHPCraftdream\Garnet\Kernel\Io\Services\Cron {
     use Aura\Cli\Context;
     use Aura\Cli\Stdio;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\ICommand;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Io\ICommand;
 
     class CMDCron implements ICommand {
         protected static string $cronServiceClass = FwCronService::class;

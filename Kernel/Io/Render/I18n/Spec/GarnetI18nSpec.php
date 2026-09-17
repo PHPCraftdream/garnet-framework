@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-use PHPCraftdream\Garnet\Kernel\Interfaces\II18n;
+use PHPCraftdream\Garnet\Kernel\Interfaces\Core\II18n;
 use PHPCraftdream\Garnet\Kernel\Io\Render\I18n\GarnetI18n;
 use PHPCraftdream\Garnet\Kernel\Io\Services\Logs\Logger;
 

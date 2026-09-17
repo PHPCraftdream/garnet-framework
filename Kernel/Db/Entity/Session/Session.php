@@ -2,13 +2,13 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session {
     use Exception;
-    use PHPCraftdream\Garnet\Kernel\Core\Benchmark\BenchmarkLog;
-    use PHPCraftdream\Garnet\Kernel\Core\Tools\StrTools;
+    use PHPCraftdream\Garnet\Kernel\Core\Support\Benchmark\BenchmarkLog;
+    use PHPCraftdream\Garnet\Kernel\Core\Support\Tools\StrTools;
     use PHPCraftdream\Garnet\Kernel\Db\Link\DbPool;
     use PHPCraftdream\Garnet\Kernel\Exceptions\Web\SessionException;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookies;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbMySQLiLink;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\ISession;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookies;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Web\ISession;
     use PHPCraftdream\Garnet\Kernel\Io\Http\Cookies\Cookies;
     use Psr\Http\Message\RequestInterface;
     use Psr\Http\Message\ResponseInterface;

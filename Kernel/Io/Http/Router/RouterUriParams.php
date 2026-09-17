@@ -2,8 +2,8 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Io\Http\Router {
     use PHPCraftdream\Garnet\Kernel\Exceptions\Web\RouterException;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\Router\IRouterUriParams;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Core\IGlobalReqParams;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Web\Router\IRouterUriParams;
 
     class RouterUriParams implements IRouterUriParams {
         protected static string $routePrefix = '';

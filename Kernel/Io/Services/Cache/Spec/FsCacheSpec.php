@@ -2,7 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Io\Services\Cache\Spec {
     use PHPCraftdream\Garnet\Kernel\Exceptions\Io\CacheException;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\ICache;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Io\ICache;
     use PHPCraftdream\Garnet\Kernel\Io\Services\Cache\FileCache;
     use PHPCraftdream\Garnet\Kernel\Io\Services\Cache\FsCache;
     use ReflectionClass;

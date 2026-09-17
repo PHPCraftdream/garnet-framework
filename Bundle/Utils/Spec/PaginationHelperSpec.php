@@ -4,7 +4,7 @@ namespace PHPCraftdream\Garnet\Bundle\Utils\Spec {
     use Mockery;
     use PHPCraftdream\Garnet\Bundle\Utils\PaginationHelper;
     use PHPCraftdream\Garnet\Kernel\Db\Tables\PageData;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Core\IGlobalReqParams;
 
     describe('PaginationHelper', function (): void {
         afterEach(function (): void {

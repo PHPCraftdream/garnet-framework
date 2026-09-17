@@ -6,7 +6,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Spec {
     use function class_exists;
     use function count;
 
-    use PHPCraftdream\Garnet\Kernel\Core\FrameworkController;
+    use PHPCraftdream\Garnet\Kernel\Core\Runtime\FrameworkController;
     use ReflectionClass;
     use ReflectionMethod;
 

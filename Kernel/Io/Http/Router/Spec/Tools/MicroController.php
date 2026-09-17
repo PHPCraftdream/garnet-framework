@@ -2,10 +2,10 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Io\Http\Router\Spec\Tools;
 
-use PHPCraftdream\Garnet\Kernel\Core\GlobalVars\GlobalVars4Tests;
-use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
-use PHPCraftdream\Garnet\Kernel\Interfaces\Router\IRouterUriParams;
-use PHPCraftdream\Garnet\Kernel\Io\Http\Router\BaseController;
+use PHPCraftdream\Garnet\Kernel\Core\Runtime\GlobalVars\GlobalVars4Tests;
+use PHPCraftdream\Garnet\Kernel\Interfaces\Core\IGlobalReqParams;
+use PHPCraftdream\Garnet\Kernel\Interfaces\Web\Router\IRouterUriParams;
+use PHPCraftdream\Garnet\Kernel\Io\Http\Router\Controller\BaseController;
 use Psr\Http\Message\ResponseInterface;
 
 class MicroController extends BaseController {

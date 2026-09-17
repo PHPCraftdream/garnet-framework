@@ -3,8 +3,8 @@
 namespace PHPCraftdream\Application\Foreground\Backend {
     use PHPCraftdream\Garnet\Bundle\Modules\Auth\Controllers\FwMagicLoginController;
     use PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\EmailAuthMiddleware;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
-    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\ControllerTools;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Core\IGlobalReqParams;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\Controller\ControllerTools;
     use PHPCraftdream\Garnet\Kernel\Io\Render\Twig\Twig;
     use PHPCraftdream\Garnet\Kernel\Io\Render\Twig\TwigParams;
 

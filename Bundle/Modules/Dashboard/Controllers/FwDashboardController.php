@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Bundle\Modules\Dashboard\Controllers {
-    use PHPCraftdream\Garnet\Kernel\Core\FrameworkController;
+    use PHPCraftdream\Garnet\Kernel\Core\Runtime\FrameworkController;
 
     /**
      * Generic admin dashboard base controller.

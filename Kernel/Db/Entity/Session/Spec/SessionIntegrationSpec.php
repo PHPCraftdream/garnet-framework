@@ -730,16 +730,16 @@ describe('Session Integration', function (): void {
 
 // Minimal ICookie double: only the members rotate()/issueNewCookie() and
 // touchCookie() actually exercise are meaningfully implemented.
-class MinimalMockCookieForRotateSpec implements \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+class MinimalMockCookieForRotateSpec implements \PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookie {
     public ?string $name = null;
 
     public ?string $value = null;
 
-    public function setOld(): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+    public function setOld(): \PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookie {
         return $this;
     }
 
-    public function setItNew(): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+    public function setItNew(): \PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookie {
         return $this;
     }
 
@@ -747,7 +747,7 @@ class MinimalMockCookieForRotateSpec implements \PHPCraftdream\Garnet\Kernel\Int
         return false;
     }
 
-    public function startObserveChanges(): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+    public function startObserveChanges(): \PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookie {
         return $this;
     }
 
@@ -795,59 +795,59 @@ class MinimalMockCookieForRotateSpec implements \PHPCraftdream\Garnet\Kernel\Int
         return '';
     }
 
-    public function setName(?string $name = null): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+    public function setName(?string $name = null): \PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookie {
         $this->name = $name;
 
         return $this;
     }
 
-    public function setValue(?string $value = null): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+    public function setValue(?string $value = null): \PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookie {
         $this->value = $value;
 
         return $this;
     }
 
-    public function setSameSiteStrict(): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+    public function setSameSiteStrict(): \PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookie {
         return $this;
     }
 
-    public function setSameSiteLax(): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+    public function setSameSiteLax(): \PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookie {
         return $this;
     }
 
-    public function setSameSiteNone(): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+    public function setSameSiteNone(): \PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookie {
         return $this;
     }
 
-    public function setExpires(null|DateTimeInterface|int|string $expires = null): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+    public function setExpires(null|DateTimeInterface|int|string $expires = null): \PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookie {
         return $this;
     }
 
-    public function rememberForever(): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+    public function rememberForever(): \PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookie {
         return $this;
     }
 
-    public function expire(): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+    public function expire(): \PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookie {
         return $this;
     }
 
-    public function setMaxAge(?int $maxAge = null): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+    public function setMaxAge(?int $maxAge = null): \PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookie {
         return $this;
     }
 
-    public function setPath(?string $path = null): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+    public function setPath(?string $path = null): \PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookie {
         return $this;
     }
 
-    public function setDomain(?string $domain = null): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+    public function setDomain(?string $domain = null): \PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookie {
         return $this;
     }
 
-    public function setSecure(?bool $secure = null): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+    public function setSecure(?bool $secure = null): \PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookie {
         return $this;
     }
 
-    public function setHttpOnly(?bool $httpOnly = null): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+    public function setHttpOnly(?bool $httpOnly = null): \PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookie {
         return $this;
     }
 
@@ -855,7 +855,7 @@ class MinimalMockCookieForRotateSpec implements \PHPCraftdream\Garnet\Kernel\Int
         return '';
     }
 
-    public function parse(string $string): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+    public function parse(string $string): \PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookie {
         return $this;
     }
 }
@@ -863,14 +863,14 @@ class MinimalMockCookieForRotateSpec implements \PHPCraftdream\Garnet\Kernel\Int
 // Minimal ICookies double for the rotate()-regression spec: rotate() calls
 // issueNewCookie(), which needs a working cookies->get(name)->setValue()...
 // chain.
-class MockCookiesForRotateSpec implements \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookies {
+class MockCookiesForRotateSpec implements \PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookies {
     public array $cookies = [];
 
     public function has(string $name): bool {
         return isset($this->cookies[$name]);
     }
 
-    public function get(string $name): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie {
+    public function get(string $name): \PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookie {
         if (!isset($this->cookies[$name])) {
             $this->cookies[$name] = new MinimalMockCookieForRotateSpec();
             $this->cookies[$name]->setName($name);
@@ -879,7 +879,7 @@ class MockCookiesForRotateSpec implements \PHPCraftdream\Garnet\Kernel\Interface
         return $this->cookies[$name];
     }
 
-    public function setItNew(): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookies {
+    public function setItNew(): \PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookies {
         return $this;
     }
 
@@ -887,11 +887,11 @@ class MockCookiesForRotateSpec implements \PHPCraftdream\Garnet\Kernel\Interface
         return $this->cookies;
     }
 
-    public function add(\PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie $cookie): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookies {
+    public function add(\PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookie $cookie): \PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookies {
         return $this;
     }
 
-    public function delete(string $name): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookies {
+    public function delete(string $name): \PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookies {
         return $this;
     }
 
@@ -899,7 +899,7 @@ class MockCookiesForRotateSpec implements \PHPCraftdream\Garnet\Kernel\Interface
         return $response;
     }
 
-    public function fromResponse(\Psr\Http\Message\ResponseInterface $response): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookies {
+    public function fromResponse(\Psr\Http\Message\ResponseInterface $response): \PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookies {
         return $this;
     }
 
@@ -907,19 +907,19 @@ class MockCookiesForRotateSpec implements \PHPCraftdream\Garnet\Kernel\Interface
         return $request;
     }
 
-    public function fromRequest(\Psr\Http\Message\RequestInterface $request): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookies {
+    public function fromRequest(\Psr\Http\Message\RequestInterface $request): \PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookies {
         return $this;
     }
 
-    public function fromServer(array $_server): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookies {
+    public function fromServer(array $_server): \PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookies {
         return $this;
     }
 
-    public function fromCookieStrings(array $cookieStrings): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookies {
+    public function fromCookieStrings(array $cookieStrings): \PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookies {
         return $this;
     }
 
-    public function fromGlobals($globals): \PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookies {
+    public function fromGlobals($globals): \PHPCraftdream\Garnet\Kernel\Interfaces\Web\Cookies\ICookies {
         return $this;
     }
 }

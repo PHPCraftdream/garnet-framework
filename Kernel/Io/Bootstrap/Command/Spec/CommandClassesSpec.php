@@ -60,7 +60,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Bootstrap\Command {
             it('overwrites existing command', function (): void {
                 CommandClasses::set('test', CMDHelp::class);
 
-                $testCommand = new class() implements \PHPCraftdream\Garnet\Kernel\Interfaces\ICommand {
+                $testCommand = new class() implements \PHPCraftdream\Garnet\Kernel\Interfaces\Io\ICommand {
                     public static function description(): string {
                         return 'Test';
                     }

@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Bundle\I18n {
-    use PHPCraftdream\Garnet\Kernel\Interfaces\II18n;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Core\II18n;
     use PHPCraftdream\Garnet\Kernel\Io\Render\I18n\GarnetI18n;
 
     class FwI18n extends GarnetI18n {

@@ -2,7 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Io\Services\Mailer\Spec;
 
-use PHPCraftdream\Garnet\Kernel\Interfaces\IMailer;
+use PHPCraftdream\Garnet\Kernel\Interfaces\Io\IMailer;
 use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
 use PHPCraftdream\Garnet\Kernel\Io\Services\Mailer\Mailer;
 use ReflectionClass;

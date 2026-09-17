@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Io\Render\Twig {
-    use PHPCraftdream\Garnet\Kernel\Core\Tools\RuntimeParams;
+    use PHPCraftdream\Garnet\Kernel\Core\Support\Tools\RuntimeParams;
 
     class TwigParams extends RuntimeParams {
         public const DEF_LAYOUT_PARAMS = 'DEF_LAYOUT_PARAMS';

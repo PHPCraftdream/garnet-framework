@@ -2,7 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Io\Http\Router\Spec {
     use PHPCraftdream\Garnet\Kernel\Exceptions\Web\RouterException;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Core\IGlobalReqParams;
     use PHPCraftdream\Garnet\Kernel\Io\Http\Router\RouterDevFile;
     use Psr\Http\Message\ResponseInterface;
     use RecursiveDirectoryIterator;

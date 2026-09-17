@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\L0_Core\ErrorCatcher\Spec {
-    use PHPCraftdream\Garnet\Kernel\Core\GlobalVars\GlobalVars;
+    use PHPCraftdream\Garnet\Kernel\Core\Runtime\GlobalVars\GlobalVars;
 
     if (!GlobalVars::get('ErrorCatcherTestEnabled')) {
         return;

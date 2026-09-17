@@ -2,7 +2,7 @@
 
 use PHPCraftdream\Garnet\Kernel\Core\Event\Event;
 use PHPCraftdream\Garnet\Kernel\Core\Event\EventObj;
-use PHPCraftdream\Garnet\Kernel\Interfaces\IEvent;
+use PHPCraftdream\Garnet\Kernel\Interfaces\Core\IEvent;
 
 describe('Event', function (): void {
     beforeEach(function (): void {

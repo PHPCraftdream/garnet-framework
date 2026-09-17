@@ -2,8 +2,8 @@
 
 namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Viewer\Controllers {
     use PHPCraftdream\Garnet\Bundle\Modules\Logging\Request\Controllers\FwDashboardRequestLogController;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\Router\IRouterUriParams;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Core\IGlobalReqParams;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Web\Router\IRouterUriParams;
 
     /**
      * Proxy — exposes FwDashboardRequestLogController's request/error helpers

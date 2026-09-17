@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Core\HCalendar {
-    use PHPCraftdream\Garnet\Kernel\Interfaces\II18n;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Core\II18n;
 
     class HCalendar extends HCalendarBase {
         public function toStrHTr(II18n $i18n): string {

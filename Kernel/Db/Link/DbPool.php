@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Db\Link {
     use mysqli_sql_exception;
-    use PHPCraftdream\Garnet\Kernel\Core\Benchmark\BenchmarkLog;
+    use PHPCraftdream\Garnet\Kernel\Core\Support\Benchmark\BenchmarkLog;
     use PHPCraftdream\Garnet\Kernel\Db\Query\QueryTools;
     use PHPCraftdream\Garnet\Kernel\Exceptions\Db\DbException;
     use PHPCraftdream\Garnet\Kernel\Exceptions\Io\IniConfigException;

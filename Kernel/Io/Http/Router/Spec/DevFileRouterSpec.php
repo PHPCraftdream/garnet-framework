@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
-use PHPCraftdream\Garnet\Kernel\Core\BaseTest\BaseTest;
-use PHPCraftdream\Garnet\Kernel\Core\GlobalReqParams\GlobalReqParams;
+use PHPCraftdream\Garnet\Kernel\Core\Runtime\GlobalReqParams\GlobalReqParams;
+use PHPCraftdream\Garnet\Kernel\Core\Support\BaseTest\BaseTest;
 use PHPCraftdream\Garnet\Kernel\Exceptions\Web\RouterException;
 use PHPCraftdream\Garnet\Kernel\Io\Http\Router\RouterDevFile;
 use PHPCraftdream\Garnet\Kernel\Io\Http\Router\RouterUriParams;

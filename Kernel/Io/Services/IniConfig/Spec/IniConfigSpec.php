@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\Spec {
-    use PHPCraftdream\Garnet\Kernel\Interfaces\IIniConfig;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Io\IIniConfig;
     use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
     use ReflectionClass;
 

@@ -2,9 +2,9 @@
 
 namespace PHPCraftdream\Garnet\Bundle\Utils\Upload {
     use PHPCraftdream\Garnet\Bundle\I18n\FwI18n;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\Router\IRouterUriParams;
-    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\ControllerTools;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Core\IGlobalReqParams;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Web\Router\IRouterUriParams;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\Controller\ControllerTools;
 
     /**
      * Reusable controller endpoints for uploading and deleting a PUBLIC image

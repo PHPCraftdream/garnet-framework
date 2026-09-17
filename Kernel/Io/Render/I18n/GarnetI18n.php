@@ -2,7 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Io\Render\I18n {
     use PHPCraftdream\Garnet\Kernel\Exceptions\Io\LoggerException;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\II18n;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Core\II18n;
     use PHPCraftdream\Garnet\Kernel\Io\Services\Logs\Logger;
 
     abstract class GarnetI18n implements II18n {

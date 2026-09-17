@@ -1,0 +1,30 @@
+<?php declare(strict_types=1);
+
+namespace PHPCraftdream\Garnet\Kernel\Interfaces\Io {
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Io\CacheException;
+    use Throwable;
+
+    interface ICache {
+        /**
+         * @param string $fileName
+         * @return string
+         * @throws CacheException
+         */
+        public function getActualFile(string $fileName): string;
+
+        /**
+         * @param string $fileName
+         * @return string
+         * @throws CacheException
+         * @throws Throwable
+         */
+        public function getExistsFile(string $fileName): string;
+
+        /**
+         * @param string $fileName
+         * @throws CacheException
+         * @throws Throwable
+         */
+        public function refreshFile(string $fileName): void;
+    }
+}

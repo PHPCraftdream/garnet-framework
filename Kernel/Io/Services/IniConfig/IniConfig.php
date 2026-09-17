@@ -2,7 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig {
     use PHPCraftdream\Garnet\Kernel\Exceptions\Io\IniConfigException;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\IIniConfig;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Io\IIniConfig;
 
     class IniConfig implements IIniConfig {
         public const ENV_APP = 'ENV_APP';

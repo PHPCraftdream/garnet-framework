@@ -4,8 +4,8 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
     use Aura\Sql\Exception;
     use PHPCraftdream\Garnet\Bundle\Utils\HtmlLayout;
     use PHPCraftdream\Garnet\Bundle\Utils\RenderIsland;
-    use PHPCraftdream\Garnet\Kernel\Core\Tools\ArrayTools;
-    use PHPCraftdream\Garnet\Kernel\Core\Tools\StrTools;
+    use PHPCraftdream\Garnet\Kernel\Core\Support\Tools\ArrayTools;
+    use PHPCraftdream\Garnet\Kernel\Core\Support\Tools\StrTools;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Account\Account;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\BaseEntity\SaveFilesParams;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\DbLog\EntityLog;
@@ -14,10 +14,10 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
     use PHPCraftdream\Garnet\Kernel\Exceptions\Db\DbException;
     use PHPCraftdream\Garnet\Kernel\Exceptions\Io\IniConfigException;
     use PHPCraftdream\Garnet\Kernel\Exceptions\Web\ValidationException;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Core\IGlobalReqParams;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IEntityConfig;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\Router\IRouterUriParams;
-    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\ControllerTools;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Web\Router\IRouterUriParams;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\Controller\ControllerTools;
     use PHPCraftdream\Garnet\Kernel\Io\Render\Twig\TwigParams;
     use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\AppConfig;
     use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;

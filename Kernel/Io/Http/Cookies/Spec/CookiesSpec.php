@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 use GuzzleHttp\Psr7\Response;
-use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
+use PHPCraftdream\Garnet\Kernel\Interfaces\Core\IGlobalReqParams;
 use PHPCraftdream\Garnet\Kernel\Io\Http\Cookies\Cookie;
 use PHPCraftdream\Garnet\Kernel\Io\Http\Cookies\Cookies;
 

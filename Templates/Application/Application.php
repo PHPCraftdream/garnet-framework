@@ -22,8 +22,8 @@ namespace PHPCraftdream\Application {
     use PHPCraftdream\Garnet\Kernel\Core\AppInit\BaseAppInit;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Migration\CMDMigration;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Session;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\Router\IRouterUriParams;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Core\IGlobalReqParams;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Web\Router\IRouterUriParams;
     use PHPCraftdream\Garnet\Kernel\Io\Bootstrap\Command\CommandClasses;
     use PHPCraftdream\Garnet\Kernel\Io\Http\Router\Router;
     use PHPCraftdream\Garnet\Kernel\Io\Render\Twig\TwigParams;

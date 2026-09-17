@@ -3,9 +3,9 @@
 namespace PHPCraftdream\Garnet\Kernel\Io\Bootstrap\Command {
     use Aura\Cli\Context;
     use Aura\Cli\Stdio;
-    use PHPCraftdream\Garnet\Kernel\Core\Tools\StrTools;
+    use PHPCraftdream\Garnet\Kernel\Core\Support\Tools\StrTools;
     use PHPCraftdream\Garnet\Kernel\Exceptions\Io\CommandException;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\ICommand;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Io\ICommand;
 
     class CMDHelp implements ICommand {
         /**

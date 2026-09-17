@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-use PHPCraftdream\Garnet\Kernel\Core\Benchmark\BenchmarkLog;
+use PHPCraftdream\Garnet\Kernel\Core\Support\Benchmark\BenchmarkLog;
 use PHPCraftdream\Garnet\Kernel\Io\Render\Twig\Twig;
 use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
 use PHPCraftdream\Garnet\Kernel\Io\Services\Logs\Logger;

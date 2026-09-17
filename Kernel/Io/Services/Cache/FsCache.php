@@ -2,7 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Io\Services\Cache {
     use PHPCraftdream\Garnet\Kernel\Exceptions\Io\CacheException;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\ICache;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Io\ICache;
     use Throwable;
 
     /** @phpstan-consistent-constructor */

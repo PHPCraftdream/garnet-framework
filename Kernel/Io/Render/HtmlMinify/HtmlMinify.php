@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Io\Render\HtmlMinify {
-    use PHPCraftdream\Garnet\Kernel\Interfaces\IHtmlMinify;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Io\IHtmlMinify;
 
     class HtmlMinify implements IHtmlMinify {
         protected array $options;

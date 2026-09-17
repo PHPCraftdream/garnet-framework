@@ -43,7 +43,7 @@ tight loop is cheap.
 
 ## Tools — strings, arrays, filesystem
 
-`Kernel/Core/Tools/` holds the dependency-free helpers nothing else
+`Kernel/Core/Support/Tools/` holds the dependency-free helpers nothing else
 fits into:
 
 | Class | Examples |
@@ -58,7 +58,7 @@ function, look here first; if it isn't here, add it.
 
 ## Benchmark — wall-time profiling
 
-`Kernel/Core/Benchmark/BenchmarkLog.php` records named timestamps from
+`Kernel/Core/Support/Benchmark/BenchmarkLog.php` records named timestamps from
 the moment the request starts:
 
 ```php

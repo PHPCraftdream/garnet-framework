@@ -3,8 +3,8 @@
 namespace PHPCraftdream\Garnet\Bundle\Middlewares {
     use GuzzleHttp\Psr7\Response;
     use PHPCraftdream\Garnet\Kernel\Core\AppInit\BaseAppInit;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\Router\IRouterUriParams;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Core\IGlobalReqParams;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Web\Router\IRouterUriParams;
     use PHPCraftdream\Garnet\Kernel\Io\Render\Twig\Twig;
     use Psr\Http\Message\ResponseInterface;
 

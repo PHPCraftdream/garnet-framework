@@ -2,7 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Settings {
     use PHPCraftdream\Garnet\Kernel\Db\Query\QueryTools;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\ISettings;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Core\ISettings;
 
     class Settings implements ISettings {
         protected bool $read = false;

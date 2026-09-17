@@ -2,11 +2,11 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Io\Http\Router {
     use Closure;
-    use PHPCraftdream\Garnet\Kernel\Core\Benchmark\BenchmarkLog;
+    use PHPCraftdream\Garnet\Kernel\Core\Support\Benchmark\BenchmarkLog;
     use PHPCraftdream\Garnet\Kernel\Exceptions\Web\RouterException;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\Router\IRouter;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\Router\IRouterUriParams;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Core\IGlobalReqParams;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Web\Router\IRouter;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Web\Router\IRouterUriParams;
     use Psr\Http\Message\ResponseInterface;
 
     class Router implements IRouter {

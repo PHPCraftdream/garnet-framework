@@ -3,11 +3,11 @@
 namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages\Controllers {
     use PHPCraftdream\Garnet\Bundle\Modules\StaticPages\FwStaticPagesService;
     use PHPCraftdream\Garnet\Bundle\Utils\Upload\PublicImageUploadTrait;
-    use PHPCraftdream\Garnet\Kernel\Core\FrameworkController;
+    use PHPCraftdream\Garnet\Kernel\Core\Runtime\FrameworkController;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Account\Account;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
-    use PHPCraftdream\Garnet\Kernel\Interfaces\Router\IRouterUriParams;
-    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\ControllerTools;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Core\IGlobalReqParams;
+    use PHPCraftdream\Garnet\Kernel\Interfaces\Web\Router\IRouterUriParams;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\Controller\ControllerTools;
 
     abstract class FwStaticPagesAdminController extends FrameworkController {
         // Public image upload/delete endpoints (post__uploadImage / post__deleteImage)
