@@ -201,6 +201,12 @@ class GarnetRunner {
 
                 exit(0);
             })(),
+            $command === 'size:check' => (static function () use ($args): void {
+                // Команда сама решает код выхода: 0 — нарушений нет,
+                // 1 — есть. Поэтому здесь нет exit(0): он бы стёр её ответ
+                // и правило нельзя было бы поставить в гейт.
+                GarnetSizeCheckCommand::run($args);
+            })(),
             $command === 'migrate:status' => (static function (): void {
                 GarnetMigrateStatusCommand::run();
 
@@ -314,6 +320,7 @@ class GarnetRunner {
     ssh               Run remote shell command (host from ssh.ini)
     ssh:put/get/test  Transfer files / verify connectivity
     build:check       Verify built frontend assets exist
+    size:check        Files over the line limit and dirs over 7 entries (exit 1 when any)
     migrate:status    Show DB version vs target migration version
     test:remote       Run UI tests against a remote box (provision->playwright->teardown)
     snapshot:pull     Download a full prod data snapshot (db+config+logs+uploads)
