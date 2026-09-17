@@ -46,7 +46,7 @@ jobs:
         run: composer install --no-progress --prefer-dist --no-interaction
 
       - name: Production dependency audit
-        run: composer audit --locked --no-dev --audit-format=summary
+        run: composer audit --locked --no-dev --format=summary
 
       - name: Code style (php-cs-fixer)
         run: composer cs:check

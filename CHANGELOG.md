@@ -25,6 +25,11 @@ Planned for `1.0`:
   fresh Composer update.
 - Added production dependency audits and a migration guide for alpha apps.
 
+## [0.1.0-alpha87] — CI release gate
+
+- Use the Composer audit option supported by the current Composer 2 release.
+- Run the short template frontend security and regression guards in CI.
+
 ## [0.1.0] — first public release
 
 The framework's first standalone release after extraction from the
