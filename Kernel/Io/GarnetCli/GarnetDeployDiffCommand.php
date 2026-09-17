@@ -38,6 +38,12 @@ final class GarnetDeployDiffCommand {
     /** Remote marker file: last sha known to be deployed. Relative to runtime_dir. */
     private const DEPLOY_SHA_FILE = 'WorkDir/.deploy-sha';
 
+    /** Отметка о версии фреймворка, выложенной на хост целиком. */
+    private const FRAMEWORK_REF_FILE = '.framework-ref';
+
+    /** Пакет фреймворка в composer.lock приложения (vendor-режим). */
+    private const FRAMEWORK_PACKAGE = 'phpcraftdream/garnet-framework';
+
     /**
      * Whether we're running in vendor (Composer-package) mode as opposed to
      * legacy monorepo mode. In vendor mode the framework lives inside
@@ -573,6 +579,11 @@ final class GarnetDeployDiffCommand {
 
         // 8. Preview
         $warns = self::computeWarnings($diff);
+        $warns = array_merge($warns, self::frameworkRefWarnings(
+            self::localFrameworkRef(),
+            self::readRemoteFrameworkRef($ssh, $layout),
+            self::touchesComposerFiles($diff),
+        ));
         self::printPreview($shas, $cat, $plan, $layout, $ssh, $warns, $appName);
 
         // 9. Apply or stop at dry-run
@@ -1359,6 +1370,132 @@ final class GarnetDeployDiffCommand {
             && $opts['range'] === ''
             && $opts['branch'] === ''
             && empty($opts['commits']);
+    }
+
+    /**
+     * Версия фреймворка, установленная локально, — в виде
+     * `v0.1.0-alpha73@0a1b2c3` (ссылка укорочена, если она вообще есть).
+     *
+     * Читается из composer.lock приложения. Нужна затем, что в vendor-режиме
+     * фреймворк приезжает на хост не как пакет: composer на хосте не
+     * запускается, и обновление версии САМО не доезжает — deploy:diff шлёт
+     * только файлы, затронутые коммитами, а файлы пакета в коммитах не
+     * лежат. Без этой сверки выкладка новой альфы выглядела успешной, а хост
+     * оставался на старой (проверено дважды за одну сессию).
+     */
+    private static function localFrameworkRef(): ?string {
+        $lock = self::gitRepoRoot() . DIRECTORY_SEPARATOR . 'composer.lock';
+
+        if (!is_file($lock)) {
+            return null;
+        }
+        $raw = @file_get_contents($lock);
+
+        if (!is_string($raw) || $raw === '') {
+            return null;
+        }
+        $data = json_decode($raw, true);
+
+        if (!is_array($data)) {
+            return null;
+        }
+
+        foreach (['packages', 'packages-dev'] as $section) {
+            foreach (($data[$section] ?? []) as $pkg) {
+                if (($pkg['name'] ?? '') !== self::FRAMEWORK_PACKAGE) {
+                    continue;
+                }
+
+                return self::formatFrameworkRef(
+                    (string)($pkg['version'] ?? ''),
+                    (string)($pkg['source']['reference'] ?? $pkg['dist']['reference'] ?? ''),
+                );
+            }
+        }
+
+        return null;
+    }
+
+    /** `версия@ссылка` (ссылка до 7 знаков) либо только версия. */
+    private static function formatFrameworkRef(string $version, string $reference): ?string {
+        $version = trim($version);
+
+        if ($version === '') {
+            return null;
+        }
+        $reference = trim($reference);
+
+        return $reference === '' ? $version : $version . '@' . substr($reference, 0, 7);
+    }
+
+    /** Reads `framework_dir/.framework-ref` over SSH. Returns trimmed ref or null. */
+    private static function readRemoteFrameworkRef(SshClient $ssh, array $layout): ?string {
+        $remoteFile = rtrim($layout['remote_path'], '/') . '/' . $layout['framework_dir'] . '/' . self::FRAMEWORK_REF_FILE;
+        $res = $ssh->run('cat ' . escapeshellarg($remoteFile) . ' 2>/dev/null || true');
+        $ref = trim($res->stdout);
+
+        return $ref === '' ? null : $ref;
+    }
+
+    /**
+     * Записывает маркер версии фреймворка на хост. Вызывает тот, кто
+     * выложил фреймворк ЦЕЛИКОМ (deploy:full): маркер утверждает «на хосте
+     * эта версия», и точечная досылка отдельных файлов такого права не даёт.
+     */
+    public static function writeRemoteFrameworkRef(SshClient $ssh, array $layout, ?string $ref = null): void {
+        $ref ??= self::localFrameworkRef();
+
+        if ($ref === null || $ref === '') {
+            return;
+        }
+        $remoteFile = rtrim($layout['remote_path'], '/') . '/' . $layout['framework_dir'] . '/' . self::FRAMEWORK_REF_FILE;
+        $cmd = 'mkdir -p ' . escapeshellarg(dirname($remoteFile))
+             . " && printf '%s\\n' " . escapeshellarg($ref)
+             . ' > ' . escapeshellarg($remoteFile);
+        $res = $ssh->run($cmd);
+        $err = trim($res->stderr);
+
+        if ($err !== '') {
+            echo "\nwarn: could not write remote framework ref: {$err}\n";
+
+            return;
+        }
+        echo "  remote framework ref → {$ref}\n";
+    }
+
+    /**
+     * Сверяет версию фреймворка на хосте с локальной и говорит вслух, если
+     * они разошлись. Предупреждает, не блокирует: точечная досылка файлов
+     * пакета — законный способ жить, если знать, что делаешь.
+     *
+     * @return list<string>
+     */
+    public static function frameworkRefWarnings(?string $localRef, ?string $remoteRef, bool $composerTouched): array {
+        if ($localRef === null) {
+            return [];
+        }
+
+        if ($remoteRef === null) {
+            if (!$composerTouched) {
+                return [];
+            }
+
+            return [
+                'версия пакета фреймворка изменилась, а на хосте нет отметки о выложенной версии. '
+                . 'composer на хосте не запускается, и файлы пакета в коммитах не лежат — сам он не приедет. '
+                . 'Выложите фреймворк целиком: php garnet deploy:full (она же поставит отметку).',
+            ];
+        }
+
+        if ($remoteRef === $localRef) {
+            return [];
+        }
+
+        return [
+            "фреймворк на хосте — {$remoteRef}, локально — {$localRef}. deploy:diff шлёт только файлы, "
+            . 'затронутые коммитами, поэтому смена версии пакета так не доедет. Либо php garnet deploy:full, '
+            . 'либо точечно: --files=vendor/phpcraftdream/garnet-framework/<путь>.',
+        ];
     }
 
     /** Reads `runtime_dir/WorkDir/.deploy-sha` over SSH. Returns trimmed sha or null. */
@@ -2621,6 +2758,19 @@ final class GarnetDeployDiffCommand {
         return null;
     }
 
+    /** Тронул ли набор изменений composer.json / composer.lock. */
+    public static function touchesComposerFiles(array $diff): bool {
+        foreach ($diff as $row) {
+            $base = basename((string)($row['path'] ?? ''));
+
+            if ($base === 'composer.json' || $base === 'composer.lock') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static function computeWarnings(array $diff): array {
         $warns = [];
         $touched = array_map(fn ($r) => $r['path'], $diff);
@@ -2629,7 +2779,13 @@ final class GarnetDeployDiffCommand {
             $base = basename($p);
 
             if ($base === 'composer.json' || $base === 'composer.lock') {
-                $warns[] = "{$p} modified — composer install does not run automatically (run it manually after deploying)";
+                // В vendor-режиме «запустите composer вручную» — плохой совет:
+                // на хосте лежит не vendor-дерево, а выложенный каталог
+                // фреймворка, и composer там не запускается вовсе. Что делать
+                // на самом деле, говорит сверка версий ниже.
+                $warns[] = self::isVendorMode()
+                    ? "{$p} modified — зависимости на хосте не обновляются сами (см. сверку версии фреймворка ниже)"
+                    : "{$p} modified — composer install does not run automatically (run it manually after deploying)";
             }
 
             if ($base === 'package.json' || $base === 'package-lock.json') {

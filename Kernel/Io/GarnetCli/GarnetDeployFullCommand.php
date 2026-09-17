@@ -298,6 +298,13 @@ class GarnetDeployFullCommand {
                 . 'or the next deploy:diff will re-diff this whole release.' . PHP_EOL;
         }
 
+        // Отметка о версии фреймворка: только эта команда выкладывает его
+        // целиком и потому имеет право утверждать, что на хосте именно эта
+        // версия. deploy:diff её лишь читает и предупреждает при
+        // расхождении — в vendor-режиме composer на хосте не запускается, и
+        // смена версии пакета иначе не доезжает совсем.
+        GarnetDeployDiffCommand::writeRemoteFrameworkRef($ssh, $layout);
+
         self::resetOpcacheOnHost($ssh, $remoteRuntime);
 
         echo "=== Deploy complete — {$appName} is live at {$layout['remote_path']} ===" . PHP_EOL;

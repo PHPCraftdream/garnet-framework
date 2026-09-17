@@ -442,6 +442,63 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
             });
         });
 
+        describe('::frameworkRefWarnings — версия фреймворка на хосте против локальной', function (): void {
+            it('молчит, когда версии совпадают', function (): void {
+                $w = GarnetDeployDiffCommand::frameworkRefWarnings('v0.1.0-alpha73@abc1234', 'v0.1.0-alpha73@abc1234', true);
+                expect($w)->toBe([]);
+            });
+
+            it('говорит вслух, когда версии разошлись', function (): void {
+                $w = GarnetDeployDiffCommand::frameworkRefWarnings('v0.1.0-alpha73@abc1234', 'v0.1.0-alpha71@def5678', false);
+                expect(count($w))->toBe(1);
+                expect($w[0])->toContain('v0.1.0-alpha71@def5678');
+                expect($w[0])->toContain('v0.1.0-alpha73@abc1234');
+                expect($w[0])->toContain('deploy:full');
+            });
+
+            it('при отсутствии отметки на хосте молчит, пока composer-файлы не тронуты', function (): void {
+                // Иначе предупреждение висело бы на каждом обычном деплое —
+                // и перестало бы читаться к тому разу, когда оно важно.
+                $w = GarnetDeployDiffCommand::frameworkRefWarnings('v0.1.0-alpha73@abc1234', null, false);
+                expect($w)->toBe([]);
+            });
+
+            it('при отсутствии отметки и смене composer.lock объясняет, что делать', function (): void {
+                $w = GarnetDeployDiffCommand::frameworkRefWarnings('v0.1.0-alpha73@abc1234', null, true);
+                expect(count($w))->toBe(1);
+                expect($w[0])->toContain('deploy:full');
+            });
+
+            it('молчит, когда локальную версию определить не удалось', function (): void {
+                // Нет данных — нет утверждений: ложная тревога хуже молчания.
+                expect(GarnetDeployDiffCommand::frameworkRefWarnings(null, 'v0.1.0-alpha71@def5678', true))->toBe([]);
+            });
+        });
+
+        describe('::touchesComposerFiles', function (): void {
+            it('видит composer.lock в любом каталоге', function (): void {
+                expect(GarnetDeployDiffCommand::touchesComposerFiles([
+                    ['path' => 'Foreground/Controllers/MainController.php'],
+                    ['path' => 'composer.lock'],
+                ]))->toBe(true);
+            });
+
+            it('видит composer.json', function (): void {
+                expect(GarnetDeployDiffCommand::touchesComposerFiles([['path' => 'composer.json']]))->toBe(true);
+            });
+
+            it('не путает с похожими именами', function (): void {
+                expect(GarnetDeployDiffCommand::touchesComposerFiles([
+                    ['path' => 'docs/composer.lock.md'],
+                    ['path' => 'Tests/helpers/composer-lockfile.ts'],
+                ]))->toBe(false);
+            });
+
+            it('пустой набор изменений — false', function (): void {
+                expect(GarnetDeployDiffCommand::touchesComposerFiles([]))->toBe(false);
+            });
+        });
+
         describe('::gitTry (public — GarnetDeployFullCommand relies on this exact contract '
             . 'to advance the deploy-sha marker without risking exit(1) after a deploy already succeeded)', function (): void {
                 it('returns [0, HEAD sha] for a valid command against this repo', function (): void {
