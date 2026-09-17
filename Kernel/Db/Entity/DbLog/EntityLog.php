@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Db\Entity\DbLog {
-    use Aura\Sql\Exception;
+    use Exception;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Account\Account;
     use PHPCraftdream\Garnet\Kernel\Db\Tables\DbTable;
     use PHPCraftdream\Garnet\Kernel\Db\Tables\DbTableBuilderFactory;

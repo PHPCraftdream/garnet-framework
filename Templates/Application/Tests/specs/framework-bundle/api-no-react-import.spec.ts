@@ -25,8 +25,11 @@ import * as path from 'node:path';
 // directory tree — the app's location relative to the framework checkout is
 // not guaranteed (cross-drive `app:create --target=` is explicitly
 // supported).
+const FRAMEWORK = process.env.GARNET_FRAMEWORK_PATH;
 const REPO = process.env.PW_APP_DIR ?? path.resolve(__dirname, '..', '..', '..');
-const FRONT = path.join(REPO, 'vendor', 'phpcraftdream', 'garnet-framework', 'Bundle', 'Front');
+const FRONT = FRAMEWORK
+    ? path.join(FRAMEWORK, 'Bundle', 'Front')
+    : path.join(REPO, 'vendor', 'phpcraftdream', 'garnet-framework', 'Bundle', 'Front');
 
 function resolveSpec(spec: string, fromFile: string): string | null {
     let base: string;
@@ -52,14 +55,14 @@ function importSpecs(file: string): string[] {
 
 test('low-level API layer never imports the GlobalToast React component (React #130 regression)', () => {
     const entries = [
-        'Common/Api/asyncJsonThen.ts',
-        'Common/Api/asyncTextThen.ts',
-        'Common/Api/sendPostFormData.ts',
-        'Common/Api/sendPost.ts',
+        'Common/Api/Get/asyncJsonThen.ts',
+        'Common/Api/Get/asyncTextThen.ts',
+        'Common/Api/Send/sendPostFormData.ts',
+        'Common/Api/Send/sendPost.ts',
         'Common/Api/maintenance503.ts',
     ].map((p) => path.join(FRONT, p));
 
-    const banned = path.join(FRONT, 'Common', 'Components', 'GlobalToast.tsx');
+    const banned = path.join(FRONT, 'Common', 'Components', 'Feedback', 'GlobalToast.tsx');
     expect(fs.existsSync(banned), 'GlobalToast.tsx should exist').toBe(true);
 
     const seen = new Set<string>();

@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Bundle\Modules\Accounts\Auth\Controllers {
-    use Aura\Sql\Exception;
     use Aura\SqlQuery\Common\SelectInterface;
+    use Exception;
     use PHPCraftdream\Garnet\Bundle\FrameworkJsGen;
     use PHPCraftdream\Garnet\Bundle\Support\Utils\HtmlLayout;
     use PHPCraftdream\Garnet\Bundle\Support\Utils\RenderIsland;

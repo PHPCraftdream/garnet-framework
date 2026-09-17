@@ -174,6 +174,7 @@ For the full story see [`docs/reference/architecture.md`](docs/reference/archite
 ## Documentation
 
 - [`docs/guides/quickstart.md`](docs/guides/quickstart.md) — scaffold a new app
+- [`docs/guides/upgrade-to-0.1.md`](docs/guides/upgrade-to-0.1.md) — migrate an alpha app to 0.1.x
 - [`docs/guides/dev-workflow.md`](docs/guides/dev-workflow.md) — develop framework + app together
 - [`docs/reference/architecture.md`](docs/reference/architecture.md) — layers, request lifecycle, async DB
 - [`docs/reference/layers/bundle.md`](docs/reference/layers/bundle.md) — writing your own bundle

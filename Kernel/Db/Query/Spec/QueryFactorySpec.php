@@ -2,7 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Db\Query\Spec;
 
-use Aura\Sql\Exception;
+use InvalidArgumentException;
 use PHPCraftdream\Garnet\Kernel\Db\Query\QueryFactory;
 use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
 use ReflectionClass;
@@ -98,7 +98,7 @@ describe('QueryFactory', function (): void {
 
             expect(function (): void {
                 QueryFactory::get();
-            })->toThrow(new Exception('Empty db type from config'));
+            })->toThrow(new InvalidArgumentException('Empty db type from config'));
 
             unlink($iniFile);
         });
@@ -111,7 +111,7 @@ describe('QueryFactory', function (): void {
 
             expect(function (): void {
                 QueryFactory::get();
-            })->toThrow(new Exception('Empty db type from config'));
+            })->toThrow(new InvalidArgumentException('Empty db type from config'));
 
             unlink($iniFile);
         });

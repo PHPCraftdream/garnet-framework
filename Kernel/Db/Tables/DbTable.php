@@ -1,12 +1,12 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
-    use Aura\Sql\Exception;
     use Aura\SqlQuery\Common\DeleteInterface;
     use Aura\SqlQuery\Common\InsertInterface;
     use Aura\SqlQuery\Common\SelectInterface;
     use Aura\SqlQuery\Common\UpdateInterface;
     use Closure;
+    use Exception;
     use PHPCraftdream\Garnet\Kernel\Db\Query\QueryEx;
     use PHPCraftdream\Garnet\Kernel\Db\Query\QueryFactory;
     use PHPCraftdream\Garnet\Kernel\Db\Query\QueryTools;

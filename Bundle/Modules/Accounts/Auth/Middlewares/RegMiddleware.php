@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Bundle\Modules\Accounts\Auth\Middlewares {
-    use Aura\Sql\Exception;
+    use Exception;
     use PHPCraftdream\Garnet\Bundle\Support\Utils\HtmlLayout;
     use PHPCraftdream\Garnet\Bundle\Support\Utils\RenderIsland;
     use PHPCraftdream\Garnet\Kernel\Core\Support\Tools\ArrayTools;

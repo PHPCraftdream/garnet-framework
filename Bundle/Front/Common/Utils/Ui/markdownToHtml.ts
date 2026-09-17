@@ -1,4 +1,9 @@
 import {appUrl} from '@common/Utils/Url/appUrl';
+import DOMPurify from 'dompurify';
+
+const SAFE_TAGS = ['a', 'blockquote', 'br', 'code', 'em', 'h2', 'h3', 'hr', 'li', 'ol', 'p', 'strong', 'ul'];
+const SAFE_ATTR = ['class', 'href', 'rel', 'target'];
+const SAFE_URI = /^(?:(?:https?|mailto|tel):|\/|#|\?)/i;
 
 /**
  * Lightweight markdown-to-HTML converter.
@@ -67,5 +72,10 @@ export function markdownToHtml(md: string): string {
         .filter(Boolean)
         .join('\n');
 
-    return html;
+    return DOMPurify.sanitize(html, {
+        ALLOWED_TAGS: SAFE_TAGS,
+        ALLOWED_ATTR: SAFE_ATTR,
+        ALLOW_DATA_ATTR: false,
+        ALLOWED_URI_REGEXP: SAFE_URI,
+    });
 }

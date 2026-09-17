@@ -152,13 +152,13 @@ function getRealPageLoaderCode(): string {
 	let code = result.code;
 
 	// Stub the require() calls that esbuild generated
-	// @common/Utils/PageEvents and @common/Enums are not needed for this test
+	// @common/Utils/Ui/PageEvents and @common/Support/Enums are not needed for this test
 	code = code.replace(
-		/var import_PageEvents = require\("@common\/Utils\/PageEvents"\);/g,
+		/var import_PageEvents = require\("@common\/Utils\/Ui\/PageEvents"\);/g,
 		'var import_PageEvents = { init: () => ({ emmit: () => {} }) };'
 	);
 	code = code.replace(
-		/var import_Enums = require\("@common\/Enums"\);/g,
+		/var import_Enums = require\("@common\/Support\/Enums"\);/g,
 		'var import_Enums = { ECommonEvents: { PAGE_RELOADED: "PAGE_RELOADED" } };'
 	);
 

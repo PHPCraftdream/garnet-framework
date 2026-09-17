@@ -43,7 +43,10 @@ jobs:
           restore-keys: composer-${{ matrix.php }}-
 
       - name: Install dependencies
-        run: composer update --no-progress --prefer-dist --no-interaction
+        run: composer install --no-progress --prefer-dist --no-interaction
+
+      - name: Production dependency audit
+        run: composer audit --locked --no-dev --audit-format=summary
 
       - name: Code style (php-cs-fixer)
         run: composer cs:check
@@ -78,7 +81,7 @@ jobs:
           key: composer-${{ matrix.php }}-${{ hashFiles('composer.json') }}
 
       - name: Install dependencies
-        run: composer update --no-progress --prefer-dist --no-interaction
+        run: composer install --no-progress --prefer-dist --no-interaction
 
       - name: Kernel specs
         run: composer test:kernel
@@ -128,7 +131,7 @@ jobs:
           key: composer-${{ matrix.php }}-${{ hashFiles('composer.json') }}
 
       - name: Install dependencies
-        run: composer update --no-progress --prefer-dist --no-interaction
+        run: composer install --no-progress --prefer-dist --no-interaction
 
       - name: Wait for MySQL
         run: |
@@ -184,6 +187,48 @@ jobs:
       - name: oxlint + tsgo
         working-directory: FrontBuilder
         run: npm run check
+
+      - name: Production dependency audit
+        working-directory: FrontBuilder
+        run: npm audit --omit=dev --audit-level=high
+
+  template-regression-guards:
+    name: Template frontend regression guards
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            FrontBuilder/package-lock.json
+            Templates/Application/Tests/package-lock.json
+
+      - name: Install framework frontend dependencies
+        working-directory: FrontBuilder
+        run: npm ci
+
+      - name: Install template test dependencies
+        working-directory: Templates/Application/Tests
+        run: npm ci
+
+      - name: Install Chromium
+        working-directory: Templates/Application/Tests
+        run: npx playwright install --with-deps chromium
+
+      - name: Run static frontend guards
+        working-directory: Templates/Application/Tests
+        env:
+          GARNET_FRAMEWORK_PATH: ${{ github.workspace }}
+        run: >-
+          npx playwright test
+          specs/framework-bundle/api-no-react-import.spec.ts
+          specs/smoke/pageloader-incoming-state-ids-guard.spec.ts
+          specs/framework-bundle/markdown-preview-security.spec.ts
+          --workers=1 --retries=0
 
   admin-bundle-staleness:
     name: Admin bundle staleness — committed dist matches source

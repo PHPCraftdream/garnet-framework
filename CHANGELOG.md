@@ -14,10 +14,28 @@ Planned for `1.0`:
   an application-side extension point.
 - Generalise `AdminAction_booking_*` i18n keys.
 
+## [0.1.0-alpha86] — release hardening
+
+- Rebuilt the shipped admin bundle from current sources.
+- Removed the incompatible `aura/sql` 5.x dependency and refreshed the locked
+  production dependency graph.
+- Sanitised Markdown preview output and removed lodash from runtime frontend
+  dependencies.
+- Fixed template frontend regression guards and automatic app setup after a
+  fresh Composer update.
+- Added production dependency audits and a migration guide for alpha apps.
+
 ## [0.1.0] — first public release
 
 The framework's first standalone release after extraction from the
 internal monorepo that gave rise to it.
+
+Alpha upgrade note: the 0.1.0 API uses the reorganised `Kernel\Io\Http`,
+`Kernel\Io\Services` and `Kernel\Interfaces\Core` namespaces. Applications
+upgrading from the deleted alpha83 tag must follow
+[`docs/guides/upgrade-to-0.1.md`](docs/guides/upgrade-to-0.1.md). The deleted
+alpha83 tag cannot be used as a migration baseline; this guide records the
+supported symbol moves and the public contract for the 0.1.x line.
 
 ### Added
 - `phpcraftdream/garnet-framework` Composer package, dual-licensed under MIT or Apache-2.0.

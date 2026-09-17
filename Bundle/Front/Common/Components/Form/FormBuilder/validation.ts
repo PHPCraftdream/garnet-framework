@@ -19,8 +19,6 @@ import {PageEvents} from '@common/Utils/Ui/PageEvents';
 import {DomEl} from '@common/Dom/El/DomEl';
 import {componentUploadPhotoHandler} from '@common/Dom/Component/ComponentUploadPhotoHandler';
 import {uploadMaxBytes, megabytes} from '@common/Utils/Upload/uploadLimits';
-import isString from 'lodash/isString';
-import isObject from 'lodash/isObject';
 import {Loader2} from 'lucide-react';
 import {Upload, XCircle} from 'lucide-react';
 import {UncontrolledForm, type UncontrolledFormHandle} from '../UncontrolledForm';
@@ -36,6 +34,9 @@ export const parseValidation = (el: string): TValidationMapped | null => {
 	return name ? {name, args} : null;
 };
 
+const isString = (value: unknown): value is string => typeof value === 'string';
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
+
 
 export const runFieldValidation = (fieldInfo: TGridFieldInfo, value: string, inputEl?: HTMLInputElement): string | true => {
 	const validators: TValidationMapped[] = (fieldInfo?.validation || [])
@@ -46,7 +47,7 @@ export const runFieldValidation = (fieldInfo: TGridFieldInfo, value: string, inp
 		})
 		.filter(isString)
 		.map(parseValidation)
-		.filter((v): v is TValidationMapped => isObject(v));
+		.filter((v): v is TValidationMapped => isRecord(v));
 
 	for (const validator of validators) {
 		if ((Validators as any)[validator.name]) {
@@ -65,4 +66,3 @@ export const runFieldValidation = (fieldInfo: TGridFieldInfo, value: string, inp
 
 // --- DatalistSelect (Combobox for large lists, native select for small) ---
 import {Combobox} from '@common/Components/ui/Combobox';
-

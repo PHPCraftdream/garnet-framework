@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Account {
-    use Aura\Sql\Exception;
     use Aura\SqlQuery\Common\SelectInterface;
+    use Exception;
     use PHPCraftdream\Garnet\Kernel\Core\Event\Event;
     use PHPCraftdream\Garnet\Kernel\Core\Support\Benchmark\BenchmarkLog;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Session;

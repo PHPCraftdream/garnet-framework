@@ -9,7 +9,7 @@ import {TColumn} from 'gridjs/dist/src/types';
 import {printUtDateTime} from '@common/Utils/Str/printUtDateTime';
 import {Grid, html} from 'gridjs';
 import 'gridjs/dist/theme/mermaid.min.css';
-import escape from 'lodash/escape';
+import {escapeHtml} from '@common/Utils/Str/EscapeHtml';
 import {gridConfig} from '@common/Dom/GridTable/GridConfig';
 import {classClick} from '@common/Dom/El/ClassClick';
 import {DomEl} from '@common/Dom/El/DomEl';
@@ -136,7 +136,7 @@ export class GridTable extends Component {
 
 		for (const row of gridItems) {
 			const idColumn = gridData?.idColumn || 'id';
-			const rowId = escape(row?.[idColumn] + '');
+			const rowId = escapeHtml(row?.[idColumn] + '');
 			const newRow: (string | ReturnType<typeof html>)[] = [];
 
 			this.dataMap[rowId] = row;

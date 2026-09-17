@@ -1,5 +1,3 @@
-import isArray from 'lodash/isArray';
-import isObject from 'lodash/isObject';
 import {
     IGridInfo,
     TGridBoolStr,
@@ -15,7 +13,7 @@ export class GridUtils {
     static isGridData<T>(data: IGridInfo | unknown): data is IGridInfo {
         const d = data as IGridInfo;
 
-        if (!d?.hasOwnProperty('items') || !d?.hasOwnProperty('fields') || !isArray(d?.items)) {
+        if (!d?.hasOwnProperty('items') || !d?.hasOwnProperty('fields') || !Array.isArray(d?.items)) {
             return false;
         }
 
@@ -23,7 +21,7 @@ export class GridUtils {
             return false;
         }
 
-        return isObject(d.fields);
+        return typeof d.fields === 'object' && d.fields !== null && !Array.isArray(d.fields);
     }
 
     static isBoolStr(typeInfo: TGridFieldType): typeInfo is TGridBoolStr {

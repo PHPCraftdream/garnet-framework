@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Db\Query {
-    use Aura\Sql\Exception;
     use Aura\SqlQuery\QueryFactory as AuraSqlQueryQueryFactory;
+    use InvalidArgumentException;
     use PHPCraftdream\Garnet\Kernel\Db\Query\Builders\PositionalBindTrait;
     use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
 
@@ -24,7 +24,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
                 $type = $config->param('type');
 
                 if (empty($type)) {
-                    throw new Exception('Empty db type from config');
+                    throw new InvalidArgumentException('Empty db type from config');
                 }
 
                 $item = new static($type);

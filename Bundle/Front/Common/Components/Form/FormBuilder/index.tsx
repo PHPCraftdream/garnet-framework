@@ -20,8 +20,6 @@ import {PageEvents} from '@common/Utils/Ui/PageEvents';
 import {DomEl} from '@common/Dom/El/DomEl';
 import {componentUploadPhotoHandler} from '@common/Dom/Component/ComponentUploadPhotoHandler';
 import {uploadMaxBytes, megabytes} from '@common/Utils/Upload/uploadLimits';
-import isString from 'lodash/isString';
-import isObject from 'lodash/isObject';
 import {Loader2} from 'lucide-react';
 import {Upload, XCircle} from 'lucide-react';
 import {UncontrolledForm, type UncontrolledFormHandle} from '../UncontrolledForm';
