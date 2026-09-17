@@ -384,7 +384,7 @@ jobs:
         run: composer ci
 
   dependency-install:
-    name: Dependency install — app:create from vendor (no symlink)
+    name: Dependency install — vendored dev package (no bootstrap checkout)
     runs-on: ubuntu-latest
     # Env::isDevDir() decides "dev mode" (reads WorkDir/ConfigDev/ — the
     # zero-config quickstart defaults) vs "production mode" (reads
@@ -413,10 +413,10 @@ jobs:
           coverage: none
           tools: composer:v2
 
-      # Create a blank Composer project that pulls garnet-framework as a
-      # normal dependency — NOT a symlinked path repo.  symlink:false makes
-      # Composer physically copy the files into vendor/, which is the closest
-      # approximation of a real Packagist install without network access.
+      # Create a blank Composer project that physically copies the framework
+      # into vendor/. This validates the installed-package path without a
+      # sibling checkout; the release constraint branch is covered by the
+      # GarnetAppCommand helper spec.
       - name: Create consumer project
         run: |
           mkdir -p "${{ runner.temp }}/consumer"

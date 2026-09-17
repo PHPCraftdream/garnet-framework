@@ -100,6 +100,22 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Project\Spec {
             });
         });
 
+        describe('::wireReleaseDependency', function (): void {
+            it('removes the path repository and pins a released framework constraint', function (): void {
+                $json = [
+                    'repositories' => [['type' => 'path', 'url' => '../garnet-framework']],
+                    'require' => ['phpcraftdream/garnet-framework' => '@dev'],
+                ];
+
+                $args = [&$json, '0.1.0', true];
+                ($this->invoke)('wireReleaseDependency', $args);
+
+                expect($json)->toBe([
+                    'require' => ['phpcraftdream/garnet-framework' => '^0.1.0'],
+                ]);
+            });
+        });
+
         describe('::isAbsolutePath', function (): void {
             it('returns false for empty string', function (): void {
                 expect(($this->invoke)('isAbsolutePath', ['']))->toBe(false);

@@ -30,7 +30,7 @@ still applies once the dependency is in place.
 
 - PHP 8.1+
 - Composer 2.x
-- Node.js 18+ (for the frontend build and Playwright e2e)
+- Node.js 20+ (for the frontend build and Playwright e2e)
 - MySQL 8.0+ / MariaDB 10.6+ (optional, only if you use the DB)
 
 ## Install the framework

@@ -128,7 +128,7 @@ for the full comparison, including which CI job covers each path.
 - PHP **8.1+**
 - Extensions: `mbstring`, `json`, `pdo`, `mysqli`, `intl`
 - MySQL **8.0+** or MariaDB **10.6+** (optional — only if you use the DB)
-- Node.js **18+** (for the frontend build)
+- Node.js **20+** (for the frontend build)
 - Composer **2.x**
 
 ## What you get in an app
