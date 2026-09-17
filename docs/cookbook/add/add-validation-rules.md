@@ -56,7 +56,7 @@ import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { zodFromFieldsInfo, getFieldRegisterOptions }
-    from '@common/Utils/zodFromFieldsInfo';
+    from '@common/Utils/Data/zodFromFieldsInfo';
 
 export default function CourseEditor({ fieldsInfo, course }: Props) {
     const schema = useMemo(

@@ -70,9 +70,11 @@
     "test:kernel-integration": "php vendor/bin/kahlan --spec=Kernel --grep=*IntegrationSpec.php",
     "test:bundle": "php vendor/bin/kahlan --spec=Bundle --grep=*Spec.php",
     "test:e2e": "node tooling/scripts/test-e2e.mjs",
+    "size:check": "@php bin/garnet size:check .",
     "ci": [
       "@cs:check",
       "@phpstan",
+      "@size:check",
       "@test"
     ]
   }

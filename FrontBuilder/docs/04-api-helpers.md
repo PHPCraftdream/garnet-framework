@@ -9,7 +9,7 @@
 Sends a POST request with `FormData`. Automatically adds the CSRF token from `window.__GARNET_CSRF__`.
 
 ```ts
-import {sendPostFormData} from '@common/Api/sendPostFormData';
+import {sendPostFormData} from '@common/Api/Send/sendPostFormData';
 
 const formData = new FormData();
 formData.append('name', 'value');
@@ -28,7 +28,7 @@ const result = await sendPostFormData('/my/endpoint', formData);
 Sends a POST request with a JSON body. Automatically adds the CSRF token.
 
 ```ts
-import {sendPost} from '@common/Api/sendPost';
+import {sendPost} from '@common/Api/Send/sendPost';
 
 const result = await sendPost('/my/endpoint', { key: 'value' });
 ```
@@ -46,7 +46,7 @@ If you need to invoke an API helper from an inline `<script>` inside a Twig temp
 
 ```ts
 // FrontBuilder/MyApp/Foreground/Scripts/Foreground.ts
-import {sendPostFormData} from '@common/Api/sendPostFormData';
+import {sendPostFormData} from '@common/Api/Send/sendPostFormData';
 (window as any).sendPostFormData = sendPostFormData;
 ```
 

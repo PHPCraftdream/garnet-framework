@@ -154,8 +154,8 @@ islands and app islands use it.
 | `@common/Components` | The component zoo: `AdminGrid`, `Banner`, `Calendar`, `ConfirmModal`, `DateInput`, `Form/*`, `Pagination`, `SendButton`, `Toast`, `Modal`, `Drawer`, `EntityHistory*`, `ImageUploadField`, `Navigation/*`, … |
 | `@common/hooks` | `useConfirm`, `useSending`, `useCtrlEnter`, `useBodyScrollLock`, `useOpenUser`, … |
 | `@common/Islands/createIsland` | The lazy-island factory. |
-| `@common/Utils/DateUtils` | `formatTs`, `formatTime`, `formatDateShort`, `formatDateLong` — timezone-aware via `Intl.DateTimeFormat`. |
-| `@common/Utils/zodFromFieldsInfo` | Converts the backend `fieldsInfo` shape to a Zod schema. |
+| `@common/Utils/Time/DateUtils` | `formatTs`, `formatTime`, `formatDateShort`, `formatDateLong` — timezone-aware via `Intl.DateTimeFormat`. |
+| `@common/Utils/Data/zodFromFieldsInfo` | Converts the backend `fieldsInfo` shape to a Zod schema. |
 | `@common/I18n/I18nFramework` | The generated TS shim of every translation key. |
 
 Before writing anything new, search `@common/Components` for an

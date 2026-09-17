@@ -36,10 +36,10 @@ flow's client. Apps add their own business islands under
 
 ```tsx
 import { createIsland }    from '@common/Islands/createIsland';
-import { useConfirm }      from '@common/hooks/useConfirm';
+import { useConfirm }      from '@common/hooks/ui/useConfirm';
 import { sendPost }        from '@common/Api';
-import { formatTs }        from '@common/Utils/DateUtils';
-import { ConfirmModal }    from '@common/Components/ConfirmModal';
+import { formatTs }        from '@common/Utils/Time/DateUtils';
+import { ConfirmModal }    from '@common/Components/Feedback/ConfirmModal';
 import { t }               from '@common/I18n/I18nForeground';
 ```
 

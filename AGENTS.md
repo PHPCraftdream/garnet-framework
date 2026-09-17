@@ -24,20 +24,36 @@ prefer it over guessing from filenames.
 ```
 PHPCraftdream\Garnet\
 ├── Kernel\        → ./Kernel/      (engine: no business logic)
-│   ├── Core       → benchmarks, env, events, i18n interface, globals
+│   ├── Core       → AppInit, Env, Event, HCalendar, Runtime (controller
+│   │                base, request params, globals), Support (benchmark,
+│   │                tools, base test)
 │   ├── Db         → DbPool, DbTable, Account, Session, Settings, migrations
-│   ├── Io         → Router, IniConfig, Twig, Logger, Cache, Emitter, CLI
-│   └── Exceptions
+│   ├── Io         → Bootstrap (web entry, autoload, error catcher,
+│   │                command registry), Http (Router + Controller,
+│   │                cookies, emitter, rate limit, forms, uploads,
+│   │                IoRun), Render (Twig, minify, i18n), Services
+│   │                (cache, logs, mailer, ssh, cron, ini), GarnetCli,
+│   │                Debug
+│   ├── Interfaces → Core, Io, Web, Db, Migration — mirrors Io's shape,
+│   │                so an interface and its implementation sit at
+│   │                matching addresses
+│   └── Exceptions → CommonException at the root (everything extends it)
+│                    + Db, Io, Web, Core
 └── Bundle\        → ./Bundle/      (reusable modules; opt-in)
-    ├── BaseBundleInit  → contract every bundle implements
-    ├── Modules\        → Auth, Balance, Comments, Cron, Dashboard,
-    │                     Files, IM, Logs, Notifications, StaticPages,
-    │                     Support, SystemSettings, Tickets, Users, …
+    ├── Framework.php   → this bundle's own BaseBundleInit (the contract
+    │                     itself lives in Kernel/Core/AppInit/)
+    ├── Modules\        → Accounts (auth, invite, balance), Comms (email,
+    │                     messaging, comments, support), Content
+    │                     (static pages, news, dashboard), Ops (cron,
+    │                     logging, js errors, idempotency, history,
+    │                     system settings)
     ├── Front\          → shared frontend (React islands, hooks, CSS,
     │                     utilities) consumed by every app
-    ├── TwigTemplates\  → Layout/, Email/, Components/, …
-    ├── Controllers\    → reusable CRUD controllers (FwAccountsController, …)
-    └── Utils, Filters, Modules…
+    ├── TwigTemplates\  → Layout/, Email/, StaticPages/, Components/
+    └── Support\        → I18n, Middlewares, Utils (RenderIsland, …)
+
+Reusable CRUD controllers (`FwAccountsController`, …) live inside their
+module: `Bundle/Modules/<theme>/<Module>/Controllers/`.
 ```
 
 **Strict separation.** Code under `Kernel/` and `Bundle/` must not know
@@ -50,13 +66,13 @@ extension-point convention.
 
 | You want to… | Look at |
 |---|---|
-| Add a CLI command | `Kernel/Io/GarnetCli/Garnet*Command.php` + `Kernel/Io/GarnetCli/GarnetRunner.php` |
-| Extend the kernel HTTP pipeline | `Kernel/Core/FrameworkController.php`, `Kernel/Io/Http/IoRun/IoRunWeb.php` |
+| Add a CLI command | `Kernel/Io/GarnetCli/Commands/<theme>/Garnet*Command.php` + `Kernel/Io/GarnetCli/GarnetRunner.php` |
+| Extend the kernel HTTP pipeline | `Kernel/Core/Runtime/FrameworkController.php`, `Kernel/Io/Http/IoRun/IoRunWeb.php` |
 | Add or change a DB primitive | `Kernel/Db/Tables/DbTable.php` (don't), `Kernel/Db/Link/DbPool.php`, `Kernel/Db/Entity/Account/Account.php` |
 | Add a bundle (auth, comments, …) | `Bundle/Modules/<Name>/` — model on an existing module |
 | Add a Twig template | `Bundle/TwigTemplates/<scope>/<name>.twig`; register through your bundle's `BaseBundleInit::init()` |
 | Add a React island | `Bundle/Front/Islands/<Name>/` for framework-level, or in the app for business |
-| Touch the asset bridge | `Kernel/Io/GarnetCli/GarnetBuildCommand.php`, `FrontBuilder/build/PhpClassGeneratorPlugin.ts` |
+| Touch the asset bridge | `Kernel/Io/GarnetCli/Commands/Build/GarnetBuildCommand.php`, `FrontBuilder/build/PhpClassGeneratorPlugin.ts` |
 | Add specs | `<area>/Spec/*Spec.php`, kahlan-style (`describe`/`it`/`expect`) |
 
 ## Local development conventions
@@ -73,8 +89,8 @@ extension-point convention.
 
 - **No TypeScript errors.** Use type guards, handle `undefined`.
 - **React islands lazy-load.** `createIsland({lazy: () => import(...)})`. No sync imports in entry points. Wrap every island in `ErrorBoundary`.
-- **Single source of validation truth = PHP.** Frontend converts PHP `fieldsInfo` to Zod via `Bundle/Front/Common/Utils/zodFromFieldsInfo.ts`. Never rewrite validators by hand.
-- **Time is `unixtime` everywhere.** Display via `formatTs` from `@common/Utils/DateUtils` with the user's timezone (`window.__GARNET_USER__.timezone`).
+- **Single source of validation truth = PHP.** Frontend converts PHP `fieldsInfo` to Zod via `Bundle/Front/Common/Utils/Data/zodFromFieldsInfo.ts`. Never rewrite validators by hand.
+- **Time is `unixtime` everywhere.** Display via `formatTs` from `@common/Utils/Time/DateUtils` with the user's timezone (`window.__GARNET_USER__.timezone`).
 
 ### Tests (kahlan, under `<area>/Spec/`)
 
@@ -94,7 +110,30 @@ extension-point convention.
 | Run kernel integration specs | `composer test:kernel-integration` |
 | Run bundle specs (needs MySQL) | `composer test:bundle` |
 | TS typecheck | `cd FrontBuilder && npm run typecheck` |
+| Size and layout rule | `composer size:check` |
 | Lint everything before pushing | `composer ci` |
+
+### Size and layout rule
+
+- **A file over 500 lines (frontend) or 1000 lines (backend) becomes a
+  directory of several files.** A file nobody reads end-to-end gets read
+  in pieces, and then an edit in one piece breaks another — because
+  nobody held the connection between them.
+- **A directory holds at most seven entries.** Past seven, a listing
+  stops reading as a list; group by theme instead.
+- `composer size:check` is the measurement, and it runs inside
+  `composer ci` — the rule is a gate, not a habit to remember. Generated
+  files (`*Gen.php`) are not measured: their length and location are the
+  generator's decision.
+- Exceptions live in `.size-check.json` **with a reason**. An exception
+  without a stated reason is indistinguishable from unfinished work, and
+  that difference is exactly what the next reader needs.
+- When you split a file or move one into a subdirectory, the thing that
+  breaks silently is every path that counts directory levels:
+  `dirname(__DIR__, N)`, `require __DIR__ . '/../../x'`, a spec fixture,
+  a glob in a config. Grep for those in what you moved, and prove the
+  suite still collects the same number of tests — not just that it is
+  green.
 
 ## Strict separation: framework vs business
 
