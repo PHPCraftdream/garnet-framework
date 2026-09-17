@@ -69,8 +69,8 @@ tests. This holds across the codebase:
 Kernel/Db/Entity/Session/Session.php
 Kernel/Db/Entity/Session/Spec/SessionCsrfSpec.php
 
-Bundle/Modules/Balance/Tables/FwAccountBalance.php
-Bundle/Modules/Balance/Spec/FwBalanceSpec.php
+Bundle/Modules/Accounts/Balance/Tables/FwAccountBalance.php
+Bundle/Modules/Accounts/Balance/Spec/FwBalanceSpec.php
 ```
 
 One class can have several spec files if it's easier to split by concern
@@ -104,13 +104,13 @@ for setup/teardown scoped to the enclosing block. `expect($x)->toBe($y)`,
 `->toBeA('integer')`, `->toBeGreaterThan($n)`, `->toContain($item)`,
 `->toBeAnInstanceOf(Foo::class)` cover most assertions you'll need — see
 `Kernel/Db/Entity/Session/Spec/SessionCsrfSpec.php` and
-`Bundle/Modules/Balance/Spec/FwBalanceSpec.php` for real examples of both
+`Bundle/Modules/Accounts/Balance/Spec/FwBalanceSpec.php` for real examples of both
 styles.
 
 **Testing without a real DB.** Framework tables (`DbTable` subclasses) are
 usually tested against a concrete test-only subclass that overrides
 `insert()`/`selectAll()`/etc. with in-memory arrays, rather than mocking the
-DB driver. `Bundle/Modules/Balance/Spec/FwBalanceSpec.php` is a good
+DB driver. `Bundle/Modules/Accounts/Balance/Spec/FwBalanceSpec.php` is a good
 reference: it defines `TestBalanceLedger extends FwBalanceLedger` and
 `TestAccountBalance extends FwAccountBalance`, each backed by a `public
 array $rows` and `insertCalls`/`updateCalls` logs the spec asserts against.
@@ -123,7 +123,7 @@ array $rows` and `insertCalls`/`updateCalls` logs the spec asserts against.
 `janmarek/mockista` and `mockery/mockery`. **In practice, Mockery is what
 spec authors reach for** — it's used directly in spec files
 (`Kernel/Db/Entity/Session/Spec/SessionCsrfSpec.php`,
-`Bundle/Modules/Idempotency/Spec/IdempotencyMiddlewareSpec.php`). Mockista
+`Bundle/Modules/Ops/Idempotency/Spec/IdempotencyMiddlewareSpec.php`). Mockista
 only shows up internally, wrapped by `Kernel/Core/Support/BaseTest/BaseTest.php`
 (a legacy test helper) — no spec file calls it directly.
 

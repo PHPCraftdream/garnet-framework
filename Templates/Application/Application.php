@@ -16,9 +16,9 @@ namespace PHPCraftdream\Application {
     use PHPCraftdream\Application\Migrations\AppMigration;
     use PHPCraftdream\Garnet\Bundle\Framework;
     use PHPCraftdream\Garnet\Bundle\FrameworkJsGen;
-    use PHPCraftdream\Garnet\Bundle\I18n\FwI18n;
-    use PHPCraftdream\Garnet\Bundle\Modules\Auth\FwMagicLoginService;
-    use PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\EmailAuthMiddleware;
+    use PHPCraftdream\Garnet\Bundle\Modules\Accounts\Auth\FwMagicLoginService;
+    use PHPCraftdream\Garnet\Bundle\Modules\Accounts\Auth\Middlewares\EmailAuthMiddleware;
+    use PHPCraftdream\Garnet\Bundle\Support\I18n\FwI18n;
     use PHPCraftdream\Garnet\Kernel\Core\AppInit\BaseAppInit;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Migration\CMDMigration;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Session;
@@ -56,7 +56,7 @@ namespace PHPCraftdream\Application {
             $router->add('/', MainController::class);
 
             // Reference route for the framework's built-in email-code auth
-            // flow (Bundle/Modules/Auth) — `/` itself is deliberately left
+            // flow (Bundle/Modules/Accounts/Auth) — `/` itself is deliberately left
             // public so a fresh scaffold's homepage isn't a login wall. Move
             // this middleware onto `/` (or any other route) instead if your
             // app should require auth everywhere.

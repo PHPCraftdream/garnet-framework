@@ -1,4 +1,4 @@
-import {IDataListItem} from '@common/Models';
+import {IDataListItem} from '@common/Support/Models';
 
 export type TGridBoolStr = { bool: string };
 export type TGridMap = { map: IDataListItem[] };

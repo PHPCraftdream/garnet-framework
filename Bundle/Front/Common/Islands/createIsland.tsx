@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {createRoot, Root} from 'react-dom/client';
-import {DomObserver} from '@common/Dom/DomObserver';
-import {ErrorBoundary} from '@common/Components/ErrorBoundary';
+import {DomObserver} from '@common/Dom/El/DomObserver';
+import {ErrorBoundary} from '@common/Components/Layout/ErrorBoundary';
 
 type LazyImport<P> = () => Promise<{ default: React.ComponentType<P> } | { [key: string]: React.ComponentType<P> }>;
 

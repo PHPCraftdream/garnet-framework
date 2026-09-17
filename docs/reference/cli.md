@@ -136,7 +136,7 @@ maps. Commit them alongside the frontend changes.
 | `db:restore <file>` | Restore from a dump (auto-backs-up the live DB first). `--no-backup` to skip the safety snapshot. |
 | `sql "<query>"` | Run a single SQL query against the active app's DB (text output). Also reads from stdin. |
 
-For the migration file structure see [`database.md`](database.md).
+For the migration file structure see [`database.md`](layers/database.md).
 
 ### Configuration
 
@@ -152,7 +152,7 @@ For the migration file structure see [`database.md`](database.md).
 |---|---|
 | `deploy` | Local: maintenance ON → migrations → cache clear → maintenance OFF. Does not push files. |
 | `bundle` | Builds 4 sibling directories (`public/`, `framework/`, `app/`, `runtime/`) for a from-scratch deploy. |
-| `deploy:diff` | Pushes the file delta between two commits over SSH/SCP. See [`deploy.md`](deploy.md). |
+| `deploy:diff` | Pushes the file delta between two commits over SSH/SCP. See [`deploy.md`](../guides/deploy.md). |
 | `ssh "<cmd>"` | Runs a shell command on the host (host + key from `ssh.ini`). |
 | `ssh:put <local> [remote]` | Upload a file/directory. |
 | `ssh:get <remote> [local]` | Download a file/directory. |

@@ -1,5 +1,5 @@
 import {sprintf} from '@common/Utils/Str/Sprintf';
-import {IGarnetWindow} from '@common/Models';
+import {IGarnetWindow} from '@common/Support/Models';
 
 const w: IGarnetWindow = window as IGarnetWindow;
 

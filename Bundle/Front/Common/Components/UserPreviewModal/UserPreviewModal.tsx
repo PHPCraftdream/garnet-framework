@@ -1,8 +1,8 @@
 import * as React from 'react';
-import {sendPost} from '@common/Api/sendPost';
-import {useBodyScrollLock} from '@common/hooks/useBodyScrollLock';
-import {appUrl} from '@common/Utils/appUrl';
-import {Portal} from '@common/Components/Portal';
+import {sendPost} from '@common/Api/Send/sendPost';
+import {useBodyScrollLock} from '@common/hooks/ui/useBodyScrollLock';
+import {appUrl} from '@common/Utils/Url/appUrl';
+import {Portal} from '@common/Components/Layout/Portal';
 
 /**
  * Generic foreground user preview modal.

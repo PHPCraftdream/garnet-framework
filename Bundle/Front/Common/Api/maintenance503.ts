@@ -1,4 +1,4 @@
-import {TOAST_EVENT, ToastEventDetail} from '@common/Components/toastEvent';
+import {TOAST_EVENT, ToastEventDetail} from '@common/Components/Feedback/toastEvent';
 import {I18nFramework} from '@framework/I18nGen/I18nFramework';
 
 /** Raise a toast from the low-level API layer WITHOUT importing the toast

@@ -49,8 +49,8 @@ is:
 
 - [`../Bundle/README.md`](../Bundle/README.md) — reusable modules built on top of this kernel.
 - [`../docs/reference/architecture.md`](../docs/reference/architecture.md) — full layered overview.
-- [`../docs/reference/database.md`](../docs/reference/database.md) — the data layer in depth.
-- [`../docs/reference/io.md`](../docs/reference/io.md) — the IO subsystem in depth.
+- [`../docs/reference/layers/database.md`](../docs/reference/layers/database.md) — the data layer in depth.
+- [`../docs/reference/layers/io.md`](../docs/reference/layers/io.md) — the IO subsystem in depth.
 
 ---
 

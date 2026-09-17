@@ -317,7 +317,7 @@ The prod equivalent is the same via `ssh`:
 php garnet ssh "cd /var/www/u…/data/www/garnet-runtime-myapp && php garnet maintenance on && php garnet migration && php garnet maintenance off"
 ```
 
-Migration internals: [`database.md`](database.md).
+Migration internals: [`database.md`](../reference/layers/database.md).
 
 ---
 
@@ -404,9 +404,9 @@ changed.
 
 ## Related docs
 
-- [`cli.md`](cli.md) — overview of every `php garnet` command.
-- [`ssh.md`](ssh.md) — `ssh.ini` config and the `ssh*` commands.
-- [`database.md`](database.md) — migration structure.
-- [`bundle.md`](bundle.md) — **FrameworkBundle** (the framework's code
+- [`cli.md`](../reference/cli.md) — overview of every `php garnet` command.
+- [`ssh.md`](../reference/ssh.md) — `ssh.ini` config and the `ssh*` commands.
+- [`database.md`](../reference/layers/database.md) — migration structure.
+- [`bundle.md`](../reference/layers/bundle.md) — **FrameworkBundle** (the framework's code
   module), not to be confused with deploy-bundle.
 - `Apps/<App>/docs/guides/deploy.md` — per-app first-time-install guide.

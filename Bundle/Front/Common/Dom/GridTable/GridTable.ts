@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {createRoot, Root} from 'react-dom/client';
-import {Component} from '@common/Dom/Component';
+import {Component} from '@common/Dom/Component/Component';
 import {parseJson} from '@common/Utils/Str/parseJson';
 import {decode} from 'js-base64';
 import {IGridInfo, TGridFieldType} from '@common/Dom/GridTable/Models';
@@ -11,19 +11,19 @@ import {Grid, html} from 'gridjs';
 import 'gridjs/dist/theme/mermaid.min.css';
 import escape from 'lodash/escape';
 import {gridConfig} from '@common/Dom/GridTable/GridConfig';
-import {classClick} from '@common/Dom/ClassClick';
-import {DomEl} from '@common/Dom/DomEl';
+import {classClick} from '@common/Dom/El/ClassClick';
+import {DomEl} from '@common/Dom/El/DomEl';
 import {FormBuilder, FormBuilderProps} from '@common/Components/Form/FormBuilder';
-import {sendPost} from '@common/Api/sendPost';
+import {sendPost} from '@common/Api/Send/sendPost';
 
 declare global {
 	interface Window {
 		__GARNET_CSRF__?: string;
 	}
 }
-import {IApiSuccessResponse} from '@common/Models';
+import {IApiSuccessResponse} from '@common/Support/Models';
 import {I18nFramework} from '@framework/I18nGen/I18nFramework';
-import {iconSvg} from '@common/Utils/LucideIcons';
+import {iconSvg} from '@common/Utils/Ui/LucideIcons';
 
 export class GridTable extends Component {
 	protected grid!: Grid;

@@ -75,8 +75,8 @@ provided, not per-app.
 
 - [`../README.md`](../README.md) — bundle index.
 - [`../TwigTemplates/README.md`](../TwigTemplates/README.md) — the markup the islands hydrate into.
-- [`../../docs/reference/frontend.md`](../../docs/reference/frontend.md) — full frontend reference.
-- [`../../docs/cookbook/add-an-island.md`](../../docs/cookbook/add-an-island.md) — recipe.
+- [`../../docs/reference/layers/frontend.md`](../../docs/reference/layers/frontend.md) — full frontend reference.
+- [`../../docs/cookbook/add/add-an-island.md`](../../docs/cookbook/add/add-an-island.md) — recipe.
 
 ---
 

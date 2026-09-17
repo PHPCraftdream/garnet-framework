@@ -1,6 +1,6 @@
 import {IAuthData, ICodeRequest, ICodeRequestResponse, TInputRef, TSetAuthState} from '@framework/auth/Models';
 import {EPhase} from '@framework/auth/Enums';
-import {sendPost} from '@common/Api/sendPost';
+import {sendPost} from '@common/Api/Send/sendPost';
 import {goTo} from '@common/Dom/Nav/GoTo';
 
 /**

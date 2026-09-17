@@ -3,19 +3,19 @@
 Short, copy-friendly recipes for the most common framework tasks. Each
 page is a single small problem with a complete, working solution.
 
-If you're new, read [`../quickstart.md`](../quickstart.md) and
-[`../architecture.md`](../architecture.md) first — the recipes assume
+If you're new, read [`../quickstart.md`](../guides/quickstart.md) and
+[`../architecture.md`](../reference/architecture.md) first — the recipes assume
 you know what a bundle, a controller and a Twig template are.
 
 ## Index
 
 ### Adding things
 
-- [Add a bundle](add-a-bundle.md) — wire a new self-contained module into your app.
-- [Add a route](add-a-route.md) — expose a new URL via a controller method.
-- [Add a CLI command](add-a-cli-command.md) — register a `php garnet <name>` subcommand.
-- [Add a React island](add-an-island.md) — hydrate a server-rendered placeholder with React.
-- [Add an admin entity](add-an-admin-entity.md) — `IEntityConfig` + Template Method controllers for admin CRUD pages.
+- [Add a bundle](add/add-a-bundle.md) — wire a new self-contained module into your app.
+- [Add a route](add/add-a-route.md) — expose a new URL via a controller method.
+- [Add a CLI command](add/add-a-cli-command.md) — register a `php garnet <name>` subcommand.
+- [Add a React island](add/add-an-island.md) — hydrate a server-rendered placeholder with React.
+- [Add an admin entity](add/add-an-admin-entity.md) — `IEntityConfig` + Template Method controllers for admin CRUD pages.
 
 ### Data and IO
 
@@ -25,7 +25,7 @@ you know what a bundle, a controller and a Twig template are.
 
 ### Patterns
 
-- [Add validation rules to a form](add-validation-rules.md) — one source of truth in PHP, auto-Zod on the frontend.
+- [Add validation rules to a form](add/add-validation-rules.md) — one source of truth in PHP, auto-Zod on the frontend.
 - [Localise UI strings](localise-strings.md) — i18n keys, `%s` interpolation, codegen pipeline.
 
 ---

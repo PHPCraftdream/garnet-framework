@@ -13,13 +13,13 @@ import type { EnvConfig, ToolDef, ToolResult } from './types.ts';
 
 import * as sessionTools from './tools/sessions.ts';
 import * as navigationTools from './tools/navigation/index.ts';
-import * as understandingTools from './tools/understanding.ts';
-import * as loggingTools from './tools/logging.ts';
+import * as understandingTools from './tools/observe/understanding.ts';
+import * as loggingTools from './tools/observe/logging.ts';
 import * as smokeTools from './tools/smoke.ts';
-import * as visualTools from './tools/visual.ts';
+import * as visualTools from './tools/observe/visual.ts';
 import * as backendTools from './tools/backend.ts';
 import * as actionTools from './tools/actions.ts';
-import * as noteTools from './tools/notes.ts';
+import * as noteTools from './tools/observe/notes.ts';
 
 // ── Tool registry ────────────────────────────────────────────────────
 

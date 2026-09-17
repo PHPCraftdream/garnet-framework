@@ -1,6 +1,6 @@
 # Send an email
 
-The framework ships `Bundle/Modules/Email/` on top of `symfony/mailer`.
+The framework ships `Bundle/Modules/Comms/Email/` on top of `symfony/mailer`.
 SMTP credentials come from `email.ini`, templates from Twig under
 `TwigTemplates/Email/`, and queueing is a thin table-backed loop the
 cron runner drains.
@@ -8,7 +8,7 @@ cron runner drains.
 ## Configure SMTP once
 
 `<App>/WorkDir/ConfigDev/email.ini` for local dev, `<App>/WorkDir/Config/email.ini`
-in production (see [`core.md`](../core.md#env--execution-environment-detection) for
+in production (see [`core.md`](../reference/layers/core.md#env--execution-environment-detection) for
 which one a given checkout actually reads):
 
 ```ini
@@ -28,7 +28,7 @@ runtime.
 ## Send right now
 
 ```php
-use PHPCraftdream\Garnet\Bundle\Modules\Email\FwEmailQueueService;
+use PHPCraftdream\Garnet\Bundle\Modules\Comms\Email\FwEmailQueueService;
 
 FwEmailQueueService::queue(
     to: 'alice@example.com',
@@ -82,7 +82,7 @@ Subjects are i18n keys with `%s` interpolation handled by the engine —
 **never** by `sprintf`. Pass arguments through the i18n call:
 
 ```php
-use PHPCraftdream\Garnet\Bundle\I18n\I18nFramework;
+use PHPCraftdream\Garnet\Bundle\Support\I18n\I18nFramework;
 
 $t = I18nFramework::getInstance();
 FwEmailQueueService::queue(
@@ -95,9 +95,9 @@ FwEmailQueueService::queue(
 
 ## Related
 
-- [`../i18n.md`](../i18n.md) — translation pipeline.
-- [`../../Bundle/Modules/Email/README.md`](../../Bundle/Modules/Email/README.md) — service / table reference.
-- [`../../Bundle/Modules/Cron/README.md`](../../Bundle/Modules/Cron/README.md) — runner internals.
+- [`../i18n.md`](../reference/i18n.md) — translation pipeline.
+- [`../../Bundle/Modules/Comms/Email/README.md`](../../Bundle/Modules/Comms/Email/README.md) — service / table reference.
+- [`../../Bundle/Modules/Ops/Cron/README.md`](../../Bundle/Modules/Ops/Cron/README.md) — runner internals.
 
 ---
 

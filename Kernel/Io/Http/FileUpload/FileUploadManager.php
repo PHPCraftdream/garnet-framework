@@ -2,7 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Io\Http\FileUpload {
     use finfo;
-    use PHPCraftdream\Garnet\Bundle\I18n\FwI18n;
+    use PHPCraftdream\Garnet\Bundle\Support\I18n\FwI18n;
     use PHPCraftdream\Garnet\Kernel\Io\Http\FileUpload\Types\UploadedFileInfo;
     use PHPCraftdream\Garnet\Kernel\Io\Http\FileUpload\Types\UploadResult;
     use PHPCraftdream\Garnet\Kernel\Io\Http\FileUpload\Types\UploadRules;

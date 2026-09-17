@@ -3,18 +3,18 @@
 // Regenerate framework i18n TypeScript files from PHP source.
 //
 // This is a framework-standalone version of what BaseAppInit::dumpFrontLang()
-// does for scaffolded apps. Use this after editing Bundle/I18n/I18nData{En,Ru}.php
+// does for scaffolded apps. Use this after editing Bundle/Support/I18n/I18nData{En,Ru}.php
 // to update Bundle/Front/I18nGen/* without needing an app context or .env.
 //
 // Usage: php tooling/scripts/regen-i18n.php
 
 $root = dirname(__DIR__, 2);
 require $root . '/Kernel/Io/Render/I18n/I18nFrontendDumper.php';
-require $root . '/Bundle/I18n/I18nDataEn.php';
-require $root . '/Bundle/I18n/I18nDataRu.php';
+require $root . '/Bundle/Support/I18n/I18nDataEn.php';
+require $root . '/Bundle/Support/I18n/I18nDataRu.php';
 
-use PHPCraftdream\Garnet\Bundle\I18n\I18nDataEn;
-use PHPCraftdream\Garnet\Bundle\I18n\I18nDataRu;
+use PHPCraftdream\Garnet\Bundle\Support\I18n\I18nDataEn;
+use PHPCraftdream\Garnet\Bundle\Support\I18n\I18nDataRu;
 use PHPCraftdream\Garnet\Kernel\Io\Render\I18n\I18nFrontendDumper;
 
 $out = $root . DIRECTORY_SEPARATOR . 'Bundle' . DIRECTORY_SEPARATOR . 'Front' . DIRECTORY_SEPARATOR . 'I18nGen';

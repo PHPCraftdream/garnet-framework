@@ -3,7 +3,7 @@
 The `php garnet ssh*` commands and the whole `deploy:diff` pipeline
 ride over a single SSH connection to a single host. Connection config
 lives in `ssh.ini`. The on-host directory layout lives in `deploy.ini`
-(see [`deploy.md`](deploy.md)).
+(see [`deploy.md`](../guides/deploy.md)).
 
 ## Contents
 
@@ -48,7 +48,7 @@ prod is harmless.
 
 Layout fields (`remote_path`, `public_dir`, `framework_dir`, `app_dir`,
 `runtime_dir`, `public_name`) live in a **separate** `deploy.ini` — see
-[`deploy.md`](deploy.md).
+[`deploy.md`](../guides/deploy.md).
 
 ---
 

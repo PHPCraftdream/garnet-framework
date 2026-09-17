@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {useFormErrors} from './useFormErrors';
-import type {IDataListItem} from '@common/Models';
+import type {IDataListItem} from '@common/Support/Models';
 
 interface Props {
     name: string;

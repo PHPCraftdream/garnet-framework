@@ -4,7 +4,7 @@
  * and that the submit button is disabled until consent is given.
  *
  * REQUIRES: a route gated by `AuthMiddleware::authOnly` (see
- * `Bundle/Modules/Auth/Middlewares/AuthMiddleware.php`). The scaffolded
+ * `Bundle/Modules/Accounts/Auth/Middlewares/AuthMiddleware.php`). The scaffolded
  * `Application.php` ships the `/` route's authOnly middleware commented
  * out — uncomment it (or wire authOnly onto another route and update
  * AUTH_PATH below) before running this spec.

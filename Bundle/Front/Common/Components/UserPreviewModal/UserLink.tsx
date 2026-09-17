@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {usePreview} from './PreviewContext';
-import {appUrl} from '@common/Utils/appUrl';
+import {appUrl} from '@common/Utils/Url/appUrl';
 
 interface UserLinkProps {
     id: number;

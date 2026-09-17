@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Application\Foreground\Backend {
-    use PHPCraftdream\Garnet\Bundle\I18n\FwI18n;
-    use PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\AuthMiddleware;
+    use PHPCraftdream\Garnet\Bundle\Modules\Accounts\Auth\Middlewares\AuthMiddleware;
+    use PHPCraftdream\Garnet\Bundle\Support\I18n\FwI18n;
     use PHPCraftdream\Garnet\Kernel\Core\Runtime\FrameworkController;
     use PHPCraftdream\Garnet\Kernel\Core\Support\Tools\StrTools;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Session;

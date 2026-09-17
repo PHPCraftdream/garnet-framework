@@ -8,7 +8,7 @@ the TypeScript companions that the React side imports.
 
 | File | Scope |
 |---|---|
-| `Bundle/I18n/I18nDataRu.php` / `I18nDataEn.php` | Framework-level keys (Auth, Pagination, Action_*, …) |
+| `Bundle/Support/I18n/I18nDataRu.php` / `I18nDataEn.php` | Framework-level keys (Auth, Pagination, Action_*, …) |
 | `<App>/Foreground/I18n/ForegroundI18nDataRu.php` / `…En.php` | Per-app foreground keys |
 | `<App>/Dashboard/I18n/DashboardI18nDataRu.php` / `…En.php` | Per-app admin-panel keys |
 
@@ -100,7 +100,7 @@ translations.
 
 ## Related
 
-- [`../i18n.md`](../i18n.md) — full pipeline reference.
+- [`../i18n.md`](../reference/i18n.md) — full pipeline reference.
 
 ---
 

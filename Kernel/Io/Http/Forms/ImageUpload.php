@@ -3,7 +3,7 @@
 namespace PHPCraftdream\Garnet\Kernel\Io\Http\Forms {
     use Exception;
     use Gumlet\ImageResize;
-    use PHPCraftdream\Garnet\Bundle\I18n\FwI18n;
+    use PHPCraftdream\Garnet\Bundle\Support\I18n\FwI18n;
     use PHPCraftdream\Garnet\Kernel\Exceptions\Io\LoggerException;
     use PHPCraftdream\Garnet\Kernel\Io\Bootstrap\ErrorCatcher\ErrorCatcher;
     use PHPCraftdream\Garnet\Kernel\Io\Services\Logs\Logger;

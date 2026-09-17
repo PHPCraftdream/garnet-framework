@@ -36,6 +36,34 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Build\Spec {
                 expect(GarnetSizeCheckCommand::limitFor('A.PHP'))->toBe(GarnetSizeCheckCommand::BACK_MAX_LINES);
                 expect(GarnetSizeCheckCommand::limitFor('B.TSX'))->toBe(GarnetSizeCheckCommand::FRONT_MAX_LINES);
             });
+
+            it('не мерит сгенерированный мост ассетов — его длину выбирает не человек', function (): void {
+                expect(GarnetSizeCheckCommand::limitFor('Bundle/FrameworkCssGen.php'))->toBe(null);
+                expect(GarnetSizeCheckCommand::limitFor('Foreground/ForegroundJsGen.php'))->toBe(null);
+            });
+
+            it('но мерит файл, чьё имя лишь содержит Gen', function (): void {
+                // Суффикс, а не подстрока: GenericTable.php писали руками.
+                expect(GarnetSizeCheckCommand::limitFor('Common/Tables/GenericTable.php'))
+                    ->toBe(GarnetSizeCheckCommand::BACK_MAX_LINES);
+                expect(GarnetSizeCheckCommand::limitFor('Front/Utils/GenUtils.ts'))
+                    ->toBe(GarnetSizeCheckCommand::FRONT_MAX_LINES);
+            });
+        });
+
+        describe('::isGenerated — сгенерированное не участвует и в счёте элементов', function (): void {
+            it('узнаёт мост ассетов по концу имени', function (): void {
+                expect(GarnetSizeCheckCommand::isGenerated('FrameworkJsGen.php'))->toBe(true);
+                expect(GarnetSizeCheckCommand::isGenerated('ForegroundCssGen.php'))->toBe(true);
+            });
+
+            it('не путает с рукописным файлом', function (): void {
+                // Иначе после сборки корень бандла «прирастает» двумя файлами,
+                // и правило семи элементов начинает зависеть от того, собирали
+                // ли фронт в этом дереве.
+                expect(GarnetSizeCheckCommand::isGenerated('GenerateThings.php'))->toBe(false);
+                expect(GarnetSizeCheckCommand::isGenerated('Gen.ts'))->toBe(false);
+            });
         });
 
         describe('::isSkipped — исключения по сегменту пути, а не по подстроке', function (): void {

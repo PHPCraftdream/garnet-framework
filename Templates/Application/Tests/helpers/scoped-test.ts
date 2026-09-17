@@ -8,7 +8,7 @@
  *      (`dbPrefix`) so direct DB queries target the right tables.
  *   2. Wires the `X-Test-Worker` header into every HTTP request the
  *      browser issues, so the server-side `WorkerScopeMiddleware`
- *      (`Bundle/Middlewares/WorkerScopeMiddleware.php`) swaps the table
+ *      (`Bundle/Support/Middlewares/WorkerScopeMiddleware.php`) swaps the table
  *      prefix to `test_worker_N_*` for that request.
  *
  * The fixture is per-worker (not per-test), so the prefix is stable
@@ -16,9 +16,9 @@
  *
  * Usage:
  * ```ts
- * import { test, expect } from '../helpers/scoped-test';
- * import { tn } from '../helpers/scoped-test';
- * import { withConnection } from '../helpers/db';
+ * import { test, expect } from './scoped-test';
+ * import { tn } from './scoped-test';
+ * import { withConnection } from './db';
  *
  * test('signup lands in DB', async ({ page, dbPrefix }) => {
  *   await page.goto('/');

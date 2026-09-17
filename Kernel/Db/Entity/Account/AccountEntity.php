@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Account {
-    use PHPCraftdream\Garnet\Bundle\I18n\FwI18n;
+    use PHPCraftdream\Garnet\Bundle\Support\I18n\FwI18n;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\BaseEntity\BaseEntity;
 
     class AccountEntity extends BaseEntity {

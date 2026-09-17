@@ -3,7 +3,7 @@
  *
  * There is no auto-login-without-a-code shortcut in the bare framework: the
  * `.test` domain carve-out on `EmailAuthMiddleware::processPhaseNullPost`
- * (see `Bundle/Modules/Auth/Middlewares/EmailAuthMiddleware.php`) only
+ * (see `Bundle/Modules/Accounts/Auth/Middlewares/EmailAuthMiddleware.php`) only
  * exempts `*.test` addresses from the registrations-disabled gate — a code
  * is still minted and written to `session_data` for every address. Tests
  * read that code back out of the DB (see `helpers/auth.ts`) instead of a
@@ -18,7 +18,7 @@
  *   6. DB: account created in the accounts table after login
  *
  * REQUIRES: a route gated by `AuthMiddleware::authOnly` (see
- * `Bundle/Modules/Auth/Middlewares/AuthMiddleware.php`). The scaffolded
+ * `Bundle/Modules/Accounts/Auth/Middlewares/AuthMiddleware.php`). The scaffolded
  * `Application.php` ships the `/` route's authOnly middleware commented
  * out — uncomment it (or wire authOnly onto another route and update
  * AUTH_PATH below) before running this spec.

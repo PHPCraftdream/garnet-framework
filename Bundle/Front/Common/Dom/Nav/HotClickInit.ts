@@ -1,4 +1,4 @@
-import {classClick} from '@common/Dom/ClassClick';
+import {classClick} from '@common/Dom/El/ClassClick';
 import {goTo} from '@common/Dom/Nav/GoTo';
 
 /**

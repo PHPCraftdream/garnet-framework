@@ -7,12 +7,12 @@ import {getInputPlaceholder} from '@framework/auth/utils/GetInputPlaceholder';
 import {getHintParams} from '@framework/auth/utils/GetHintParams';
 import {getButtonParams} from '@framework/auth/utils/GetButtonParams';
 import {CodeTimer} from '@framework/auth/utils/CodeTimer';
-import {renderMarkdownLinks} from '@common/Utils/staticPageUrl';
+import {renderMarkdownLinks} from '@common/Utils/Url/staticPageUrl';
 import {getInputParams} from './utils/GetInputParams';
 import {handleRequestCode} from '@framework/auth/utils/HandleRequestCode';
 import {handleCheckCode} from '@framework/auth/utils/HandleCheckCode';
-import {startSession} from '@common/Api/startSession';
-import {IGarnetWindow} from '@common/Models';
+import {startSession} from '@common/Api/Send/startSession';
+import {IGarnetWindow} from '@common/Support/Models';
 
 const w: IGarnetWindow = window as IGarnetWindow;
 

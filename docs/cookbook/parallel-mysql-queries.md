@@ -87,8 +87,8 @@ DbPool::get()->pollFinishAll();
 
 ## Related
 
-- [`../database.md`](../database.md) — `DbPool`, `DbTable`, EAV, Account.
-- [`../architecture.md`](../architecture.md#async-database) — the
+- [`../database.md`](../reference/layers/database.md) — `DbPool`, `DbTable`, EAV, Account.
+- [`../architecture.md`](../reference/architecture.md#async-database) — the
   `mysqli_poll` mechanism in depth.
 
 ---

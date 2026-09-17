@@ -140,7 +140,7 @@ class GarnetDeployFullCommand {
         // 2. Maintenance ON before anything remote gets touched. This is
         // NOT optional/defense-in-depth here — a real production incident
         // showed why: framework-dir's swap once left a window where
-        // Bundle/Middlewares/MaintenanceMiddleware itself (a framework
+        // Bundle/Support/Middlewares/MaintenanceMiddleware itself (a framework
         // class) couldn't be autoloaded, so even the maintenance page
         // can't be trusted to render if the swap below isn't also made
         // effectively instantaneous (see shipDir()'s doc comment). Both

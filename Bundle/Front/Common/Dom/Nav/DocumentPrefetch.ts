@@ -11,7 +11,7 @@
  * isn't a `<a href>` navigation.
  */
 import {PrefetchCache} from '@common/Api/PrefetchCache';
-import {getHtml} from '@common/Api/getHtml';
+import {getHtml} from '@common/Api/Get/getHtml';
 import {initIntentTriggers} from '@common/Dom/Nav/IntentTriggers';
 
 const documentCache = new PrefetchCache<string>();

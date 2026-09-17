@@ -109,7 +109,7 @@ HTTP header.
 
 ### `X-Test-Worker` and `WorkerScopeMiddleware`
 
-`Bundle/Middlewares/WorkerScopeMiddleware.php` runs on (almost) every
+`Bundle/Support/Middlewares/WorkerScopeMiddleware.php` runs on (almost) every
 request and rewrites the active DB prefix for that request's duration:
 
 1. It always clears any prior runtime prefix override first — no stale
@@ -256,11 +256,11 @@ step for the current excluded-spec list and why.
 
 - [Testing](testing.md) — the kahlan side: running/writing unit specs,
   and where the kahlan/e2e line sits.
-- [Add an admin entity](cookbook/add-an-admin-entity.md) — the kind of
+- [Add an admin entity](../cookbook/add/add-an-admin-entity.md) — the kind of
   admin CRUD flow role-based e2e specs typically exercise.
-- [`architecture.md`](architecture.md) — request lifecycle and
+- [`architecture.md`](../reference/architecture.md) — request lifecycle and
   middleware pipeline that `WorkerScopeMiddleware` plugs into.
 
 ---
 
-↑ Back to [Documentation index](README.md)
+↑ Back to [Documentation index](../README.md)

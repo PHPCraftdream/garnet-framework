@@ -7,6 +7,7 @@
     "Templates/Application/Tests/helpers": "часть той же заготовки",
     "Templates/Application/Foreground/TwigTemplates/Foreground": "часть той же заготовки",
     "Templates/Application/Migrations/Items": "нумерованные миграции заготовки: порядок и есть структура",
-    "Templates/Application/Common": "часть той же заготовки"
+    "Templates/Application/Common": "часть той же заготовки",
+    "tooling/mcp/browser/collector/parts": "нумерованные куски ОДНОГО скрипта: загрузчик читает каталог по порядку имён и склеивает их в один инъектируемый файл — номер в имени и есть структура, подкаталог её разорвёт"
   }
 }

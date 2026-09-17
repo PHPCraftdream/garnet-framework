@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {useState} from 'react';
 import * as Popover from '@radix-ui/react-popover';
-import {cn} from '@common/Utils/cn';
+import {cn} from '@common/Utils/Ui/cn';
 
 interface ComboboxOption {
     value: string;

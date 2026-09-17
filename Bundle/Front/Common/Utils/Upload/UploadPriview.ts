@@ -1,8 +1,8 @@
-import {ICropData, TCropHandler, TSelectImageHandler} from '@common/Models';
+import {ICropData, TCropHandler, TSelectImageHandler} from '@common/Support/Models';
 import Cropper from 'cropperjs';
 import 'cropperjs/dist/cropper.min.css';
-import {DomEl} from '@common/Dom/DomEl';
-import {resolveTimeout} from '@common/Utils/ResolveTimeout';
+import {DomEl} from '@common/Dom/El/DomEl';
+import {resolveTimeout} from '@common/Utils/Data/ResolveTimeout';
 import {I18nFramework} from '@framework/I18nGen/I18nFramework';
 import {uploadMaxBytes, megabytes} from '@common/Utils/Upload/uploadLimits';
 

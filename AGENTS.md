@@ -105,10 +105,10 @@ framework's abstract / `Fw*` class in the app.
 
 Known leakage we accept for v0.x and plan to generalise:
 
-- `Bundle/Modules/Balance/Tables/FwBalanceLedger.php` — string enum
+- `Bundle/Modules/Accounts/Balance/Tables/FwBalanceLedger.php` — string enum
   values still spell `booking_invoice`, `booking_payment`,
   `booking_refund`. v1.0 will rename to generic `tx_*`.
-- `Bundle/Modules/SystemSettings/FwAppSettings.php` —
+- `Bundle/Modules/Ops/SystemSettings/FwAppSettings.php` —
   `cancellation_penalty_percent` is a booking-domain setting; v1.0 will
   move it to the app layer.
 
@@ -131,10 +131,10 @@ name or an extension point.
 - `README.md` — the user-facing pitch and limitations.
 - `CONTRIBUTING.md` — how to send a PR.
 - `docs/reference/architecture.md` — layered architecture, request lifecycle, async DB.
-- `docs/reference/bundle.md` — how bundles are written.
+- `docs/reference/layers/bundle.md` — how bundles are written.
 - `docs/reference/cli.md` — every CLI command.
-- `docs/reference/database.md` — DbPool, DbTable, async patterns.
-- `docs/reference/frontend.md` — React islands, codegen, asset bridge.
+- `docs/reference/layers/database.md` — DbPool, DbTable, async patterns.
+- `docs/reference/layers/frontend.md` — React islands, codegen, asset bridge.
 - `docs/guides/deploy.md` — host layout, `bundle`/`deploy:diff`/`deploy`, migrations, case studies.
 - `docs/reference/ssh.md` — `ssh.ini` config, `ssh*` commands, identity key vs. inline, troubleshooting.
 - `docs/reference/i18n.md` — i18n keys, `%s` interpolation rules.

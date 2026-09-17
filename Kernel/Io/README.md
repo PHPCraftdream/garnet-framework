@@ -23,7 +23,7 @@ INI config, logger, cache, emitter, mailer, file uploads, cookies.
 | `IoRun/` | The two top-level runners: `IoRunWeb` (request → router → controller → emit) and `IoRunConsole` (CLI dispatch). |
 | `IoTools.php` | `pr()` / `varDump()` — dev-only debug printers (deliberately raw — used when Twig itself is broken). |
 | `Logs/` | `Logger` channels (`SYSTEM_LOGGER`, `ERROR_LOGGER`, `APP_LOGGER`) with file-journal storage. |
-| `Mailer/` | `symfony/mailer` wrapper plus the email queue table runner. Used by `Bundle/Modules/Email`. |
+| `Mailer/` | `symfony/mailer` wrapper plus the email queue table runner. Used by `Bundle/Modules/Comms/Email`. |
 | `PSR4Autoload/` | The framework's own autoloader (composer's is the primary, this is the fallback for the few bootstrap-time loads). |
 | `RateLimit/` | Token-bucket primitives behind the auth + signup brute-force gates. |
 | `Router/` | The O(1) router — path used as a direct hash-map key. `RouterUriParams` parses `/path/~method` and `/x~123` syntaxes. |
@@ -61,7 +61,7 @@ invoked them.
 - New CLI commands go to `GarnetCli/Garnet<Name>Command.php` and are
   registered in `GarnetRunner::main`'s `match`. **For app-level
   commands, do it in the app**, not here — see
-  [`../../docs/cookbook/add-a-cli-command.md`](../../docs/cookbook/add-a-cli-command.md).
+  [`../../docs/cookbook/add/add-a-cli-command.md`](../../docs/cookbook/add/add-a-cli-command.md).
 - Logger channels: `SYSTEM_LOGGER` for framework noise, `APP_LOGGER`
   for app events, `ERROR_LOGGER` for the uncaught-exception sink.
 - All HTML rendering goes through `Twig`. No string concatenation of
@@ -71,7 +71,7 @@ invoked them.
 
 - [`../README.md`](../README.md) — kernel overview.
 - [`../../docs/reference/cli.md`](../../docs/reference/cli.md) — every CLI command in full.
-- [`../../docs/reference/io.md`](../../docs/reference/io.md) — IO subsystem reference.
+- [`../../docs/reference/layers/io.md`](../../docs/reference/layers/io.md) — IO subsystem reference.
 - [`../../docs/reference/architecture.md`](../../docs/reference/architecture.md) — request lifecycle.
 
 ---

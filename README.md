@@ -176,16 +176,16 @@ For the full story see [`docs/reference/architecture.md`](docs/reference/archite
 - [`docs/guides/quickstart.md`](docs/guides/quickstart.md) — scaffold a new app
 - [`docs/guides/dev-workflow.md`](docs/guides/dev-workflow.md) — develop framework + app together
 - [`docs/reference/architecture.md`](docs/reference/architecture.md) — layers, request lifecycle, async DB
-- [`docs/reference/bundle.md`](docs/reference/bundle.md) — writing your own bundle
+- [`docs/reference/layers/bundle.md`](docs/reference/layers/bundle.md) — writing your own bundle
 - [`docs/reference/cli.md`](docs/reference/cli.md) — every CLI command
-- [`docs/reference/database.md`](docs/reference/database.md) — DbPool, DbTable, async patterns
-- [`docs/reference/frontend.md`](docs/reference/frontend.md) — React islands, codegen, asset bridge
+- [`docs/reference/layers/database.md`](docs/reference/layers/database.md) — DbPool, DbTable, async patterns
+- [`docs/reference/layers/frontend.md`](docs/reference/layers/frontend.md) — React islands, codegen, asset bridge
 - [`docs/reference/i18n.md`](docs/reference/i18n.md) — translation pipeline
 - [`docs/guides/deploy.md`](docs/guides/deploy.md) — production deploy via `garnet bundle` / `deploy:diff`
 - [`docs/guides/testing.md`](docs/guides/testing.md) — kahlan specs, writing tests
 - [`docs/guides/e2e-testing.md`](docs/guides/e2e-testing.md) — Playwright end-to-end tests
-- [`docs/reference/core.md`](docs/reference/core.md) — kernel-level primitives
-- [`docs/reference/io.md`](docs/reference/io.md) — HTTP, CLI dispatch, Twig, config, caching, mailer
+- [`docs/reference/layers/core.md`](docs/reference/layers/core.md) — kernel-level primitives
+- [`docs/reference/layers/io.md`](docs/reference/layers/io.md) — HTTP, CLI dispatch, Twig, config, caching, mailer
 - [`docs/reference/ssh.md`](docs/reference/ssh.md) — SSH connection and remote commands
 - [`docs/known-issues.md`](docs/known-issues.md) — sharp edges
 - [`docs/cookbook/`](docs/cookbook/) — short copy-friendly recipes (routes, islands, CRUD, parallel queries, emails, uploads, i18n, validation, CLI commands, bundles)

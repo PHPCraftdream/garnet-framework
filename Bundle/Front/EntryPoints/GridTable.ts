@@ -1,4 +1,4 @@
-import {DomObserver} from '@common/Dom/DomObserver';
+import {DomObserver} from '@common/Dom/El/DomObserver';
 import {GridTable} from '@common/Dom/GridTable/GridTable';
 
 const observer = DomObserver?.init();

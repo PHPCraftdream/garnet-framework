@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {memo, useEffect, useRef, useState} from 'react';
-import {unixTime} from '@common/Utils/UnixTime';
-import {secondsToTime} from '@common/Utils/SecondsToTime';
+import {unixTime} from '@common/Utils/Time/UnixTime';
+import {secondsToTime} from '@common/Utils/Time/SecondsToTime';
 
 type TPropsRender = { value: number, onTimeout: () => void };
 

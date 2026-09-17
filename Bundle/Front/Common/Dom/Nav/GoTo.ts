@@ -1,7 +1,7 @@
 import {fetchDocumentPrefetched} from '@common/Dom/Nav/DocumentPrefetch';
 import {PageLoader} from '@common/Dom/PageLoader';
 import {RespError} from '@common/Api/RespError';
-import {showToast} from '@common/Components/GlobalToast';
+import {showToast} from '@common/Components/Feedback/GlobalToast';
 import {I18nFramework} from '@framework/I18nGen/I18nFramework';
 
 // Monotonic navigation token. Every goTo() captures the current value up-front;

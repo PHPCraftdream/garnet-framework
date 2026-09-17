@@ -8,8 +8,8 @@ import {
     TGridSelect, TGridSelectField,
     TGridTimeZone
 } from '@common/Dom/GridTable/Models';
-import {TzList} from '@common/Utils/TzList';
-import {IDataListItem} from '@common/Models';
+import {TzList} from '@common/Utils/Time/TzList';
+import {IDataListItem} from '@common/Support/Models';
 
 export class GridUtils {
     static isGridData<T>(data: IGridInfo | unknown): data is IGridInfo {

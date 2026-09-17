@@ -1,5 +1,5 @@
-import {PageEvents} from '@common/Utils/PageEvents';
-import {ECommonEvents} from '@common/Enums';
+import {PageEvents} from '@common/Utils/Ui/PageEvents';
+import {ECommonEvents} from '@common/Support/Enums';
 
 export class PageLoader {
     static DEFAULT_TIMEOUT = 30000; // 30 seconds

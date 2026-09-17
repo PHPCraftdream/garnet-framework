@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import type { SessionState, PageSnapshot, TimelineEntry, LogEntry, EnvConfig, AuthOutcome, DestroyOutcome } from './types.ts';
 import { diffStates, formatDiff } from './diff.ts';
 import { formatTimestamp } from './utils.ts';
-import { bumpActionCounter, getReminder } from './tools/notes.ts';
+import { bumpActionCounter, getReminder } from './tools/observe/notes.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const COLLECTOR_PARTS_DIR = resolve(__dirname, '..', 'collector', 'parts');

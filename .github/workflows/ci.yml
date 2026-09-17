@@ -291,11 +291,11 @@ jobs:
           mkdir -p "$OUT_DIR"
           php -r '
             require "Kernel/Io/Render/I18n/I18nFrontendDumper.php";
-            require "Bundle/I18n/I18nDataEn.php";
-            require "Bundle/I18n/I18nDataRu.php";
+            require "Bundle/Support/I18n/I18nDataEn.php";
+            require "Bundle/Support/I18n/I18nDataRu.php";
             use PHPCraftdream\Garnet\Kernel\Io\Render\I18n\I18nFrontendDumper;
-            use PHPCraftdream\Garnet\Bundle\I18n\I18nDataEn;
-            use PHPCraftdream\Garnet\Bundle\I18n\I18nDataRu;
+            use PHPCraftdream\Garnet\Bundle\Support\I18n\I18nDataEn;
+            use PHPCraftdream\Garnet\Bundle\Support\I18n\I18nDataRu;
             I18nFrontendDumper::dump(
               [I18nDataEn::LANG => I18nDataEn::$data, I18nDataRu::LANG => I18nDataRu::$data],
               "'"$OUT_DIR"'",

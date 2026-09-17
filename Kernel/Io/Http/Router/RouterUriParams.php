@@ -29,7 +29,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Http\Router {
          * global route prefix. This does NOT affect routing itself —
          * {@see fromGlobals()} never consults this list, it's a
          * URL-building/rendering helper. Real consumers are app-side link
-         * builders (e.g. `Bundle/Utils/HtmlLayout.php`, an app's
+         * builders (e.g. `Bundle/Support/Utils/HtmlLayout.php`, an app's
          * bootstrap class) that need to render clean URLs for
          * public-facing routes (landing, static pages, webhooks) even when
          * the rest of the app sits under e.g. /system.

@@ -127,7 +127,7 @@ php garnet migration         # run DB migrations
 Which `.ini` set you're editing depends on `Env::isDevDir()` — on a
 normal IDE checkout (`.vscode`/`.idea`/etc. present near the project
 root) the app reads `WorkDir/ConfigDev/`; otherwise it reads
-`WorkDir/Config/`. See [`core.md`](core.md#env--execution-environment-detection)
+`WorkDir/Config/`. See [`core.md`](../reference/layers/core.md#env--execution-environment-detection)
 for the exact rule. `php garnet config:init` (re-)seeds both from
 `WorkDir/ConfigExample/` — mainly useful for the deploy-only
 `ssh.ini`/`deploy.ini`, which aren't part of the default scaffolding.
@@ -158,7 +158,7 @@ composer install            # vendor + node deps + Playwright, via `garnet setup
 ## Where to put what
 
 - **Backend logic** → `Foreground/Controllers/`, `Common/Services/`, `Common/Tables/`.
-- **Frontend (React islands)** → `Front/Islands/<Feature>/<Component>.tsx`. The framework lazy-loads them; see `docs/reference/frontend.md`.
+- **Frontend (React islands)** → `Front/Islands/<Feature>/<Component>.tsx`. The framework lazy-loads them; see `docs/reference/layers/frontend.md`.
 - **Templates** → `Foreground/TwigTemplates/`. No HTML in PHP — see project AGENTS.md / coding standards.
 - **DB migrations** → `Migrations/Items/M_NNNN.php`. Pattern: incrementing numbered files.
 - **Translations** → `Foreground/I18n/ForegroundI18nDataRu.php` + `…En.php`. TS files are generated; never hand-edit them.
@@ -166,6 +166,6 @@ composer install            # vendor + node deps + Playwright, via `garnet setup
 ## Next steps
 
 - See [dev-workflow.md](dev-workflow.md) — how to develop the framework and your app side by side.
-- See [architecture.md](architecture.md) — request lifecycle, router, bundles.
-- See [database.md](database.md) — DbPool, DbTable, async queries.
-- See [frontend.md](frontend.md) — React islands, codegen, asset bridge.
+- See [architecture.md](../reference/architecture.md) — request lifecycle, router, bundles.
+- See [database.md](../reference/layers/database.md) — DbPool, DbTable, async queries.
+- See [frontend.md](../reference/layers/frontend.md) — React islands, codegen, asset bridge.

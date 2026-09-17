@@ -1,4 +1,4 @@
-import {IApiResponse} from '@common/Models';
+import {IApiResponse} from '@common/Support/Models';
 
 export class RespError extends Error {
     public status: number = 0;

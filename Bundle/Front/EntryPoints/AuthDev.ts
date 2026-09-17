@@ -1,8 +1,8 @@
 import * as React from 'react';
 import {createRoot} from 'react-dom/client';
 import {DevLoginButtons} from '@framework/auth/DevLogin';
-import {PageEvents} from '@common/Utils/PageEvents';
-import {ECommonEvents} from '@common/Enums';
+import {PageEvents} from '@common/Utils/Ui/PageEvents';
+import {ECommonEvents} from '@common/Support/Enums';
 
 // Single persistent container — survives body.innerHTML replacement by re-attaching
 let floatingDiv: HTMLDivElement | null = null;

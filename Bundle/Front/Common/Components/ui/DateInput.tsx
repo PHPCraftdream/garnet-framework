@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Portal} from '../Portal';
+import {Portal} from '../Layout/Portal';
 
 type DateInputType = 'date' | 'time' | 'datetime-local' | 'month' | 'week';
 

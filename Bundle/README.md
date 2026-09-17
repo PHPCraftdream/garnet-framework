@@ -43,12 +43,12 @@ that a host application includes via `bundles()` in its main class.
 
 ## Adding your own bundle
 
-See the recipe [`../docs/cookbook/add-a-bundle.md`](../docs/cookbook/add-a-bundle.md).
+See the recipe [`../docs/cookbook/add/add-a-bundle.md`](../docs/cookbook/add/add-a-bundle.md).
 
 ## Related
 
 - [`../Kernel/README.md`](../Kernel/README.md) — the engine these modules sit on.
-- [`../docs/reference/bundle.md`](../docs/reference/bundle.md) — bundle architecture in depth.
+- [`../docs/reference/layers/bundle.md`](../docs/reference/layers/bundle.md) — bundle architecture in depth.
 
 ---
 

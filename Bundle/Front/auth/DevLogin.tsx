@@ -1,7 +1,7 @@
 import * as React from 'react';
-import {sendPost} from '@common/Api/sendPost';
-import {useConfirm} from '@common/hooks/useConfirm';
-import {ConfirmModal} from '@common/Components/ConfirmModal';
+import {sendPost} from '@common/Api/Send/sendPost';
+import {useConfirm} from '@common/hooks/ui/useConfirm';
+import {ConfirmModal} from '@common/Components/Feedback/ConfirmModal';
 import {I18nFramework as I18n} from '@framework/I18nGen/I18nFramework';
 
 const DEFAULT_ROLES = ['admin', 'owner', 'moderator', 'user'] as const;

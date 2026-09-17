@@ -1,6 +1,6 @@
 /**
  * Drive the framework's real passwordless email-auth flow
- * (`Bundle/Modules/Auth/Middlewares/EmailAuthMiddleware.php`) from a spec.
+ * (`Bundle/Modules/Accounts/Auth/Middlewares/EmailAuthMiddleware.php`) from a spec.
  *
  * There is no `/dev-login` shortcut in the bare framework — that's an
  * app-level convenience some apps add on top. Instead this drives the
@@ -11,7 +11,7 @@
  * real login.
  *
  * Requires the app to have wired `EmailAuthMiddleware::authOnly` onto
- * some route (see `Bundle/Modules/Auth/README.md`); the scaffolded
+ * some route (see `Bundle/Modules/Accounts/Auth/README.md`); the scaffolded
  * `Application.php` ships this commented out by default — uncomment it
  * (or wire it on your own route) before using these helpers.
  */

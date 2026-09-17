@@ -9,7 +9,7 @@
  * the file on every request, no caching). Restores to 1 in afterAll.
  *
  * REQUIRES: a route gated by `EmailAuthMiddleware::authOnly` (see
- * `Bundle/Modules/Auth/Middlewares/EmailAuthMiddleware.php`). The scaffolded
+ * `Bundle/Modules/Accounts/Auth/Middlewares/EmailAuthMiddleware.php`). The scaffolded
  * `Application.php` wires this onto `/account` by default (AccountController)
  * — override AUTH_PATH below if your app gates a different route.
  */

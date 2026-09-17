@@ -18,7 +18,7 @@
  * see role-login.ts for the two built-in login paths (generic account
  * + admin token).
  *
- * This pipeline mirrors `Bundle/Middlewares/WorkerScopeMiddleware.php`'s
+ * This pipeline mirrors `Bundle/Support/Middlewares/WorkerScopeMiddleware.php`'s
  * dev-context fan-out (`test_worker_template`, `test_worker_0..N`).
  */
 import * as path from 'node:path';

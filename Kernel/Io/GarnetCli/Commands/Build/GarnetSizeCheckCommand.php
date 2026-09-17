@@ -42,6 +42,22 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Build {
         public const BACK_EXT = ['php'];
 
         /**
+         * Файлы, которые правило не касается, и почему. Сверяется по концу
+         * имени.
+         *
+         * Сгенерированный код не переписывают руками — его переписывает
+         * генератор, и ни его длина, ни его присутствие в каталоге не
+         * говорят ничего о том, кто и как читает это дерево. `*Gen.php`
+         * (мост ассетов) появляются в корне бандла после сборки фронта, по
+         * соглашению, общему для бандла фреймворка и бандлов приложений.
+         *
+         * @var array<string, string>
+         */
+        public const SKIP_FILE_SUFFIX = [
+            'Gen.php' => 'мост ассетов: пишется сборкой фронта в корень бандла',
+        ];
+
+        /**
          * Каталоги, которые правило не касается, и почему. Имя сверяется по
          * одному сегменту пути, а не по суффиксу: 'dist' исключает любой
          * dist на любой глубине и не задевает 'distribution'.
@@ -276,8 +292,22 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Build {
             ];
         }
 
+        /** Сгенерированный ли это файл: его длина и место — решение генератора. */
+        public static function isGenerated(string $name): bool {
+            foreach (array_keys(self::SKIP_FILE_SUFFIX) as $suffix) {
+                if (str_ends_with($name, $suffix)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         /** Порог для файла по расширению, либо null — файл не код. */
         public static function limitFor(string $path): ?int {
+            if (self::isGenerated(basename($path))) {
+                return null;
+            }
             $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
 
             if (in_array($ext, self::FRONT_EXT, true)) {
@@ -317,6 +347,10 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Build {
                 }
 
                 if (str_starts_with($name, '.')) {
+                    continue;
+                }
+
+                if (self::isGenerated($name)) {
                     continue;
                 }
                 $n++;

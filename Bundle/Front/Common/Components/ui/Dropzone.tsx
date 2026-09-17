@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {useRef, useState, useCallback} from 'react';
-import {cn} from '@common/Utils/cn';
-import {sendPostFormData} from '@common/Api/sendPostFormData';
+import {cn} from '@common/Utils/Ui/cn';
+import {sendPostFormData} from '@common/Api/Send/sendPostFormData';
 
 /** A file that has been uploaded to pending storage (Phase 1). */
 export interface UploadedFile {

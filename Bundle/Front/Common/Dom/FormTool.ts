@@ -1,9 +1,9 @@
-import {makeFormData} from '@common/Api/makeFormData';
-import {Component} from '@common/Dom/Component';
-import {DomEl} from '@common/Dom/DomEl';
+import {makeFormData} from '@common/Api/Send/makeFormData';
+import {Component} from '@common/Dom/Component/Component';
+import {DomEl} from '@common/Dom/El/DomEl';
 import {updateProgress} from '@common/Dom/updateProgress';
-import {sendPostFormData} from '@common/Api/sendPostFormData';
-import {TFormErrors, TFromMap} from '@common/Models';
+import {sendPostFormData} from '@common/Api/Send/sendPostFormData';
+import {TFormErrors, TFromMap} from '@common/Support/Models';
 import {escapeHtml} from '@common/Utils/Str/EscapeHtml';
 import {I18nFramework} from '@framework/I18nGen/I18nFramework';
 
