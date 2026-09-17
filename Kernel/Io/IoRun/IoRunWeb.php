@@ -3,6 +3,7 @@
 namespace PHPCraftdream\Garnet\Kernel\Io\IoRun {
     use Closure;
     use PHPCraftdream\Garnet\Kernel\Core\Benchmark\BenchmarkLog;
+    use PHPCraftdream\Garnet\Kernel\Core\Env\Env;
     use PHPCraftdream\Garnet\Kernel\Core\Env\TestScope;
     use PHPCraftdream\Garnet\Kernel\Core\Event\Event;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Session;
@@ -102,16 +103,18 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IoRun {
          * Сложность замера должна лежать на том, кто знает правду о
          * запросе, — на самом запросе.
          *
-         * Гейт — {@see TestScope::isActive()}: нужен и секретный файл на
-         * сервере, и заголовок с тем же токеном. Без этого заголовок не
-         * появляется никогда, в том числе на боевом трафике.
+         * Гейт — {@see TestScope::isActive()} (нужен и секретный файл на
+         * сервере, и заголовок с тем же токеном) либо каталог разработки
+         * ({@see Env::isDevDir()}). Второе — чтобы у локального прогона и
+         * боевого был один и тот же замер, а не два разных. На боевом
+         * трафике не выполняется ни то, ни другое, и заголовка нет.
          *
          * @param ResponseInterface $response
          * @param int $queriesAtStart
          * @return ResponseInterface
          */
         protected static function patchQueryCountHeader(ResponseInterface $response, int $queriesAtStart): ResponseInterface {
-            if (!TestScope::isActive()) {
+            if (!TestScope::isActive() && !Env::isDevDir()) {
                 return $response;
             }
 

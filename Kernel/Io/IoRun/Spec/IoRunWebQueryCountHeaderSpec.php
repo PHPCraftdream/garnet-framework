@@ -1,6 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Io\IoRun\Spec {
+    use PHPCraftdream\Garnet\Kernel\Core\Env\Env;
     use PHPCraftdream\Garnet\Kernel\Core\Env\TestScope;
     use PHPCraftdream\Garnet\Kernel\Db\Link\DbPool;
     use PHPCraftdream\Garnet\Kernel\Io\IoRun\IoRunWeb;
@@ -37,6 +38,12 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IoRun\Spec {
             putenv(TestScope::ENV_TOKEN);
             unset($_SERVER[TestScope::HEADER_KEY]);
 
+            // Второй путь к заголовку — каталог разработки, а репозиторий
+            // фреймворка им и является. Чтобы проверять именно токенный
+            // гейт, на время спеки объявляем режим боевым.
+            $this->prevMode = getenv(Env::ENV_MODE);
+            putenv(Env::ENV_MODE . '=prod');
+
             $this->token = 'qcount_token_0123456789';
 
             $reflection = new ReflectionClass(IoRunWeb::class);
@@ -56,6 +63,12 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IoRun\Spec {
                 putenv(TestScope::ENV_TOKEN . '=' . $this->prevEnvToken);
             }
             unset($_SERVER[TestScope::HEADER_KEY]);
+
+            if ($this->prevMode === false) {
+                putenv(Env::ENV_MODE);
+            } else {
+                putenv(Env::ENV_MODE . '=' . $this->prevMode);
+            }
 
             @unlink($this->tokenFile);
             @unlink($this->appDir . DIRECTORY_SEPARATOR . '.env');
@@ -102,6 +115,17 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IoRun\Spec {
 
             $response = ControllerTools::ok('body');
             $result = $this->patch->invoke(null, $response, $start);
+
+            expect($result->getHeaderLine(IoRunWeb::QUERY_COUNT_HEADER))->toBe('0');
+        });
+
+        it('в каталоге разработки заголовок есть и без токена', function (): void {
+            // Локальный прогон должен мерить тем же способом, что боевой, —
+            // иначе проверка стоимости запроса живёт только на проде.
+            putenv(Env::ENV_MODE . '=dev');
+
+            $response = ControllerTools::ok('body');
+            $result = $this->patch->invoke(null, $response, DbPool::get()->getQueryCount());
 
             expect($result->getHeaderLine(IoRunWeb::QUERY_COUNT_HEADER))->toBe('0');
         });
