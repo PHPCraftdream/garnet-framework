@@ -283,6 +283,12 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Build\Spec {
                 expect($out)->toContain('putenv("GARNET_APP_DIR={$_app}");');
                 expect($out)->toContain('/run_web.php');
             });
+
+            it('loads the framework autoloader before the app web bootstrap', function (): void {
+                $out = $this->fn->invoke(null);
+
+                expect($out)->toContain("require_once \$_fw . '/vendor/autoload.php';");
+            });
         });
     });
 }
