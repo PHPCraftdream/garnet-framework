@@ -1,0 +1,415 @@
+/* 02-controls.css — часть 2 из 7
+   Элементы управления и повторно используемые токены: кнопки,
+   карточки, бейджи, таблицы, списки, модальное окно и тост,
+   переключатели, прогресс, а также «чип», «мягкая секция» и разметка
+   предпросмотра markdown.
+
+   ПОРЯДОК ПОДКЛЮЧЕНИЯ ЗНАЧИМ. Это каскад: файлы подключаются в
+   framework.less по номерам, и правило из файла с большим номером
+   перебивает одноимённое из меньшего. Переставить импорты местами —
+   значит изменить внешний вид, ничего не меняя в самих правилах.
+   Исходно всё это лежало одним файлом на 2593 строки. */
+
+/* ---------- Buttons ---------- */
+
+.btn {
+  @apply inline-flex items-center justify-center gap-1.5 font-medium leading-normal rounded-md border border-transparent cursor-pointer no-underline whitespace-nowrap;
+  padding: 0.4375rem 0.875rem;
+  font-size: 0.8125rem;
+  transition: all 0.15s ease;
+
+  &:active { @apply translate-y-px; }
+}
+
+.btn-primary {
+  @apply bg-accent text-accent-text;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-accent) 25%, transparent);
+  &:hover { @apply bg-accent-hover; }
+}
+
+.btn-success {
+  @apply bg-green-600 text-white;
+  box-shadow: 0 1px 2px rgba(22, 163, 74, 0.2);
+  &:hover { @apply bg-green-700; }
+}
+
+.btn-danger {
+  @apply bg-red-600 text-white;
+  box-shadow: 0 1px 2px rgba(220, 38, 38, 0.2);
+  &:hover { @apply bg-red-700; }
+}
+
+.btn-secondary {
+  @apply bg-gray-500 text-white;
+  &:hover { @apply bg-gray-600; }
+}
+
+.btn-outline-primary {
+  @apply border-accent text-accent bg-transparent;
+  &:hover { @apply bg-accent text-accent-text; }
+}
+
+.btn-outline-secondary {
+  @apply border-strong text-muted bg-transparent;
+  &:hover { @apply bg-surface-hover text-secondary border-gray-400; }
+}
+
+.btn-outline-danger {
+  @apply border-red-300 text-red-600 bg-transparent;
+  &:hover { @apply bg-red-600 text-white border-red-600; }
+}
+
+.btn-outline-info {
+  @apply border-cyan-300 text-cyan-600 bg-transparent;
+  &:hover { @apply bg-cyan-600 text-white border-cyan-600; }
+}
+
+.btn-sm {
+  @apply px-2 py-1 text-xs rounded;
+}
+
+.btn-lg {
+  @apply px-6 py-2.5;
+  font-size: 0.9375rem;
+}
+
+.btn-close {
+  @apply inline-flex items-center justify-center w-6 h-6 p-0 bg-transparent border-0 cursor-pointer opacity-50 text-xl leading-none;
+
+  &::before { content: '\00d7'; }
+  &:hover { @apply opacity-100; }
+}
+
+.btn-close-white {
+  @apply invert;
+}
+
+.btn-light {
+  @apply bg-surface-hover text-secondary border-strong;
+  &:hover { @apply bg-gray-200; }
+}
+
+/* ---------- Cards ---------- */
+
+.card {
+  @apply rounded-lg border border-default bg-surface shadow overflow-hidden;
+}
+
+.card-body {
+  @apply p-5;
+}
+
+.card-title {
+  @apply text-base font-semibold mb-2 text-on-surface;
+}
+
+.card-text {
+  @apply mb-1 text-secondary text-sm;
+}
+
+/* ---------- Badges ---------- */
+
+.badge {
+  @apply inline-flex items-center rounded-full px-2.5 py-0.5 font-semibold leading-normal tracking-wide;
+  font-size: 0.6875rem;
+}
+
+.bg-success { @apply status-success; }
+.bg-warning { @apply status-warning; }
+.bg-danger  { @apply status-danger; }
+.bg-primary { @apply status-info; }
+.bg-info    { @apply status-info; }
+.bg-secondary { @apply bg-surface-hover text-secondary; }
+.bg-light   { @apply bg-surface-alt text-secondary; }
+
+.text-bg-primary { @apply bg-accent text-accent-text; }
+.text-bg-danger  { @apply bg-red-600 text-white; }
+.text-bg-success { @apply bg-green-600 text-white; }
+
+/* ---------- Tables ---------- */
+
+.table {
+  @apply w-full border-collapse;
+  font-size: 0.8125rem;
+
+  & th, & td {
+    @apply py-2 px-3 align-top border-b border-subtle;
+  }
+
+  & thead th {
+    @apply font-semibold text-left text-secondary bg-surface-alt text-xs uppercase tracking-wider;
+  }
+}
+
+.table-sm {
+  & th, & td { @apply py-1 px-2; }
+}
+
+.table-bordered {
+  @apply border border-default;
+  & th, & td { @apply border border-default; }
+}
+
+.table-warning {
+  @apply bg-amber-50;
+}
+
+/* ---------- List Groups ---------- */
+
+.list-group {
+  @apply flex flex-col rounded-md border border-default;
+}
+
+.list-group-flush {
+  @apply rounded-none border-x-0;
+}
+
+.list-group-item {
+  @apply py-2 px-4 border-b border-default text-sm;
+
+  &:last-child { @apply border-b-0; }
+}
+
+/* ---------- Modal (vanilla JS) ---------- */
+
+.modal {
+  @apply hidden fixed inset-0 z-50 items-center justify-center bg-black/50 backdrop-blur-[2px];
+}
+
+.modal.show {
+  @apply flex;
+}
+
+.modal-dialog {
+  @apply bg-surface rounded-xl shadow-2xl max-w-lg m-4;
+  width: calc(100% - 2rem);
+}
+
+.modal-dialog-centered {
+  @apply self-center;
+}
+
+.modal-content {
+  @apply overflow-hidden;
+}
+
+.modal-body {
+  @apply p-6;
+}
+
+.modal-footer {
+  @apply px-6 py-3 flex justify-end gap-2 border-t border-default bg-surface-alt;
+}
+
+/* ---------- Toast (vanilla JS) ---------- */
+
+.toast-container {
+  @apply fixed bottom-6 z-[100] flex flex-col gap-2 items-end;
+  right: 5rem;
+}
+
+.toast {
+  @apply rounded-lg overflow-hidden opacity-0 pointer-events-none min-w-64;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  transition: opacity 0.3s, transform 0.3s;
+  transform: translateY(0.5rem);
+}
+
+.toast.show {
+  @apply opacity-100 pointer-events-auto translate-y-0;
+}
+
+.toast-body {
+  @apply py-3 px-4 text-sm font-medium;
+}
+
+/* ---------- Utility Bridges ---------- */
+
+.text-muted   { color: var(--color-text-muted); }
+.text-dark    { color: var(--color-text-primary); }
+.text-warning { @apply text-amber-600; }
+.text-primary { @apply text-accent; }
+
+/* d-none: used by DomEl.ts core visibility toggle — do NOT remove */
+.d-none  { display: none !important; }
+.d-flex  { @apply flex; }
+
+.border-success { border-color: #86efac !important; }
+.border-warning { border-color: #fde68a !important; }
+.border-primary { border-color: #93c5fd !important; }
+
+/* ---------- Form Check / Switch ---------- */
+
+.form-check {
+  @apply flex items-center gap-2 min-h-6;
+}
+
+.form-check-input {
+  @apply w-4 h-4 cursor-pointer accent-theme;
+}
+
+.form-switch .form-check-input {
+  @apply w-8 h-4 appearance-none bg-gray-300 rounded-full relative cursor-pointer;
+  transition: background-color 0.15s;
+
+  &::before {
+    content: '';
+    @apply absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white;
+    transition: transform 0.15s;
+  }
+
+  &:checked {
+    @apply bg-accent;
+    &::before { @apply translate-x-4; }
+  }
+}
+
+.form-check-label {
+  @apply text-sm cursor-pointer;
+}
+
+/* ---------- Progress ---------- */
+
+.progress {
+  @apply h-2 bg-theme-border rounded-full overflow-hidden;
+}
+
+.progress-bar {
+  @apply h-full bg-accent rounded-full;
+  transition: width 0.3s;
+}
+
+/* ---------- Reusable design tokens ---------- */
+
+/* Pill / chip — used for filter tabs, status filters, small selectors. */
+.chip {
+  @apply inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border transition-all;
+  @apply border-transparent text-secondary bg-surface-hover hover:text-on-surface;
+}
+.chip-active {
+  @apply bg-accent text-accent-text border-accent shadow-sm;
+  box-shadow: 0 2px 8px -2px color-mix(in srgb, var(--color-accent) 35%, transparent);
+}
+/* Keep active state readable on hover/focus/active — base class' hover would
+   leave text-accent-text on the unchanged accent bg with no feedback, but the
+   bigger risk is class-order surprises; explicitly pin colors for active. */
+.chip-active:hover,
+.chip-active:focus,
+.chip-active:active {
+  @apply bg-accent-hover text-accent-text border-accent;
+}
+.chip-count {
+  @apply tabular-nums text-[10px] px-1.5 py-px rounded-full bg-surface-alt text-muted;
+}
+.chip-active .chip-count {
+  @apply bg-white/20 text-accent-text;
+}
+
+/* Mini section label — small uppercase tracker label above form groups. */
+.label-mini {
+  @apply block text-[11px] font-semibold uppercase tracking-wider mb-1.5 text-muted;
+}
+
+/* Round icon nav button — used for week prev/next arrows. */
+.btn-icon-round {
+  @apply inline-flex items-center justify-center w-9 h-9 rounded-full text-secondary bg-surface-hover hover:text-on-surface transition-all;
+}
+
+/* Soft section — subtle, frameless container that groups content without a hard border. */
+.section-soft {
+  @apply rounded-2xl p-4;
+  background-color: color-mix(in srgb, var(--color-bg-surface-alt) 55%, transparent);
+  /* A light diagonal wash — faint accent in the top-left fading to a hint of
+     violet bottom-right — gives the uniform admin content block subtle depth. */
+  background-image: linear-gradient(150deg,
+    color-mix(in srgb, var(--color-accent) 9%, transparent) 0%,
+    transparent 42%,
+    color-mix(in srgb, var(--color-status-purple) 7%, transparent) 100%);
+}
+/* Frost section-soft panels (filters, calendar, …) over the honeycomb backdrop. */
+.glass-skin .section-soft {
+  -webkit-backdrop-filter: blur(10px) saturate(110%);
+  backdrop-filter: blur(10px) saturate(110%);
+  border: 1px solid color-mix(in srgb, var(--color-border-strong) 85%, var(--color-accent));
+}
+
+/* Slot card — borderless card relying on shadow + lift for depth.
+   Used in calendars; can be reused for other time-slot-style cards. */
+.time-slot-card {
+  @apply rounded-xl bg-surface p-3 mb-2 cursor-pointer;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition: box-shadow 200ms ease, transform 200ms ease;
+}
+.slot-card:hover {
+  box-shadow: 0 12px 28px -10px rgba(15, 23, 42, 0.18),
+              0 2px 6px -2px rgba(15, 23, 42, 0.08);
+  transform: translateY(-2px);
+}
+[data-theme="dark"] .time-slot-card {
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04),
+              inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+[data-theme="dark"] .time-slot-card:hover {
+  box-shadow: 0 14px 32px -10px rgba(0, 0, 0, 0.6),
+              inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 30%, transparent);
+}
+
+/* Day number badge — circular indicator above each day column. */
+.day-num-badge {
+  @apply mt-1 inline-flex items-center justify-center min-w-8 h-8 px-2 rounded-full text-sm font-bold tabular-nums text-on-surface;
+}
+.day-num-badge-active {
+  @apply bg-accent text-accent-text;
+}
+
+/* Muted empty state — small centered placeholder text inside columns/lists. */
+.muted-empty-state {
+  @apply text-center text-[11px] py-6;
+  color: color-mix(in srgb, var(--color-text-muted) 75%, transparent);
+}
+
+/* ---------- Markdown Preview ---------- */
+
+.md-preview {
+  @apply rounded border border-subtle p-3 min-h-[120px] text-sm text-on-surface bg-surface-alt;
+}
+
+.md-preview p { @apply mb-2 last:mb-0; }
+.md-preview ul { @apply list-disc pl-5 mb-2; }
+.md-preview ol { @apply list-decimal pl-5 mb-2; }
+.md-preview li { @apply mb-0.5; }
+.md-preview hr { @apply border-0 border-t border-default my-3; }
+.md-preview strong { @apply font-bold; }
+.md-preview em { @apply italic; }
+.md-preview a { @apply text-accent underline; }
+.md-preview blockquote {
+    @apply border-l-4 border-accent pl-4 py-1 my-2 text-secondary italic;
+}
+.md-preview h2 {
+    @apply text-lg font-semibold text-on-surface mt-4 mb-2;
+}
+.md-preview h3 {
+    @apply text-base font-semibold text-on-surface mt-3 mb-1;
+}
+/* GFM pipe tables. On mobile the table scrolls horizontally (display:block +
+   nowrap) so wide tables stay readable instead of squashing every column. */
+.md-preview table {
+    @apply w-full my-3 text-sm;
+    border-collapse: collapse;
+}
+.md-preview :is(th, td) {
+    @apply border border-default px-3 py-2 text-left align-top;
+}
+.md-preview thead th {
+    @apply bg-surface font-semibold text-on-surface;
+}
+.md-preview tbody tr:nth-child(even) td {
+    background-color: color-mix(in srgb, var(--color-bg-surface-alt) 55%, transparent);
+}
+@media (max-width: 767px) {
+    .md-preview table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}

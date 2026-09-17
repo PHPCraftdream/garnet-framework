@@ -1,0 +1,353 @@
+/* 04-admin-panel.css — часть 4 из 7
+   Разделы административной панели: фильтры-пилюли, сегментированные
+   вкладки, панель деталей, общие примитивы сводки и страница-герой.
+
+   ПОРЯДОК ПОДКЛЮЧЕНИЯ ЗНАЧИМ. Это каскад: файлы подключаются в
+   framework.less по номерам, и правило из файла с большим номером
+   перебивает одноимённое из меньшего. Переставить импорты местами —
+   значит изменить внешний вид, ничего не меняя в самих правилах.
+   Исходно всё это лежало одним файлом на 2593 строки. */
+
+/* ─── admin panel sections ─── */
+
+/* Hide WebKit's clear-X button on date/time inputs in the request-log filters
+   (and any other admin date-picker that uses .form-control inside admin-request-log). */
+[data-test-id="admin-request-log"] input[type="date"]::-webkit-clear-button,
+[data-test-id="admin-request-log"] input[type="date"]::-webkit-inner-spin-button {
+  display: none;
+  -webkit-appearance: none;
+}
+
+/* Filter pill button (rounded-md), used for status/sub-tab filters above grids.
+   Distinct from .chip (rounded-full). Toggle .admin-filter-btn-active for selected state. */
+.admin-filter-btn {
+  @apply inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md border transition-colors border-default text-secondary hover:bg-surface-hover;
+}
+
+.admin-filter-btn-active {
+  @apply bg-accent text-accent-text border-accent;
+}
+/* Pin active-state colors on all interaction pseudos so the base class' hover
+   (hover:bg-surface-hover) doesn't fight bg-accent and leave white-on-white. */
+.admin-filter-btn-active:hover,
+.admin-filter-btn-active:focus,
+.admin-filter-btn-active:active {
+  @apply bg-accent-hover text-accent-text border-accent;
+}
+
+.admin-filter-count {
+  @apply text-xs ml-1.5 opacity-75;
+}
+
+/* Underline-style segmented tab nav (UsersSection top tabs). */
+.admin-tabnav {
+  @apply flex flex-wrap border-b border-default mb-4;
+}
+
+.admin-tabnav-item {
+  @apply mr-1;
+}
+
+.admin-tabnav-btn {
+  @apply inline-block px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors border-transparent text-muted hover:text-on-surface hover:border-strong;
+}
+
+.admin-tabnav-btn-active {
+  @apply border-accent text-accent;
+}
+/* Pin colors on hover/focus/active so the base class' hover:text-on-surface
+   and hover:border-strong don't override the active accent state. */
+.admin-tabnav-btn-active:hover,
+.admin-tabnav-btn-active:focus,
+.admin-tabnav-btn-active:active {
+  @apply border-accent text-accent;
+}
+
+.admin-tabnav-count {
+  @apply text-xs text-muted ml-1;
+}
+
+/* Centered narrow page container — for pages whose content shouldn't span the full width
+   (dashboards, bookings, profile views). Use as the root element class on the island. */
+.page-narrow {
+  @apply mx-auto w-full max-w-4xl;
+}
+
+/* Detail panel container — used by UserDetailPanel and SupportTicketTab */
+.admin-detail-pane {
+  @apply p-4 max-w-4xl;
+}
+
+.admin-detail-loading {
+  @apply p-6 text-muted text-sm;
+}
+
+.admin-detail-error {
+  @apply p-6 text-danger;
+}
+
+/* User detail header */
+.admin-user-header {
+  @apply flex items-start gap-4 mb-4;
+}
+
+.admin-user-avatar-img {
+  @apply w-16 h-16 rounded-full object-cover;
+}
+
+.admin-user-avatar-fallback {
+  @apply w-16 h-16 rounded-full bg-accent-subtle text-accent flex items-center justify-center text-xl font-bold select-none;
+}
+
+.admin-user-meta {
+  @apply text-xs text-muted mt-1 flex gap-4 flex-wrap;
+}
+
+.admin-user-balance {
+  @apply text-right shrink-0;
+}
+
+.admin-user-balance-label {
+  @apply text-xs text-muted;
+}
+
+.admin-user-balance-amount {
+  @apply text-xl font-bold;
+}
+
+/* Section title (h3) inside detail panes */
+.admin-section-title {
+  @apply text-sm font-semibold text-muted uppercase tracking-wide mb-2 mt-5;
+}
+
+/* Detail tables (compact list of slots/bookings/ledger/tickets etc.) */
+.admin-detail-table {
+  @apply w-full text-sm border-collapse;
+}
+
+.admin-detail-table thead tr {
+  @apply text-left text-xs text-muted border-b border-subtle;
+}
+
+.admin-detail-table tbody tr {
+  @apply border-b border-subtle;
+}
+
+.admin-detail-table th {
+  @apply py-1 pr-3 font-medium;
+}
+
+.admin-detail-table td {
+  @apply py-1 pr-3;
+}
+
+.admin-detail-table th:last-child,
+.admin-detail-table td:last-child {
+  @apply pr-0;
+}
+
+.admin-cell-id {
+  @apply text-muted;
+}
+
+.admin-cell-date {
+  @apply text-muted text-xs whitespace-nowrap;
+}
+
+.admin-cell-note {
+  @apply text-muted text-xs;
+}
+
+.admin-cell-mono {
+  @apply font-mono text-xs;
+}
+
+/* Inline link-style buttons (open user, open ticket, party link, etc.) */
+.admin-link-btn {
+  @apply text-accent hover:underline text-xs;
+}
+
+.admin-link-btn-md {
+  @apply text-accent hover:underline text-sm;
+}
+
+.admin-link-btn-strong {
+  @apply text-accent hover:underline text-left font-medium;
+}
+
+/* Floating toast inside detail pane */
+.admin-floating-toast {
+  @apply fixed top-4 right-4 z-50 px-4 py-2 rounded shadow-lg text-sm;
+  background-color: var(--color-status-green-bg);
+  color: var(--color-status-green);
+}
+
+/* Extended profile compact card inside UserDetailPanel.detailTab */
+.admin-profile-card {
+  @apply bg-surface-alt rounded p-3 text-sm mb-4;
+}
+
+.admin-profile-row {
+  @apply flex gap-6 flex-wrap;
+}
+
+/* Misc admin layout helpers */
+.admin-filter-bar {
+  @apply flex flex-wrap gap-2 mb-4;
+}
+
+.admin-header-badges {
+  @apply flex items-center gap-2 flex-wrap;
+}
+
+.admin-header-actions {
+  @apply flex items-center gap-2 flex-wrap mt-2;
+}
+
+.admin-unread-pill {
+  @apply text-xs rounded-full px-1.5 py-0.5 font-bold;
+}
+
+/* ─── shared dashboard primitives ─── */
+
+/* Section heading: small sub-h2 used above lists/widgets. */
+.section-heading {
+  @apply text-base font-semibold text-secondary mb-3;
+}
+
+/* Inline header row: title on the left, "view all" link on the right. */
+.section-header-row {
+  @apply flex items-center justify-between mb-3;
+}
+
+/* "View all" / inline accent link inside section headers. */
+.view-all-link {
+  @apply text-sm text-accent hover:underline;
+}
+
+/* ─── Page hero header ───
+   The styled title block at the top of a page (title + hint, optional icon
+   and actions). A soft accent-gradient panel with a glowing left rail; the
+   glass skin layers frosting + an edge glow on top (see glass.css). Use via
+   the shared <PageHeader> component so every page reads consistently. */
+.page-hero {
+  @apply relative rounded-2xl border border-default px-5 py-4 mb-6 overflow-hidden;
+  background-image: linear-gradient(135deg,
+    color-mix(in srgb, var(--color-accent) 13%, var(--color-bg-surface)),
+    var(--color-bg-surface) 62%);
+}
+.page-hero::before {
+  content: "";
+  @apply absolute left-0 top-0 bottom-0;
+  width: 4px;
+  background: linear-gradient(to bottom,
+    var(--color-accent),
+    color-mix(in srgb, var(--color-status-purple) 70%, var(--color-accent)));
+}
+.page-hero-row {
+  @apply flex items-start justify-between gap-4;
+}
+.page-hero-main {
+  @apply flex items-start gap-3 min-w-0;
+}
+.page-hero-icon {
+  @apply shrink-0 grid place-items-center rounded-xl text-accent;
+  width: 2.75rem;
+  height: 2.75rem;
+  background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 30%, transparent);
+}
+.page-hero-title {
+  @apply text-2xl font-bold tracking-tight text-on-surface;
+}
+.page-hero-subtitle {
+  @apply mt-1 text-sm text-muted;
+}
+.page-hero-actions {
+  @apply shrink-0 flex items-center gap-2 flex-wrap;
+}
+
+/* Small count badge (filled accent pill, e.g. "X/Y booked"). */
+.count-badge-accent {
+  @apply inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-accent-subtle text-accent;
+}
+.count-badge-warning {
+  @apply inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-warning-subtle text-warning;
+}
+.count-badge-success {
+  @apply inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-success-subtle text-success;
+}
+
+/* Time-slot list row — bordered card-like row used in upcoming widgets. */
+.time-slot-row {
+  @apply flex items-center justify-between p-3 rounded-lg border border-default bg-surface;
+}
+
+/* Time-slot group — wraps multiple items for the same time slot. */
+.time-slot-group {
+  @apply rounded-lg border border-default bg-surface-alt p-3 flex flex-col gap-3;
+}
+.time-slot-group-header {
+  @apply flex items-center justify-between gap-2 flex-wrap;
+}
+.time-slot-group-title {
+  @apply text-base font-semibold text-on-surface;
+}
+.time-slot-group-meta {
+  @apply text-sm text-muted;
+}
+.time-slot-group-count {
+  @apply inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-accent-subtle text-accent;
+}
+.time-slot-group-list {
+  @apply flex flex-col gap-3;
+}
+
+/* News feed group suffix — "+ N more" tail under primary line. */
+.news-group-suffix {
+  @apply text-xs text-muted mt-0.5 italic;
+}
+.news-group-others {
+  @apply text-xs text-muted mt-0.5;
+}
+
+/* Empty/dashed placeholder card (upcoming bookings/slots when none). */
+.empty-state-card {
+  @apply p-6 rounded-lg border border-dashed border-strong bg-surface-alt text-center;
+}
+
+/* Generic stat tile (centered value + label inside a bordered card). */
+.stat-tile {
+  @apply p-4 rounded-lg border border-default bg-surface text-center;
+}
+.stat-tile-value {
+  @apply text-2xl font-bold;
+}
+.stat-tile-label {
+  @apply text-xs text-muted mt-1;
+}
+
+/* Quick-link pill (horizontal: icon + text). */
+.quick-link-pill {
+  @apply flex items-center gap-2 px-4 py-2.5 rounded-lg border border-default bg-surface hover:bg-surface-hover hover:border-strong transition-colors text-sm font-medium text-secondary no-underline;
+}
+
+/* Quick-link tile (vertical: icon over text). */
+.quick-link-tile {
+  @apply flex flex-col items-center gap-1.5 p-4 rounded-lg border border-default bg-surface hover:bg-surface-hover hover:border-strong transition-colors text-center no-underline;
+}
+
+/* Avatar circle (initials, accent surface). */
+.avatar-circle {
+  @apply w-9 h-9 rounded-full bg-accent-subtle text-accent flex items-center justify-center text-sm font-semibold flex-shrink-0;
+}
+.avatar-circle-lg {
+  @apply w-20 h-20 rounded-full bg-accent-subtle text-accent text-2xl font-bold flex items-center justify-center;
+}
+/* Photo variants — same footprint as the initials circles, image cropped to fill. */
+.avatar-circle-img {
+  @apply w-9 h-9 rounded-full object-cover flex-shrink-0 border border-default;
+}
+.avatar-circle-lg-img {
+  @apply w-20 h-20 rounded-full object-cover border border-default;
+}

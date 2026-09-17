@@ -34,7 +34,17 @@
 @import "modules/hotClick";
 @import "modules/listbox";
 @import "modules/uploads";
-@import (inline) "modules/components.css";
+/* Слой компонентов разложен по файлам (был один на 2593 строки).
+   Порядок подключения — часть поведения: это каскад, и правило из
+   файла ниже перебивает одноимённое из файла выше. Номера в именах
+   существуют ровно для того, чтобы этот порядок был виден. */
+@import (inline) "modules/components/01-base.css";
+@import (inline) "modules/components/02-controls.css";
+@import (inline) "modules/components/03-navigation.css";
+@import (inline) "modules/components/04-admin-panel.css";
+@import (inline) "modules/components/05-app-screens.css";
+@import (inline) "modules/components/06-features.css";
+@import (inline) "modules/components/07-admin-screens.css";
 @import (inline) "modules/theme.css";
 @import (inline) "modules/glass.css";
 

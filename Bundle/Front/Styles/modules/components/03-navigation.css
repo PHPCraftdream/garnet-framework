@@ -1,0 +1,311 @@
+/* 03-navigation.css — часть 3 из 7
+   Навигация и виджеты обзора: выдвижное меню (включая блокировку
+   прокрутки и тёмную тему) и плитки административной сводки.
+
+   ПОРЯДОК ПОДКЛЮЧЕНИЯ ЗНАЧИМ. Это каскад: файлы подключаются в
+   framework.less по номерам, и правило из файла с большим номером
+   перебивает одноимённое из меньшего. Переставить импорты местами —
+   значит изменить внешний вид, ничего не меняя в самих правилах.
+   Исходно всё это лежало одним файлом на 2593 строки. */
+
+/* ---------- Mobile Drawer Navigation ----------
+   Off-canvas drawer pattern toggled via #show--menu checkbox-hack.
+   Only visible <lg breakpoint; desktop uses TopMenu + SidebarMenu instead. */
+
+.hamburger-btn {
+  @apply relative inline-flex items-center justify-center w-10 h-10 rounded-md text-on-surface hover:bg-surface-hover transition-colors;
+}
+
+/* Collapsed-drawer signal: on desktop the utility cluster (message/support
+   counts) sits inline in the always-visible top bar; on mobile that same
+   cluster only renders once the drawer is open. Without this dot, unread
+   messages/support were invisible until you opened the menu "just in case". */
+.hamburger-unread-dot {
+  @apply absolute top-1.5 right-1.5 w-2 h-2 rounded-full;
+  background: var(--color-warning, #d97706);
+}
+
+/* The island mount wrapper carries no box (display:contents) so the sticky
+   bar inside it sticks against <body>, not this 1-row-tall wrapper. */
+.mobile-menu-mount {
+  display: contents;
+}
+
+.mobile-topbar {
+  @apply sticky top-0 z-30 flex items-center justify-between px-2 h-14 bg-surface border-b border-default;
+}
+
+@media (width >= 64rem) {
+  .mobile-topbar { display: none; }
+}
+
+.mobile-topbar-brand {
+  @apply font-semibold text-on-surface text-base truncate;
+}
+
+.mobile-topbar-utility {
+  @apply flex items-center gap-1;
+}
+
+.mobile-balance-pill {
+  @apply inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium text-accent bg-accent-subtle no-underline;
+}
+
+.mobile-drawer {
+  @apply fixed top-0 bottom-0 right-0 z-50 w-72 max-w-[80vw] bg-surface flex flex-col;
+  transform: translateX(100%);
+  transition: transform 240ms cubic-bezier(0.32, 0.72, 0, 1);
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.18);
+}
+
+@media (width >= 64rem) {
+  .mobile-drawer { display: none; }
+}
+
+#show--menu:checked ~ .mobile-drawer {
+  transform: translateX(0);
+}
+
+.mobile-overlay {
+  @apply fixed inset-0 z-40 opacity-0 pointer-events-none block;
+  background: rgba(0, 0, 0, 0.4);
+  transition: opacity 240ms ease;
+}
+
+@media (width >= 64rem) {
+  .mobile-overlay { display: none; }
+}
+
+#show--menu:checked ~ .mobile-overlay {
+  @apply opacity-100 pointer-events-auto;
+}
+
+.drawer-header {
+  @apply flex items-center justify-between px-4 h-14 border-b border-default;
+}
+
+.drawer-brand {
+  @apply font-semibold text-on-surface text-base;
+}
+
+.drawer-close {
+  @apply inline-flex items-center justify-center w-8 h-8 rounded-md text-muted hover:text-on-surface hover:bg-surface-hover transition-colors;
+}
+
+.drawer-nav {
+  @apply flex-1 overflow-y-auto py-2;
+}
+
+.drawer-section {
+  @apply flex flex-col;
+}
+
+.drawer-section-bordered {
+  @apply border-t border-default mt-2 pt-2;
+}
+
+/* Drawer links over frosted glass. Layout here; colours are scoped under
+   `.mobile-drawer a…` below so they outrank the global `a:not(.btn)` accent
+   rule (spec 21) — otherwise every item would render as flat accent purple. */
+.drawer-nav-link {
+  @apply flex items-center gap-3 px-4 py-3 font-medium no-underline text-sm;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+/* Plain items: high-contrast on-surface text (crisp in both themes), with a
+   translucent hover so the glass shows through (no solid fill). */
+.mobile-drawer a.drawer-nav-link {
+  color: var(--color-on-surface);
+}
+.mobile-drawer a.drawer-nav-link:hover,
+.mobile-drawer a.drawer-nav-link:focus {
+  background-color: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+/* Active item: accent text + a translucent accent wash and a left accent bar
+   instead of a solid (near-white) pill, so it belongs to the glass. */
+.mobile-drawer a.drawer-nav-link.active {
+  color: var(--color-accent);
+  font-weight: 600;
+  background-color: color-mix(in srgb, var(--color-accent) 16%, transparent);
+  box-shadow: inset 3px 0 0 var(--color-accent);
+}
+.mobile-drawer a.drawer-nav-link.active:hover,
+.mobile-drawer a.drawer-nav-link.active:focus {
+  background-color: color-mix(in srgb, var(--color-accent) 22%, transparent);
+}
+/* Dark theme: lift the accent so the active label reads as a paler indigo
+   against the dark glass (mirrors the sp-nav link treatment). */
+[data-theme="dark"] .mobile-drawer a.drawer-nav-link.active {
+  color: color-mix(in srgb, var(--color-accent) 60%, var(--color-text-primary) 40%);
+}
+
+.drawer-footer {
+  @apply border-t border-default p-3 flex items-center gap-2;
+}
+
+/* Lock body scroll while drawer is open (modern browsers — :has support) */
+body:has(#show--menu:checked) {
+  overflow: hidden;
+}
+
+/* ─── admin dashboard widgets ─── */
+
+.admin-dash-card {
+  @apply rounded-lg border border-default bg-surface p-5;
+}
+
+.admin-dash-card-header {
+  @apply flex items-center justify-between mb-4;
+}
+
+.admin-dash-card-title {
+  @apply text-base font-semibold text-secondary;
+}
+
+.admin-dash-card-title-mb {
+  @apply text-base font-semibold text-secondary mb-4;
+}
+
+.admin-dash-count {
+  @apply text-2xl font-bold;
+}
+
+.admin-dash-list {
+  @apply space-y-2;
+}
+
+.admin-dash-list-tight {
+  @apply space-y-1;
+}
+
+.admin-dash-list-row {
+  @apply flex items-center justify-between text-sm border-b border-subtle pb-2 last:border-b-0;
+}
+
+.admin-dash-row-main {
+  @apply min-w-0 flex-1;
+}
+
+.admin-dash-row-aside {
+  @apply text-right ml-3 shrink-0;
+}
+
+.admin-dash-row-aside-time {
+  @apply text-xs text-muted ml-3 shrink-0;
+}
+
+.admin-dash-link-primary {
+  @apply font-medium text-accent hover:underline;
+}
+
+.admin-dash-link-primary-truncate {
+  @apply font-medium text-accent hover:underline truncate block;
+}
+
+.admin-dash-link-inline {
+  @apply text-accent hover:underline;
+}
+
+.admin-dash-link-footer {
+  @apply block mt-3 text-sm text-accent hover:underline;
+}
+
+.admin-dash-empty {
+  @apply text-sm text-muted;
+}
+
+.admin-dash-meta {
+  @apply text-xs text-muted;
+}
+
+.admin-dash-meta-mt {
+  @apply text-xs text-muted mt-0.5;
+}
+
+.admin-dash-stats-grid {
+  @apply grid grid-cols-2 gap-3;
+}
+
+.admin-dash-stat-tile {
+  @apply block p-4 rounded-lg border border-subtle bg-surface-alt text-center hover:border-strong hover:bg-surface transition-colors no-underline;
+}
+
+.admin-dash-stat-value {
+  @apply text-2xl font-bold;
+}
+
+.admin-dash-stat-label {
+  @apply text-xs text-muted mt-1;
+}
+
+/* One activity = one visual block: an action line (label + time) on top,
+   the two users (actor → target) wrapping underneath. Keeps long dual-links
+   from blowing the row out sideways. */
+.admin-dash-activity-item {
+  @apply flex flex-col gap-1 text-sm border-b border-subtle pb-2 last:border-b-0;
+}
+
+.admin-dash-activity-head {
+  @apply flex items-baseline justify-between gap-2;
+}
+
+.admin-dash-activity-time {
+  @apply text-xs text-muted shrink-0;
+}
+
+.admin-dash-activity-users {
+  @apply flex items-center flex-wrap gap-y-1 min-w-0;
+}
+
+/* Out-of-window slot counts shown beside the calendar pager arrows — one pill
+   per slot kind (number + label), so it's clear whether paging is worth it.
+   Vivid coloured border + saturated tint so the kinds read at a glance. */
+.cal-nav-counts {
+  @apply inline-flex items-center gap-1 flex-wrap;
+}
+.cal-nav-badge {
+  @apply inline-flex items-center gap-1 h-[1.35rem] px-1.5 rounded-full text-[11px] leading-none;
+  border: 1.5px solid transparent;
+}
+.cal-nav-badge-num { @apply font-bold; }
+.cal-nav-badge-label { @apply font-medium; }
+
+.cal-nav-badge--free {
+  background-color: color-mix(in srgb, var(--color-status-green) 18%, transparent);
+  color: var(--color-status-green);
+  border-color: var(--color-status-green);
+}
+.cal-nav-badge--pending {
+  background-color: color-mix(in srgb, var(--color-status-orange) 18%, transparent);
+  color: var(--color-status-orange);
+  border-color: var(--color-status-orange);
+}
+.cal-nav-badge--booked,
+.cal-nav-badge--mine {
+  background-color: color-mix(in srgb, var(--color-status-blue) 18%, transparent);
+  color: var(--color-status-blue);
+  border-color: var(--color-status-blue);
+}
+.cal-nav-badge--completed {
+  background-color: color-mix(in srgb, var(--color-status-gray) 20%, transparent);
+  color: var(--color-status-gray);
+  border-color: var(--color-status-gray);
+}
+/* Когда список отфильтрован по виду (напр. «Свободен»), приглушаем остальные
+   бейджи подсказки пагинатора, чтобы число нужного вида не терялось среди
+   остальных трёх (D-174/D-179). */
+.cal-nav-badge--dim {
+  opacity: 0.35;
+}
+
+.admin-dash-activity-actor {
+  @apply font-medium text-on-surface;
+}
+
+.admin-dash-activity-arrow {
+  @apply text-muted mx-1.5;
+}
+
+/* Action label: one line, truncates instead of pushing the time off-row. */
+.admin-dash-activity-action {
+  @apply text-secondary truncate min-w-0;
+}

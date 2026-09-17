@@ -1,0 +1,388 @@
+/* 06-features.css — часть 6 из 7
+   Сообщения, комментарии, общие элементы интерфейса, анимации и
+   верхняя навигация.
+
+   ПОРЯДОК ПОДКЛЮЧЕНИЯ ЗНАЧИМ. Это каскад: файлы подключаются в
+   framework.less по номерам, и правило из файла с большим номером
+   перебивает одноимённое из меньшего. Переставить импорты местами —
+   значит изменить внешний вид, ничего не меняя в самих правилах.
+   Исходно всё это лежало одним файлом на 2593 строки. */
+
+/* ─── IM ─── */
+
+.im-bubble-row {
+  @apply flex mb-3;
+}
+
+.im-bubble-row-tight {
+  @apply flex mb-2;
+}
+
+.im-bubble {
+  @apply max-w-[70%] rounded-lg px-4 py-3 text-sm;
+}
+
+.im-bubble-tight {
+  @apply max-w-[80%] rounded-lg px-3 py-2 text-sm;
+}
+
+.im-bubble-mine {
+  @apply bg-accent-subtle text-on-surface;
+}
+
+.im-bubble-theirs {
+  @apply bg-surface-hover text-on-surface;
+}
+
+.im-bubble-author {
+  @apply text-xs font-medium text-muted mb-1;
+}
+
+.im-bubble-author-tight {
+  @apply text-xs font-medium text-muted mb-0.5;
+}
+
+.im-bubble-body {
+  @apply whitespace-pre-wrap break-words;
+}
+
+.im-bubble-time {
+  @apply text-xs mt-1 text-muted;
+}
+
+.im-list-header {
+  @apply p-3 border-b border-default bg-surface-alt flex flex-col gap-2;
+}
+
+.im-conv-snippet {
+  @apply text-xs text-muted truncate flex-1;
+}
+
+.im-conv-you-prefix {
+  @apply font-medium text-on-surface;
+}
+
+.im-conv-time {
+  @apply text-xs text-muted shrink-0;
+}
+
+.im-combobox-trigger {
+  @apply flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm border-strong bg-surface text-on-surface hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-accent;
+}
+
+.im-combobox-trigger-empty {
+  @apply text-muted;
+}
+
+.im-combobox-content {
+  @apply z-50 rounded-md border shadow-lg border-default bg-surface;
+  width: var(--radix-popover-trigger-width);
+}
+
+.im-combobox-search-wrap {
+  @apply p-2 border-b border-default;
+}
+
+.im-combobox-search-input {
+  @apply w-full px-2 py-1.5 text-sm rounded border-0 outline-none bg-surface-alt text-on-surface placeholder:text-muted;
+}
+
+.im-combobox-list {
+  @apply max-h-60 overflow-y-auto p-1;
+}
+
+.im-combobox-empty {
+  @apply py-4 text-center text-sm text-muted;
+}
+
+.im-combobox-option {
+  @apply flex w-full items-center gap-2.5 rounded-sm px-2 py-2 text-sm cursor-pointer hover:bg-accent-subtle text-on-surface;
+}
+
+.im-combobox-option-active {
+  @apply bg-accent-subtle text-accent;
+}
+
+.im-combobox-chevron {
+  @apply ml-2 shrink-0 opacity-50;
+}
+
+.im-avatar {
+  @apply w-8 h-8 rounded-full bg-accent-subtle text-accent text-xs font-bold flex items-center justify-center shrink-0;
+}
+
+.im-avatar-sm {
+  @apply w-6 h-6 rounded-full bg-accent-subtle text-accent text-[10px] font-bold flex items-center justify-center shrink-0;
+}
+
+/* ─── comments ─── */
+
+.comment-card {
+  @apply border border-default rounded-lg px-4 py-3 bg-surface;
+}
+
+.comment-card-row {
+  @apply flex items-start justify-between gap-2;
+}
+
+.comment-author {
+  @apply text-sm font-medium text-on-surface;
+}
+
+.comment-body {
+  @apply text-sm text-secondary mt-1 whitespace-pre-wrap break-words;
+}
+
+.comment-time {
+  @apply text-xs text-muted mt-1;
+}
+
+.comment-delete-btn {
+  @apply text-danger text-xs hover:text-danger shrink-0;
+}
+
+.comment-list {
+  @apply flex flex-col gap-3 mb-4;
+}
+
+.comment-form {
+  @apply flex gap-3;
+}
+
+/* ─── common ui ─── */
+
+.common-status-pill {
+  @apply inline-block px-2 py-0.5 rounded text-xs font-medium;
+}
+
+.common-link {
+  @apply text-accent hover:underline;
+}
+
+.common-link-admin-tag {
+  @apply text-[10px] px-1 py-0.5 rounded border border-default text-muted hover:text-accent hover:border-accent no-underline;
+}
+
+.common-role-tag {
+  @apply text-[10px] px-1.5 py-0.5 rounded status-muted;
+}
+
+.common-entity-link {
+  @apply inline-flex items-center gap-1.5;
+}
+
+.common-attach-image {
+  @apply block border border-default rounded overflow-hidden hover:border-accent transition-colors p-0 bg-transparent cursor-zoom-in;
+}
+
+.common-attach-image-img {
+  @apply max-w-48 max-h-32 object-contain block;
+}
+
+.common-attach-file {
+  @apply block border border-default rounded overflow-hidden hover:border-accent transition-colors;
+}
+
+.common-attach-file-inner {
+  @apply px-3 py-2 bg-surface-alt flex items-center gap-2 text-sm;
+}
+
+.common-attach-list {
+  @apply flex flex-wrap gap-2 mt-2;
+}
+
+.common-pick-grid {
+  @apply flex flex-wrap gap-2 mb-2;
+}
+
+.common-pick-tile {
+  @apply relative border border-default rounded overflow-hidden cursor-pointer;
+}
+
+.common-pick-tile-fallback {
+  @apply w-full h-full flex items-center justify-center bg-surface-alt text-xs text-muted p-1 text-center;
+}
+
+.common-pick-remove {
+  @apply absolute top-0 right-0 bg-danger-subtle text-danger rounded-bl text-xs px-1.5 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity;
+}
+
+.common-pick-lightbox {
+  @apply fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center;
+}
+
+.common-pick-lightbox-frame {
+  @apply relative max-w-[90vw] max-h-[90vh];
+}
+
+.common-pick-lightbox-img {
+  @apply max-w-full max-h-[85vh] object-contain rounded shadow-2xl;
+}
+
+.common-pick-lightbox-actions {
+  @apply absolute top-2 right-2 flex gap-2;
+}
+
+.common-pick-lightbox-btn-danger {
+  @apply bg-danger-subtle text-danger rounded-full w-8 h-8 flex items-center justify-center hover:bg-danger-subtle;
+}
+
+.common-pick-lightbox-btn-neutral {
+  @apply bg-surface-alt text-on-surface rounded-full w-8 h-8 flex items-center justify-center hover:bg-surface-hover;
+}
+
+.common-pick-lightbox-nav {
+  @apply absolute top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-black/70 text-xl;
+}
+
+.common-pick-lightbox-caption {
+  @apply text-center text-white text-sm mt-2 opacity-70;
+}
+
+.common-spinner {
+  @apply animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full;
+}
+
+.common-send-spinner-wrap {
+  @apply inline-flex items-center gap-1;
+}
+
+.common-theme-toggle {
+  @apply inline-flex items-center gap-1 px-3 py-1.5 text-sm text-muted hover:text-warning hover:bg-warning-subtle rounded transition-colors;
+}
+
+.common-pgn-btn {
+  @apply inline-flex items-center justify-center min-w-[2rem] h-8 px-2 text-sm rounded border transition-colors disabled:opacity-40 disabled:cursor-not-allowed border-default bg-surface text-on-surface hover:bg-surface-hover;
+}
+
+.common-pgn-btn-active {
+  @apply inline-flex items-center justify-center min-w-[2rem] h-8 px-2 text-sm rounded border transition-colors disabled:opacity-40 disabled:cursor-not-allowed border-accent bg-accent text-accent-text font-semibold;
+}
+.common-pgn-btn-active:hover,
+.common-pgn-btn-active:focus,
+.common-pgn-btn-active:active {
+  @apply bg-accent-hover text-accent-text border-accent;
+}
+
+.common-pgn-ellipsis {
+  @apply px-1 text-muted text-sm select-none;
+}
+
+.common-pgn-info {
+  @apply text-sm text-muted;
+}
+
+/* ─── animations ─── */
+
+/* Reusable attention shake — pair with the useShake() hook. */
+@keyframes shake-x {
+  0%, 100% { transform: translateX(0); }
+  15%, 45%, 75% { transform: translateX(-6px); }
+  30%, 60%, 90% { transform: translateX(6px); }
+}
+.animate-shake {
+  animation: shake-x 0.5s ease-in-out;
+}
+
+/* ─── nav ─── */
+
+.nav-topbar {
+  @apply bg-surface border-b border-default px-4;
+}
+
+/* Sticky slot that carries the top-menu island so it frosts over scrolled
+   content (the island consumes its *-init class but keeps these). The reserved
+   min-height matches the rendered bar (h-14 row + 1px border) so content below
+   doesn't jump down when the top-menu island hydrates after load. */
+.app-topbar {
+  @apply hidden lg:block lg:sticky lg:top-0 z-30;
+  min-height: 57px;
+}
+
+/* Admin sidebar column — sticky under the top bar, own scroll when tall.
+   The fixed w-20 (matching the inner .nav-sidebar) reserves the column width
+   server-side, so content doesn't jump right by ~80px when the sidebar island
+   hydrates after load. */
+.app-sidebar {
+  @apply hidden lg:block w-20 shrink-0 self-start overflow-y-auto overflow-x-hidden bg-surface border-r border-default lg:sticky lg:top-14;
+  max-height: calc(100vh - 3.5rem);
+}
+
+.nav-topbar-row {
+  @apply grid w-full items-center h-14 gap-3;
+  grid-template-columns: 1fr auto 1fr;
+}
+
+.nav-topbar-list {
+  @apply flex justify-center flex-wrap list-none m-0 p-0 gap-1 min-w-0;
+  grid-column: 2;
+}
+
+/* Site logo in the far-left grid cell — links to the home page.
+   The box mirrors the w-20 sidebar below it (width 5rem) and cancels the
+   .nav-topbar px-4 padding via a negative margin, so the centered logo lines
+   up exactly over the centre of the left sidebar. */
+.nav-topbar-logo {
+  @apply inline-flex items-center justify-center no-underline;
+  grid-column: 1;
+  justify-self: start;
+  width: 5rem;
+  margin-left: -1rem;
+}
+.nav-topbar-logo img {
+  @apply rounded;
+  width: 28px;
+  height: 28px;
+}
+/* Page footer with the configured support/contact email. */
+.app-footer {
+  @apply flex items-center justify-center gap-1.5 flex-wrap px-4 py-3 text-xs text-muted border-t border-subtle mt-auto shrink-0;
+}
+.app-footer-email {
+  @apply text-accent hover:underline;
+}
+
+.mobile-topbar-logo {
+  @apply inline-flex items-center no-underline;
+}
+.mobile-topbar-logo img {
+  @apply rounded;
+  width: 26px;
+  height: 26px;
+}
+
+.nav-topbar-row > .util-cluster-wrap {
+  grid-column: 3;
+  justify-self: end;
+}
+
+.nav-top-link {
+  @apply inline-flex items-center gap-2 px-4 py-2.5 text-sm no-underline transition-colors text-muted hover:text-on-surface;
+}
+
+.nav-top-link-active {
+  @apply inline-flex items-center gap-2 px-4 py-2.5 text-sm no-underline transition-colors text-accent border-b-2 border-accent font-medium;
+}
+
+.nav-sidebar {
+  @apply w-20 py-3;
+}
+
+.nav-side-list {
+  @apply flex flex-col list-none m-0 p-0;
+}
+
+.nav-side-link {
+  @apply flex flex-col items-center justify-center gap-0.5 px-2 py-3 transition-colors no-underline text-muted hover:text-on-surface hover:bg-surface-hover;
+}
+
+.nav-side-link-active {
+  @apply flex flex-col items-center justify-center gap-0.5 px-2 py-3 transition-colors no-underline text-accent font-semibold border-r-4 border-accent;
+  /* Stronger accent wash than bg-accent-subtle so the active item clearly
+     stands out over the frosted (translucent) sidebar. */
+  background-color: color-mix(in srgb, var(--color-accent) 20%, transparent);
+}
+
+.nav-side-label {
+  @apply text-[0.6rem] leading-tight text-center;
+}

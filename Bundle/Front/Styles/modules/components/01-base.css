@@ -1,0 +1,229 @@
+/* 01-base.css — часть 1 из 7
+   Базовый слой: глобальные состояния, кросс-фейд навигации,
+   типографика и элементы форм.
+
+   ПОРЯДОК ПОДКЛЮЧЕНИЯ ЗНАЧИМ. Это каскад: файлы подключаются в
+   framework.less по номерам, и правило из файла с большим номером
+   перебивает одноимённое из меньшего. Переставить импорты местами —
+   значит изменить внешний вид, ничего не меняя в самих правилах.
+   Исходно всё это лежало одним файлом на 2593 строки. */
+
+/* ================================================
+   Component layer — Bootstrap-compatible class names
+   for JS-generated HTML (innerHTML) and common patterns.
+   Rewritten with Tailwind CSS v4 @apply.
+   ================================================ */
+
+/* ---------- Global interactive ---------- */
+
+html {
+  scrollbar-gutter: stable;
+  overflow-y: scroll;
+}
+
+/* ---------- Hot-navigation cross-fade ----------
+   PageLoader mounts the incoming page in this layer (stacked over the old one)
+   and fades it in once hydrated, then drops the old content — no blank flash. */
+body.page-swapping {
+  position: relative;
+}
+.page-swap-incoming {
+  position: absolute;
+  inset: 0 0 auto 0;        /* top/left/right pinned; height follows content */
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transition: opacity 0.28s ease;
+  will-change: opacity;
+}
+.page-swap-incoming.page-swap-in {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-swap-incoming { transition: none; opacity: 1; }
+}
+
+/* Click-time fade-out of the current page — instant "loading" feedback the
+   moment a hot link is clicked. The incoming page and the persistent toast
+   root keep full opacity; on error HotClickInit removes the class and the page
+   snaps back. */
+/* Dim the outgoing page while a navigation is in flight. We deliberately keep
+   it clickable: clicking ANOTHER link mid-navigation should supersede the
+   pending one (goTo's token guard drops the first result). Re-clicking the SAME
+   link is still blocked by `.hot-clicked { pointer-events: none }`. */
+body.page-leaving > :not(.page-swap-incoming):not(#global-toast) {
+  opacity: 0.5;
+  transition: opacity 0.4s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  body.page-leaving > :not(.page-swap-incoming):not(#global-toast) { transition: none; }
+}
+
+button, [role="button"] {
+  cursor: pointer;
+}
+
+/* ---------- Base typography ---------- */
+
+h1, h2, h3, h4, h5, h6 {
+  @apply font-semibold leading-tight text-on-surface;
+}
+
+h1 { @apply text-2xl mb-4; }
+h2 { @apply text-xl mb-3; }
+h3 { @apply text-lg mb-3; }
+h4 { @apply text-base mb-2; }
+h5 { @apply mb-1.5; font-size: 0.9375rem; }
+h6 { @apply text-sm mb-1; }
+
+a:not(.btn):not([class*="bg-"]) { @apply text-accent; }
+a:not(.btn):not([class*="bg-"]):hover { @apply text-accent-hover; }
+
+hr {
+  @apply border-0 border-t border-default my-4;
+}
+
+/* ---------- Form Controls ---------- */
+
+.form-label {
+  @apply block font-medium mb-1 text-secondary;
+  font-size: 0.8125rem;
+}
+
+.form-control {
+  @apply block w-full px-3 text-sm leading-normal text-on-surface bg-surface border border-strong rounded-md;
+  padding-top: 0.4375rem;
+  padding-bottom: 0.4375rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus {
+    @apply border-accent outline-none ring-3 ring-[var(--color-accent)]/15;
+  }
+
+  &::placeholder {
+    @apply text-muted;
+  }
+}
+
+.form-control-sm {
+  @apply px-2 py-1;
+  font-size: 0.8rem;
+}
+
+/* Native number-input spinners differ between engines: Chrome paints an
+   up/down stack inside the box, Firefox/Waterfox paints a left/right pair
+   at the right edge, neither is themeable beyond a few pseudo-elements.
+   Drop the spinner everywhere so the field looks identical in every
+   browser — users still type freely and the up/down arrow keys keep
+   working. If a specific input wants a styled +/- pair we'll add a
+   dedicated React NumberInput; this rule only kills the native chrome. */
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+
+/* Custom date picker — we paint our own popup, so kill every piece of
+   native calendar chrome the browser would otherwise add on top. */
+input.custom-date-input {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+input.custom-date-input::-webkit-calendar-picker-indicator,
+input.custom-date-input::-webkit-clear-button,
+input.custom-date-input::-webkit-inner-spin-button {
+  display: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.cdp-popup {
+  @apply fixed z-50 bg-surface border border-default rounded-md shadow-lg p-2 text-sm text-on-surface;
+  min-width: 18rem;
+}
+.cdp-header {
+  @apply flex items-center justify-between mb-2;
+}
+.cdp-title {
+  @apply font-semibold;
+}
+.cdp-nav {
+  @apply w-7 h-7 inline-flex items-center justify-center rounded hover:bg-surface-alt text-on-surface;
+}
+.cdp-weekdays {
+  @apply grid grid-cols-7 gap-1 mb-1 text-xs text-muted text-center;
+}
+.cdp-weekday {
+  @apply font-medium;
+}
+.cdp-grid {
+  @apply grid grid-cols-7 gap-1;
+}
+.cdp-day {
+  @apply h-8 inline-flex items-center justify-center rounded text-on-surface hover:bg-surface-alt;
+}
+.cdp-day-outside {
+  @apply text-muted;
+}
+.cdp-day-today {
+  @apply border border-default;
+}
+.cdp-day-selected {
+  @apply bg-accent text-white hover:bg-accent;
+}
+.cdp-day-disabled {
+  @apply text-muted opacity-40 cursor-not-allowed hover:bg-transparent;
+}
+.cdp-footer {
+  @apply flex justify-between mt-2 pt-2 border-t border-default;
+}
+.cdp-foot-link {
+  @apply text-accent text-sm hover:underline cursor-pointer;
+}
+
+.form-select {
+  @apply block w-full pl-3 pr-8 text-sm leading-normal text-on-surface bg-surface border border-strong rounded-md appearance-none;
+  padding-top: 0.4375rem;
+  padding-bottom: 0.4375rem;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus {
+    @apply border-accent outline-none ring-3 ring-[var(--color-accent)]/15;
+  }
+}
+
+.form-select-sm {
+  @apply py-1 pl-2 pr-8;
+  font-size: 0.8rem;
+}
+
+.col-form-label {
+  @apply leading-normal;
+  padding-top: calc(0.4375rem + 1px);
+  padding-bottom: calc(0.4375rem + 1px);
+  font-size: inherit;
+}
+
+.form-switch input {
+  @apply cursor-pointer;
+}
+
+.col-form-label.main-label {
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
+}
+
+@media screen and (min-width: 576px) {
+  .col-form-label.main-label {
+    @apply text-right;
+  }
+}

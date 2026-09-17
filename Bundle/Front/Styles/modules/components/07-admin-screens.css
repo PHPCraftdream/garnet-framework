@@ -1,0 +1,491 @@
+/* 07-admin-screens.css — часть 7 из 7
+   Административные экраны: фильтры журналов и броней, блочный
+   редактор статических страниц, таблицы, баннеры, строка расхождения
+   часовых поясов, панель CLI-сервера и мелкие утилиты.
+
+   ПОРЯДОК ПОДКЛЮЧЕНИЯ ЗНАЧИМ. Это каскад: файлы подключаются в
+   framework.less по номерам, и правило из файла с большим номером
+   перебивает одноимённое из меньшего. Переставить импорты местами —
+   значит изменить внешний вид, ничего не меняя в самих правилах.
+   Исходно всё это лежало одним файлом на 2593 строки. */
+
+/* ---------- Admin Log Filters ---------- */
+
+/* Unified filter grid for admin log pages (requests, errors, etc.).
+   All filter cells live in one grid; on small screens it collapses to fewer columns. */
+.admin-log-filters {
+  @apply grid gap-3 mb-4 items-end;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.admin-log-filters .filter-cell {
+  @apply flex flex-col min-w-0;
+}
+
+.admin-log-filters .filter-cell label {
+  @apply block text-xs text-muted mb-1;
+}
+
+.admin-log-filters .filter-cell input,
+.admin-log-filters .filter-cell select {
+  @apply text-sm w-full;
+}
+
+/* Searchable user filter takes a wider slot to avoid looking cramped. */
+.admin-log-filters .filter-cell-user {
+  grid-column: span 2 / span 2;
+}
+
+/* Action cell: search button, reset, counter — bottom-aligned via items-end on grid. */
+.admin-log-filters .filter-actions {
+  @apply flex items-center gap-2 flex-wrap;
+}
+
+.admin-log-filters .filter-actions .filter-counter {
+  @apply text-xs text-muted whitespace-nowrap ml-1;
+}
+
+/* On narrow screens collapse to a single column. */
+@media (max-width: 640px) {
+  .admin-log-filters {
+    grid-template-columns: 1fr;
+  }
+  .admin-log-filters .filter-cell-user {
+    grid-column: auto;
+  }
+}
+
+/* ---------- Admin Bookings Filters ---------- */
+
+/* Unified filter grid for admin bookings/slots/cancellations tabs.
+   Same auto-fit grid as admin-log-filters but with a denser min-column to fit
+   more compact controls (status select, ID search, date inputs). */
+.admin-bookings-filters {
+  @apply grid gap-2 mb-4 items-end;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.admin-bookings-filters .filter-cell {
+  @apply flex flex-col min-w-0;
+}
+
+.admin-bookings-filters .filter-cell label {
+  @apply block text-xs text-muted mb-1;
+}
+
+.admin-bookings-filters .filter-cell input,
+.admin-bookings-filters .filter-cell select {
+  @apply text-sm w-full;
+}
+
+.admin-bookings-filters .filter-actions {
+  @apply flex items-end justify-end;
+}
+
+@media (max-width: 640px) {
+  .admin-bookings-filters {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Block Editor (Static Pages Admin) ---------- */
+
+/* Small square icon button for move arrows, delete, etc. */
+.blk-icon-btn {
+  @apply inline-flex items-center justify-center w-7 h-7 rounded-md text-xs text-secondary bg-surface-hover hover:text-on-surface transition-colors disabled:opacity-40;
+}
+
+.blk-icon-btn-danger {
+  @apply inline-flex items-center justify-center w-7 h-7 rounded-md text-xs text-danger bg-surface-hover hover:bg-danger-subtle transition-colors disabled:opacity-40;
+}
+
+/* Visibility chip toggle */
+.blk-vis-chip {
+  @apply inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full transition-colors cursor-pointer;
+}
+
+.blk-vis-chip-on {
+  @apply bg-success-subtle text-success;
+}
+
+.blk-vis-chip-off {
+  @apply bg-surface-hover text-muted;
+}
+
+/* Segmented toggle for Edit/Preview */
+.blk-seg-toggle {
+  @apply inline-flex rounded-md overflow-hidden border border-default;
+}
+
+.blk-seg-toggle-btn {
+  @apply px-3 py-1 text-xs font-medium transition-colors cursor-pointer;
+}
+
+.blk-seg-toggle-active {
+  @apply bg-accent text-accent-text;
+}
+
+.blk-seg-toggle-inactive {
+  @apply bg-surface-alt text-secondary hover:text-on-surface;
+}
+
+/* Markdown formatting toolbar button */
+.blk-fmt-btn {
+  @apply inline-flex items-center justify-center w-8 h-8 rounded-md text-sm text-secondary bg-surface-alt hover:bg-surface-hover hover:text-on-surface transition-colors;
+}
+
+/* Dashed "add block" separator */
+.blk-add-separator {
+  @apply relative flex items-center justify-center py-2;
+}
+
+.blk-add-separator::before {
+  content: '';
+  @apply absolute inset-x-0 top-1/2 border-t border-dashed border-subtle;
+}
+
+.blk-add-btn {
+  @apply relative z-10 inline-flex items-center justify-center w-7 h-7 rounded-full border border-dashed border-subtle bg-surface text-muted text-sm hover:border-accent hover:text-accent transition-colors disabled:opacity-40;
+}
+
+/* Block card container */
+.blk-card {
+  @apply rounded-lg border border-default p-3 transition-opacity;
+}
+
+.blk-card-dimmed {
+  @apply opacity-50;
+}
+
+/* Block header row */
+.blk-header {
+  @apply flex items-center gap-1 mb-2;
+}
+
+/* Block type selector */
+.blk-type-select {
+  @apply w-28;
+}
+
+/* ---------- Static Page Image/Gallery Blocks ---------- */
+
+.sp-block-image { @apply max-w-full rounded-lg; }
+.sp-image-block { @apply flex justify-center; }
+.sp-lightbox-link { @apply cursor-zoom-in; }
+.sp-gallery-block { @apply space-y-2; }
+.sp-gallery-row { @apply grid gap-2; }
+.sp-gallery-image { @apply w-full h-full object-cover rounded-lg; }
+
+/* Static Page Admin: image upload area */
+.blk-upload-area {
+  @apply border-2 border-dashed border-subtle rounded-lg p-6 text-center cursor-pointer transition-colors bg-surface-alt;
+}
+.blk-upload-area-active {
+  @apply border-accent bg-accent-subtle;
+}
+.blk-upload-hint {
+  @apply text-sm text-muted;
+}
+
+/* Static Page Admin: gallery thumbnail grid */
+.blk-gal-grid {
+  @apply grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3;
+}
+.blk-gal-thumb {
+  @apply relative rounded-lg overflow-hidden border border-default bg-surface-alt;
+}
+.blk-gal-thumb-img {
+  @apply w-full h-24 object-cover;
+}
+.blk-gal-thumb-remove {
+  @apply absolute top-1 right-1 inline-flex items-center justify-center w-6 h-6 rounded-md text-xs text-danger bg-surface-hover hover:bg-danger-subtle transition-colors opacity-0 transition-opacity;
+}
+.blk-gal-thumb:hover .blk-gal-thumb-remove {
+  opacity: 1;
+}
+
+/* Static Page Admin: image block preview */
+.blk-img-preview {
+  @apply relative inline-block;
+}
+.blk-img-preview-img {
+  @apply max-h-48 rounded-lg;
+}
+.blk-img-preview-remove {
+  @apply absolute top-1 right-1 inline-flex items-center justify-center w-7 h-7 rounded-md text-xs text-danger bg-surface-hover hover:bg-danger-subtle transition-colors;
+}
+
+/* Static pages navigation (header snippet).
+   Floats on top; the frosted-glass fill is supplied by the shared
+   `glass-skin` chrome rule (glass.css) and the bottom divider matches the
+   admin top bar exactly (border-b border-default) so the line under the
+   menu reads identically across the app and the public static pages. */
+.sp-nav {
+  @apply sticky top-0 z-40 py-3 px-4 border-b border-default;
+  position: sticky; /* floats on every page, not just sticky-flagged ones */
+}
+.sp-nav-inner { @apply flex items-center gap-4 md:gap-6 max-w-5xl mx-auto; }
+.sp-nav-center .sp-nav-inner { @apply md:justify-center; }
+/* sp-nav-sticky kept as an explicit alias; the base nav already floats. */
+.sp-nav-sticky { @apply sticky top-0 z-40; }
+.sp-nav-logo img { @apply block; }
+/* Menu: inline row on desktop; collapsed behind the burger on mobile and
+   shown as a full-width frosted dropdown when the nav is open. */
+.sp-nav-menu { @apply hidden md:flex items-center gap-4 list-none m-0 p-0; }
+/* Pure CSS checkbox-hack: the hidden .sp-nav-toggle drives the open state.
+   On mobile the menu drops down as a frosted panel; md: resets restore the
+   inline row on desktop regardless of checked state (handles resize). */
+.sp-nav-toggle { @apply hidden; }
+.sp-nav-toggle:checked ~ .sp-nav-inner .sp-nav-menu {
+  @apply flex flex-col absolute left-0 right-0 top-full px-4 py-3 gap-3 z-40
+         border-b border-subtle
+         md:static md:flex-row md:items-center md:gap-4 md:p-0 md:border-0;
+  background: color-mix(in srgb, var(--color-bg-surface) 92%, transparent);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  backdrop-filter: blur(12px) saturate(1.4);
+  box-shadow: 0 6px 14px -8px color-mix(in srgb, var(--color-accent) 45%, transparent);
+}
+@media (min-width: 768px) {
+  .sp-nav-toggle:checked ~ .sp-nav-inner .sp-nav-menu { background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; }
+}
+.sp-nav-link { @apply text-sm text-secondary no-underline transition-colors; }
+.sp-nav-link:hover { @apply text-accent; }
+.sp-nav-divider { @apply hidden md:block h-4 self-center border-l border-subtle; }
+.sp-nav-theme-toggle { @apply ml-auto md:ml-1; }
+.sp-nav-theme-toggle .spnt-icon { @apply block; }
+/* Hamburger (the toggle's <label>) — mobile only; bars animate into an X. */
+.sp-nav-burger { @apply md:hidden inline-flex flex-col justify-center items-center gap-[5px] w-9 h-9 rounded-md text-on-surface cursor-pointer; }
+.sp-nav-burger span { @apply block h-0.5 w-5 rounded bg-current transition-all; }
+.sp-nav-toggle:checked ~ .sp-nav-inner .sp-nav-burger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.sp-nav-toggle:checked ~ .sp-nav-inner .sp-nav-burger span:nth-child(2) { opacity: 0; }
+.sp-nav-toggle:checked ~ .sp-nav-inner .sp-nav-burger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* Static pages footer (footer snippet). Frosted-glass fill is supplied by
+   the shared glass-skin chrome rule (glass.css) to match the admin chrome. */
+.sp-footer {
+  @apply border-t border-subtle mt-auto pt-6 pb-4 px-4;
+}
+.sp-footer-inner { @apply max-w-5xl mx-auto; }
+.sp-footer-cols { @apply grid gap-8 mb-4; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.sp-footer-col-title { @apply text-sm font-semibold text-on-surface mb-2; }
+.sp-footer-col-links { @apply list-none m-0 p-0 space-y-1; }
+.sp-footer-link { @apply text-sm text-secondary no-underline transition-colors; }
+.sp-footer-link:hover { @apply text-accent; }
+.sp-footer-copyright { @apply text-xs text-muted text-center pt-4 border-t border-subtle; }
+/* Single-column meta-footer fallback: when only one column survived
+   placeholder filtering, the footer renders a flat horizontal row of
+   links separated by bullets. Keeps the slim look of a marketing
+   site footer instead of a half-empty grid. Wraps on narrow screens. */
+.sp-footer-row { @apply flex flex-wrap items-center justify-center gap-x-4 gap-y-2 list-none m-0 p-0 mb-4; }
+.sp-footer-row li { @apply flex items-center; }
+.sp-footer-row li + li::before { content: "·"; @apply text-muted mr-4; }
+
+/* Default 404 body (rendered inside the public-page shell). */
+.sp-notfound { @apply text-center py-12; }
+.sp-notfound-code { @apply text-6xl font-bold text-accent leading-none mb-2; }
+.sp-notfound-title { @apply text-2xl font-semibold text-on-surface mb-2; }
+.sp-notfound-text { @apply text-secondary mb-6; }
+.sp-notfound-home { @apply inline-block rounded-lg bg-accent px-4 py-2 font-medium text-accent-text no-underline hover:bg-accent-hover transition-colors; }
+
+/* Lift sp-nav / sp-footer link colour in dark mode — the resolved
+   --color-accent (#6366A6) reads as "too dark" against #0A0A0B for
+   chrome links. Keep the blue/indigo identity, just shift it toward
+   primary text so it reads as a paler, more readable indigo.
+   NB: the `a` prefix is required to outrank the global
+   `a:not(.btn):not([class*="bg-"])` rule (specificity 21). */
+[data-theme="dark"] a.sp-nav-link,
+[data-theme="dark"] a.sp-footer-link { color: color-mix(in srgb, var(--color-accent) 55%, var(--color-text-primary) 45%); }
+[data-theme="dark"] a.sp-nav-link:hover,
+[data-theme="dark"] a.sp-footer-link:hover { color: var(--color-text-primary); }
+
+/* Static pages structured snippet admin editors */
+.sp-editor-section { @apply rounded-lg border border-default bg-surface p-4 space-y-3; }
+.sp-editor-section-title { @apply text-sm font-semibold text-on-surface; }
+.sp-menu-item-row { @apply flex flex-wrap items-center gap-2 py-2 border-b border-subtle; }
+.sp-menu-item-row:last-child { @apply border-b-0; }
+.sp-col-card { @apply rounded-lg border border-default bg-surface-alt p-4 space-y-3; }
+
+/* ---------- Centralised admin-table styling ---------- */
+/*
+ * Single source of truth for admin tables. Apply `admin-table` to <table>
+ * and the headers + row underlines come for free; no need to dust each
+ * <thead>/<tr> with the same Tailwind cocktail.
+ */
+.admin-table { @apply w-full text-sm; }
+.admin-table thead tr { @apply bg-surface-alt border-b border-subtle text-left text-secondary; }
+.admin-table thead th { @apply px-4 py-3 font-semibold; }
+.admin-table tbody tr { @apply border-b border-subtle; }
+.admin-table tbody tr:last-child { @apply border-b-0; }
+.admin-table tbody td { @apply px-4 py-3 align-top; }
+
+/* ---------- Banners (inline notices) ---------- */
+/*
+ * Generic full-width notice strip used for any inline page message:
+ * timezone notice, deprecation hint, error summary, success confirmation.
+ * Use the <Banner variant=…> React component, not these classes directly.
+ *
+ * Variants share padding/radius/layout; only the colour palette changes:
+ *  - info    — calm, surface-alt background, default border
+ *  - warn    — eye-catching amber on warning-subtle bg
+ *  - danger  — red text on danger-subtle bg
+ *  - success — green text on success-subtle bg
+ */
+.banner {
+    @apply flex items-start gap-2 rounded-md px-3 py-2 mb-3 text-sm;
+    border: 1px solid var(--border-default-color, transparent);
+}
+.banner-info    { @apply bg-surface-alt text-secondary; }
+.banner-warn    {
+    @apply bg-warning-subtle text-on-surface;
+    border-color: var(--color-warning);
+}
+.banner-danger  {
+    @apply bg-danger-subtle text-on-surface;
+    border-color: var(--color-danger);
+}
+.banner-success {
+    @apply bg-success-subtle text-on-surface;
+    border-color: var(--color-success);
+}
+.banner-icon { @apply text-base leading-none shrink-0; }
+.banner-title { @apply font-semibold; }
+
+/* ---------- TZ-mismatch row (TimezoneNotice warn variant) ---------- */
+/*
+ * One-line layout: two inline chips (browser • time, profile • time) with a
+ * diff pill between them. Wraps to two/three lines on narrow viewports via
+ * flex-wrap — no media-query breakpoint needed, the content reflows when
+ * it can't fit.
+ */
+.tz-mismatch-row {
+    @apply flex flex-wrap items-center gap-x-2 gap-y-1 leading-tight;
+}
+.tz-chip-inline {
+    /* No flex-wrap: the check/icon and time stay on the same row as the
+       label; only the label text itself wraps (min-w-0 below). items-start
+       keeps the ✓ aligned to the first line when the label runs long. */
+    @apply inline-flex items-start gap-1.5 rounded-md px-2 py-0.5 text-sm max-w-full min-w-0;
+    /* Was var(--bg-surface) — that token doesn't exist, so it always fell back
+       to #fff (white). In dark theme the muted label then sat on a white chip
+       (gray-on-white, invisible). Use the real theme surface token. */
+    background: color-mix(in srgb, var(--color-bg-surface) 55%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-warning, #d97706) 25%, transparent);
+}
+/* Active chip — the timezone the page actually uses for rendering times. */
+.tz-chip-active {
+    background: color-mix(in srgb, var(--color-success, #16a34a) 12%, transparent);
+    border-color: color-mix(in srgb, var(--color-success, #16a34a) 45%, transparent);
+}
+.tz-chip-muted     { @apply opacity-80; }
+.tz-chip-check     { @apply font-bold; color: var(--color-success, #16a34a); }
+.tz-chip-label-text{ @apply text-muted text-xs min-w-0; }
+.tz-chip-name      { @apply font-medium; }
+.tz-chip-sep       { @apply text-muted; }
+.tz-chip-time      { @apply font-mono tabular-nums; }
+.tz-diff-pill {
+    @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap;
+    background: color-mix(in srgb, var(--color-warning, #d97706) 18%, transparent);
+    color: var(--color-warning, #b45309);
+}
+.tz-mismatch-footer { @apply mt-1 text-xs text-muted; }
+
+/* ---------- Centralised tab bar ---------- */
+/*
+ * Tab bar = ul.tab-bar > li > button.tab-link[.tab-link-active]. Used by
+ * TabNav and any page-level tab strip. The base .tab-link is inline-flex
+ * with gap-1 so an optional close × span renders cleanly; pages without
+ * a close button render the same.
+ */
+.tab-bar { @apply flex flex-wrap border-b border-default; }
+.tab-link {
+    @apply inline-flex items-center gap-1 px-4 py-2 text-sm font-medium rounded-t-lg
+           border-b-2 border-transparent text-muted transition-colors
+           hover:text-secondary hover:border-strong;
+}
+.tab-link-active { @apply border-accent text-accent hover:text-accent hover:border-accent; }
+
+/* ---------- Admin Dashboard (GarnetCli admin server) ---------- */
+/*
+ * Component classes used by the AdminDashboard island. The panel is the
+ * card-like container; the terminal-panel is the command output area.
+ * Button-warning/info are framework-level button variants that didn't
+ * exist before but are needed here (and elsewhere) to keep the 4-layer
+ * colour rule (no raw tailwind palette in TSX).
+ */
+.btn-warning {
+    @apply bg-warning-subtle text-on-surface;
+    border-color: var(--color-warning);
+    &:hover { @apply bg-warning-subtle text-on-surface; }
+}
+
+.btn-info {
+    @apply bg-info-subtle text-on-surface;
+    &:hover { @apply bg-info-subtle text-on-surface; }
+}
+
+.admin-dash-page {
+    @apply min-h-screen bg-page;
+}
+
+.admin-dash-topbar {
+    @apply bg-surface shadow;
+}
+
+.admin-dash-topbar-inner {
+    @apply max-w-4xl mx-auto px-4 py-4 flex items-center justify-between;
+}
+
+.admin-dash-title {
+    @apply text-xl font-bold text-on-surface;
+}
+
+.admin-dash-main {
+    @apply max-w-4xl mx-auto px-4 py-6 space-y-6;
+}
+
+.admin-dash-panel {
+    @apply bg-surface rounded-lg shadow p-4;
+}
+
+.admin-dash-panel-row {
+    @apply flex items-center gap-3;
+}
+
+.admin-dash-panel-actions {
+    @apply flex flex-wrap gap-2;
+}
+
+.admin-dash-panel-header {
+    @apply flex items-center justify-between mb-2;
+}
+
+.admin-dash-panel-label {
+    @apply font-medium text-secondary;
+}
+
+.admin-dash-panel-hint {
+    @apply text-sm text-muted;
+}
+
+.admin-dash-panel-mini-action {
+    @apply text-xs text-muted hover:text-on-surface bg-transparent border-0 cursor-pointer;
+}
+
+.admin-dash-select {
+    @apply border border-default rounded px-3 py-1.5 text-sm bg-surface text-on-surface;
+}
+
+/*
+ * Terminal-style output panel (e.g. AdminDashboard cmd runner output).
+ * We use bg-surface-alt + text-success to stay inside the 4-layer rule:
+ * the visual "console-on-dark" look is the dark-theme rendering of these
+ * layer-3 classes, and light-theme stays readable too.
+ */
+.terminal-panel {
+    @apply bg-surface-alt text-success rounded p-4 h-96 overflow-y-auto text-sm font-mono whitespace-pre-wrap;
+}
+
+/* ---------- Misc Utilities ---------- */
+
+.fs-5 { @apply text-xl; }
+.h-100 { @apply h-full; }
