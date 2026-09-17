@@ -3,7 +3,7 @@
 namespace PHPCraftdream\Garnet\Kernel\Db\Link\Spec\NamedLock {
     use mysqli_sql_exception;
     use PHPCraftdream\Garnet\Kernel\Db\Link\NamedLock;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\DbException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Db\DbException;
     use ReflectionMethod;
 
     describe('NamedLock — распознавание разорванного соединения', function (): void {

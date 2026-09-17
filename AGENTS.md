@@ -51,7 +51,7 @@ extension-point convention.
 | You want to… | Look at |
 |---|---|
 | Add a CLI command | `Kernel/Io/GarnetCli/Garnet*Command.php` + `Kernel/Io/GarnetCli/GarnetRunner.php` |
-| Extend the kernel HTTP pipeline | `Kernel/Core/FrameworkController.php`, `Kernel/Io/IoRun/IoRunWeb.php` |
+| Extend the kernel HTTP pipeline | `Kernel/Core/FrameworkController.php`, `Kernel/Io/Http/IoRun/IoRunWeb.php` |
 | Add or change a DB primitive | `Kernel/Db/Tables/DbTable.php` (don't), `Kernel/Db/Link/DbPool.php`, `Kernel/Db/Entity/Account/Account.php` |
 | Add a bundle (auth, comments, …) | `Bundle/Modules/<Name>/` — model on an existing module |
 | Add a Twig template | `Bundle/TwigTemplates/<scope>/<name>.twig`; register through your bundle's `BaseBundleInit::init()` |

@@ -2,7 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Deploy;
 
-use PHPCraftdream\Garnet\Kernel\Exceptions\SshException;
+use PHPCraftdream\Garnet\Kernel\Exceptions\Io\SshException;
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Deploy\DeployDiff\DeployDiffAssetsTrait;
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Deploy\DeployDiff\DeployDiffInputTrait;
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Deploy\DeployDiff\DeployDiffModesTrait;
@@ -13,8 +13,8 @@ use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Deploy\DeployDiff\DeployDi
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Deploy\Journal\DeployJournal;
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\GarnetEnv;
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\PublicPathRebrander;
-use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
-use PHPCraftdream\Garnet\Kernel\Io\Ssh\SshClient;
+use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
+use PHPCraftdream\Garnet\Kernel\Io\Services\Ssh\SshClient;
 use ReflectionClass;
 use Throwable;
 

@@ -3,7 +3,7 @@
 namespace PHPCraftdream\Garnet\Kernel\Db\Link\Spec {
     use Exception;
     use PHPCraftdream\Garnet\Kernel\Db\Link\DbPool;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
 
     // Regression coverage for DbPool::queryAsync() building SQL via string
     // interpolation (QueryTools::buildSql() -> escapeSqlParam()) instead of

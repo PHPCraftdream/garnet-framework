@@ -5,9 +5,9 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\DbLog {
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Account\Account;
     use PHPCraftdream\Garnet\Kernel\Db\Tables\DbTable;
     use PHPCraftdream\Garnet\Kernel\Db\Tables\DbTableBuilderFactory;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\DbException;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\IniConfigException;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\ValidationException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Db\DbException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Io\IniConfigException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Web\ValidationException;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbMySQLiLink;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Db\ITableBuilderDriver;
 

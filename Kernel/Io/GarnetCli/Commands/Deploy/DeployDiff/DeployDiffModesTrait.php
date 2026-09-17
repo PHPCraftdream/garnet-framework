@@ -2,7 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Deploy\DeployDiff {
     use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\PublicPathRebrander;
-    use PHPCraftdream\Garnet\Kernel\Io\Ssh\SshClient;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\Ssh\SshClient;
 
     /**
      * Два режима, обходящие git-диф: точечная досылка и полный public.

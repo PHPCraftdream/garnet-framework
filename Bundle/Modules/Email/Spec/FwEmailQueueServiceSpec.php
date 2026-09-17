@@ -7,7 +7,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Email\Spec {
     use PHPCraftdream\Garnet\Bundle\Modules\Email\Tables\FwEmailAttempts;
     use PHPCraftdream\Garnet\Bundle\Modules\Email\Tables\FwEmailQueue;
     use PHPCraftdream\Garnet\Kernel\Db\Tables\DbTable;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
     use ReflectionClass;
 
     // ---------------------------------------------------------------------------

@@ -1,11 +1,11 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
-    use PHPCraftdream\Garnet\Kernel\Exceptions\DbTableBuilderException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Db\DbTableBuilderException;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbM2M;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbTable;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Db\ITableBuilderDriver;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
 
     class DbTableBuilderFactory {
         public static function get(string $tableName): ITableBuilderDriver {

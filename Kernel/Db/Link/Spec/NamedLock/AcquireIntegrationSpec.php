@@ -3,7 +3,7 @@
 namespace PHPCraftdream\Garnet\Kernel\Db\Link\Spec\NamedLock {
     use PHPCraftdream\Garnet\Kernel\Db\Link\DbPool;
     use PHPCraftdream\Garnet\Kernel\Db\Link\NamedLock;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\DbException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Db\DbException;
 
     describe('NamedLock — взятие замка', function (): void {
         $dbAvailable = false;

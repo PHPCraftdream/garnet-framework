@@ -5,10 +5,10 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Idempotency {
     use PHPCraftdream\Garnet\Bundle\Modules\Idempotency\Tables\FwIdempotencyKeys;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Account\Account;
     use PHPCraftdream\Garnet\Kernel\Db\Link\CasUpdate;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\DbException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Db\DbException;
     use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Router\IRouterUriParams;
-    use PHPCraftdream\Garnet\Kernel\Io\Router\ControllerTools;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\ControllerTools;
     use Psr\Http\Message\ResponseInterface;
     use Throwable;
 

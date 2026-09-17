@@ -4,8 +4,8 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Deploy\Remote;
 
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\GarnetEnv;
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\GarnetRunner;
-use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
-use PHPCraftdream\Garnet\Kernel\Io\Ssh\SshClient;
+use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
+use PHPCraftdream\Garnet\Kernel\Io\Services\Ssh\SshClient;
 
 /**
  * `php garnet test:remote` — orchestrate a UI-test run against an external

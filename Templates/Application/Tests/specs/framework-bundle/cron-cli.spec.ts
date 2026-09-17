@@ -5,7 +5,7 @@
  * so it boots without an HTTP request. This spec exercises the CLI
  * directly (no browser) against the bare scaffolded template, which
  * registers zero cron tasks by default — apps wire their own tasks via
- * a concrete `FwCronService` subclass (see `Kernel/Io/Cron/README.md`
+ * a concrete `FwCronService` subclass (see `Kernel/Io/Services/Cron/README.md`
  * and `FwCronService::registerTasks()`).
  *
  * Asserts the CLI boots cleanly and reports the correct task count in

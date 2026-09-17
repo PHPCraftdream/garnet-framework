@@ -11,16 +11,16 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
     use PHPCraftdream\Garnet\Kernel\Db\Entity\DbLog\EntityLog;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Session;
     use PHPCraftdream\Garnet\Kernel\Exceptions\CommonException;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\DbException;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\IniConfigException;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\ValidationException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Db\DbException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Io\IniConfigException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Web\ValidationException;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IEntityConfig;
     use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Router\IRouterUriParams;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\AppConfig;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
-    use PHPCraftdream\Garnet\Kernel\Io\Router\ControllerTools;
-    use PHPCraftdream\Garnet\Kernel\Io\Twig\TwigParams;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\ControllerTools;
+    use PHPCraftdream\Garnet\Kernel\Io\Render\Twig\TwigParams;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\AppConfig;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
     use Psr\Http\Message\ResponseInterface;
 
     abstract class RegMiddleware {

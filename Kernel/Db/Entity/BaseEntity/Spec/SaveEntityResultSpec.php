@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 use PHPCraftdream\Garnet\Kernel\Db\Entity\BaseEntity\SaveEntityResult;
-use PHPCraftdream\Garnet\Kernel\Io\Forms\Updater;
+use PHPCraftdream\Garnet\Kernel\Io\Http\Forms\Updater;
 
 describe('SaveEntityResult', function (): void {
     describe('constructor', function (): void {

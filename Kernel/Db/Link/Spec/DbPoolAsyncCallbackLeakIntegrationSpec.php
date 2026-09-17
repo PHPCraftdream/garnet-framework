@@ -3,8 +3,8 @@
 namespace PHPCraftdream\Garnet\Kernel\Db\Link\Spec {
     use Exception;
     use PHPCraftdream\Garnet\Kernel\Db\Link\DbPool;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\DbException;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Db\DbException;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
     use ReflectionClass;
 
     // Regression coverage for the async-callback-leak bug: an async query

@@ -4,8 +4,8 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link\Spec;
 
 use mysqli_sql_exception;
 use PHPCraftdream\Garnet\Kernel\Db\Link\DbPool;
-use PHPCraftdream\Garnet\Kernel\Exceptions\DbException;
-use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+use PHPCraftdream\Garnet\Kernel\Exceptions\Db\DbException;
+use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
 use ReflectionClass;
 
 /**
@@ -158,7 +158,7 @@ describe('DbPool Commands out of sync exception handling (Integration)', functio
         expect($exceptionThrown)->toBe(true);
 
         // The exception MUST be DbException, not mysqli_sql_exception
-        expect($exceptionType)->toBe('PHPCraftdream\Garnet\Kernel\Exceptions\DbException');
+        expect($exceptionType)->toBe('PHPCraftdream\Garnet\Kernel\Exceptions\Db\DbException');
 
         // The exception message should indicate probe query failure
         expect($exceptionMessage)->toContain('could not verify sql_mode');

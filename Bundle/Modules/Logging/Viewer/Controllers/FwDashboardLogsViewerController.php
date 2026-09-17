@@ -8,8 +8,8 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Viewer\Controllers {
     use PHPCraftdream\Garnet\Bundle\Utils\RenderIsland;
     use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Router\IRouterUriParams;
-    use PHPCraftdream\Garnet\Kernel\Io\Router\ControllerTools;
-    use PHPCraftdream\Garnet\Kernel\Io\Twig\TwigParams;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\ControllerTools;
+    use PHPCraftdream\Garnet\Kernel\Io\Render\Twig\TwigParams;
 
     /**
      * Unified logs viewer with 4 tabs:

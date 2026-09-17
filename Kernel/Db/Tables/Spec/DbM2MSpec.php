@@ -47,7 +47,7 @@ if (!class_exists('TestM2M', false)) {
 describe('DbM2M', function (): void {
     beforeEach(function (): void {
         // Reset IniConfig static state
-        $reflection = new ReflectionClass(\PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig::class);
+        $reflection = new ReflectionClass(\PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig::class);
         $itemsProp = $reflection->getProperty('items');
         $itemsProp->setValue(null, []);
 
@@ -57,7 +57,7 @@ describe('DbM2M', function (): void {
         // Set up IniConfig to avoid prefix
         $tempFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'db_test_' . uniqid() . '.ini';
         file_put_contents($tempFile, 'prefix=');
-        \PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig::defineDbIni($tempFile);
+        \PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig::defineDbIni($tempFile);
     });
 
     describe('Table and entity names', function (): void {

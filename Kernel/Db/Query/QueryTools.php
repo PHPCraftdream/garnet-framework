@@ -2,7 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Db\Query {
     use mysqli;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\DbException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Db\DbException;
 
     class QueryTools {
         public static function makeInsertBatchNamed(

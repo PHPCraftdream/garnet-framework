@@ -7,7 +7,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\Spec {
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Account\Account;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Session;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Session\SessionData;
-    use PHPCraftdream\Garnet\Kernel\Io\Cookies\Cookies;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\Cookies\Cookies;
     use ReflectionClass;
 
     /**

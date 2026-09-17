@@ -7,9 +7,9 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Account {
     use PHPCraftdream\Garnet\Kernel\Core\Event\Event;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Session;
     use PHPCraftdream\Garnet\Kernel\Db\Link\DbPool;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\DbException;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\IniConfigException;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\ValidationException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Db\DbException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Io\IniConfigException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Web\ValidationException;
     use PHPCraftdream\Garnet\Kernel\Interfaces\IAccount;
     use PHPCraftdream\Garnet\Kernel\Interfaces\IEventObj;
 

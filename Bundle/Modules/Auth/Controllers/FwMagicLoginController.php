@@ -5,7 +5,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Controllers {
     use PHPCraftdream\Garnet\Kernel\Core\FrameworkController;
     use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Router\IRouterUriParams;
-    use PHPCraftdream\Garnet\Kernel\Io\Router\ControllerTools;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\ControllerTools;
 
     /**
      * One-click magic-login endpoint: `/magic-login/code~{32-char token}`

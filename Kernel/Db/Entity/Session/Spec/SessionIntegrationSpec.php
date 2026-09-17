@@ -46,7 +46,7 @@ describe('Session Integration', function (): void {
         }
 
         // Create test tables using DbPool
-        \PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig::defineDbIni($dbConfigPath);
+        \PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig::defineDbIni($dbConfigPath);
 
         try {
             $pool = DbPool::get();

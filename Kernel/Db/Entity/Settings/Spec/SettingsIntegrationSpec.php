@@ -43,7 +43,7 @@ describe('Settings Integration', function (): void {
         }
 
         // Create test table using DbPool/mysqli
-        \PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig::defineDbIni($dbConfigPath);
+        \PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig::defineDbIni($dbConfigPath);
 
         try {
             $pool = DbPool::get();

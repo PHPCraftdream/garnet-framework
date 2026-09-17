@@ -4,9 +4,9 @@ namespace PHPCraftdream\Application\Foreground\Backend {
     use PHPCraftdream\Garnet\Bundle\Modules\Auth\Controllers\FwMagicLoginController;
     use PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares\EmailAuthMiddleware;
     use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
-    use PHPCraftdream\Garnet\Kernel\Io\Router\ControllerTools;
-    use PHPCraftdream\Garnet\Kernel\Io\Twig\Twig;
-    use PHPCraftdream\Garnet\Kernel\Io\Twig\TwigParams;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\ControllerTools;
+    use PHPCraftdream\Garnet\Kernel\Io\Render\Twig\Twig;
+    use PHPCraftdream\Garnet\Kernel\Io\Render\Twig\TwigParams;
 
     /**
      * One-click magic-login endpoint: GET /magic-login/code~{32-char token}.

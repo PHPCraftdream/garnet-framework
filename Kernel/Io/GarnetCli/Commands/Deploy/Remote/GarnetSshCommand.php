@@ -3,7 +3,7 @@
 namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Deploy\Remote;
 
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\GarnetEnv;
-use PHPCraftdream\Garnet\Kernel\Io\Ssh\SshClient;
+use PHPCraftdream\Garnet\Kernel\Io\Services\Ssh\SshClient;
 use Throwable;
 
 /**
@@ -369,7 +369,7 @@ class GarnetSshCommand {
      */
     private static function runtimeDir(): string {
         try {
-            $deploy = \PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig::deploy();
+            $deploy = \PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig::deploy();
             $base = rtrim($deploy->paramString('remote_path', ''), '/');
             $dir = trim($deploy->paramString('runtime_dir', ''), '/');
 

@@ -3,7 +3,7 @@
 use Aura\SqlQuery\QueryFactory as AuraQueryFactory;
 use PHPCraftdream\Garnet\Kernel\Db\Query\QueryFactory;
 use PHPCraftdream\Garnet\Kernel\Db\Query\QueryTools;
-use PHPCraftdream\Garnet\Kernel\Exceptions\DbException;
+use PHPCraftdream\Garnet\Kernel\Exceptions\Db\DbException;
 
 /**
  * A placeholder with no bind value used to become NULL. That is the worst

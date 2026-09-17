@@ -4,8 +4,8 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Deploy\DeployDiff {
     use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\CliTokens;
     use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Build\GarnetBundleCommand;
     use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\GarnetRunner;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
-    use PHPCraftdream\Garnet\Kernel\Io\Ssh\SshClient;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\Ssh\SshClient;
     use RuntimeException;
     use Throwable;
 

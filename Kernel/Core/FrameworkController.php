@@ -2,13 +2,13 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Core {
     use Exception;
-    use PHPCraftdream\Garnet\Kernel\Io\ErrorCatcher\ErrorCatcher;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\AppConfig;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
-    use PHPCraftdream\Garnet\Kernel\Io\Logs\Logger;
-    use PHPCraftdream\Garnet\Kernel\Io\Router\BaseController;
-    use PHPCraftdream\Garnet\Kernel\Io\Router\ErrorTools;
-    use PHPCraftdream\Garnet\Kernel\Io\Twig\Twig;
+    use PHPCraftdream\Garnet\Kernel\Io\Bootstrap\ErrorCatcher\ErrorCatcher;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\BaseController;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\ErrorTools;
+    use PHPCraftdream\Garnet\Kernel\Io\Render\Twig\Twig;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\AppConfig;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\Logs\Logger;
     use Throwable;
 
     abstract class FrameworkController extends BaseController {

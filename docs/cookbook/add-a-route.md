@@ -19,7 +19,7 @@ namespace PHPCraftdream\MyApp\Foreground\Controllers;
 
 use PHPCraftdream\Garnet\Kernel\Core\FrameworkController;
 use PHPCraftdream\Garnet\Kernel\Core\GlobalReqParams\GlobalReqParams;
-use PHPCraftdream\Garnet\Kernel\Io\Router\RouterUriParams;
+use PHPCraftdream\Garnet\Kernel\Io\Http\Router\RouterUriParams;
 use Psr\Http\Message\ResponseInterface;
 
 class AboutController extends FrameworkController

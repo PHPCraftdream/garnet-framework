@@ -13,7 +13,7 @@ namespace PHPCraftdream\GarnetMySql {
 
     use PHPCraftdream\Garnet\Kernel\Core\Env\Env;
     use PHPCraftdream\Garnet\Kernel\Db\Link\DbPool;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
     use Throwable;
 
     // Minimal init: just load configs so DB connection works

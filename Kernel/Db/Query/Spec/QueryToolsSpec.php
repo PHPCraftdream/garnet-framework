@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 use PHPCraftdream\Garnet\Kernel\Db\Query\QueryTools;
-use PHPCraftdream\Garnet\Kernel\Exceptions\DbException;
+use PHPCraftdream\Garnet\Kernel\Exceptions\Db\DbException;
 
 describe('QueryTools', function (): void {
     describe('makeInsertBatchNamed()', function (): void {

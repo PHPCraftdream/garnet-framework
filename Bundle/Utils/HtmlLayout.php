@@ -2,10 +2,10 @@
 
 namespace PHPCraftdream\Garnet\Bundle\Utils;
 
-use PHPCraftdream\Garnet\Kernel\Io\Forms\ImageUpload;
-use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
-use PHPCraftdream\Garnet\Kernel\Io\Router\RouterUriParams;
-use PHPCraftdream\Garnet\Kernel\Io\Twig\Twig;
+use PHPCraftdream\Garnet\Kernel\Io\Http\Forms\ImageUpload;
+use PHPCraftdream\Garnet\Kernel\Io\Http\Router\RouterUriParams;
+use PHPCraftdream\Garnet\Kernel\Io\Render\Twig\Twig;
+use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
 
 /**
  * Thin façade that prepares parameters for the base page Twig layout.

@@ -17,7 +17,7 @@ sub-loggers for mail and request traces.
 
 Logging is two-layered:
 
-1. **`Kernel/Io/Logs/Logger`** — the low-level file-journal writer.
+1. **`Kernel/Io/Services/Logs/Logger`** — the low-level file-journal writer.
    Three built-in channels:
    - `SYSTEM_LOGGER` — framework noise (benchmark, OPcache reset).
    - `ERROR_LOGGER` — uncaught exceptions.
@@ -75,7 +75,7 @@ referenced entity. Behaviour:
 ## Related
 
 - [`../../README.md`](../../README.md) — bundle index.
-- [`../../../Kernel/Io/Logs/Logger.php`](../../../Kernel/Io/Logs/Logger.php) — the file-journal layer.
+- [`../../../Kernel/Io/Services/Logs/Logger.php`](../../../Kernel/Io/Services/Logs/Logger.php) — the file-journal layer.
 - [`../EntityHistory/README.md`](../EntityHistory/README.md) — per-entity audit log (complementary, not a replacement).
 
 ---

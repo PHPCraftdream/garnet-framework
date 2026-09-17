@@ -4,7 +4,7 @@ namespace PHPCraftdream\Garnet\Bundle {
     use PHPCraftdream\Garnet\Bundle\I18n\FwI18n;
     use PHPCraftdream\Garnet\Kernel\Core\AppInit\BaseAppInit;
     use PHPCraftdream\Garnet\Kernel\Core\AppInit\BaseBundleInit;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\I18nException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Core\I18nException;
 
     class Framework extends BaseBundleInit {
         public static function getBundleDir(): string {

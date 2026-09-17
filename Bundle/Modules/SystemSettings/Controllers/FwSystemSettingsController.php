@@ -7,9 +7,9 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\SystemSettings\Controllers {
     use PHPCraftdream\Garnet\Kernel\Core\FrameworkController;
     use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Router\IRouterUriParams;
-    use PHPCraftdream\Garnet\Kernel\Io\Mailer\Mailer;
-    use PHPCraftdream\Garnet\Kernel\Io\Router\ControllerTools;
-    use PHPCraftdream\Garnet\Kernel\Io\Twig\TwigParams;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\ControllerTools;
+    use PHPCraftdream\Garnet\Kernel\Io\Render\Twig\TwigParams;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\Mailer\Mailer;
     use Throwable;
 
     abstract class FwSystemSettingsController extends FrameworkController {

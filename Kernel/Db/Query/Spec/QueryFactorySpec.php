@@ -4,7 +4,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query\Spec;
 
 use Aura\Sql\Exception;
 use PHPCraftdream\Garnet\Kernel\Db\Query\QueryFactory;
-use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
 use ReflectionClass;
 
 describe('QueryFactory', function (): void {

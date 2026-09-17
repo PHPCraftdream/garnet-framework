@@ -10,12 +10,12 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
     use PHPCraftdream\Garnet\Kernel\Db\Query\QueryEx;
     use PHPCraftdream\Garnet\Kernel\Db\Query\QueryFactory;
     use PHPCraftdream\Garnet\Kernel\Db\Query\QueryTools;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\DbException;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\IniConfigException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Db\DbException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Io\IniConfigException;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbMySQLiLink;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbTable;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Db\ITableBuilderDriver;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
 
     abstract class DbTable implements IDbTable {
         protected static array $items = [];

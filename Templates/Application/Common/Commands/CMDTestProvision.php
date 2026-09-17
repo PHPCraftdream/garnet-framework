@@ -7,7 +7,7 @@ namespace PHPCraftdream\Application\Common\Commands {
     use PHPCraftdream\Garnet\Kernel\Core\Env\TestScope;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Migration\CMDMigration;
     use PHPCraftdream\Garnet\Kernel\Interfaces\ICommand;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
 
     /**
      * `php garnet test:provision` — server-side setup for `php garnet

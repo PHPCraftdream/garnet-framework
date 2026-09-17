@@ -7,7 +7,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\News\Controllers {
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Account\Account;
     use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Router\IRouterUriParams;
-    use PHPCraftdream\Garnet\Kernel\Io\Router\ControllerTools;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\ControllerTools;
 
     abstract class FwNewsController extends FrameworkController {
         /**

@@ -24,12 +24,12 @@ namespace PHPCraftdream\Application {
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Session;
     use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Router\IRouterUriParams;
-    use PHPCraftdream\Garnet\Kernel\Io\Command\CommandClasses;
-    use PHPCraftdream\Garnet\Kernel\Io\Cron\CMDCron;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\AppConfig;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
-    use PHPCraftdream\Garnet\Kernel\Io\Router\Router;
-    use PHPCraftdream\Garnet\Kernel\Io\Twig\TwigParams;
+    use PHPCraftdream\Garnet\Kernel\Io\Bootstrap\Command\CommandClasses;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\Router;
+    use PHPCraftdream\Garnet\Kernel\Io\Render\Twig\TwigParams;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\Cron\CMDCron;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\AppConfig;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
     use Psr\Http\Message\ResponseInterface;
 
     if (!defined('DS')) {

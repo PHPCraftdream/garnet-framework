@@ -4,7 +4,7 @@ namespace PHPCraftdream\Application\Dashboard {
     use PHPCraftdream\Application\Dashboard\I18n\DashboardI18n;
     use PHPCraftdream\Garnet\Kernel\Core\AppInit\BaseAppInit;
     use PHPCraftdream\Garnet\Kernel\Core\AppInit\BaseBundleInit;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\I18nException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Core\I18nException;
 
     class Dashboard extends BaseBundleInit {
         public static function getBundleDir(): string {

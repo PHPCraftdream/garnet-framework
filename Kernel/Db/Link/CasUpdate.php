@@ -2,7 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Db\Link;
 
-use PHPCraftdream\Garnet\Kernel\Exceptions\DbException;
+use PHPCraftdream\Garnet\Kernel\Exceptions\Db\DbException;
 use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbMySQLiLink;
 use Throwable;
 

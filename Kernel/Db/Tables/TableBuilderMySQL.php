@@ -2,9 +2,9 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
     use PHPCraftdream\Garnet\Kernel\Db\Query\QueryEx;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\DbTableBuilderException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Db\DbTableBuilderException;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Db\ITableBuilderDriver;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
 
     class TableBuilderMySQL implements ITableBuilderDriver {
         public const DEFAULT_TABLE_ENGINE = 'CREATE';

@@ -171,7 +171,7 @@ namespace PHPCraftdream\Garnet\Kernel\Core\AppInit\Spec {
 
                 expect(function (): void {
                     BaseBundleInit::getInstance();
-                })->toThrow(new \PHPCraftdream\Garnet\Kernel\Exceptions\BundleException('Bundle instance not found'));
+                })->toThrow(new \PHPCraftdream\Garnet\Kernel\Exceptions\Core\BundleException('Bundle instance not found'));
             });
 
             it('returns the instance when created', function (): void {
@@ -189,7 +189,7 @@ namespace PHPCraftdream\Garnet\Kernel\Core\AppInit\Spec {
 
                 $twig = $bundle->getTwig();
 
-                expect($twig)->toBeAnInstanceOf(\PHPCraftdream\Garnet\Kernel\Io\Twig\Twig::class);
+                expect($twig)->toBeAnInstanceOf(\PHPCraftdream\Garnet\Kernel\Io\Render\Twig\Twig::class);
             });
         });
 

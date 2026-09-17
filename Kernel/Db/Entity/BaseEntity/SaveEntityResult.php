@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Db\Entity\BaseEntity {
-    use PHPCraftdream\Garnet\Kernel\Io\Forms\Updater;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\Forms\Updater;
 
     class SaveEntityResult {
         public function __construct(

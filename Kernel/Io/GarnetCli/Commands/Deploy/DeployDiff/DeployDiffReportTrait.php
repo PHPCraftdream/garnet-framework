@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Deploy\DeployDiff {
-    use PHPCraftdream\Garnet\Kernel\Io\Ssh\SshClient;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\Ssh\SshClient;
 
     /**
      * Что человек увидит до того, как что-то поедет.

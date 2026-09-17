@@ -183,7 +183,7 @@ php garnet <any>:help    # help for an individual app command
 ```
 
 Registration: `Apps/<App>/<App>.php → wireCommands()`. The command
-contract lives at `Framework/Kernel/Io/Command/ICommand.php`.
+contract lives at `Framework/Kernel/Io/Bootstrap/Command/ICommand.php`.
 
 ---
 

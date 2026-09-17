@@ -4,7 +4,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
     use Aura\Sql\Exception;
     use Aura\SqlQuery\QueryFactory as AuraSqlQueryQueryFactory;
     use PHPCraftdream\Garnet\Kernel\Db\Query\Builders\PositionalBindTrait;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
 
     class QueryFactory extends AuraSqlQueryQueryFactory {
         /**

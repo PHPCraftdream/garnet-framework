@@ -5,7 +5,7 @@ namespace PHPCraftdream\Garnet\Bundle\Middlewares {
     use PHPCraftdream\Garnet\Kernel\Core\AppInit\BaseAppInit;
     use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Router\IRouterUriParams;
-    use PHPCraftdream\Garnet\Kernel\Io\Twig\Twig;
+    use PHPCraftdream\Garnet\Kernel\Io\Render\Twig\Twig;
     use Psr\Http\Message\ResponseInterface;
 
     class MaintenanceMiddleware {

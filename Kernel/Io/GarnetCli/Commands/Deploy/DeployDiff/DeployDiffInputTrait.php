@@ -2,7 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Deploy\DeployDiff {
     use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\GarnetEnv;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
     use Throwable;
 
     /**

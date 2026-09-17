@@ -12,7 +12,7 @@ Every template ships in **two locale variants**: `Foo/Bar.en.twig` and
 
 Callers keep using the bare name — `Twig::get()->render('Foo/Bar.twig', $vars)`
 or `{% include 'Foo/Bar.twig' %}` inside another template. Resolution
-happens transparently inside [`LocaleResolvingLoader`](../../Kernel/Io/Twig/LocaleResolvingLoader.php):
+happens transparently inside [`LocaleResolvingLoader`](../../Kernel/Io/Render/Twig/LocaleResolvingLoader.php):
 
 1. Reads the active locale from `app.ini` (`default_locale=en|ru|…`,
    falls back to `en`).

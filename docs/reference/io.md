@@ -60,7 +60,7 @@ invoked from a web request and from a CLI fake harness.
 
 ## Router
 
-`Kernel/Io/Router/Router.php`. O(1) hash-map dispatch.
+`Kernel/Io/Http/Router/Router.php`. O(1) hash-map dispatch.
 
 ```php
 $router->add('/about',                     [AboutController::class, [], '']);
@@ -107,7 +107,7 @@ Recipe: [`cookbook/add-a-route.md`](cookbook/add-a-route.md).
 
 ## IniConfig
 
-`Kernel/Io/IniConfig/IniConfig.php` — the typed reader over the four
+`Kernel/Io/Services/IniConfig/IniConfig.php` — the typed reader over the four
 INI files in `WorkDir/Config/`:
 
 - `app.ini` — `title`, `base_url`, `time_zone`, brand colours, …
@@ -130,10 +130,10 @@ Boot order at the top of `run_web.php` calls `defineAppIni()`,
 
 ## Logger
 
-`Kernel/Io/Logs/Logger.php` — file-journal channels:
+`Kernel/Io/Services/Logs/Logger.php` — file-journal channels:
 
 ```php
-use PHPCraftdream\Garnet\Kernel\Io\Logs\Logger;
+use PHPCraftdream\Garnet\Kernel\Io\Services\Logs\Logger;
 
 Logger::get(Logger::SYSTEM_LOGGER)->write('benchmark', $payload);
 Logger::get(Logger::APP_LOGGER)->append('signup', $email);
@@ -156,7 +156,7 @@ additional DB-backed channel + admin viewer on top of this.
 
 ## Twig
 
-`Kernel/Io/Twig/Twig.php` — `Twig::get()` returns the configured
+`Kernel/Io/Render/Twig/Twig.php` — `Twig::get()` returns the configured
 environment.
 
 What it knows about:
@@ -172,7 +172,7 @@ already trusts; each use should be commented with the reason.
 
 ## Cache
 
-`Kernel/Io/Cache/` — filesystem-backed cache with per-call memoisation:
+`Kernel/Io/Services/Cache/` — filesystem-backed cache with per-call memoisation:
 
 ```php
 $result = Cache::remember('reports.last_month', 300, function () {
@@ -191,7 +191,7 @@ the Twig render cache both ride on this primitive.
 
 ## Emitter
 
-`Kernel/Io/Emitter/Emitter.php` — `Emitter::emit($response)` turns a
+`Kernel/Io/Http/Emitter/Emitter.php` — `Emitter::emit($response)` turns a
 `Psr\Http\Message\ResponseInterface` into actual headers + body
 output. The end of every web request goes through it.
 
@@ -200,7 +200,7 @@ You almost never call `Emitter` directly — controllers return a
 
 ## FileUpload
 
-`Kernel/Io/FileUpload/FileUploadManager.php` plus
+`Kernel/Io/Http/FileUpload/FileUploadManager.php` plus
 `SecureFileServing.php`. Two-phase upload: pending → commit. Recipe:
 [`cookbook/upload-a-file.md`](cookbook/upload-a-file.md).
 
@@ -213,13 +213,13 @@ You almost never call `Emitter` directly — controllers return a
 
 ## Cookies + Session integration
 
-`Kernel/Io/Cookies/` — typed cookie writer with `SameSite=Lax`,
+`Kernel/Io/Http/Cookies/` — typed cookie writer with `SameSite=Lax`,
 `Secure` (when HTTPS), and `HttpOnly` defaults. `Session` is what
 calls into it. Hand-writing `setcookie` in business code is a smell.
 
 ## RateLimit
 
-`Kernel/Io/RateLimit/` — token-bucket primitives. Used by the Auth
+`Kernel/Io/Http/RateLimit/` — token-bucket primitives. Used by the Auth
 bundle to gate magic-link send + verify attempts; reusable for any
 per-IP / per-account rate-limited endpoint.
 
@@ -232,20 +232,20 @@ if (!$bucket->take()) {
 
 ## Mailer
 
-`Kernel/Io/Mailer/` is a thin wrapper around `symfony/mailer`. The
+`Kernel/Io/Services/Mailer/` is a thin wrapper around `symfony/mailer`. The
 queue / retry loop lives in the
 [Email bundle](../Bundle/Modules/Email/README.md); the kernel piece is
 the raw "send this message right now" call.
 
 ## Ssh
 
-`Kernel/Io/Ssh/SshClient.php` — driven by `ssh.ini`. Powers `ssh*`
+`Kernel/Io/Services/Ssh/SshClient.php` — driven by `ssh.ini`. Powers `ssh*`
 commands, `deploy:diff`, `snapshot:pull`. Full reference:
 [`ssh.md`](ssh.md).
 
 ## Cron
 
-`Kernel/Io/Cron/` — the runtime side of cron-scheduled CLI commands.
+`Kernel/Io/Services/Cron/` — the runtime side of cron-scheduled CLI commands.
 The Cron *bundle* (`Bundle/Modules/Cron/`) adds the `cron_log` table
 and admin viewer. Recipe:
 [`cookbook/add-a-cli-command.md`](cookbook/add-a-cli-command.md).

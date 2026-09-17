@@ -4,7 +4,7 @@ namespace PHPCraftdream\Application\Foreground {
     use PHPCraftdream\Application\Foreground\I18n\ForegroundI18n;
     use PHPCraftdream\Garnet\Kernel\Core\AppInit\BaseAppInit;
     use PHPCraftdream\Garnet\Kernel\Core\AppInit\BaseBundleInit;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\I18nException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Core\I18nException;
 
     class Foreground extends BaseBundleInit {
         public static function getBundleDir(): string {

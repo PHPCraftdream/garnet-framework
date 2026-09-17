@@ -17,18 +17,18 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Account\Account;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Session;
     use PHPCraftdream\Garnet\Kernel\Exceptions\CommonException;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\IniConfigException;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\LoggerException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Io\IniConfigException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Io\LoggerException;
     use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Router\IRouterUriParams;
-    use PHPCraftdream\Garnet\Kernel\Io\HtmlMinify\HtmlMinify;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\AppConfig;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
-    use PHPCraftdream\Garnet\Kernel\Io\Mailer\Mailer;
-    use PHPCraftdream\Garnet\Kernel\Io\RateLimit\RateLimit;
-    use PHPCraftdream\Garnet\Kernel\Io\Router\ControllerTools;
-    use PHPCraftdream\Garnet\Kernel\Io\Twig\Twig;
-    use PHPCraftdream\Garnet\Kernel\Io\Twig\TwigParams;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\RateLimit\RateLimit;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\ControllerTools;
+    use PHPCraftdream\Garnet\Kernel\Io\Render\HtmlMinify\HtmlMinify;
+    use PHPCraftdream\Garnet\Kernel\Io\Render\Twig\Twig;
+    use PHPCraftdream\Garnet\Kernel\Io\Render\Twig\TwigParams;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\AppConfig;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\Mailer\Mailer;
     use Psr\Http\Message\ResponseInterface;
     use Throwable;
 

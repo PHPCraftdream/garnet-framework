@@ -1,9 +1,9 @@
 <?php declare(strict_types=1);
 
 use PHPCraftdream\Garnet\Kernel\Core\Benchmark\BenchmarkLog;
-use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
-use PHPCraftdream\Garnet\Kernel\Io\Logs\Logger;
-use PHPCraftdream\Garnet\Kernel\Io\Twig\Twig;
+use PHPCraftdream\Garnet\Kernel\Io\Render\Twig\Twig;
+use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
+use PHPCraftdream\Garnet\Kernel\Io\Services\Logs\Logger;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 

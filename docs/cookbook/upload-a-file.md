@@ -94,7 +94,7 @@ public folder.
 
 ## Related
 
-- [`../../Kernel/Io/FileUpload/`](../../Kernel/Io/FileUpload/) — `FileUploadManager` and `SecureFileServing` source.
+- [`../../Kernel/Io/Http/FileUpload/`](../../Kernel/Io/Http/FileUpload/) — `FileUploadManager` and `SecureFileServing` source.
 
 ---
 

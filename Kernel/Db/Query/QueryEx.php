@@ -7,7 +7,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
     use Aura\SqlQuery\Common\UpdateInterface;
     use Aura\SqlQuery\QueryInterface;
     use PHPCraftdream\Garnet\Kernel\Db\Link\DbPool;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\DbException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Db\DbException;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbMySQLiLink;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbPool;
 

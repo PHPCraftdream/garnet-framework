@@ -10,11 +10,11 @@ namespace PHPCraftdream\Application\Foreground\Backend {
     use PHPCraftdream\Garnet\Kernel\Exceptions\CommonException;
     use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Router\IRouterUriParams;
-    use PHPCraftdream\Garnet\Kernel\Io\HtmlMinify\HtmlMinify;
-    use PHPCraftdream\Garnet\Kernel\Io\IoTools;
-    use PHPCraftdream\Garnet\Kernel\Io\Router\ControllerTools;
-    use PHPCraftdream\Garnet\Kernel\Io\Twig\Twig;
-    use PHPCraftdream\Garnet\Kernel\Io\Twig\TwigParams;
+    use PHPCraftdream\Garnet\Kernel\Io\Debug\IoTools;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\ControllerTools;
+    use PHPCraftdream\Garnet\Kernel\Io\Render\HtmlMinify\HtmlMinify;
+    use PHPCraftdream\Garnet\Kernel\Io\Render\Twig\Twig;
+    use PHPCraftdream\Garnet\Kernel\Io\Render\Twig\TwigParams;
 
     class DevController extends FrameworkController {
         public static function get__main(IGlobalReqParams $globals, IRouterUriParams $params): mixed {

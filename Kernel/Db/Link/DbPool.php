@@ -5,11 +5,11 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
     use mysqli_sql_exception;
     use PHPCraftdream\Garnet\Kernel\Core\Benchmark\BenchmarkLog;
     use PHPCraftdream\Garnet\Kernel\Db\Query\QueryTools;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\DbException;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\IniConfigException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Db\DbException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Io\IniConfigException;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbMySQLiLink;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbPool;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
 
     class DbPool implements IDbPool {
         // pollFinishAll() must never spin forever: a link stuck busy=true

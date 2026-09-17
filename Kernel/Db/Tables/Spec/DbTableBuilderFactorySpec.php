@@ -4,9 +4,9 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Tables\Spec;
 
 use PHPCraftdream\Garnet\Kernel\Db\Tables\DbTableBuilderFactory;
 use PHPCraftdream\Garnet\Kernel\Db\Tables\TableBuilderMySQL;
-use PHPCraftdream\Garnet\Kernel\Exceptions\DbTableBuilderException;
+use PHPCraftdream\Garnet\Kernel\Exceptions\Db\DbTableBuilderException;
 use PHPCraftdream\Garnet\Kernel\Interfaces\Db\ITableBuilderDriver;
-use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
 use ReflectionClass;
 
 describe('DbTableBuilderFactory', function (): void {

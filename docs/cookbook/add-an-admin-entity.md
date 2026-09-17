@@ -200,7 +200,7 @@ Notes grounded in the real code, not guessed:
   an explicit option list. `'photo'` is the one type the *backend*
   actively special-cases — `Updater::validateByFieldsInfo()` skips
   validation for it, and `Updater::processUploadPhoto()`
-  (`Kernel/Io/Forms/Updater.php`) handles the pending → commit upload +
+  (`Kernel/Io/Http/Forms/Updater.php`) handles the pending → commit upload +
   optional crop via `uploadPath`/`cropInfo`/`cropName`. Everything else
   is a rendering hint for the app's own grid/form island — the
   framework doesn't ship a generic admin grid React component in this

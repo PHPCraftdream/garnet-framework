@@ -290,10 +290,10 @@ jobs:
           OUT_DIR="$TEMP_DIR/I18nGen"
           mkdir -p "$OUT_DIR"
           php -r '
-            require "Kernel/Io/I18n/I18nFrontendDumper.php";
+            require "Kernel/Io/Render/I18n/I18nFrontendDumper.php";
             require "Bundle/I18n/I18nDataEn.php";
             require "Bundle/I18n/I18nDataRu.php";
-            use PHPCraftdream\Garnet\Kernel\Io\I18n\I18nFrontendDumper;
+            use PHPCraftdream\Garnet\Kernel\Io\Render\I18n\I18nFrontendDumper;
             use PHPCraftdream\Garnet\Bundle\I18n\I18nDataEn;
             use PHPCraftdream\Garnet\Bundle\I18n\I18nDataRu;
             I18nFrontendDumper::dump(

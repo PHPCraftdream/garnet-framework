@@ -4,7 +4,7 @@ namespace PHPCraftdream\Application {
     require_once __DIR__ . '/autoload.php';
 
     use PHPCraftdream\Garnet\Kernel\Core\Env\Env;
-    use PHPCraftdream\Garnet\Kernel\Io\IoRun\IoRunConsole;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\IoRun\IoRunConsole;
 
     gc_disable();
 

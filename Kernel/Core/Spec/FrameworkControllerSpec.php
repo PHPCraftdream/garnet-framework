@@ -3,9 +3,9 @@
 namespace PHPCraftdream\Garnet\Kernel\Core\Spec;
 
 use PHPCraftdream\Garnet\Kernel\Core\FrameworkController;
-use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
-use PHPCraftdream\Garnet\Kernel\Io\Logs\Logger;
-use PHPCraftdream\Garnet\Kernel\Io\Twig\Twig;
+use PHPCraftdream\Garnet\Kernel\Io\Render\Twig\Twig;
+use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
+use PHPCraftdream\Garnet\Kernel\Io\Services\Logs\Logger;
 use ReflectionClass;
 use Throwable;
 

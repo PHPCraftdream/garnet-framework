@@ -2,7 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Bundle\I18n {
     use PHPCraftdream\Garnet\Kernel\Interfaces\II18n;
-    use PHPCraftdream\Garnet\Kernel\Io\I18n\GarnetI18n;
+    use PHPCraftdream\Garnet\Kernel\Io\Render\I18n\GarnetI18n;
 
     class FwI18n extends GarnetI18n {
         protected string $lang = I18nDataRu::LANG;

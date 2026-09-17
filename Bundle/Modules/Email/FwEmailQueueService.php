@@ -6,8 +6,8 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Email {
     use PHPCraftdream\Garnet\Bundle\Modules\Email\Tables\FwEmailAttempts;
     use PHPCraftdream\Garnet\Bundle\Modules\Email\Tables\FwEmailQueue;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Account\DbAccount;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
-    use PHPCraftdream\Garnet\Kernel\Io\Mailer\Mailer;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\Mailer\Mailer;
     use Throwable;
 
     /**

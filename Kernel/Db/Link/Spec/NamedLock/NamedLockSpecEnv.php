@@ -4,7 +4,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link\Spec\NamedLock {
     use Exception;
     use PHPCraftdream\Garnet\Kernel\Db\Link\DbPool;
     use PHPCraftdream\Garnet\Kernel\Db\Link\NamedLock;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
 
     /**
      * Общая обвязка интеграционных спеков NamedLock: есть ли база и уборка

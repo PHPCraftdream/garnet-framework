@@ -2,7 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Bundle\Modules\SystemSettings\Spec {
     use PHPCraftdream\Garnet\Bundle\Modules\SystemSettings\FwAppSettings;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
     use ReflectionClass;
 
     // ---------------------------------------------------------------------------

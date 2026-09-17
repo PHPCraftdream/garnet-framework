@@ -3,7 +3,7 @@
 namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\AuthStrategy;
 
 use Exception;
-use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
 
 class AuthConfig {
     protected static ?AuthConfig $instance = null;

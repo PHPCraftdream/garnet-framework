@@ -13,9 +13,9 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages {
     use PHPCraftdream\Garnet\Bundle\Modules\StaticPages\Tables\FwStaticSnippets;
     use PHPCraftdream\Garnet\Bundle\Modules\SystemSettings\FwAppSettings;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Account\Account;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\AppConfig;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
-    use PHPCraftdream\Garnet\Kernel\Io\Twig\Twig;
+    use PHPCraftdream\Garnet\Kernel\Io\Render\Twig\Twig;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\AppConfig;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
 
     abstract class FwStaticPagesService {
         abstract protected static function pagesTable(): FwStaticPages;

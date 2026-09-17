@@ -3,8 +3,8 @@
 namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Migration {
     use Aura\Cli\Stdio;
     use PHPCraftdream\Garnet\Kernel\Core\Env\Env;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\DbException;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\MigrationException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Db\DbException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Db\MigrationException;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Migration\IMigration;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Migration\IMigrationItem;
 

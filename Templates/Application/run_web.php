@@ -8,12 +8,12 @@ namespace PHPCraftdream\Application {
     use PHPCraftdream\Garnet\Kernel\Core\Env\Env;
     use PHPCraftdream\Garnet\Kernel\Core\GlobalReqParams\GlobalReqParams;
     use PHPCraftdream\Garnet\Kernel\Db\Link\DbPool;
-    use PHPCraftdream\Garnet\Kernel\Io\Emitter\Emitter;
-    use PHPCraftdream\Garnet\Kernel\Io\ErrorCatcher\ErrorCatcher;
-    use PHPCraftdream\Garnet\Kernel\Io\IoRun\IoRunWeb;
-    use PHPCraftdream\Garnet\Kernel\Io\Logs\Logger;
-    use PHPCraftdream\Garnet\Kernel\Io\Router\RouterDevFile;
-    use PHPCraftdream\Garnet\Kernel\Io\Router\RouterUriParams;
+    use PHPCraftdream\Garnet\Kernel\Io\Bootstrap\ErrorCatcher\ErrorCatcher;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\Emitter\Emitter;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\IoRun\IoRunWeb;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\RouterDevFile;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\RouterUriParams;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\Logs\Logger;
     use Psr\Http\Message\ResponseInterface;
     use Throwable;
 

@@ -9,13 +9,13 @@
 // Usage: php tooling/scripts/regen-i18n.php
 
 $root = dirname(__DIR__, 2);
-require $root . '/Kernel/Io/I18n/I18nFrontendDumper.php';
+require $root . '/Kernel/Io/Render/I18n/I18nFrontendDumper.php';
 require $root . '/Bundle/I18n/I18nDataEn.php';
 require $root . '/Bundle/I18n/I18nDataRu.php';
 
 use PHPCraftdream\Garnet\Bundle\I18n\I18nDataEn;
 use PHPCraftdream\Garnet\Bundle\I18n\I18nDataRu;
-use PHPCraftdream\Garnet\Kernel\Io\I18n\I18nFrontendDumper;
+use PHPCraftdream\Garnet\Kernel\Io\Render\I18n\I18nFrontendDumper;
 
 $out = $root . DIRECTORY_SEPARATOR . 'Bundle' . DIRECTORY_SEPARATOR . 'Front' . DIRECTORY_SEPARATOR . 'I18nGen';
 

@@ -16,7 +16,7 @@ inherit from `BaseCmdRun`. Garnet's CLI sees them through the app's
 
 namespace PHPCraftdream\MyApp\Common\Commands;
 
-use PHPCraftdream\Garnet\Kernel\Io\IoRun\BaseCmdRun;
+use PHPCraftdream\Garnet\Kernel\Io\Http\IoRun\BaseCmdRun;
 
 class CMDHelloWorld extends BaseCmdRun
 {

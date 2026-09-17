@@ -2,7 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Bundle\Utils;
 
-use PHPCraftdream\Garnet\Kernel\Io\Twig\Twig;
+use PHPCraftdream\Garnet\Kernel\Io\Render\Twig\Twig;
 
 class RenderIsland {
     /**

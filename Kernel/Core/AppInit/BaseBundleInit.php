@@ -2,10 +2,10 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Core\AppInit {
     use PHPCraftdream\Garnet\Kernel\Core\Tools\FsTools;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\BundleException;
     use PHPCraftdream\Garnet\Kernel\Exceptions\CommonException;
-    use PHPCraftdream\Garnet\Kernel\Io\I18n\I18nFrontendDumper;
-    use PHPCraftdream\Garnet\Kernel\Io\Twig\Twig;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Core\BundleException;
+    use PHPCraftdream\Garnet\Kernel\Io\Render\I18n\I18nFrontendDumper;
+    use PHPCraftdream\Garnet\Kernel\Io\Render\Twig\Twig;
     use Twig\Error\LoaderError;
 
     if (!defined('DS')) {

@@ -4,7 +4,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Build\Bundle {
     use Phar;
     use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\GarnetEnv;
     use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\GarnetRunner;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
     use Throwable;
 
     /**

@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 use PHPCraftdream\Garnet\Kernel\Core\GlobalReqParams\GlobalReqParams;
-use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
 
 describe('GlobalReqParams', function (): void {
     describe('from()', function (): void {

@@ -2,7 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Db\Entity\BaseEntity {
     use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IEntityConfig;
-    use PHPCraftdream\Garnet\Kernel\Io\Forms\Updater;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\Forms\Updater;
 
     abstract class BaseEntity implements IEntityConfig {
         protected static IEntityConfig $config;

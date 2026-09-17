@@ -25,8 +25,8 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Deploy\Spec {
 
         describe('::categorizeSinglePath', function (): void {
             it('routes Framework/* to the framework bucket and strips the prefix', function (): void {
-                $r = ($this->invoke)('categorizeSinglePath', ['Framework/Kernel/Io/Router/Router.php', 'MyApp']);
-                expect($r)->toBe(['bucket' => 'framework', 'rel_remote' => 'Kernel/Io/Router/Router.php']);
+                $r = ($this->invoke)('categorizeSinglePath', ['Framework/Kernel/Io/Http/Router/Router.php', 'MyApp']);
+                expect($r)->toBe(['bucket' => 'framework', 'rel_remote' => 'Kernel/Io/Http/Router/Router.php']);
             });
 
             it('routes Apps/<App>/WorkDir/* to runtime with a WorkDir/ prefix', function (): void {

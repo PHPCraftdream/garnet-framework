@@ -2,7 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Core\GlobalReqParams {
     use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
     use Throwable;
 
     class GlobalReqParams implements IGlobalReqParams {

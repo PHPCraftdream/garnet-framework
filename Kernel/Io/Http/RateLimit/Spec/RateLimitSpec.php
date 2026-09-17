@@ -1,0 +1,395 @@
+<?php declare(strict_types=1);
+
+namespace PHPCraftdream\Garnet\Kernel\Io\Http\RateLimit\Spec;
+
+use PHPCraftdream\Garnet\Kernel\Io\Http\RateLimit\RateLimit;
+
+// Creates an isolated temporary directory for each test
+function makeTmpDir(): string {
+    $dir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'rl_spec_' . uniqid('', true);
+    mkdir($dir, 0o777, true);
+
+    return $dir;
+}
+
+// Removes the temporary directory and all its files
+function removeTmpDir(string $dir): void {
+    if (!is_dir($dir)) {
+        return;
+    }
+
+    foreach (glob($dir . DIRECTORY_SEPARATOR . '*') as $file) {
+        unlink($file);
+    }
+    rmdir($dir);
+}
+
+// RateLimit::hit() buckets by time()'s 1-second granularity. A scenario that
+// starts near the tail end of a wall-clock second is already closer to the
+// next tick than intended, so a sleep(N)-based margin that "should" be safe
+// can still land on the wrong side of a bucket boundary under real scheduling
+// jitter — exactly the kind of flake this project's CLAUDE.md says to root-
+// cause, not paper over. Starting from a fresh tick gives each sleep() its
+// full intended second of margin instead of a variable, sometimes-zero one.
+function waitForFreshSecond(): void {
+    $start = time();
+
+    while (time() === $start) {
+        usleep(10000);
+    }
+}
+
+describe('RateLimit', function (): void {
+    // -----------------------------------------------------------------------
+    describe('hit()', function (): void {
+        it('allows the first request', function (): void {
+            $tmp = makeTmpDir();
+            expect(RateLimit::hit('test:first', 3, 60, $tmp))->toBe(true);
+            removeTmpDir($tmp);
+        });
+
+        it('allows requests up to and including maxHits', function (): void {
+            $tmp = makeTmpDir();
+            $key = 'test:upto_max';
+
+            for ($i = 0; $i < 5; $i++) {
+                $result = RateLimit::hit($key, 5, 60, $tmp);
+                expect($result)->toBe(true);
+            }
+
+            removeTmpDir($tmp);
+        });
+
+        it('blocks a request beyond maxHits', function (): void {
+            $tmp = makeTmpDir();
+            $key = 'test:over_max';
+
+            for ($i = 0; $i < 3; $i++) {
+                RateLimit::hit($key, 3, 60, $tmp);
+            }
+
+            expect(RateLimit::hit($key, 3, 60, $tmp))->toBe(false);
+            removeTmpDir($tmp);
+        });
+
+        it('a blocked request is not recorded (counter does not grow)', function (): void {
+            $tmp = makeTmpDir();
+            $key = 'test:no_inc_when_blocked';
+
+            for ($i = 0; $i < 2; $i++) {
+                RateLimit::hit($key, 2, 60, $tmp);
+            }
+
+            // Three attempts beyond the limit
+            RateLimit::hit($key, 2, 60, $tmp);
+            RateLimit::hit($key, 2, 60, $tmp);
+            RateLimit::hit($key, 2, 60, $tmp);
+
+            // Limit is still 2 — did not drift
+            expect(RateLimit::hit($key, 2, 60, $tmp))->toBe(false);
+            removeTmpDir($tmp);
+        });
+
+        it('different keys are isolated from each other', function (): void {
+            $tmp = makeTmpDir();
+
+            for ($i = 0; $i < 3; $i++) {
+                RateLimit::hit('key:A', 3, 60, $tmp);
+            }
+
+            // key:A is exhausted — key:B is unaffected
+            expect(RateLimit::hit('key:A', 3, 60, $tmp))->toBe(false);
+            expect(RateLimit::hit('key:B', 3, 60, $tmp))->toBe(true);
+            removeTmpDir($tmp);
+        });
+
+        it('allows again after the window expires (window=1s)', function (): void {
+            $tmp = makeTmpDir();
+            $key = 'test:window_expire';
+
+            waitForFreshSecond();
+            RateLimit::hit($key, 1, 1, $tmp);
+            expect(RateLimit::hit($key, 1, 1, $tmp))->toBe(false);
+
+            sleep(2); // wait for the window to close
+
+            expect(RateLimit::hit($key, 1, 1, $tmp))->toBe(true);
+            removeTmpDir($tmp);
+        });
+
+        it('isolates sliding-window cutoff: allows requests after window expires even with fresh mtime (no cleanup)', function (): void {
+            $tmp = makeTmpDir();
+            $key = 'test:cutoff_isolation';
+
+            // Use a 2-second window for faster testing
+            // Start right after a tick so each sleep(1) below gets its full
+            // intended second of margin before the next time() bucket.
+            waitForFreshSecond();
+
+            // Exhaust the limit with 3 hits
+            expect(RateLimit::hit($key, 3, 2, $tmp))->toBe(true);
+            expect(RateLimit::hit($key, 3, 2, $tmp))->toBe(true);
+            expect(RateLimit::hit($key, 3, 2, $tmp))->toBe(true);
+            expect(RateLimit::hit($key, 3, 2, $tmp))->toBe(false);
+
+            // Keep hitting every 0.5 seconds to keep the file mtime fresh
+            // This prevents cleanupIfExpired from deleting the file (mtime always < 2s old)
+            // But the sliding-window cutoff should eventually filter out old timestamps
+            sleep(1);
+            expect(RateLimit::hit($key, 3, 2, $tmp))->toBe(false);
+
+            sleep(1);
+            expect(RateLimit::hit($key, 3, 2, $tmp))->toBe(true);
+
+            // File should still exist (cleanupIfExpired didn't delete it)
+            // because we kept hitting it within the 2-second mtime threshold
+            $file = $tmp . DIRECTORY_SEPARATOR . 'rl_' . md5($key) . '.json';
+            expect(file_exists($file))->toBe(true);
+
+            removeTmpDir($tmp);
+        });
+
+        it('maxHits=1: the second request is blocked immediately', function (): void {
+            $tmp = makeTmpDir();
+            $key = 'test:max1';
+
+            expect(RateLimit::hit($key, 1, 60, $tmp))->toBe(true);
+            expect(RateLimit::hit($key, 1, 60, $tmp))->toBe(false);
+            removeTmpDir($tmp);
+        });
+
+        it('uses sys_get_temp_dir() when tmpDir is empty', function (): void {
+            $key = 'test:default_tmp_' . uniqid('', true);
+            $result = RateLimit::hit($key, 5, 60);
+            expect($result)->toBe(true);
+
+            // Clean up after ourselves
+            $file = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'rl_' . md5($key) . '.json';
+
+            if (file_exists($file)) {
+                unlink($file);
+            }
+        });
+    });
+
+    // -----------------------------------------------------------------------
+    describe('retryAfter()', function (): void {
+        it('returns 0 when the limit is not exhausted', function (): void {
+            $tmp = makeTmpDir();
+            $key = 'test:retry_not_limited';
+
+            RateLimit::hit($key, 5, 60, $tmp);
+            expect(RateLimit::retryAfter($key, 5, 60, $tmp))->toBe(0);
+            removeTmpDir($tmp);
+        });
+
+        it('returns 0 when the file does not exist', function (): void {
+            $tmp = makeTmpDir();
+            expect(RateLimit::retryAfter('test:no_file', 3, 60, $tmp))->toBe(0);
+            removeTmpDir($tmp);
+        });
+
+        it('returns a positive number after the limit is exhausted', function (): void {
+            $tmp = makeTmpDir();
+            $key = 'test:retry_positive';
+
+            for ($i = 0; $i < 3; $i++) {
+                RateLimit::hit($key, 3, 60, $tmp);
+            }
+
+            $retry = RateLimit::retryAfter($key, 3, 60, $tmp);
+            expect($retry > 0)->toBe(true);
+            expect($retry <= 60)->toBe(true);
+            removeTmpDir($tmp);
+        });
+
+        it('returns 0 after the window expires', function (): void {
+            $tmp = makeTmpDir();
+            $key = 'test:retry_after_expire';
+
+            RateLimit::hit($key, 1, 1, $tmp);
+
+            sleep(2);
+
+            expect(RateLimit::retryAfter($key, 1, 1, $tmp))->toBe(0);
+            removeTmpDir($tmp);
+        });
+    });
+
+    // -----------------------------------------------------------------------
+    describe('corrupted state file (S11)', function (): void {
+        it('degrades gracefully when the state file holds non-integer entries', function (): void {
+            $tmp = makeTmpDir();
+            $key = 'test:corrupted_state';
+            $file = $tmp . DIRECTORY_SEPARATOR . 'rl_' . md5($key) . '.json';
+
+            // Simulates a hand-edited / foreign-format / bit-flipped state
+            // file: strings, null, floats mixed into what should be an int[].
+            file_put_contents($file, json_encode(['not-a-number', null, 1.5, time()]));
+
+            expect(function () use ($key, $tmp): void {
+                RateLimit::hit($key, 5, 60, $tmp);
+            })->not->toThrow();
+
+            removeTmpDir($tmp);
+        });
+
+        it('treats a JSON object (non-array) state file as no prior state', function (): void {
+            $tmp = makeTmpDir();
+            $key = 'test:corrupted_object';
+            $file = $tmp . DIRECTORY_SEPARATOR . 'rl_' . md5($key) . '.json';
+
+            file_put_contents($file, json_encode(['foo' => 'bar']));
+
+            expect(function () use ($key, $tmp): void {
+                $result = RateLimit::hit($key, 5, 60, $tmp);
+                expect($result)->toBeAn('bool');
+            })->not->toThrow();
+
+            removeTmpDir($tmp);
+        });
+
+        it('treats garbage (non-JSON) file content as no prior state', function (): void {
+            $tmp = makeTmpDir();
+            $key = 'test:garbage_content';
+            $file = $tmp . DIRECTORY_SEPARATOR . 'rl_' . md5($key) . '.json';
+
+            file_put_contents($file, '{not valid json!!!');
+
+            expect(RateLimit::hit($key, 5, 60, $tmp))->toBe(true);
+            removeTmpDir($tmp);
+        });
+    });
+
+    // -----------------------------------------------------------------------
+    describe('stale file cleanup (S11)', function (): void {
+        it('removes a state file whose entire window has already expired', function (): void {
+            $tmp = makeTmpDir();
+            $key = 'test:cleanup_expired';
+            $file = $tmp . DIRECTORY_SEPARATOR . 'rl_' . md5($key) . '.json';
+
+            file_put_contents($file, json_encode([time() - 100]));
+            touch($file, time() - 100);
+
+            // windowSec=1: the file's mtime is far older than the window,
+            // so hit() should clean it up before creating a fresh one.
+            RateLimit::hit($key, 5, 1, $tmp);
+
+            $content = json_decode(file_get_contents($file), true);
+            expect(count($content))->toBe(1); // only the new hit remains, old state was purged
+
+            removeTmpDir($tmp);
+        });
+    });
+
+    // -----------------------------------------------------------------------
+    describe('per-IP rate limiting (email auth abuse scenario)', function (): void {
+        it('allows requests up to per-IP limit across distinct keys', function (): void {
+            $tmp = makeTmpDir();
+            $ip = '192.0.2.1';
+
+            // Simulate an attacker rotating through 30 distinct recipient addresses
+            // from the same IP — this should be allowed (the per-IP limit).
+            for ($i = 0; $i < 30; $i++) {
+                $email = "user{$i}@example.com";
+                $ipKey = "email_auth_ip:{$ip}";
+                $emailKey = "email_auth:{$email}";
+
+                $ipAllowed = RateLimit::hit($ipKey, 30, 600, $tmp);
+                $emailAllowed = RateLimit::hit($emailKey, 5, 600, $tmp);
+
+                // Both should be allowed — we're at the per-IP limit (30),
+                // and each email is only hit once (limit is 5).
+                expect($ipAllowed)->toBe(true);
+                expect($emailAllowed)->toBe(true);
+            }
+
+            removeTmpDir($tmp);
+        });
+
+        it('blocks request beyond per-IP limit across distinct keys', function (): void {
+            $tmp = makeTmpDir();
+            $ip = '192.0.2.1';
+
+            // Fill the per-IP bucket with 30 requests to 30 distinct emails
+            for ($i = 0; $i < 30; $i++) {
+                $email = "user{$i}@example.com";
+                $ipKey = "email_auth_ip:{$ip}";
+                $emailKey = "email_auth:{$email}";
+
+                RateLimit::hit($ipKey, 30, 600, $tmp);
+                RateLimit::hit($emailKey, 5, 600, $tmp);
+            }
+
+            // The 31st request to a fresh email should be blocked by the per-IP limit
+            $ipKey = "email_auth_ip:{$ip}";
+            $freshEmailKey = 'email_auth:fresh@example.com';
+
+            $ipAllowed = RateLimit::hit($ipKey, 30, 600, $tmp);
+            $emailAllowed = RateLimit::hit($freshEmailKey, 5, 600, $tmp);
+
+            // Per-IP limit blocks; per-email limit would allow (first hit on this email).
+            expect($ipAllowed)->toBe(false);
+            expect($emailAllowed)->toBe(true);
+
+            removeTmpDir($tmp);
+        });
+
+        it('per-IP and per-email limits are independent', function (): void {
+            $tmp = makeTmpDir();
+            $ip = '192.0.2.1';
+            $email = 'user@example.com';
+            $ipKey = "email_auth_ip:{$ip}";
+            $emailKey = "email_auth:{$email}";
+
+            // Hit the same email 5 times (per-email limit)
+            for ($i = 0; $i < 5; $i++) {
+                RateLimit::hit($ipKey, 30, 600, $tmp);
+                expect(RateLimit::hit($emailKey, 5, 600, $tmp))->toBe(true);
+            }
+
+            // The 6th hit to the same email should be blocked by per-email limit,
+            // but the per-IP bucket still has 25 slots left.
+            RateLimit::hit($ipKey, 30, 600, $tmp);
+            expect(RateLimit::hit($emailKey, 5, 600, $tmp))->toBe(false);
+
+            // A fresh email from the same IP should still be allowed (per-IP not exhausted).
+            $freshEmailKey = 'email_auth:fresh@example.com';
+            RateLimit::hit($ipKey, 30, 600, $tmp);
+            expect(RateLimit::hit($freshEmailKey, 5, 600, $tmp))->toBe(true);
+
+            removeTmpDir($tmp);
+        });
+    });
+
+    // -----------------------------------------------------------------------
+    describe('symlink attack resistance (S11)', function (): void {
+        it('refuses to use a state file that is a symlink', function (): void {
+            if (!function_exists('symlink')) {
+                skipIf(true);
+            }
+
+            $tmp = makeTmpDir();
+            $key = 'test:symlink_attack';
+            $file = $tmp . DIRECTORY_SEPARATOR . 'rl_' . md5($key) . '.json';
+            $target = $tmp . DIRECTORY_SEPARATOR . 'evil_target.json';
+
+            file_put_contents($target, 'sensitive-marker-content');
+
+            $linked = @symlink($target, $file);
+
+            if (!$linked) {
+                // No permission to create symlinks in this environment
+                // (e.g. unprivileged Windows) — nothing to assert.
+                skipIf(true);
+            }
+
+            // fail-open (true), but must NOT have touched $target's content.
+            $result = RateLimit::hit($key, 5, 60, $tmp);
+            expect($result)->toBe(true);
+            expect(file_get_contents($target))->toBe('sensitive-marker-content');
+
+            removeTmpDir($tmp);
+        });
+    });
+});

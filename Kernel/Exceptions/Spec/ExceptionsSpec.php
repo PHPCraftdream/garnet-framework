@@ -1,12 +1,12 @@
 <?php declare(strict_types=1);
 
-use PHPCraftdream\Garnet\Kernel\Exceptions\CacheException;
-use PHPCraftdream\Garnet\Kernel\Exceptions\CommandException;
 use PHPCraftdream\Garnet\Kernel\Exceptions\CommonException;
-use PHPCraftdream\Garnet\Kernel\Exceptions\I18nException;
-use PHPCraftdream\Garnet\Kernel\Exceptions\IoException;
-use PHPCraftdream\Garnet\Kernel\Exceptions\LoggerException;
-use PHPCraftdream\Garnet\Kernel\Exceptions\RouterException;
+use PHPCraftdream\Garnet\Kernel\Exceptions\Core\I18nException;
+use PHPCraftdream\Garnet\Kernel\Exceptions\Io\CacheException;
+use PHPCraftdream\Garnet\Kernel\Exceptions\Io\CommandException;
+use PHPCraftdream\Garnet\Kernel\Exceptions\Io\IoException;
+use PHPCraftdream\Garnet\Kernel\Exceptions\Io\LoggerException;
+use PHPCraftdream\Garnet\Kernel\Exceptions\Web\RouterException;
 
 describe('Framework Exceptions', function (): void {
     describe('CommonException', function (): void {

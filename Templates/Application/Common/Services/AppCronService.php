@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Application\Common\Services {
-    use PHPCraftdream\Garnet\Kernel\Io\Cron\FwCronService;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\Cron\FwCronService;
 
     class AppCronService extends FwCronService {
         public static function registerTasks(): void {

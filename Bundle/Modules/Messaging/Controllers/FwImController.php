@@ -13,11 +13,11 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Messaging\Controllers {
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Session;
     use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Router\IRouterUriParams;
-    use PHPCraftdream\Garnet\Kernel\Io\FileUpload\FileUploadManager;
-    use PHPCraftdream\Garnet\Kernel\Io\FileUpload\SecureFileServing;
-    use PHPCraftdream\Garnet\Kernel\Io\FileUpload\UploadRules;
-    use PHPCraftdream\Garnet\Kernel\Io\Router\ControllerTools;
-    use PHPCraftdream\Garnet\Kernel\Io\Twig\TwigParams;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\FileUpload\FileUploadManager;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\FileUpload\SecureFileServing;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\FileUpload\UploadRules;
+    use PHPCraftdream\Garnet\Kernel\Io\Http\Router\ControllerTools;
+    use PHPCraftdream\Garnet\Kernel\Io\Render\Twig\TwigParams;
 
     abstract class FwImController extends FrameworkController {
         public const URL = '/im/';

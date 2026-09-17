@@ -2,7 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Db\Link\Spec {
     use PHPCraftdream\Garnet\Kernel\Db\Link\CasUpdate;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\DbException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Db\DbException;
     use RuntimeException;
 
     describe('CasUpdate', function (): void {

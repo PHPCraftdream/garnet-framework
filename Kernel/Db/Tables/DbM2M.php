@@ -1,10 +1,10 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Db\Tables {
-    use PHPCraftdream\Garnet\Kernel\Exceptions\DbTableException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Db\DbTableException;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbM2M;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Db\ITableBuilderDriver;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
 
     abstract class DbM2M extends DbTable implements IDbM2M {
         protected string $DbTableClass1;

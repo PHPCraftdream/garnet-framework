@@ -3,7 +3,7 @@
 namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Deploy\DeployDiff {
     use FilesystemIterator;
     use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\GarnetRunner;
-    use PHPCraftdream\Garnet\Kernel\Io\Ssh\SshClient;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\Ssh\SshClient;
     use RecursiveDirectoryIterator;
     use RecursiveIteratorIterator;
 

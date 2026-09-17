@@ -5,7 +5,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Logging\Mail {
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Account\DbAccount;
     use PHPCraftdream\Garnet\Kernel\Db\Tables\DbTable;
     use PHPCraftdream\Garnet\Kernel\Interfaces\IMailer;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
     use Throwable;
 
     abstract class FwAppMailer implements IMailer {

@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Interfaces\Router {
-    use PHPCraftdream\Garnet\Kernel\Exceptions\RouterException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Web\RouterException;
     use PHPCraftdream\Garnet\Kernel\Interfaces\IGlobalReqParams;
     use Psr\Http\Message\ResponseInterface;
 

@@ -4,7 +4,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Spec {
     use DateTimeInterface;
     use Kahlan\Plugin\Double;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Session;
-    use PHPCraftdream\Garnet\Kernel\Exceptions\SessionException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Web\SessionException;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookie;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Cookies\ICookies;
     use PHPCraftdream\Garnet\Kernel\Interfaces\ISession;
@@ -277,8 +277,8 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Spec {
                 $mockRequest = Double::instance(['implements' => RequestInterface::class]);
 
                 // Create a partial mock for the Session readFromRequest method
-                allow('PHPCraftdream\Garnet\Kernel\Io\Cookies\Cookies')->toReceive('fromRequest')->andReturn($mockCookies);
-                allow('PHPCraftdream\Garnet\Kernel\Io\Cookies\Cookies')->toReceive('__construct')->andReturn($mockCookies);
+                allow('PHPCraftdream\Garnet\Kernel\Io\Http\Cookies\Cookies')->toReceive('fromRequest')->andReturn($mockCookies);
+                allow('PHPCraftdream\Garnet\Kernel\Io\Http\Cookies\Cookies')->toReceive('__construct')->andReturn($mockCookies);
 
                 try {
                     $session->readFromRequest($mockRequest);
@@ -302,8 +302,8 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Spec {
 
                 // Mock the Cookies class behavior
                 $mockCookies = new MockCookies();
-                allow('PHPCraftdream\Garnet\Kernel\Io\Cookies\Cookies')->toReceive('fromServer')->andReturn($mockCookies);
-                allow('PHPCraftdream\Garnet\Kernel\Io\Cookies\Cookies')->toReceive('__construct')->andReturn($mockCookies);
+                allow('PHPCraftdream\Garnet\Kernel\Io\Http\Cookies\Cookies')->toReceive('fromServer')->andReturn($mockCookies);
+                allow('PHPCraftdream\Garnet\Kernel\Io\Http\Cookies\Cookies')->toReceive('__construct')->andReturn($mockCookies);
 
                 try {
                     $session->readFromServer($_server);

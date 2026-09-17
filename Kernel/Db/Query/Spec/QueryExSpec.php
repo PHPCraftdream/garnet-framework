@@ -11,7 +11,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query\Spec {
     use PHPCraftdream\Garnet\Kernel\Db\Query\QueryEx;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbMySQLiLink;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Db\IDbPool;
-    use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
     use ReflectionClass;
     use RuntimeException;
 

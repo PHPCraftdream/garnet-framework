@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Kernel\Interfaces {
-    use PHPCraftdream\Garnet\Kernel\Exceptions\CacheException;
+    use PHPCraftdream\Garnet\Kernel\Exceptions\Io\CacheException;
     use Throwable;
 
     interface ICache {

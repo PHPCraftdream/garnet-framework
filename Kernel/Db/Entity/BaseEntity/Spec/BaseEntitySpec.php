@@ -88,7 +88,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\BaseEntity {
 
                 $result = $mock->testSaveOne($postData, $fields, $saveFiles);
 
-                expect($result->update)->toBeAnInstanceOf(\PHPCraftdream\Garnet\Kernel\Io\Forms\Updater::class);
+                expect($result->update)->toBeAnInstanceOf(\PHPCraftdream\Garnet\Kernel\Io\Http\Forms\Updater::class);
             });
 
             it('works with null SaveFilesParams', function (): void {
@@ -141,8 +141,8 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\BaseEntity {
 
     describe('SaveEntityResult', function (): void {
         it('stores update and addData correctly', function (): void {
-            $updater1 = new \PHPCraftdream\Garnet\Kernel\Io\Forms\Updater([]);
-            $updater2 = new \PHPCraftdream\Garnet\Kernel\Io\Forms\Updater([]);
+            $updater1 = new \PHPCraftdream\Garnet\Kernel\Io\Http\Forms\Updater([]);
+            $updater2 = new \PHPCraftdream\Garnet\Kernel\Io\Http\Forms\Updater([]);
 
             $result = new SaveEntityResult($updater1, $updater2);
 
@@ -151,7 +151,7 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\BaseEntity {
         });
 
         it('addData defaults to null', function (): void {
-            $updater = new \PHPCraftdream\Garnet\Kernel\Io\Forms\Updater([]);
+            $updater = new \PHPCraftdream\Garnet\Kernel\Io\Http\Forms\Updater([]);
 
             $result = new SaveEntityResult($updater);
 

@@ -2,9 +2,9 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Interfaces\Db;
 
-use PHPCraftdream\Garnet\Kernel\Exceptions\DbException;
-use PHPCraftdream\Garnet\Kernel\Exceptions\IniConfigException;
-use PHPCraftdream\Garnet\Kernel\Io\IniConfig\IniConfig;
+use PHPCraftdream\Garnet\Kernel\Exceptions\Db\DbException;
+use PHPCraftdream\Garnet\Kernel\Exceptions\Io\IniConfigException;
+use PHPCraftdream\Garnet\Kernel\Io\Services\IniConfig\IniConfig;
 
 interface IDbPool {
     /**
