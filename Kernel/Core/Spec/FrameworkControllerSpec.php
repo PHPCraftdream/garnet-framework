@@ -146,7 +146,7 @@ describe('FrameworkController', function (): void {
         }
 
         // Twig::$instances was just wiped — re-register the framework's
-        // template path so the controller can find Layout/ErrorPage.twig.
+        // template path so the controller can find Layout/states/ErrorPage.twig.
         Twig::get()->addFsPath($frameworkTwigDir);
 
         TestFrameworkController::setAppIniNamespace(IniConfig::ENV_APP);
@@ -220,7 +220,7 @@ description=Test Description
             $error = 'Error message';
             $result = TestFrameworkController::testMakeErrorPage('Title', $error, true);
 
-            // Layout/ErrorPage.twig uses single quotes on its class attrs.
+            // Layout/states/ErrorPage.twig uses single quotes on its class attrs.
             expect($result)->toContain("class='line'");
         });
 

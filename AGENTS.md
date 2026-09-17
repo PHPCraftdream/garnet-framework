@@ -130,14 +130,14 @@ name or an extension point.
 
 - `README.md` — the user-facing pitch and limitations.
 - `CONTRIBUTING.md` — how to send a PR.
-- `docs/architecture.md` — layered architecture, request lifecycle, async DB.
-- `docs/bundle.md` — how bundles are written.
-- `docs/cli.md` — every CLI command.
-- `docs/database.md` — DbPool, DbTable, async patterns.
-- `docs/frontend.md` — React islands, codegen, asset bridge.
-- `docs/deploy.md` — host layout, `bundle`/`deploy:diff`/`deploy`, migrations, case studies.
-- `docs/ssh.md` — `ssh.ini` config, `ssh*` commands, identity key vs. inline, troubleshooting.
-- `docs/i18n.md` — i18n keys, `%s` interpolation rules.
-- `docs/dev-workflow.md` — develop framework + app side by side with a path repo.
-- `docs/quickstart.md` — scaffold a new app from the template.
+- `docs/reference/architecture.md` — layered architecture, request lifecycle, async DB.
+- `docs/reference/bundle.md` — how bundles are written.
+- `docs/reference/cli.md` — every CLI command.
+- `docs/reference/database.md` — DbPool, DbTable, async patterns.
+- `docs/reference/frontend.md` — React islands, codegen, asset bridge.
+- `docs/guides/deploy.md` — host layout, `bundle`/`deploy:diff`/`deploy`, migrations, case studies.
+- `docs/reference/ssh.md` — `ssh.ini` config, `ssh*` commands, identity key vs. inline, troubleshooting.
+- `docs/reference/i18n.md` — i18n keys, `%s` interpolation rules.
+- `docs/guides/dev-workflow.md` — develop framework + app side by side with a path repo.
+- `docs/guides/quickstart.md` — scaffold a new app from the template.
 - `docs/known-issues.md` — sharp edges to be aware of.

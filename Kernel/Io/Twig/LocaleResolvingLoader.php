@@ -18,7 +18,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Twig {
      * resolves to a locale-specific file `Foo/Bar.{locale}.twig` first.
      *
      * The framework's bundled templates ship as paired files (e.g.
-     * `Layout/Maintenance.en.twig` + `Layout/Maintenance.ru.twig`). Call
+     * `Layout/states/Maintenance.en.twig` + `Layout/states/Maintenance.ru.twig`). Call
      * sites and inter-template `{% include %}` / `{% extends %}` /
      * `{% import %}` directives keep using the canonical bare name — the
      * loader rewrites them on the fly.
@@ -46,7 +46,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Twig {
             $src = $this->inner->getSourceContext($resolved);
 
             // Re-stamp the Source with the original (un-suffixed) name so
-            // `{% include 'Email/Row.twig' %}` inside this template still
+            // `{% include 'Email/rows/Row.twig' %}` inside this template still
             // routes through this loader on the next load.
             return new Source($src->getCode(), $name, $src->getPath());
         }

@@ -1,27 +1,27 @@
 # Email template — usage example
 
 Framework email templates live under `Bundle/TwigTemplates/Email/*.twig`.
-The entry template is **`Email/Email.twig`**; the helpers below render the
-secondary blocks (`Email/Row.twig`, `Email/ButtonMain.twig`,
-`Email/Value.twig`).
+The entry template is **`Email/layout/Email.twig`**; the helpers below render the
+secondary blocks (`Email/rows/Row.twig`, `Email/controls/ButtonMain.twig`,
+`Email/text/Value.twig`).
 
 The framework is i18n-agnostic — your application supplies the rendered
 strings in whichever language(s) it ships. Two parallel examples follow:
 the first uses English copy, the second uses the Russian copy that the
 bundled `Example` reference app actually sends.
 
-## Example 1 — English copy (template: `Email/Email.twig`)
+## Example 1 — English copy (template: `Email/layout/Email.twig`)
 
 ``` PHP
     $twig = TwigInit::get(IniConfig::ENV_TWIG_SYSTEM);
 
-    $row = fn (string $str, string $align = 'left') => $twig->render('Email/Row.twig', ['row' => $str, 'align' => $align]);
-    $button = fn (string $text, string $href) => $twig->render('Email/ButtonMain.twig', ['text' => $text, 'href' => $href]);
-    $val = fn (string $v) => $twig->render('Email/Value.twig', ['val' => $v]);
+    $row = fn (string $str, string $align = 'left') => $twig->render('Email/rows/Row.twig', ['row' => $str, 'align' => $align]);
+    $button = fn (string $text, string $href) => $twig->render('Email/controls/ButtonMain.twig', ['text' => $text, 'href' => $href]);
+    $val = fn (string $v) => $twig->render('Email/text/Value.twig', ['val' => $v]);
 
     $dangerString = '<hello>';
 
-    $render = $twig->render('Email/Email.twig', [
+    $render = $twig->render('Email/layout/Email.twig', [
         'content_align' => 'left',
         'head_align' => 'left',
         'block_title_align' => 'left',
@@ -49,7 +49,7 @@ bundled `Example` reference app actually sends.
     $render = HtmlMinify::get()->minify($render);
 ```
 
-## Example 2 — Russian copy (template: `Email/Email.twig`)
+## Example 2 — Russian copy (template: `Email/layout/Email.twig`)
 
 The same template — only the user-facing copy changes. This is what the
 `Example` reference app produces from
@@ -58,13 +58,13 @@ The same template — only the user-facing copy changes. This is what the
 ``` PHP
     $twig = TwigInit::get(IniConfig::ENV_TWIG_SYSTEM);
 
-    $row = fn (string $str, string $align = 'left') => $twig->render('Email/Row.twig', ['row' => $str, 'align' => $align]);
-    $button = fn (string $text, string $href) => $twig->render('Email/ButtonMain.twig', ['text' => $text, 'href' => $href]);
-    $val = fn (string $v) => $twig->render('Email/Value.twig', ['val' => $v]);
+    $row = fn (string $str, string $align = 'left') => $twig->render('Email/rows/Row.twig', ['row' => $str, 'align' => $align]);
+    $button = fn (string $text, string $href) => $twig->render('Email/controls/ButtonMain.twig', ['text' => $text, 'href' => $href]);
+    $val = fn (string $v) => $twig->render('Email/text/Value.twig', ['val' => $v]);
 
     $dangerString = '<hello>';
 
-    $render = $twig->render('Email/Email.twig', [
+    $render = $twig->render('Email/layout/Email.twig', [
         'content_align' => 'left',
         'head_align' => 'left',
         'block_title_align' => 'left',

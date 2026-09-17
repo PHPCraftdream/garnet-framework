@@ -158,7 +158,7 @@ composer install            # vendor + node deps + Playwright, via `garnet setup
 ## Where to put what
 
 - **Backend logic** → `Foreground/Controllers/`, `Common/Services/`, `Common/Tables/`.
-- **Frontend (React islands)** → `Front/Islands/<Feature>/<Component>.tsx`. The framework lazy-loads them; see `docs/frontend.md`.
+- **Frontend (React islands)** → `Front/Islands/<Feature>/<Component>.tsx`. The framework lazy-loads them; see `docs/reference/frontend.md`.
 - **Templates** → `Foreground/TwigTemplates/`. No HTML in PHP — see project AGENTS.md / coding standards.
 - **DB migrations** → `Migrations/Items/M_NNNN.php`. Pattern: incrementing numbered files.
 - **Translations** → `Foreground/I18n/ForegroundI18nDataRu.php` + `…En.php`. TS files are generated; never hand-edit them.

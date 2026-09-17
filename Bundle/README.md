@@ -35,7 +35,7 @@ that a host application includes via `bundles()` in its main class.
 | Dir | What's inside |
 |---|---|
 | `Front/` | Shared frontend: React islands, hooks, Tailwind utilities, datepicker, table, dialog — see [`Front/README.md`](Front/README.md). |
-| `TwigTemplates/` | Layouts (`Layout/HtmlLayout.twig`), email components, reusable partials. |
+| `TwigTemplates/` | Layouts (`Layout/shell/HtmlLayout.twig`), email components, reusable partials. |
 | `Middlewares/` | Cross-cutting middlewares (CSRF, worker-scope, dev-only checks). |
 | `Utils/` | Helpers used by multiple modules (HTML layout helper, prefetch, etc.). |
 | `I18n/` | Framework-level translation strings (`I18nFramework`). |
@@ -48,7 +48,7 @@ See the recipe [`../docs/cookbook/add-a-bundle.md`](../docs/cookbook/add-a-bundl
 ## Related
 
 - [`../Kernel/README.md`](../Kernel/README.md) — the engine these modules sit on.
-- [`../docs/bundle.md`](../docs/bundle.md) — bundle architecture in depth.
+- [`../docs/reference/bundle.md`](../docs/reference/bundle.md) — bundle architecture in depth.
 
 ---
 

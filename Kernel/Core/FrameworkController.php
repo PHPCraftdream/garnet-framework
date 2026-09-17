@@ -45,7 +45,7 @@ namespace PHPCraftdream\Garnet\Kernel\Core {
                 }
             }
 
-            return Twig::get()->render('Layout/ErrorPage.twig', [
+            return Twig::get()->render('Layout/states/ErrorPage.twig', [
                 'title' => $title,
                 'description' => $description,
                 'error_html' => ErrorTools::wrapAsLine($result),

@@ -75,7 +75,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router {
                 ? static::formatErrorStrToHtml($error)
                 : static::wrapAsLine('Internal server error.');
 
-            return Twig::get()->render('Layout/ErrorPage.twig', [
+            return Twig::get()->render('Layout/states/ErrorPage.twig', [
                 'title' => $title,
                 'description' => '',
                 'error_html' => $errorHtml,

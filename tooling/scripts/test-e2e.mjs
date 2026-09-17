@@ -140,7 +140,7 @@ async function main() {
 		// Templates/Application/Application.php::runWebApp), they just need
 		// a real migrated database. See the matching comment in
 		// Templates/Application/.github/workflows/ci.yml's `e2e` job and
-		// docs/e2e-testing.md for how to run them against a DB-enabled app.
+		// docs/guides/e2e-testing.md for how to run them against a DB-enabled app.
 		run('npx', ['playwright', 'test', ...SAFE_SPECS, '--reporter=list'], {
 			cwd: path.join(appDir, 'Tests'),
 		});

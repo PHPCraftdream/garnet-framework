@@ -10,7 +10,7 @@ use PHPCraftdream\Garnet\Kernel\Io\Twig\Twig;
 /**
  * Thin façade that prepares parameters for the base page Twig layout.
  *
- * All HTML markup lives in `Layout/HtmlLayout.twig`. This class only
+ * All HTML markup lives in `Layout/shell/HtmlLayout.twig`. This class only
  * normalises inputs, JSON-encodes island props (so the template can splice
  * them straight into `data-props='…'` attributes), and hands the dict to
  * Twig::render(). See AGENTS.md §12 "HTML markup — Twig only".
@@ -259,6 +259,6 @@ class HtmlLayout {
 
         $vars += $seo;
 
-        return Twig::get()->render('Layout/HtmlLayout.twig', $vars);
+        return Twig::get()->render('Layout/shell/HtmlLayout.twig', $vars);
     }
 }

@@ -70,9 +70,9 @@ invoked them.
 ## Related
 
 - [`../README.md`](../README.md) — kernel overview.
-- [`../../docs/cli.md`](../../docs/cli.md) — every CLI command in full.
-- [`../../docs/io.md`](../../docs/io.md) — IO subsystem reference.
-- [`../../docs/architecture.md`](../../docs/architecture.md) — request lifecycle.
+- [`../../docs/reference/cli.md`](../../docs/reference/cli.md) — every CLI command in full.
+- [`../../docs/reference/io.md`](../../docs/reference/io.md) — IO subsystem reference.
+- [`../../docs/reference/architecture.md`](../../docs/reference/architecture.md) — request lifecycle.
 
 ---
 

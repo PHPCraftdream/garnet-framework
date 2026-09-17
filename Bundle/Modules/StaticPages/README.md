@@ -30,7 +30,7 @@ Each block has a `type` and a `body`. Built-in types:
 | `link` | URL + label | Routed through the link resolver so internal targets stay stable across renames. |
 
 Adding a new block type is a single switch case in the service plus a
-Twig include — see `TwigTemplates/StaticPages/Blocks.twig`.
+Twig include — see `TwigTemplates/StaticPages/page/Blocks.twig`.
 
 ## Markdown safety
 

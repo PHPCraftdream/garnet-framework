@@ -14,7 +14,7 @@ class RenderIsland {
     public static function render(string $className, array $props = []): string {
         $propsJson = json_encode($props, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
 
-        return Twig::get()->render('Layout/Island.twig', [
+        return Twig::get()->render('Layout/shell/Island.twig', [
             'class_name' => $className,
             'props_json' => $propsJson,
         ]);

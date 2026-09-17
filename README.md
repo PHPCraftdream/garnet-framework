@@ -120,7 +120,7 @@ your app) scaffolds this wiring for you.
 The quickstart above (`git clone` + `app:create` run *inside the framework
 checkout*) is a different, dev-only path: it's for contributing to the
 framework itself, or trying Garnet without setting up a real project. See
-["Which install path do I want?"](docs/quickstart.md#which-install-path-do-i-want)
+["Which install path do I want?"](docs/guides/quickstart.md#which-install-path-do-i-want)
 for the full comparison, including which CI job covers each path.
 
 ### Requirements
@@ -155,7 +155,7 @@ MyApp/
 └── WorkDir/            # runtime: config, caches, logs (gitignored)
 ```
 
-See `docs/quickstart.md` for the step-by-step.
+See `docs/guides/quickstart.md` for the step-by-step.
 
 ## Architecture, in one paragraph
 
@@ -169,24 +169,24 @@ async support, so any controller can fan out reads concurrently. Bundles
 register themselves at boot, contributing routes, services, templates
 and asset roots without auto-discovery.
 
-For the full story see [`docs/architecture.md`](docs/architecture.md).
+For the full story see [`docs/reference/architecture.md`](docs/reference/architecture.md).
 
 ## Documentation
 
-- [`docs/quickstart.md`](docs/quickstart.md) — scaffold a new app
-- [`docs/dev-workflow.md`](docs/dev-workflow.md) — develop framework + app together
-- [`docs/architecture.md`](docs/architecture.md) — layers, request lifecycle, async DB
-- [`docs/bundle.md`](docs/bundle.md) — writing your own bundle
-- [`docs/cli.md`](docs/cli.md) — every CLI command
-- [`docs/database.md`](docs/database.md) — DbPool, DbTable, async patterns
-- [`docs/frontend.md`](docs/frontend.md) — React islands, codegen, asset bridge
-- [`docs/i18n.md`](docs/i18n.md) — translation pipeline
-- [`docs/deploy.md`](docs/deploy.md) — production deploy via `garnet bundle` / `deploy:diff`
-- [`docs/testing.md`](docs/testing.md) — kahlan specs, writing tests
-- [`docs/e2e-testing.md`](docs/e2e-testing.md) — Playwright end-to-end tests
-- [`docs/core.md`](docs/core.md) — kernel-level primitives
-- [`docs/io.md`](docs/io.md) — HTTP, CLI dispatch, Twig, config, caching, mailer
-- [`docs/ssh.md`](docs/ssh.md) — SSH connection and remote commands
+- [`docs/guides/quickstart.md`](docs/guides/quickstart.md) — scaffold a new app
+- [`docs/guides/dev-workflow.md`](docs/guides/dev-workflow.md) — develop framework + app together
+- [`docs/reference/architecture.md`](docs/reference/architecture.md) — layers, request lifecycle, async DB
+- [`docs/reference/bundle.md`](docs/reference/bundle.md) — writing your own bundle
+- [`docs/reference/cli.md`](docs/reference/cli.md) — every CLI command
+- [`docs/reference/database.md`](docs/reference/database.md) — DbPool, DbTable, async patterns
+- [`docs/reference/frontend.md`](docs/reference/frontend.md) — React islands, codegen, asset bridge
+- [`docs/reference/i18n.md`](docs/reference/i18n.md) — translation pipeline
+- [`docs/guides/deploy.md`](docs/guides/deploy.md) — production deploy via `garnet bundle` / `deploy:diff`
+- [`docs/guides/testing.md`](docs/guides/testing.md) — kahlan specs, writing tests
+- [`docs/guides/e2e-testing.md`](docs/guides/e2e-testing.md) — Playwright end-to-end tests
+- [`docs/reference/core.md`](docs/reference/core.md) — kernel-level primitives
+- [`docs/reference/io.md`](docs/reference/io.md) — HTTP, CLI dispatch, Twig, config, caching, mailer
+- [`docs/reference/ssh.md`](docs/reference/ssh.md) — SSH connection and remote commands
 - [`docs/known-issues.md`](docs/known-issues.md) — sharp edges
 - [`docs/cookbook/`](docs/cookbook/) — short copy-friendly recipes (routes, islands, CRUD, parallel queries, emails, uploads, i18n, validation, CLI commands, bundles)
 - [`AGENTS.md`](AGENTS.md) — onboarding for AI agents / new devs

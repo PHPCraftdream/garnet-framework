@@ -78,7 +78,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router {
 
         /**
          * Beautiful standalone 404 page — no external CSS/JS dependencies.
-         * Primary path renders via Twig (Layout/Error404Fallback.twig). Since
+         * Primary path renders via Twig (Layout/states/Error404Fallback.twig). Since
          * this is itself a last-resort fallback path, we catch any Twig
          * failure and emit a minimal plain-text response so the user always
          * sees *something*.
@@ -94,7 +94,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Router {
             ];
 
             try {
-                return Twig::get()->render('Layout/Error404Fallback.twig', $vars);
+                return Twig::get()->render('Layout/states/Error404Fallback.twig', $vars);
             } catch (Throwable) {
                 return '<!doctype html><html lang="en"><head><meta charset="utf-8"/><title>404</title></head><body><h1>404</h1><p>Page not found.</p><p><a href="/">Home</a></p></body></html>';
             }

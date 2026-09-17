@@ -114,12 +114,12 @@ namespace PHPCraftdream\Garnet\Bundle\Middlewares {
 
         /**
          * Builds a static 503 HTML response with Retry-After header.
-         * Renders Layout/Maintenance.twig — self-contained, no asset
+         * Renders Layout/states/Maintenance.twig — self-contained, no asset
          * pipeline, no shared layout, so it keeps working when the rest of
          * the app is broken or mid-migration.
          */
         private static function maintenanceResponse(): ResponseInterface {
-            $html = Twig::get()->render('Layout/Maintenance.twig');
+            $html = Twig::get()->render('Layout/states/Maintenance.twig');
 
             $response = new Response();
             $response = $response

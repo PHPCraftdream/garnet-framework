@@ -1,4 +1,4 @@
-{% import 'Email/Macro.twig' as m %}
+{% import 'Email/blocks/Macro.twig' as m %}
 <!DOCTYPE html>
 <html lang="auto">
 <head>
@@ -12,7 +12,7 @@
 <body {{ m.body() | trim | raw }} >
 <table {{ m.main_table() | trim  | raw }}>
     {% if head %}
-        {% include 'Email/HeadRow.twig' with {head, align: head_align} %}
+        {% include 'Email/rows/HeadRow.twig' with {head, align: head_align} %}
     {% endif %}
 
     {% if pre_blocks_items %}
@@ -23,7 +23,7 @@
 
     {% if info_blocks %}
         {% for info_block in info_blocks %}
-            {% include 'Email/InfoBlock.twig' with {info_block, content_align, title_align: block_title_align} %}
+            {% include 'Email/blocks/InfoBlock.twig' with {info_block, content_align, title_align: block_title_align} %}
         {% endfor %}
     {% endif %}
 
@@ -34,7 +34,7 @@
     {% endif %}
 
     {% if bottom %}
-        {% include 'Email/Bottom.twig' with {bottom, align: bottom_align} %}
+        {% include 'Email/layout/Bottom.twig' with {bottom, align: bottom_align} %}
     {% endif %}
 </table>
 </body>

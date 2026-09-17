@@ -9,7 +9,7 @@ Three commands cover the entire deploy lifecycle:
 | `php garnet deploy` | Local (or prod after `bundle`) full release: maintenance ON → migrate → cache clear → maintenance OFF |
 
 This document describes the day-to-day "commit → push" flow. Per-app
-guides for the first-time install live in `Apps/<App>/docs/deploy.md`.
+guides for the first-time install live in `Apps/<App>/docs/guides/deploy.md`.
 
 ## Contents
 
@@ -409,4 +409,4 @@ changed.
 - [`database.md`](database.md) — migration structure.
 - [`bundle.md`](bundle.md) — **FrameworkBundle** (the framework's code
   module), not to be confused with deploy-bundle.
-- `Apps/<App>/docs/deploy.md` — per-app first-time-install guide.
+- `Apps/<App>/docs/guides/deploy.md` — per-app first-time-install guide.

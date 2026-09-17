@@ -1,0 +1,12 @@
+{
+  "_": "Исключения из правила «не более семи элементов в каталоге». Причина обязательна.",
+  "dir_exceptions": {
+    "FrontBuilder": "корень собственного npm-пакета: package.json, rspack.config.ts, .babelrc и прочее инструменты ищут по фиксированным путям — как и в корне репозитория",
+    "Templates/Application": "заготовка приложения: её раскладка обязана повторять раскладку настоящего приложения, иначе app:create породит структуру, не похожую на живую",
+    "Templates/Application/Tests/specs/framework-bundle": "часть той же заготовки",
+    "Templates/Application/Tests/helpers": "часть той же заготовки",
+    "Templates/Application/Foreground/TwigTemplates/Foreground": "часть той же заготовки",
+    "Templates/Application/Migrations/Items": "нумерованные миграции заготовки: порядок и есть структура",
+    "Templates/Application/Common": "часть той же заготовки"
+  }
+}

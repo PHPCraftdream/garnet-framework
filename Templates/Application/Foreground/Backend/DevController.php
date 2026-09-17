@@ -61,13 +61,13 @@ namespace PHPCraftdream\Application\Foreground\Backend {
         public static function get__test_send_email(IGlobalReqParams $globals, IRouterUriParams $params): mixed {
             $twig = Twig::get();
 
-            $row = fn (string $str, string $align = 'left') => $twig->render('Email/Row.twig', ['row' => $str, 'align' => $align]);
-            $button = fn (string $text, string $href) => $twig->render('Email/ButtonMain.twig', ['text' => $text, 'href' => $href]);
-            $val = fn (string $v) => $twig->render('Email/Value.twig', ['val' => $v]);
+            $row = fn (string $str, string $align = 'left') => $twig->render('Email/rows/Row.twig', ['row' => $str, 'align' => $align]);
+            $button = fn (string $text, string $href) => $twig->render('Email/controls/ButtonMain.twig', ['text' => $text, 'href' => $href]);
+            $val = fn (string $v) => $twig->render('Email/text/Value.twig', ['val' => $v]);
 
             $dangerString = '<hello>';
 
-            $render = $twig->render('Email/Email.twig', [
+            $render = $twig->render('Email/layout/Email.twig', [
                 'content_align' => 'left',
                 'head_align' => 'left',
                 'block_title_align' => 'left',
@@ -92,7 +92,7 @@ namespace PHPCraftdream\Application\Foreground\Backend {
                 'bottom' => '&copy; 2023 See Twig integration for better HTML integration!'
             ]);
 
-            $render = $twig->render('Email/Email.twig', AuthMiddleware::authEmailParams($globals, StrTools::randomString(10)));
+            $render = $twig->render('Email/layout/Email.twig', AuthMiddleware::authEmailParams($globals, StrTools::randomString(10)));
 
             $render = HtmlMinify::get()->minify($render);
 
@@ -119,7 +119,7 @@ namespace PHPCraftdream\Application\Foreground\Backend {
                 ],
             ];
 
-            $render = $twig->render('Email/Email.twig', $result);
+            $render = $twig->render('Email/layout/Email.twig', $result);
             $render = HtmlMinify::get()->minify($render);
 
             //            Mailer::get()->sendHtmlMail(

@@ -325,7 +325,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages {
             }
             $rendered = static::renderVariables($content);
 
-            return Twig::get()->render('StaticPages/RawSnippet.twig', [
+            return Twig::get()->render('StaticPages/parts/RawSnippet.twig', [
                 'inner_html' => static::markdownToHtml($rendered),
                 'kind' => $type === 'footer' ? 'footer' : 'header',
             ]);
@@ -354,7 +354,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages {
          * passing to the template (Twig auto-escapes the output).
          */
         public static function renderPageBody(array $page, string $blocksHtml, bool $isModeratorView = false): string {
-            return Twig::get()->render('StaticPages/Body.twig', [
+            return Twig::get()->render('StaticPages/page/Body.twig', [
                 'title' => static::renderVariables((string)($page['title'] ?? '')),
                 'blocks_html' => $blocksHtml,
                 'is_moderator_view' => $isModeratorView,
@@ -376,7 +376,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages {
             ];
             $maxWidthPx = $widthMap[$maxWidth] ?? $widthMap['full'];
 
-            return Twig::get()->render('StaticPages/Shell.twig', [
+            return Twig::get()->render('StaticPages/page/Shell.twig', [
                 'header_html' => static::renderSnippetHtmlBySlug('main-nav'),
                 'footer_html' => static::renderSnippetHtmlBySlug('main-footer'),
                 'body_html' => $bodyHtml,
@@ -387,7 +387,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages {
         /**
          * Compose the public-page shell: header snippet + per-page max-width
          * body wrapper + footer snippet. Visual layout lives in
-         * StaticPages/Shell.twig.
+         * StaticPages/page/Shell.twig.
          */
         public static function renderPageShell(array $page, string $innerBodyHtml): string {
             $widthMap = [
@@ -397,7 +397,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages {
             $maxW = (string)($page['max_width'] ?? '3xl');
             $maxWidthPx = $widthMap[$maxW] ?? $widthMap['3xl'];
 
-            return Twig::get()->render('StaticPages/Shell.twig', [
+            return Twig::get()->render('StaticPages/page/Shell.twig', [
                 'header_html' => static::renderSnippetHtmlById((int)($page['header_snippet_id'] ?? 0)),
                 'footer_html' => static::renderSnippetHtmlById((int)($page['footer_snippet_id'] ?? 0)),
                 'body_html' => $innerBodyHtml,
@@ -411,7 +411,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages {
          * header and footer. Override the strings in an app-level service.
          */
         public static function renderNotFoundBody(): string {
-            return Twig::get()->render('StaticPages/NotFound.twig', [
+            return Twig::get()->render('StaticPages/parts/NotFound.twig', [
                 'title' => FwI18n::t('StaticPages_NotFound_Title'),
                 'text' => FwI18n::t('StaticPages_NotFound_Text'),
             ]);
@@ -448,7 +448,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages {
                     $page = static::pagesTable()->selectOneByField('slug', $slug);
 
                     if ($page && (int)($page['is_published'] ?? 0) === 1) {
-                        return Twig::get()->render('StaticPages/Link.twig', [
+                        return Twig::get()->render('StaticPages/parts/Link.twig', [
                             'slug' => $slug,
                             'title' => $page['title'] ?: $slug,
                         ]);
@@ -576,7 +576,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages {
                 $normalized[] = ['kind' => 'text', 'html' => static::markdownToHtml($content)];
             }
 
-            return Twig::get()->render('StaticPages/Blocks.twig', ['blocks' => $normalized]);
+            return Twig::get()->render('StaticPages/page/Blocks.twig', ['blocks' => $normalized]);
         }
 
         /**
@@ -606,7 +606,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages {
          * PHP-side responsibility: data normalization (resolve `page` items
          * to URLs, drop unsafe/empty links, substitute `{support-*}`-style
          * placeholders). Visual layout lives in
-         * StaticPages/Nav.twig.
+         * StaticPages/chrome/Nav.twig.
          */
         /**
          * Per-page SEO overrides for the layout params (cascade over the global
@@ -750,7 +750,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages {
                 ];
             }
 
-            return Twig::get()->render('StaticPages/Nav.twig', [
+            return Twig::get()->render('StaticPages/chrome/Nav.twig', [
                 'logo' => $logoView,
                 'menu_items' => $menuItems,
                 'layout' => $layout,
@@ -763,10 +763,10 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages {
 
         /**
          * Render the light/dark theme toggle button + its bootstrapper.
-         * The widget itself lives in StaticPages/ThemeToggle.twig.
+         * The widget itself lives in StaticPages/chrome/ThemeToggle.twig.
          */
         protected static function renderThemeToggleHtml(): string {
-            return Twig::get()->render('StaticPages/ThemeToggle.twig', [
+            return Twig::get()->render('StaticPages/chrome/ThemeToggle.twig', [
                 'label' => FwI18n::t('StaticPages_ThemeToggle'),
             ]);
         }
@@ -844,7 +844,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\StaticPages {
                 $renderedCols[] = ['title' => $title, 'items' => $renderedItems];
             }
 
-            return Twig::get()->render('StaticPages/Footer.twig', [
+            return Twig::get()->render('StaticPages/chrome/Footer.twig', [
                 'columns' => $renderedCols,
                 'copyright' => $copyright !== '' ? static::renderVariables($copyright) : '',
             ]);

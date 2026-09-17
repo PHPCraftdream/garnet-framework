@@ -27,7 +27,7 @@ duplicate exists as a hook for future hardcoded copy: when a template
 gains a literal string, only the `.{locale}.twig` it belongs to needs
 to change.
 
-`Layout/Maintenance.{en,ru}.twig` is the one template that actually
+`Layout/states/Maintenance.{en,ru}.twig` is the one template that actually
 diverges today — it is served by `MaintenanceMiddleware` without the
 i18n pipeline, so the user-facing text has to live in the file itself.
 
@@ -43,7 +43,7 @@ i18n pipeline, so the user-facing text has to live in the file itself.
 
 ## The master shell
 
-`Layout/HtmlLayout.twig` is the only HTML layout almost every app
+`Layout/shell/HtmlLayout.twig` is the only HTML layout almost every app
 page extends. It owns:
 
 - `<!doctype>` and `<html lang="…">` (BCP-47, never `auto`).
@@ -67,8 +67,8 @@ contract.
 |---|---|
 | `Email/LayoutPlain.twig` | Default. Brand header + body block + brand footer. |
 | `Email/LayoutBrand.twig` | Same, but with a coloured banner per brand. |
-| `Email/LabelValueRow.twig` | "Field: value" row partial. |
-| `Email/BrandFooter.twig` | Footer with brand name, support contact. |
+| `Email/rows/LabelValueRow.twig` | "Field: value" row partial. |
+| `Email/layout/BrandFooter.twig` | Footer with brand name, support contact. |
 
 All emails extend one of the layouts and fill the `body` block. The
 brand name pulls from `FwAppSettings::brandName()` automatically.
@@ -106,7 +106,7 @@ manual flag flipping.
 
 - [`../README.md`](../README.md) — bundle index.
 - [`../Front/README.md`](../Front/README.md) — the islands these templates host.
-- [`../../docs/i18n.md`](../../docs/i18n.md) — the `t.Key()` pipeline.
+- [`../../docs/reference/i18n.md`](../../docs/reference/i18n.md) — the `t.Key()` pipeline.
 
 ---
 

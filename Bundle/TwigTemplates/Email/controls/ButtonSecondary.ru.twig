@@ -1,4 +1,4 @@
-{% import 'Email/Macro.twig' as m %}
+{% import 'Email/blocks/Macro.twig' as m %}
 {% if href and text %}
     {{ m.button_secondary(text, href) | trim | raw }}
 {% endif %}

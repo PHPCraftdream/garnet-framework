@@ -33,7 +33,7 @@ the rest of the kernel composes.
 - [`../README.md`](../README.md) — kernel overview.
 - [`../Db/README.md`](../Db/README.md) — the data layer that consumes these primitives.
 - [`../Io/README.md`](../Io/README.md) — the IO layer that does too.
-- [`../../docs/architecture.md`](../../docs/architecture.md) — request lifecycle in depth.
+- [`../../docs/reference/architecture.md`](../../docs/reference/architecture.md) — request lifecycle in depth.
 
 ---
 

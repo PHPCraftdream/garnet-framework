@@ -5,7 +5,7 @@
  *     real email-code flow (`registerAccount` in auth.ts).
  *   - 'admin'   — the Garnet admin panel (`/__garnet/`) via the one-shot
  *     CLI token flow (`php garnet admin` — see
- *     `Kernel/Io/GarnetCli/GarnetAdminCommand.php` and docs/cli.md's
+ *     `Kernel/Io/GarnetCli/GarnetAdminCommand.php` and docs/reference/cli.md's
  *     "Admin panel" section). The token is generated once per worker and
  *     applied by hitting `/__garnet/?token=<token>`, which the admin app
  *     exchanges for the `garnet_admin` cookie

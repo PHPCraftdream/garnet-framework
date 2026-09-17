@@ -683,7 +683,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
             $consentMarketingAt = (string)$session->getValue('consent_marketing_at', '');
             $magicToken = FwMagicLoginService::generate($authEmail, $returnUri, $consentPdAt, $consentMarketingAt)['token'];
 
-            $render = $twig->render('Email/Email.twig', static::authEmailParams($globals, $authCode, $magicToken));
+            $render = $twig->render('Email/layout/Email.twig', static::authEmailParams($globals, $authCode, $magicToken));
             $render = HtmlMinify::get()->minify($render);
 
             FwAppMailer::setNextMeta(['auth_code' => $authCode]);
@@ -733,7 +733,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
                 ],
             ];
 
-            $render = $twig->render('Email/Email.twig', $result);
+            $render = $twig->render('Email/layout/Email.twig', $result);
             $render = HtmlMinify::get()->minify($render);
 
             // Тема своя, а не общая «Авторизация»: иначе в ящике два подряд
@@ -804,8 +804,8 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
          */
         public static function authEmailParams(IGlobalReqParams $globals, string $code, string $magicToken): array {
             $twig = Twig::get();
-            $row = fn (string $str, string $align = 'left') => $twig->render('Email/Row.twig', ['row' => $str, 'align' => $align]);
-            $button = fn (string $text, string $href) => $twig->render('Email/ButtonMain.twig', ['text' => $text, 'href' => $href]);
+            $row = fn (string $str, string $align = 'left') => $twig->render('Email/rows/Row.twig', ['row' => $str, 'align' => $align]);
+            $button = fn (string $text, string $href) => $twig->render('Email/controls/ButtonMain.twig', ['text' => $text, 'href' => $href]);
 
             $result = TwigParams::init()->get(TwigParams::DEF_EMAIL_PARAMS);
             $ttl = floor(static::$codeSecondsTTL / 60);
@@ -825,7 +825,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Auth\Middlewares {
                     'rows' => [
                         FwI18n::t('Email_Auth_Hello'),
                         ['raw' => $row(sprintf(FwI18n::t('Email_Auth_CodeLifetime'), $ttl), 'center')],
-                        ['raw' => $row($twig->render('Email/CodeHighlight.twig', ['code' => $code]), 'center')],
+                        ['raw' => $row($twig->render('Email/controls/CodeHighlight.twig', ['code' => $code]), 'center')],
                         ['raw' => $row(FwI18n::t('Email_Auth_UseAuthButton'), 'center')],
                         ['raw' => $row($authButton, 'center')],
                         ['raw' => $row(FwI18n::t('Email_Auth_UseAuthButtonOnlyForYou'), 'center')],

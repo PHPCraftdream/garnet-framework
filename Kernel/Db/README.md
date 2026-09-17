@@ -78,7 +78,7 @@ The framework provides:
 ## Related
 
 - [`../README.md`](../README.md) — kernel overview.
-- [`../../docs/database.md`](../../docs/database.md) — full data-layer reference.
+- [`../../docs/reference/database.md`](../../docs/reference/database.md) — full data-layer reference.
 - [`../../docs/cookbook/parallel-mysql-queries.md`](../../docs/cookbook/parallel-mysql-queries.md) — recipe.
 
 ---

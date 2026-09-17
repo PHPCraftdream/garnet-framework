@@ -370,7 +370,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Bundle {
             // framework dir itself in app-mode. `FrontBuilder` (Node build
             // tooling — not needed once Public/assets/ is already built and
             // shipped, same exclusion documented for the manual redeploy path
-            // in docs/deploy.md) and `node_modules` (its own copy is an NTFS
+            // in docs/guides/deploy.md) and `node_modules` (its own copy is an NTFS
             // junction to FrontBuilder/node_modules, created by `garnet setup`
             // — walking it made copy() choke with "cannot be a directory",
             // and even if it worked it'd ship an unnecessary multi-hundred-MB

@@ -61,7 +61,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
             });
 
             it('returns null for paths that don\'t match any rule', function (): void {
-                $r = ($this->invoke)('categorizeSinglePath', ['docs/architecture.md', 'MyApp']);
+                $r = ($this->invoke)('categorizeSinglePath', ['docs/reference/architecture.md', 'MyApp']);
                 expect($r)->toBeNull();
             });
         });
