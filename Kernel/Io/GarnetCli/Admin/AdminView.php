@@ -10,7 +10,7 @@ use Twig\Loader\FilesystemLoader;
  *
  * The admin app runs its own micro HTTP server (`php garnet admin`) and
  * doesn't share the main framework's Twig environment, so we spin up a
- * local FilesystemLoader against `./templates/`. Markup belongs to Twig
+ * local FilesystemLoader against `./Ui/templates/`. Markup belongs to Twig
  * files — see AGENTS.md §12 "HTML markup — Twig only".
  */
 class AdminView {
@@ -38,7 +38,7 @@ class AdminView {
         static $env = null;
 
         if ($env === null) {
-            $env = new Environment(new FilesystemLoader(__DIR__ . '/templates'), ['cache' => false]);
+            $env = new Environment(new FilesystemLoader(__DIR__ . '/Ui/templates'), ['cache' => false]);
         }
 
         return $env;

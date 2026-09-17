@@ -2,6 +2,8 @@
 
 namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Admin;
 
+use PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Session;
+
 class AdminAuth {
     // Active tokens (post-activation) expire after this many seconds —
     // a stolen/leaked cookie or token file entry stops working eventually

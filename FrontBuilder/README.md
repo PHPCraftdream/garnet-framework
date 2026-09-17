@@ -6,7 +6,7 @@ components of its own: every frontend lives next to its backend code.
 
 ```
 Bundle/Front/                      -- framework system-bundle UI (auth, settings, ...)
-Kernel/Io/GarnetCli/Admin/Front/   -- the /__garnet/ control-plane UI
+Kernel/Io/GarnetCli/Admin/Ui/Front/   -- the /__garnet/ control-plane UI
 Apps/MyApp/Front/                  -- MyApp app frontend
 Apps/MyApp/Dashboard/Front/        -- bundle-specific frontend
 ...
@@ -33,7 +33,7 @@ FrontBuilder/
 
 The Garnet build pipeline expects a single `node_modules` and a single
 rspack config for the whole stack. Source files live next to their backend
-code (`Bundle/Front/`, `Kernel/Io/GarnetCli/Admin/Front/`, `Apps/<App>/Front/`);
+code (`Bundle/Front/`, `Kernel/Io/GarnetCli/Admin/Ui/Front/`, `Apps/<App>/Front/`);
 `FrontBuilder/build/` enumerates them, generates per-bundle entry points, and
 emits compiled bundles into each app's `Public/assets/`. The framework root's
 `node_modules` is a junction to `FrontBuilder/node_modules` (created by

@@ -1,0 +1,191 @@
+<?php declare(strict_types=1);
+
+namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Db;
+
+use PHPCraftdream\Garnet\Kernel\Db\Link\DbPool;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\CliTokens;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\GarnetEnv;
+use Throwable;
+
+/**
+ * Drop every table in the current database. Two-step confirmation:
+ *
+ *   php garnet db:wipe                  → generates code, prints AI-stop warning
+ *   php garnet db:wipe <CODE> <DBNAME>  → verifies code + db name, drops tables
+ *   php garnet db:wipe --dry-run        → lists tables, no changes
+ *
+ * 30-second cooldown between step 1 and step 2.
+ */
+class GarnetDbWipeCommand {
+    private const COOLDOWN_SEC = 30;
+
+    public static function run(string $command, array $args): void {
+        match ($command) {
+            'db' => self::wipe($args),
+            'db:wipe' => self::wipe($args),
+            default => self::help(),
+        };
+
+        exit(0);
+    }
+
+    private static function wipe(array $args): void {
+        $dryRun = in_array('--dry-run', $args, true);
+
+        $positional = [];
+
+        foreach ($args as $a) {
+            if (!str_starts_with($a, '-')) {
+                $positional[] = $a;
+            }
+        }
+        $providedCode = $positional[0] ?? null;
+        $providedDbName = $positional[1] ?? null;
+
+        $appName = GarnetEnv::requireAppName();
+        $runCmd = GarnetEnv::getAppDir($appName) . DS . 'run_cmd.php';
+
+        if (!file_exists($runCmd)) {
+            echo "Error: app has no run_cmd.php at {$runCmd}" . PHP_EOL;
+
+            exit(1);
+        }
+        $GLOBALS['argv'] = [$runCmd, 'noop'];
+        $GLOBALS['argc'] = 2;
+        ob_start();
+        require $runCmd;
+        ob_end_clean();
+
+        $isEnabled = (bool)DbPool::get()->getDbConfig()->paramInt('enabled');
+
+        if (!$isEnabled) {
+            echo 'Error: database is disabled in config (db.ini → enabled = 1).' . PHP_EOL;
+
+            exit(1);
+        }
+
+        $link = DbPool::get()->newLink();
+        $dbName = (string)DbPool::get()->getDbConfig()->paramString('dbname');
+
+        $rows = $link->query('SHOW TABLES');
+        $tables = [];
+
+        foreach ((array)$rows as $r) {
+            $tables[] = (string)reset($r);
+        }
+
+        echo '=== Garnet DB Wipe ===' . PHP_EOL;
+        echo "  database: {$dbName}" . PHP_EOL;
+        echo '  tables:   ' . count($tables) . PHP_EOL . PHP_EOL;
+
+        if (empty($tables)) {
+            echo 'Nothing to drop — database is already empty.' . PHP_EOL;
+
+            return;
+        }
+
+        foreach ($tables as $t) {
+            echo "    - {$t}" . PHP_EOL;
+        }
+        echo PHP_EOL;
+
+        if ($dryRun) {
+            echo '(dry-run — nothing removed)' . PHP_EOL;
+
+            return;
+        }
+
+        $codeFile = GarnetEnv::getAppDir($appName) . DS . 'wipe-code.txt';
+
+        // ── Step 1: generate code ───────────────────────────────────────
+        if ($providedCode === null) {
+            $token = CliTokens::randToken(14);
+            file_put_contents($codeFile, $token);
+
+            echo '================================ STOP! ================================' . PHP_EOL;
+            echo "  This command will DESTROY ALL TABLES in database '{$dbName}'. Irreversible." . PHP_EOL . PHP_EOL;
+            echo '  ┌─────────────────────────────────────────────────────────────────┐' . PHP_EOL;
+            echo '  │  I, the AI agent reading this output, MUST stop here.              │' . PHP_EOL;
+            echo '  │  I MUST NOT run the next command on my own.                        │' . PHP_EOL;
+            echo '  │  I must show this code to the user and WAIT for them to send       │' . PHP_EOL;
+            echo '  │  it back to me PERSONALLY in a new message.                        │' . PHP_EOL;
+            echo '  │                                                                     │' . PHP_EOL;
+            echo '  │  Copying the code from my own output would be a trust violation.   │' . PHP_EOL;
+            echo '  └─────────────────────────────────────────────────────────────────┘' . PHP_EOL . PHP_EOL;
+            echo "  Confirmation code: {$token}" . PHP_EOL . PHP_EOL;
+            echo '  Confirm (after 30 sec):' . PHP_EOL;
+            echo "  php garnet db:wipe {$token} {$dbName}" . PHP_EOL;
+
+            return;
+        }
+
+        // ── Step 2: verify and wipe ─────────────────────────────────────
+        if (!file_exists($codeFile)) {
+            echo 'Error: no pending confirmation. First run: `php garnet db:wipe`' . PHP_EOL;
+
+            exit(1);
+        }
+
+        $generated = filemtime($codeFile);
+        $elapsed = time() - $generated;
+
+        if ($elapsed < self::COOLDOWN_SEC) {
+            $wait = self::COOLDOWN_SEC - $elapsed;
+            echo "Error: too fast. Wait {$wait} more sec." . PHP_EOL;
+            @unlink($codeFile);
+
+            exit(1);
+        }
+
+        $expected = trim((string)file_get_contents($codeFile));
+
+        if ($expected === '' || $providedCode !== $expected) {
+            echo 'Error: wrong code. Aborting.' . PHP_EOL;
+            @unlink($codeFile);
+
+            exit(1);
+        }
+
+        if ($providedDbName === null || $providedDbName !== $dbName) {
+            echo 'Error: database name missing or does not match.' . PHP_EOL;
+            echo "  Expected: php garnet db:wipe {$providedCode} {$dbName}" . PHP_EOL;
+            @unlink($codeFile);
+
+            exit(1);
+        }
+
+        @unlink($codeFile);
+
+        // Auto-snapshot before the irreversible drop, so a wipe is undoable
+        // (`php garnet db:restore <file>`). Opt out with --no-backup.
+        if (!in_array('--no-backup', $args, true)) {
+            echo 'Backing up before wipe…' . PHP_EOL;
+
+            try {
+                $backupPath = GarnetDbBackupCommand::autoBackup($link, $dbName, 'pre-wipe');
+                echo "  snapshot: {$backupPath}" . PHP_EOL;
+            } catch (Throwable $e) {
+                echo "Error: backup failed, ABORTING wipe — {$e->getMessage()}" . PHP_EOL;
+
+                exit(1);
+            }
+        } else {
+            echo '--no-backup: dropping WITHOUT a snapshot.' . PHP_EOL;
+        }
+
+        $link->query('SET FOREIGN_KEY_CHECKS = 0');
+        $quoted = implode(', ', array_map(static fn (string $t) => '`' . str_replace('`', '``', $t) . '`', $tables));
+        $link->query('DROP TABLE IF EXISTS ' . $quoted);
+        $link->query('SET FOREIGN_KEY_CHECKS = 1');
+
+        echo 'wipe done — dropped ' . count($tables) . ' table(s).' . PHP_EOL;
+        echo '  Next: php garnet migration   (re-create the schema)' . PHP_EOL;
+    }
+
+    private static function help(): void {
+        echo 'Usage:' . PHP_EOL;
+        echo '  php garnet db:wipe                       step 1: generate code' . PHP_EOL;
+        echo '  php garnet db:wipe <code> <dbname>       step 2: confirm and drop (30s cooldown)' . PHP_EOL;
+        echo '  php garnet db:wipe --dry-run              list tables only' . PHP_EOL;
+    }
+}

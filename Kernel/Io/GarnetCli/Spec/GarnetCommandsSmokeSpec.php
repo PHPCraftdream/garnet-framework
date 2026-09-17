@@ -33,33 +33,36 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
      * GarnetServeCommandHelpersSpec, etc.).
      */
     describe('Garnet*Command smoke contract', function (): void {
+        // Тема указана явно: команда лежит в подкаталоге своей темы, и список
+        // здесь — это заодно и опись раскладки. Переезд команды в другую тему
+        // без правки этой строки роняет спеку, а не тишину.
         $commands = [
-            'GarnetAdminCommand',
-            'GarnetAppCommand',
-            'GarnetBuildCheckCommand',
-            'GarnetBuildCommand',
-            'GarnetCacheCommand',
-            'GarnetConfigCommand',
-            'GarnetDbBackupCommand',
-            'GarnetDbWipeCommand',
-            'GarnetDeployCommand',
-            'GarnetMaintenanceCommand',
-            'GarnetMaintenanceRemoteCommand',
-            'GarnetMigrateStatusCommand',
-            'GarnetPermsCommand',
-            'GarnetPrepareCommand',
-            'GarnetServeCommand',
-            'GarnetServeDebugCommand',
-            'GarnetServeWatchCommand',
-            'GarnetSnapshotCommand',
-            'GarnetSqlCommand',
-            'GarnetSshCommand',
-            'GarnetTestRemoteCommand',
-            'GarnetUninstallCommand',
+            'Serve\\GarnetAdminCommand',
+            'Serve\\GarnetServeCommand',
+            'Serve\\GarnetServeDebugCommand',
+            'Serve\\GarnetServeWatchCommand',
+            'Build\\GarnetBuildCheckCommand',
+            'Build\\GarnetBuildCommand',
+            'Build\\GarnetPrepareCommand',
+            'Deploy\\GarnetDeployCommand',
+            'Deploy\\Remote\\GarnetMaintenanceCommand',
+            'Deploy\\Remote\\GarnetMaintenanceRemoteCommand',
+            'Deploy\\Remote\\GarnetSshCommand',
+            'Deploy\\Remote\\GarnetTestRemoteCommand',
+            'Project\\GarnetAppCommand',
+            'Project\\GarnetCacheCommand',
+            'Project\\GarnetConfigCommand',
+            'Project\\GarnetPermsCommand',
+            'Project\\GarnetUninstallCommand',
+            'Db\\GarnetDbBackupCommand',
+            'Db\\GarnetDbWipeCommand',
+            'Db\\GarnetMigrateStatusCommand',
+            'Db\\GarnetSnapshotCommand',
+            'Db\\GarnetSqlCommand',
         ];
 
         foreach ($commands as $cmd) {
-            $fqcn = "PHPCraftdream\\Garnet\\Kernel\\Io\\GarnetCli\\{$cmd}";
+            $fqcn = "PHPCraftdream\\Garnet\\Kernel\\Io\\GarnetCli\\Commands\\{$cmd}";
 
             describe($cmd, function () use ($fqcn): void {
                 it('exists in the expected namespace', function () use ($fqcn): void {

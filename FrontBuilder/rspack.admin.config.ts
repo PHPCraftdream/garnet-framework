@@ -6,14 +6,14 @@ import {resolveConfig, moduleRules} from './build/moduleConfig';
 const baseDir = __dirname;
 const frameworkRoot = path.resolve(baseDir, '..');
 // Admin frontend lives next to its PHP backend at
-// <framework>/Kernel/Io/GarnetCli/Admin/Front/ — same Front/-as-sibling
+// <framework>/Kernel/Io/GarnetCli/Admin/Ui/Front/ — same Front/-as-sibling
 // pattern used by Apps/<App>/<Bundle>/Front/. Compiled output drops
-// into <framework>/Kernel/Io/GarnetCli/Admin/dist/ which the CLI's
+// into <framework>/Kernel/Io/GarnetCli/Admin/Ui/dist/ which the CLI's
 // AdminView.php references. FrontBuilder sits at the framework root, so
 // one hop up reaches it.
 const adminBackendDir = path.resolve(frameworkRoot, 'Kernel', 'Io', 'GarnetCli', 'Admin');
-const adminSrcDir = path.resolve(adminBackendDir, 'Front');
-const distDir = path.resolve(adminBackendDir, 'dist');
+const adminSrcDir = path.resolve(adminBackendDir, 'Ui', 'Front');
+const distDir = path.resolve(adminBackendDir, 'Ui', 'dist');
 
 if (!fs.existsSync(distDir)) {
 	fs.mkdirSync(distDir, {recursive: true});

@@ -3,6 +3,34 @@
 namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli;
 
 use Composer\InstalledVersions;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Build\GarnetBuildCheckCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Build\GarnetBuildCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Build\GarnetBundleCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Build\GarnetPrepareCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Build\GarnetSizeCheckCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Db\GarnetDbBackupCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Db\GarnetDbWipeCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Db\GarnetMigrateStatusCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Db\GarnetSnapshotCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Db\GarnetSqlCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Deploy\GarnetDeployCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Deploy\GarnetDeployDiffCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Deploy\GarnetDeployFullCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Deploy\Journal\GarnetDeployLogCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Deploy\Remote\GarnetMaintenanceCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Deploy\Remote\GarnetMaintenanceRemoteCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Deploy\Remote\GarnetSshCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Deploy\Remote\GarnetTestRemoteCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Project\GarnetAppCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Project\GarnetCacheCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Project\GarnetConfigCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Project\GarnetPermsCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Project\GarnetSetupCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Project\GarnetUninstallCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Serve\GarnetAdminCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Serve\GarnetServeCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Serve\GarnetServeDebugCommand;
+use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Serve\GarnetServeWatchCommand;
 use ReflectionClass;
 use Throwable;
 

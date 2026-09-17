@@ -10,8 +10,9 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
     use function file_exists;
     use function file_put_contents;
 
-    use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\GarnetTestRemoteCommand;
-    use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\GarnetUninstallCommand;
+    use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\CliTokens;
+    use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Deploy\Remote\GarnetTestRemoteCommand;
+    use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Project\GarnetUninstallCommand;
     use ReflectionMethod;
 
     use function sys_get_temp_dir;

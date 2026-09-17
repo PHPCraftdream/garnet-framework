@@ -3,6 +3,7 @@
 namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Admin;
 
 use PHPCraftdream\Garnet\Kernel\Core\Env\Env;
+use PHPCraftdream\Garnet\Kernel\Core\GlobalReqParams\GlobalReqParams;
 use PHPCraftdream\Garnet\Kernel\Io\GarnetCli\GarnetEnv;
 
 class AdminApp {
@@ -417,7 +418,7 @@ class AdminApp {
             return;
         }
 
-        $distDir = __DIR__ . DIRECTORY_SEPARATOR . 'dist';
+        $distDir = __DIR__ . DIRECTORY_SEPARATOR . 'Ui' . DIRECTORY_SEPARATOR . 'dist';
         $file = $distDir . DIRECTORY_SEPARATOR . $filename;
 
         if (!file_exists($file)) {
