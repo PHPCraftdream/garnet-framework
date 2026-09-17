@@ -348,7 +348,20 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\DeployDiff {
                 @mkdir($shadowSub, 0o755, true);
             }
 
-            $orig = file_get_contents($localAbs);
+            $orig = @file_get_contents($localAbs);
+
+            if ($orig === false) {
+                // Чаще всего это отсутствующий *Gen.php: их пишет
+                // `php garnet build`, а composer при переустановке пакета
+                // уносит вместе с ним. Раньше здесь падал TypeError из
+                // глубины ребрендера — сообщение, по которому нельзя
+                // догадаться ни о причине, ни о лекарстве, хотя лекарство
+                // одно и короткое.
+                $hint = str_ends_with($localAbs, 'Gen.php')
+                    ? ' Это генерируемый файл: выполните `php garnet build` и повторите.'
+                    : '';
+                self::fail("не удалось прочитать {$localAbs} (нужен для {$relRepo})." . $hint);
+            }
             $rewritten = PublicPathRebrander::rewriteContent($orig, $pairs);
             file_put_contents($shadowAbs, $rewritten);
 

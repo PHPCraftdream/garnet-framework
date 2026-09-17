@@ -89,6 +89,9 @@ final class GarnetDeployDiffCommand {
 
     private static ?DeployJournal $journal = null;
 
+    /** Защёлка: предупреждение о прерванном прогоне печатается один раз. */
+    private static bool $interruptedWarned = false;
+
     /**
      * The run journal. Created on first use so every path through the command
      * — including the early-return modes — records itself without each having
@@ -117,6 +120,15 @@ final class GarnetDeployDiffCommand {
      * let this run finish the job.
      */
     private static function warnAboutInterruptedRuns(string $currentRunId): void {
+        // Один прогон — одно предупреждение. Режимы вызывают этот метод
+        // после doRun, и без защёлки один и тот же незакрытый прогон
+        // печатался дважды подряд: повтор выглядит как два разных
+        // происшествия и обесценивает само предупреждение.
+        if (self::$interruptedWarned) {
+            return;
+        }
+        self::$interruptedWarned = true;
+
         $unfinished = DeployJournal::findUnfinished(self::journalDir(), $currentRunId);
 
         if ($unfinished === []) {
