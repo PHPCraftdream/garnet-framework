@@ -185,7 +185,19 @@ final class GarnetDeployDiffCommand {
             $opts = self::parseArgs($args);
             self::doRun($opts);
         } catch (Throwable $e) {
-            fwrite(STDERR, "\n✖ " . (new ReflectionClass($e))->getShortName() . ': ' . $e->getMessage() . "\n\n");
+            $short = (new ReflectionClass($e))->getShortName();
+
+            // Закрыть журнал прежде, чем уйти с ошибкой. Признак прерванного
+            // прогона — отсутствие финальной строки, и он должен означать
+            // «прибили на полпути», а не «команда честно отказалась на
+            // первом шаге». Пока этого не было, предупреждение о партиальном
+            // деплое печаталось после каждого «не выбраны коммиты» — и
+            // переставало читаться ровно к тому разу, когда оно правда.
+            if (self::$journal !== null) {
+                self::$journal->finish(1, 'error: ' . $short . ': ' . $e->getMessage());
+            }
+
+            fwrite(STDERR, "\n✖ " . $short . ': ' . $e->getMessage() . "\n\n");
 
             exit(1);
         }
@@ -320,9 +332,20 @@ final class GarnetDeployDiffCommand {
                 }
                 $opts['after'] = $remoteSha;
                 echo "  using remote deploy-sha: --after={$remoteSha} (from {$layout['runtime_dir']}/" . self::DEPLOY_SHA_FILE . ")\n";
+                $autoResumed = true;
             }
         }
         $shas = self::buildShaList($opts);
+
+        // Хост уже на HEAD — это не ошибка, а самый обычный исход: «нечего
+        // выкладывать». Раньше он печатался тем же красным исключением, что
+        // и «ты не указал селектор», и приучал не читать ошибки этой команды.
+        if (empty($shas) && ($autoResumed ?? false)) {
+            echo "\nНечего выкладывать: хост на том же коммите, что и локальный HEAD.\n";
+            $journal->finish(0, 'nothing to ship — host already at HEAD');
+
+            exit(0);
+        }
 
         if (empty($shas)) {
             self::fail('no commits selected. Pass --since=DATE / --from=SHA / --after=SHA / --range=A..B / --commit=SHA / --branch=NAME, or seed the remote deploy-sha marker. Run `php garnet deploy:diff:help`.');

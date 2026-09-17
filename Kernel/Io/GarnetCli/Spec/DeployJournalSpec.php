@@ -160,6 +160,22 @@ describe('DeployJournal', function (): void {
                 @rmdir($dir);
             });
 
+        it('не считает прерванным прогон, который честно завершился с ошибкой — иначе '
+            . 'предупреждение о партиальном деплое печатается после каждого отказа '
+            . 'на первом шаге и перестаёт читаться', function (): void {
+                $dir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'garnet_journal_' . bin2hex(random_bytes(4));
+                $run = new DeployJournal($dir, 'deploy:diff');
+                $run->finish(1, 'error: RuntimeException: no commits selected');
+
+                expect(DeployJournal::findUnfinished($dir))->toBe([]);
+
+                $runs = DeployJournal::readRuns($dir);
+                expect($runs[0]['ended'])->toBe(true);
+
+                @unlink($dir . DIRECTORY_SEPARATOR . date('Y-m-d') . '.log');
+                @rmdir($dir);
+            });
+
         it('closes the matching run id when two runs interleave, not merely the latest header', function (): void {
             $dir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'garnet_journal_' . bin2hex(random_bytes(4));
             $a = new DeployJournal($dir, 'deploy:diff');
