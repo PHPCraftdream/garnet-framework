@@ -329,10 +329,37 @@ class NamedLock {
                 // is gone and control falls through to a real GET_LOCK.
                 static::release($name);
             } else {
-                $existing['count']++;
-                static::$owners[$name] = $existing;
+                // Confirm the lock still belongs to this connection before
+                // trusting local reentrant state.
+                try {
+                    static::drainLink($existing['link']);
+                    $ownerRows = $existing['link']->query(
+                        'SELECT CONNECTION_ID() AS connection_id, IS_USED_LOCK(?) AS owner_id',
+                        [$name],
+                    );
+                } catch (DbException $e) {
+                    if (!static::isConnectionGoneException($e)) {
+                        throw $e;
+                    }
 
-                return true;
+                    static::reset();
+                    $ownerRows = [];
+                }
+
+                $ownerRow = is_array($ownerRows) ? ($ownerRows[0] ?? null) : null;
+                $sameConnection = is_array($ownerRow)
+                    && (string)($ownerRow['connection_id'] ?? '') !== ''
+                    && (string)($ownerRow['connection_id'] ?? '') === (string)($ownerRow['owner_id'] ?? '');
+
+                if ($sameConnection) {
+                    $existing['count']++;
+                    static::$owners[$name] = $existing;
+
+                    return true;
+                }
+
+                // Local state is stale; fall through to a real GET_LOCK.
+                unset(static::$owners[$name]);
             }
         }
 

@@ -170,6 +170,37 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link\Spec\NamedLock {
                 $verifyLink->query('SELECT RELEASE_LOCK(?)', [$lockName]);
             });
 
+            it('does not report stale reentrant ownership after another connection takes the lock', function () use (&$dbAvailable): void {
+                if (!$dbAvailable) {
+                    return;
+                }
+
+                $lockName = 'test_named_lock_stale_reentrant';
+                NamedLock::release($lockName);
+                $pool = DbPool::get();
+
+                expect(NamedLock::tryAcquire($lockName))->toBe(true);
+
+                $sharedProp = new ReflectionProperty(NamedLock::class, 'sharedLink');
+                $sharedLink = $sharedProp->getValue();
+                $idRows = $sharedLink->query('SELECT CONNECTION_ID() AS id', []);
+                $connId = (int)($idRows[0]['id'] ?? 0);
+                expect($connId)->toBeGreaterThan(0);
+
+                $killer = $pool->newLink();
+                $killer->query("KILL CONNECTION {$connId}", []);
+                usleep(100000);
+
+                $competitor = $pool->newLink();
+                $competitorRows = $competitor->query('SELECT GET_LOCK(?, 0) AS lk', [$lockName]);
+                expect((int)($competitorRows[0]['lk'] ?? null))->toBe(1);
+
+                // Stale local ownership must not become a false reentrant success.
+                expect(NamedLock::tryAcquire($lockName))->toBe(false);
+
+                $competitor->query('SELECT RELEASE_LOCK(?)', [$lockName]);
+            });
+
             it('survives the full compound scenario: busy-link acquire, natural death, benign release, clean re-acquire', function () use (&$dbAvailable): void {
                 if (!$dbAvailable) {
                     return;
