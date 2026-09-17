@@ -41,4 +41,10 @@ interface IDbPool {
     public function pollFinishAll(): void;
 
     public function getLinksCount(): int;
+
+    /**
+     * Сколько запросов пул отправил с начала процесса. Монотонный
+     * счётчик: стоимость одного запроса — это разница двух чтений.
+     */
+    public function getQueryCount(): int;
 }

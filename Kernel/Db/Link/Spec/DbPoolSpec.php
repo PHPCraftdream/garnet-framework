@@ -3,6 +3,7 @@
 namespace PHPCraftdream\Garnet\Kernel\Db\Link\Spec {
     use PHPCraftdream\Garnet\Kernel\Db\Link\DbPool;
     use ReflectionClass;
+    use Throwable;
 
     // Simple test stub for IDbMySQLiLink
     class MockDbLink {
@@ -78,6 +79,26 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link\Spec {
                 $linksProp->setValue($pool, [new MockDbLink(), new MockDbLink()]);
 
                 expect($pool->getLinksCount())->toBe(2);
+            });
+        });
+
+        describe('getQueryCount()', function (): void {
+            it('на свежем пуле равен нулю', function (): void {
+                expect(DbPool::get()->getQueryCount())->toBe(0);
+            });
+
+            it('растёт на единицу за запрос — даже если тот упал на соединении', function (): void {
+                $pool = DbPool::get();
+
+                try {
+                    $pool->query('SELECT 1', []);
+                } catch (Throwable) {
+                    // В юнит-прогоне базы может не быть вовсе. Нас здесь
+                    // интересует счётчик, а не результат запроса: стоимость
+                    // запроса пул уже составил, чем бы тот ни кончился.
+                }
+
+                expect($pool->getQueryCount())->toBe(1);
             });
         });
 

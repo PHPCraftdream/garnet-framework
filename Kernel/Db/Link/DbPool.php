@@ -35,7 +35,30 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
          */
         protected static array $closeAllHooks = [];
 
+        /**
+         * Сколько запросов прошло через пул за время жизни процесса.
+         *
+         * Монотонный, никогда не сбрасывается — в долгоживущем воркере
+         * (php-fpm, `php -S`) сброс на границе запроса означал бы, что
+         * значение зависит от того, кто и когда его обнулил. Считать
+         * стоимость одного запроса полагается разницей двух чтений; так и
+         * делает IoRunWeb, отдавая её заголовком в тестовом контуре.
+         *
+         * Считается каждый запрос, который пул ВЗЯЛСЯ выполнять, —
+         * синхронный и асинхронный одинаково; неудачный (упавший на
+         * соединении) тоже, потому что стоимость запроса он уже составил.
+         * Запрос, выполненный в обход пула (прямо на IDbMySQLiLink), сюда
+         * не попадёт: счётчик честно называется счётчиком пула, а не
+         * сервера.
+         */
+        protected int $queryCount = 0;
+
         protected function __construct() {
+        }
+
+        /** Запросов, отправленных пулом с начала процесса. */
+        public function getQueryCount(): int {
+            return $this->queryCount;
         }
 
         /**
@@ -292,6 +315,8 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
          * @throws DbException
          */
         public function queryAsync(string $sql, array $args = [], ?callable $callBack = null): IDbMySQLiLink {
+            $this->queryCount++;
+
             $link = $this->getLink();
 
             // mysqli has no async prepared-statement execution (MYSQLI_ASYNC
@@ -312,6 +337,8 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Link {
          * @throws DbException
          */
         public function query(string $sql, array $args = []): array|int|string|bool {
+            $this->queryCount++;
+
             return $this->getLink()->query($sql, $args);
         }
 

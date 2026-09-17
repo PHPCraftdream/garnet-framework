@@ -89,6 +89,10 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query\Spec {
         public function getLinksCount(): int {
             return 0;
         }
+
+        public function getQueryCount(): int {
+            return count($this->queryCalls);
+        }
     }
 
     describe('QueryEx', function (): void {

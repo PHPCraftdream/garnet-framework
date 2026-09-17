@@ -43,6 +43,10 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Account {
         public function getLinksCount(): int {
             return 0;
         }
+
+        public function getQueryCount(): int {
+            return count($this->queries);
+        }
     }
 
     function getDbAccountDataTestConfigPath(): string {

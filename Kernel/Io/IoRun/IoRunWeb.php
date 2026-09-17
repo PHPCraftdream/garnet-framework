@@ -3,6 +3,7 @@
 namespace PHPCraftdream\Garnet\Kernel\Io\IoRun {
     use Closure;
     use PHPCraftdream\Garnet\Kernel\Core\Benchmark\BenchmarkLog;
+    use PHPCraftdream\Garnet\Kernel\Core\Env\TestScope;
     use PHPCraftdream\Garnet\Kernel\Core\Event\Event;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Session;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Settings\Settings;
@@ -23,6 +24,9 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IoRun {
     use Throwable;
 
     class IoRunWeb {
+        /** Стоимость запроса в запросах к базе; только в тестовом контуре. */
+        public const QUERY_COUNT_HEADER = 'X-Garnet-Db-Queries';
+
         protected static string $errorLogEnv = Logger::ERROR_LOGGER;
 
         /**
@@ -83,6 +87,37 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IoRun {
 
                 throw new IoException($message);
             }
+        }
+
+        /**
+         * Сколько запросов к базе стоил этот запрос — заголовком, и только
+         * в авторизованном тестовом контуре.
+         *
+         * Зачем вообще: проверки стоимости запросов до этого мерили
+         * глобальный счётчик MySQL `Questions` до и после HTTP-вызова.
+         * Счётчик общий на сервер, а прогон идёт параллельными воркерами по
+         * одной базе — в замер попадали запросы соседних проверок. На
+         * боевом прогоне это дало +2483 запроса там, где эталон 94:
+         * проверка отрапортовала об N+1-регрессии, которой не было.
+         * Сложность замера должна лежать на том, кто знает правду о
+         * запросе, — на самом запросе.
+         *
+         * Гейт — {@see TestScope::isActive()}: нужен и секретный файл на
+         * сервере, и заголовок с тем же токеном. Без этого заголовок не
+         * появляется никогда, в том числе на боевом трафике.
+         *
+         * @param ResponseInterface $response
+         * @param int $queriesAtStart
+         * @return ResponseInterface
+         */
+        protected static function patchQueryCountHeader(ResponseInterface $response, int $queriesAtStart): ResponseInterface {
+            if (!TestScope::isActive()) {
+                return $response;
+            }
+
+            $spent = DbPool::get()->getQueryCount() - $queriesAtStart;
+
+            return $response->withHeader(self::QUERY_COUNT_HEADER, (string)$spent);
         }
 
         /**
@@ -167,6 +202,8 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IoRun {
             Closure $init,
             Closure $errorCallBack,
         ): void {
+            $queriesAtStart = DbPool::get()->getQueryCount();
+
             $session = static::getSession();
 
             BenchmarkLog::log('read_session');
@@ -198,6 +235,8 @@ namespace PHPCraftdream\Garnet\Kernel\Io\IoRun {
             BenchmarkLog::log('response_ready');
 
             static::flushAppData();
+
+            $response = static::patchQueryCountHeader($response, $queriesAtStart);
 
             // Drain async writes BEFORE releasing the response to the
             // client. Session/settings writes use exAsync (fire-and-forget)
