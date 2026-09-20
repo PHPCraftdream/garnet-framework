@@ -9,6 +9,17 @@ describe('HtmlMinify', function (): void {
             $minifier2 = HtmlMinify::get();
             expect($minifier1)->toBe($minifier2);
         });
+
+        it('does not leak a previous call\'s output into the next one (garnet-app-slotbook D-241: batch-built reminder emails glued together)', function (): void {
+            $minifier = HtmlMinify::get();
+
+            $first = $minifier->minify('<p>first email, recipient A</p>');
+            $second = $minifier->minify('<p>second email, recipient B</p>');
+
+            expect($first)->toContain('recipient A');
+            expect($second)->toContain('recipient B');
+            expect($second)->not->toContain('recipient A');
+        });
     });
 
     describe('minify()', function (): void {

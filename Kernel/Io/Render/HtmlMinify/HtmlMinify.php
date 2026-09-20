@@ -85,6 +85,13 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Render\HtmlMinify {
          * @return string
          */
         public function minify(string $html): string {
+            // get() hands out a shared singleton, and $output/$build are
+            // instance state — without resetting them here, a second call
+            // on the same instance appends to (and returns) the PREVIOUS
+            // call's output instead of starting fresh.
+            $this->output = '';
+            $this->build = [];
+
             $rest = $html;
 
             while (!empty($rest)) {
