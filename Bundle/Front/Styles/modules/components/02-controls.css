@@ -19,6 +19,15 @@
   transition: all 0.15s ease;
 
   &:active { @apply translate-y-px; }
+
+  /* D-251: a native `disabled` button already refuses clicks, but this
+     class gave it no visual sign of that — same cursor-pointer and full
+     opacity as an active button, so a person reads "disabled" as "broken,
+     did nothing". */
+  &:disabled {
+    @apply opacity-50 cursor-not-allowed;
+    &:active { transform: none; }
+  }
 }
 
 .btn-primary {
@@ -62,6 +71,16 @@
 .btn-outline-info {
   @apply border-cyan-300 text-cyan-600 bg-transparent;
   &:hover { @apply bg-cyan-600 text-white border-cyan-600; }
+}
+
+/* D-251: SendButton's `variant="outline-warning"` rendered this class name
+   with no rule behind it at all — a plain unstyled fallback to `.btn`,
+   indistinguishable from a styled button either enabled or disabled. */
+.btn-outline-warning {
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+  @apply bg-transparent;
+  &:hover:not(:disabled) { background-color: var(--color-warning); @apply text-white; }
 }
 
 .btn-sm {
