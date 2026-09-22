@@ -1,11 +1,24 @@
 import * as React from 'react';
-import {useState, useMemo} from 'react';
+import {useState, useMemo, useImperativeHandle, forwardRef} from 'react';
 import {usePagination, PageResponse} from '../../../hooks/data/usePagination';
 import Pagination from '../../Layout/Paging/Pagination';
 import {GlobalRenders, GridConfig} from './types';
 import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
 
 type RowRenders<T> = Partial<Record<string, (row: T) => React.ReactNode>>;
+
+/**
+ * Imperative handle for patching/refreshing a mounted grid from the parent —
+ * e.g. after a row action (toggle a flag, adjust a balance) succeeds and the
+ * caller wants to reflect the new value without jumping back to page 1 the
+ * way a `params` change would.
+ */
+export interface AdminGridHandle<T> {
+    /** Patch the currently-loaded page in place — does not refetch. */
+    setItems: (updater: T[] | ((prev: T[]) => T[])) => void;
+    /** Refetch the current page from the server (e.g. after a row was deleted server-side). */
+    refresh: () => void;
+}
 
 export interface AdminGridProps<T> {
     /** POST endpoint returning a PageResponse<T> for {page, perPage, query, sortField, sortDir, ...extraParams}. */
@@ -36,7 +49,10 @@ function getField(row: unknown, field: string): unknown {
     return (row as Record<string, unknown>)[field];
 }
 
-export function AdminGrid<T>({pageUrl, initialData, config, rowKey, renders = {}, globalRenders = {}, emptyMessage, expandRenderer, expandable, onRowClick, rowTestId, extraParams}: AdminGridProps<T>) {
+function AdminGridInner<T>(
+    {pageUrl, initialData, config, rowKey, renders = {}, globalRenders = {}, emptyMessage, expandRenderer, expandable, onRowClick, rowTestId, extraParams}: AdminGridProps<T>,
+    ref: React.ForwardedRef<AdminGridHandle<T>>,
+) {
     const [query,     setQuery]     = useState('');
     const [sortField, setSortField] = useState<string | null>(null);
     const [sortDir,   setSortDir]   = useState<SortDir>('asc');
@@ -50,8 +66,10 @@ export function AdminGrid<T>({pageUrl, initialData, config, rowKey, renders = {}
         [query, sortField, sortDir, extraParams],
     );
 
-    const {items: paged, page: safePage, totalPages: pageCount, total, loading, goToPage, perPage: pageSize, setPerPage} =
+    const {items: paged, setItems, page: safePage, totalPages: pageCount, total, loading, goToPage, perPage: pageSize, setPerPage, refresh} =
         usePagination<T>({url: pageUrl, initialData: initialData ?? undefined, params});
+
+    useImperativeHandle(ref, () => ({setItems, refresh}), [setItems, refresh]);
 
     const handleSort = (key: string) => {
         if (!config.sortFields.includes(key)) return;
@@ -188,3 +206,7 @@ export function AdminGrid<T>({pageUrl, initialData, config, rowKey, renders = {}
         </>
     );
 }
+
+export const AdminGrid = forwardRef(AdminGridInner) as <T>(
+    props: AdminGridProps<T> & {ref?: React.ForwardedRef<AdminGridHandle<T>>},
+) => ReturnType<typeof AdminGridInner>;

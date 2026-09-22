@@ -1,4 +1,4 @@
-import {useState, useCallback, useRef, useEffect} from 'react';
+import {useState, useCallback, useRef, useEffect, Dispatch, SetStateAction} from 'react';
 import {sendPost} from '@common/Api/Send/sendPost';
 import {usePageSize} from '@common/hooks/data/usePageSize';
 
@@ -33,6 +33,8 @@ export interface UsePaginationOptions<T> {
 
 export interface UsePaginationResult<T> {
     items: T[];
+    /** Patch the current page in place (e.g. after a row mutation succeeds) — does not refetch. */
+    setItems: Dispatch<SetStateAction<T[]>>;
     page: number;
     perPage: number;
     totalPages: number;
@@ -137,5 +139,5 @@ export function usePagination<T = Record<string, unknown>>(options: UsePaginatio
         fetchPage(page);
     }, [fetchPage, page]);
 
-    return {items, page, perPage, totalPages, total, loading, goToPage, setPerPage, nextPage, prevPage, refresh};
+    return {items, setItems, page, perPage, totalPages, total, loading, goToPage, setPerPage, nextPage, prevPage, refresh};
 }
