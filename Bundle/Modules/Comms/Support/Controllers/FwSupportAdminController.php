@@ -2,6 +2,7 @@
 
 namespace PHPCraftdream\Garnet\Bundle\Modules\Comms\Support\Controllers {
     use Aura\SqlQuery\Common\SelectInterface;
+    use PHPCraftdream\Garnet\Bundle\Support\Utils\PaginationHelper;
     use PHPCraftdream\Garnet\Kernel\Core\Runtime\FrameworkController;
     use PHPCraftdream\Garnet\Kernel\Db\Entity\Account\Account;
     use PHPCraftdream\Garnet\Kernel\Db\Tables\DbTable;
@@ -193,11 +194,72 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Comms\Support\Controllers {
             unset($msg);
         }
 
-        protected static function fetchTickets(): array {
-            $tickets = static::ticketsTable()->selectAll(function (SelectInterface $q): void {
-                $q->orderBy(['updated_at DESC']);
-                $q->limit(200);
-            });
+        protected const TICKET_SEARCH_FIELDS = ['subject'];
+
+        protected const TICKET_SORT_FIELDS = ['id', 'status', 'created_at', 'updated_at'];
+
+        protected const ASSIGNEE_UNASSIGNED = '__none__';
+
+        /**
+         * @param array<string, mixed> $filters status?, accountId?, assigneeId?
+         *   (int, or self::ASSIGNEE_UNASSIGNED), dateField? (created_at|updated_at),
+         *   dateFrom?, dateTo? (unix ts)
+         * @return array<string, mixed> PageResponse shape
+         */
+        protected static function fetchTicketsPage(
+            int $page,
+            int $perPage,
+            string $query = '',
+            ?string $sortField = null,
+            string $sortDir = 'asc',
+            array $filters = [],
+        ): array {
+            $pageData = PaginationHelper::fetchPage(
+                static::ticketsTable(),
+                $page,
+                $perPage,
+                static function (SelectInterface $q) use ($filters, $query, $sortField, $sortDir): void {
+                    if (!empty($filters['status'])) {
+                        $q->where('status = ?', [$filters['status']]);
+                    }
+
+                    if (!empty($filters['accountId'])) {
+                        $q->where('account_id = ?', [(int)$filters['accountId']]);
+                    }
+
+                    if (isset($filters['assigneeId']) && $filters['assigneeId'] === self::ASSIGNEE_UNASSIGNED) {
+                        $q->where('assignee_id IS NULL');
+                    } elseif (!empty($filters['assigneeId'])) {
+                        $q->where('assignee_id = ?', [(int)$filters['assigneeId']]);
+                    }
+                    $dateField = ($filters['dateField'] ?? '') === 'created_at' ? 'created_at' : 'updated_at';
+
+                    if (!empty($filters['dateFrom'])) {
+                        $q->where("{$dateField} >= ?", [(int)$filters['dateFrom']]);
+                    }
+
+                    if (!empty($filters['dateTo'])) {
+                        $q->where("{$dateField} <= ?", [(int)$filters['dateTo']]);
+                    }
+                    PaginationHelper::applySearchAndSort(
+                        $q, $query, self::TICKET_SEARCH_FIELDS, $sortField, $sortDir, self::TICKET_SORT_FIELDS, 'updated_at DESC',
+                    );
+                },
+            );
+
+            $pageData->pageItems = static::hydrateTickets($pageData->pageItems);
+
+            return PaginationHelper::toPageResponse($pageData);
+        }
+
+        /**
+         * @param array<int, array<string, mixed>> $tickets
+         * @return array<int, array<string, mixed>>
+         */
+        protected static function hydrateTickets(array $tickets): array {
+            if ($tickets === []) {
+                return $tickets;
+            }
 
             // Collect account IDs (ticket owners) and assignee IDs
             $accountIds = array_unique(array_filter(array_column($tickets, 'account_id')));
@@ -242,6 +304,92 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Comms\Support\Controllers {
             static::enrichWithAttachmentCounts($tickets);
 
             return $tickets;
+        }
+
+        /**
+         * Status pill counts — true global counts (GROUP BY), not just
+         * among whatever page happens to be loaded.
+         *
+         * @return array<string, int>
+         */
+        protected static function fetchTicketStatusCounts(): array {
+            $rows = static::ticketsTable()->selectAll(static function (SelectInterface $q): void {
+                $q->resetCols();
+                $q->cols(['status', 'COUNT(*) AS cnt']);
+                $q->groupBy(['status']);
+            });
+
+            $counts = [];
+
+            foreach ($rows as $row) {
+                $counts[(string)$row['status']] = (int)$row['cnt'];
+            }
+
+            return $counts;
+        }
+
+        /**
+         * Combobox options for the ticket-owner/assignee filters — distinct
+         * across the whole table, not just the currently loaded page.
+         *
+         * @return array{users: array<int, array{value: string, label: string}>, assignees: array<int, array{value: string, label: string}>, hasUnassigned: bool}
+         */
+        protected static function fetchTicketsFilterOptions(): array {
+            $accountIds = array_column(static::ticketsTable()->selectAll(static function (SelectInterface $q): void {
+                $q->resetCols();
+                $q->cols(['account_id']);
+                $q->groupBy(['account_id']);
+            }), 'account_id');
+
+            $assigneeRows = static::ticketsTable()->selectAll(static function (SelectInterface $q): void {
+                $q->resetCols();
+                $q->cols(['assignee_id']);
+                $q->groupBy(['assignee_id']);
+            });
+            $hasUnassigned = false;
+            $assigneeIds = [];
+
+            foreach ($assigneeRows as $row) {
+                if (empty($row['assignee_id'])) {
+                    $hasUnassigned = true;
+                } else {
+                    $assigneeIds[] = (int)$row['assignee_id'];
+                }
+            }
+
+            $allIds = array_unique(array_map('intval', array_merge($accountIds, $assigneeIds)));
+            $accounts = [];
+
+            if (!empty($allIds)) {
+                $accs = Account::getAccounts(
+                    selectCallback: static function (SelectInterface $select) use ($allIds): void {
+                        $select->resetCols();
+                        $select->cols(['id', 'login', 'name']);
+                        $select->where('id IN (?)', [$allIds]);
+                    },
+                );
+
+                foreach ($accs as $a) {
+                    $accounts[(int)$a['id']] = $a;
+                }
+            }
+
+            $label = static fn (int $id): string => $accounts[$id]['name'] ?? $accounts[$id]['login'] ?? "#{$id}";
+
+            $users = [];
+
+            foreach (array_unique(array_map('intval', $accountIds)) as $id) {
+                if ($id > 0) {
+                    $users[] = ['value' => (string)$id, 'label' => $label($id)];
+                }
+            }
+            $assignees = [];
+
+            foreach (array_unique($assigneeIds) as $id) {
+                $assignees[] = ['value' => (string)$id, 'label' => $label($id)];
+            }
+
+            return ['users' => $users, 'assignees' => $assignees, 'hasUnassigned' => $hasUnassigned];
         }
 
         /**
