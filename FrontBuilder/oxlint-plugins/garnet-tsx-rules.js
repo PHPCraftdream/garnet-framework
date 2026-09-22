@@ -22,10 +22,12 @@ const oneExportPerComponent = {
         return {
             Program(node) {
                 let count = 0;
+                const namedValueExports = new Set();
+                let defaultExportStmt = null;
 
                 for (const stmt of node.body) {
                     if (stmt.type === 'ExportDefaultDeclaration') {
-                        count++;
+                        defaultExportStmt = stmt;
                         continue;
                     }
 
@@ -42,9 +44,17 @@ const oneExportPerComponent = {
                             continue;
                         }
                         if (stmt.declaration.type === 'VariableDeclaration') {
-                            count += stmt.declaration.declarations.length;
+                            for (const decl of stmt.declaration.declarations) {
+                                count++;
+                                if (decl.id.type === 'Identifier') {
+                                    namedValueExports.add(decl.id.name);
+                                }
+                            }
                         } else {
                             count++;
+                            if (stmt.declaration.id) {
+                                namedValueExports.add(stmt.declaration.id.name);
+                            }
                         }
                         continue;
                     }
@@ -53,6 +63,19 @@ const oneExportPerComponent = {
                         if (spec.exportKind === 'type') {
                             continue;
                         }
+                        count++;
+                        namedValueExports.add(spec.exported.name);
+                    }
+                }
+
+                // `export default Foo;` referencing an identifier that's
+                // already named-exported is the same component exported two
+                // ways for caller convenience, not a second thing this file
+                // does — don't double-count it.
+                if (defaultExportStmt) {
+                    const decl = defaultExportStmt.declaration;
+                    const isSameAsNamed = decl.type === 'Identifier' && namedValueExports.has(decl.name);
+                    if (!isSameAsNamed) {
                         count++;
                     }
                 }

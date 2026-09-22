@@ -26,6 +26,9 @@ try {
             },
             // Non-.tsx files are out of scope for this rule.
             {code: 'export const a = 1;\nexport const b = 2;', filename: 'utils.ts'},
+            // A named export re-exported as default for caller convenience
+            // is the same component, not a second export.
+            {code: 'export const Foo = () => <div />;\nexport default Foo;', filename: 'Foo.tsx'},
         ],
         invalid: [
             {
@@ -35,6 +38,13 @@ try {
             },
             {
                 code: 'export function Foo() { return <div />; }\nexport function helper() { return 1; }',
+                filename: 'Foo.tsx',
+                errors: 1,
+            },
+            // Default-exporting a DIFFERENT identifier than the named
+            // export is genuinely two things, not the same-as-default case.
+            {
+                code: 'export const Foo = () => <div />;\nfunction Bar() { return null; }\nexport default Bar;',
                 filename: 'Foo.tsx',
                 errors: 1,
             },

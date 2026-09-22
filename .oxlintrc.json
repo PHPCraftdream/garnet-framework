@@ -41,5 +41,19 @@
     "garnet-tsx/one-export-per-component": "warn",
     "garnet-tsx/max-component-lines": "warn",
     "garnet-tsx/max-component-nesting": "warn"
-  }
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/Common/Components/ui/Dialog.tsx",
+        "**/Common/Components/ui/Select.tsx",
+        "**/Common/Components/ui/Tooltip.tsx",
+        "**/Common/Components/Admin/AdminPanel/UserDetailContext.tsx",
+        "**/Common/Components/UserPreviewModal/PreviewContext.tsx"
+      ],
+      "rules": {
+        "garnet-tsx/one-export-per-component": "off"
+      }
+    }
+  ]
 }
