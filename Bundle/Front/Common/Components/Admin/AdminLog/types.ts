@@ -66,3 +66,27 @@ export interface MailLogEntry {
     error_log: string | null;
     created_at: number;
 }
+
+// ── Filter-dropdown option lists — server-computed once, independent of
+//    the current page/filters, so a combobox can offer every possible
+//    value without shipping the whole (unbounded) log table. ──
+
+export interface ActionsFilterOptions {
+    actors: {id: number; name: string}[];
+    actions: string[];
+}
+
+export interface MailsFilterOptions {
+    accounts: {id: number; name: string}[];
+    hasNoAccount: boolean;
+    types: string[];
+}
+
+export interface CronFilterOptions {
+    taskNames: string[];
+}
+
+export interface JsErrorsFilterOptions {
+    accounts: {id: number; name: string}[];
+    files: string[];
+}

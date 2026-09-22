@@ -1,6 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace PHPCraftdream\Garnet\Bundle\Support\Utils {
+    use Aura\SqlQuery\Common\SelectInterface;
     use Closure;
     use PHPCraftdream\Garnet\Kernel\Db\Tables\DbTable;
     use PHPCraftdream\Garnet\Kernel\Db\Tables\PageData;
@@ -77,6 +78,62 @@ namespace PHPCraftdream\Garnet\Bundle\Support\Utils {
             $pageData->pageItemsCount = count($items);
 
             return $pageData;
+        }
+
+        /**
+         * Apply a generic OR-of-LIKE search across `$searchFields` and an
+         * ORDER BY validated against `$sortFields` (unknown/absent sortField
+         * falls back to `$defaultOrder`) to a query — the same two knobs
+         * every AdminGrid-backed list needs, so every controller doesn't
+         * reinvent them.
+         *
+         * @param string[] $searchFields
+         * @param string[] $sortFields
+         */
+        public static function applySearchAndSort(
+            SelectInterface $q,
+            string $query,
+            array $searchFields,
+            ?string $sortField,
+            string $sortDir,
+            array $sortFields,
+            string $defaultOrder = 'id DESC',
+        ): void {
+            if ($query !== '' && !empty($searchFields)) {
+                $conds = [];
+                $binds = [];
+
+                foreach ($searchFields as $i => $field) {
+                    $conds[] = "{$field} LIKE :search_{$i}";
+                    $binds["search_{$i}"] = '%' . $query . '%';
+                }
+                $q->where('(' . implode(' OR ', $conds) . ')', $binds);
+            }
+
+            if ($sortField !== null && in_array($sortField, $sortFields, true)) {
+                $dir = strtolower($sortDir) === 'desc' ? 'DESC' : 'ASC';
+                $q->orderBy(["{$sortField} {$dir}"]);
+            } else {
+                $q->orderBy([$defaultOrder]);
+            }
+        }
+
+        /**
+         * Read `query`/`sortField`/`sortDir` from POST — the trio every
+         * AdminGrid-backed list reads alongside page/perPage.
+         *
+         * @return array{query: string, sortField: ?string, sortDir: string}
+         */
+        public static function readSearchSortParams(IGlobalReqParams $globals): array {
+            $query = trim((string)$globals->readPostValue('query', ''));
+            $sortFieldRaw = trim((string)$globals->readPostValue('sortField', ''));
+            $sortDir = (string)$globals->readPostValue('sortDir', 'asc');
+
+            return [
+                'query' => $query,
+                'sortField' => $sortFieldRaw !== '' ? $sortFieldRaw : null,
+                'sortDir' => strtolower($sortDir) === 'desc' ? 'desc' : 'asc',
+            ];
         }
 
         /**

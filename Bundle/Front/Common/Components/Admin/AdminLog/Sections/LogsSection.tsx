@@ -1,7 +1,8 @@
 import * as React from 'react';
 import {useState, useMemo} from 'react';
-import {ActionLog, GridConfig} from '../types';
+import {ActionLog, ActionsFilterOptions, GridConfig} from '../types';
 import {AdminLogGrid} from '../AdminLogGrid';
+import {PageResponse} from '@common/hooks/data/usePagination';
 import {AdminUserLink} from '../AdminUserLink';
 import {Combobox} from '@common/Components/ui/Combobox';
 import {DateInput} from '@common/Components/ui/DateInput';
@@ -12,75 +13,28 @@ import {ActionLogDetail} from '../details/ActionLogDetail';
 import {actionLabel} from './actionLabel';
 
 interface Props {
-    logs: ActionLog[];
+    pageUrl: string;
+    initialData: PageResponse<ActionLog> | null;
     config: GridConfig;
+    filterOptions: ActionsFilterOptions;
 }
 
-export const LogsSection: React.FC<Props> = ({logs, config}) => {
+export const LogsSection: React.FC<Props> = ({pageUrl, initialData, config, filterOptions}) => {
     const [selected, setSelected] = useState<ActionLog | null>(null);
     const [actorId, setActorId] = useState<string>('');
     const [targetId, setTargetId] = useState<string>('');
     const [dateFrom, setDateFrom] = useState<string>('');
     const [dateTo, setDateTo] = useState<string>('');
     const [actionType, setActionType] = useState<string>('');
-    const [actorType, setActorType] = useState<string>('');
 
     const allLabel = t.Admin_Log_Filter_All();
 
-    const actorOptions = useMemo(() => {
-        const map = new Map<string, string>();
-        for (const r of logs) {
-            const id = String(r.actor_id);
-            if (!map.has(id)) map.set(id, r.actor_name || r.actor_login || `#${r.actor_id}`);
-        }
-        const arr = Array.from(map.entries()).map(([value, label]) => ({value, label}));
-        arr.sort((a, b) => a.label.localeCompare(b.label));
-        return [{value: '', label: allLabel}, ...arr];
-    }, [logs, allLabel]);
-
-    const targetOptions = useMemo(() => {
-        const map = new Map<string, string>();
-        for (const r of logs) {
-            const id = String(r.target_id);
-            if (!map.has(id)) map.set(id, r.target_name || r.target_login || `#${r.target_id}`);
-        }
-        const arr = Array.from(map.entries()).map(([value, label]) => ({value, label}));
-        arr.sort((a, b) => a.label.localeCompare(b.label));
-        return [{value: '', label: allLabel}, ...arr];
-    }, [logs, allLabel]);
-
-    const actionOptions = useMemo(() => {
-        const set = new Set<string>();
-        for (const r of logs) {
-            if (r.action) set.add(r.action);
-        }
-        return Array.from(set).toSorted((a, b) => a.localeCompare(b));
-    }, [logs]);
-
-    const actorTypeOptions = useMemo(() => {
-        const set = new Set<string>();
-        for (const r of logs) {
-            if (r.actor_type) set.add(r.actor_type);
-        }
-        return Array.from(set).toSorted((a, b) => a.localeCompare(b));
-    }, [logs]);
-
-    const filteredLogs = useMemo(() => {
-        let res = logs;
-        if (actorId) res = res.filter(r => String(r.actor_id) === actorId);
-        if (targetId) res = res.filter(r => String(r.target_id) === targetId);
-        if (actionType) res = res.filter(r => r.action === actionType);
-        if (actorType) res = res.filter(r => r.actor_type === actorType);
-        if (dateFrom) {
-            const tsFrom = Math.floor(new Date(dateFrom + 'T00:00:00Z').getTime() / 1000);
-            res = res.filter(r => r.created_at >= tsFrom);
-        }
-        if (dateTo) {
-            const tsTo = Math.floor(new Date(dateTo + 'T23:59:59Z').getTime() / 1000);
-            res = res.filter(r => r.created_at <= tsTo);
-        }
-        return res;
-    }, [logs, actorId, targetId, actionType, actorType, dateFrom, dateTo]);
+    // actor and target share the same account pool — the log's own
+    // distinct actor list (fetchFilterOptions) doubles as the target
+    // combobox too, since anyone who ever acted can also be acted upon.
+    const personOptions = useMemo(() => (
+        [{value: '', label: allLabel}, ...filterOptions.actors.map(a => ({value: String(a.id), label: a.name}))]
+    ), [filterOptions.actors, allLabel]);
 
     const resetAll = () => {
         setActorId('');
@@ -88,10 +42,17 @@ export const LogsSection: React.FC<Props> = ({logs, config}) => {
         setDateFrom('');
         setDateTo('');
         setActionType('');
-        setActorType('');
     };
 
-    const hasActiveFilter = !!(actorId || targetId || dateFrom || dateTo || actionType || actorType);
+    const hasActiveFilter = !!(actorId || targetId || dateFrom || dateTo || actionType);
+
+    const extraParams = useMemo(() => ({
+        actorId: actorId ? Number(actorId) : 0,
+        targetId: targetId ? Number(targetId) : 0,
+        action: actionType,
+        dateFrom: dateFrom ? Math.floor(new Date(dateFrom + 'T00:00:00Z').getTime() / 1000) : 0,
+        dateTo: dateTo ? Math.floor(new Date(dateTo + 'T23:59:59Z').getTime() / 1000) : 0,
+    }), [actorId, targetId, actionType, dateFrom, dateTo]);
 
     return (
         <div>
@@ -99,7 +60,7 @@ export const LogsSection: React.FC<Props> = ({logs, config}) => {
                 <div className="filter-cell filter-cell-user">
                     <label>{t.Admin_Log_Filter_Actor()}</label>
                     <Combobox
-                        options={actorOptions}
+                        options={personOptions}
                         value={actorId}
                         onChange={setActorId}
                         placeholder={allLabel}
@@ -111,7 +72,7 @@ export const LogsSection: React.FC<Props> = ({logs, config}) => {
                 <div className="filter-cell filter-cell-user">
                     <label>{t.Admin_Log_Filter_Target()}</label>
                     <Combobox
-                        options={targetOptions}
+                        options={personOptions}
                         value={targetId}
                         onChange={setTargetId}
                         placeholder={allLabel}
@@ -150,20 +111,7 @@ export const LogsSection: React.FC<Props> = ({logs, config}) => {
                         data-test-id="actions-action-filter"
                     >
                         <option value="">{allLabel}</option>
-                        {actionOptions.map(o => <option key={o} value={o}>{actionLabel(o)}</option>)}
-                    </select>
-                </div>
-                <div className="filter-cell">
-                    <label htmlFor="actions-actor-type">{t.Admin_Log_Filter_ActorType()}</label>
-                    <select
-                        id="actions-actor-type"
-                        className="form-select text-sm"
-                        value={actorType}
-                        onChange={e => setActorType(e.target.value)}
-                        data-test-id="actions-actor-type-filter"
-                    >
-                        <option value="">{allLabel}</option>
-                        {actorTypeOptions.map(o => <option key={o} value={o}>{o}</option>)}
+                        {filterOptions.actions.map(o => <option key={o} value={o}>{actionLabel(o)}</option>)}
                     </select>
                 </div>
                 <div className="filter-actions">
@@ -179,12 +127,13 @@ export const LogsSection: React.FC<Props> = ({logs, config}) => {
                             ×
                         </button>
                     )}
-                    <span className="filter-counter">{filteredLogs.length} / {logs.length}</span>
                 </div>
             </div>
             <AdminLogGrid
-                rows={filteredLogs}
+                pageUrl={pageUrl}
+                initialData={initialData}
                 config={config}
+                extraParams={extraParams}
                 rowKey={r => r.id}
                 rowTestId={r => `actions-row-${r.id}`}
                 emptyMessage={t.Admin_Log_Empty()}

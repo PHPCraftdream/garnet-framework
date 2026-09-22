@@ -35,6 +35,10 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Ops\Logging\Spec\LogsController {
             return array_values($this->rows);
         }
 
+        public function getCount(?callable $queryCallback = null): int {
+            return count($this->rows);
+        }
+
         protected static function recipientsTable(): FwMailLogRecipients {
             throw new LogicException('Not used');
         }
@@ -102,13 +106,17 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Ops\Logging\Spec\LogsController {
         return $inst;
     }
 
-    // Expose fetchLogs() as a callable without booting HTTP stack
-    function callFetchLogs(int $limit = 100): array {
+    // Expose fetchLogsPage() as a callable without booting HTTP stack —
+    // returns just the `items` slice, matching what the old fetchLogs()
+    // spec assertions below expect.
+    function callFetchLogs(int $perPage = 100): array {
         // We access via Reflection since it is protected static
         $ref = new ReflectionClass(TestLogsController::class);
-        $method = $ref->getMethod('fetchLogs');
+        $method = $ref->getMethod('fetchLogsPage');
 
-        return $method->invoke(null, $limit);
+        $page = $method->invoke(null, 1, $perPage);
+
+        return $page['items'];
     }
 
     // -----------------------------------------------------------------------

@@ -1,7 +1,8 @@
 import * as React from 'react';
 import {useState, useMemo} from 'react';
-import {CronLogEntry, GridConfig} from '../types';
+import {CronLogEntry, CronFilterOptions, GridConfig} from '../types';
 import {AdminLogGrid} from '../AdminLogGrid';
+import {PageResponse} from '@common/hooks/data/usePagination';
 import {DateInput} from '@common/Components/ui/DateInput';
 import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
 import {formatTs} from '@common/Utils/Time/DateUtils';
@@ -10,7 +11,9 @@ import {CronLogDetail} from '../details/CronLogDetail';
 import {DEFAULT_PAGE_SIZE} from '@common/Utils/Data/pagination';
 
 interface Props {
-    logs: CronLogEntry[];
+    pageUrl: string;
+    initialData: PageResponse<CronLogEntry> | null;
+    filterOptions: CronFilterOptions;
 }
 
 const statusBadge = (status: CronLogEntry['status']): React.ReactNode => {
@@ -33,33 +36,11 @@ const formatDuration = (ms: number): string => {
 
 const truncate = (s: string, n: number): string => (s.length > n ? s.slice(0, n) + '…' : s);
 
-export const CronLogSection: React.FC<Props> = ({logs}) => {
+export const CronLogSection: React.FC<Props> = ({pageUrl, initialData, filterOptions}) => {
     const [selected, setSelected] = useState<CronLogEntry | null>(null);
     const [taskFilter, setTaskFilter] = useState<string>('');
     const [dateFrom, setDateFrom] = useState<string>('');
     const [dateTo, setDateTo] = useState<string>('');
-
-    const taskOptions = useMemo(() => {
-        const set = new Set<string>();
-        for (const r of logs) {
-            if (r.task_name) set.add(r.task_name);
-        }
-        return Array.from(set).toSorted((a, b) => a.localeCompare(b));
-    }, [logs]);
-
-    const filtered = useMemo(() => {
-        let res = logs;
-        if (taskFilter) res = res.filter(r => r.task_name === taskFilter);
-        if (dateFrom) {
-            const tsFrom = Math.floor(new Date(dateFrom + 'T00:00:00Z').getTime() / 1000);
-            res = res.filter(r => r.started_at >= tsFrom);
-        }
-        if (dateTo) {
-            const tsTo = Math.floor(new Date(dateTo + 'T23:59:59Z').getTime() / 1000);
-            res = res.filter(r => r.started_at <= tsTo);
-        }
-        return res;
-    }, [logs, taskFilter, dateFrom, dateTo]);
 
     const resetAll = (): void => {
         setTaskFilter('');
@@ -68,6 +49,12 @@ export const CronLogSection: React.FC<Props> = ({logs}) => {
     };
 
     const hasActiveFilter = !!(taskFilter || dateFrom || dateTo);
+
+    const extraParams = useMemo(() => ({
+        taskName: taskFilter,
+        dateFrom: dateFrom ? Math.floor(new Date(dateFrom + 'T00:00:00Z').getTime() / 1000) : 0,
+        dateTo: dateTo ? Math.floor(new Date(dateTo + 'T23:59:59Z').getTime() / 1000) : 0,
+    }), [taskFilter, dateFrom, dateTo]);
 
     const config: GridConfig = useMemo(() => ({
         columns: [
@@ -81,8 +68,6 @@ export const CronLogSection: React.FC<Props> = ({logs}) => {
         searchFields: ['task_name', 'status', 'output', 'error_message'],
         sortFields: ['id', 'started_at', 'duration_ms', 'task_name', 'status'],
         pageSize: DEFAULT_PAGE_SIZE,
-        subGrids: [],
-        detailViews: [],
     }), []);
 
     return (
@@ -98,7 +83,7 @@ export const CronLogSection: React.FC<Props> = ({logs}) => {
                         data-test-id="cron-task-filter"
                     >
                         <option value="">{t.CronLog_Filter_All()}</option>
-                        {taskOptions.map(name => <option key={name} value={name}>{name}</option>)}
+                        {filterOptions.taskNames.map(name => <option key={name} value={name}>{name}</option>)}
                     </select>
                 </div>
                 <div className="filter-cell">
@@ -134,13 +119,14 @@ export const CronLogSection: React.FC<Props> = ({logs}) => {
                             ×
                         </button>
                     )}
-                    <span className="filter-counter">{filtered.length} / {logs.length}</span>
                 </div>
             </div>
 
             <AdminLogGrid
-                rows={filtered}
+                pageUrl={pageUrl}
+                initialData={initialData}
                 config={config}
+                extraParams={extraParams}
                 rowKey={r => r.id}
                 rowTestId={r => `cron-row-${r.id}`}
                 emptyMessage={t.CronLog_Empty()}

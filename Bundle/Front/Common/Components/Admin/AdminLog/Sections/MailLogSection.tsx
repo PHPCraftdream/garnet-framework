@@ -1,7 +1,8 @@
 import * as React from 'react';
 import {useState, useMemo} from 'react';
-import {MailLogEntry, GridConfig} from '../types';
+import {MailLogEntry, MailsFilterOptions, GridConfig} from '../types';
 import {AdminLogGrid} from '../AdminLogGrid';
+import {PageResponse} from '@common/hooks/data/usePagination';
 import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
 import {formatTs} from '@common/Utils/Time/DateUtils';
 import {LogDetailModal} from '../LogDetailModal';
@@ -10,8 +11,10 @@ import {Combobox} from '@common/Components/ui/Combobox';
 import {AdminUserLink} from '../AdminUserLink';
 
 interface Props {
-    logs: MailLogEntry[];
+    pageUrl: string;
+    initialData: PageResponse<MailLogEntry> | null;
     config: GridConfig;
+    filterOptions: MailsFilterOptions;
 }
 
 const STATUSES = ['sent', 'failed', 'skipped_dev', 'pending'] as const;
@@ -29,67 +32,24 @@ const statusBadge = (status: string): React.ReactNode => {
     return <span className={`badge ${cls[status] ?? 'status-info'}`}>{status}</span>;
 };
 
-export const MailLogSection: React.FC<Props> = ({logs, config}) => {
+export const MailLogSection: React.FC<Props> = ({pageUrl, initialData, config, filterOptions}) => {
     const [statusFilter, setStatusFilter] = useState<MailStatus | 'all'>('all');
     const [userFilter, setUserFilter] = useState<string>('');
     const [typeFilter, setTypeFilter] = useState<string>('');
-    const [subjectFilter, setSubjectFilter] = useState('');
     const [selected, setSelected] = useState<MailLogEntry | null>(null);
 
-    const statusCounts = useMemo(() => {
-        const counts: Partial<Record<MailStatus, number>> = {};
-        for (const log of logs) {
-            if (STATUSES.includes(log.status as MailStatus)) {
-                counts[log.status as MailStatus] = (counts[log.status as MailStatus] || 0) + 1;
-            }
-        }
-        return counts;
-    }, [logs]);
-
     const userOptions = useMemo(() => {
-        const map = new Map<string, string>();
-        let hasNoAccount = false;
-        for (const r of logs) {
-            if (r.account_id === null || r.account_id === undefined) {
-                hasNoAccount = true;
-                continue;
-            }
-            const id = String(r.account_id);
-            if (!map.has(id)) {
-                const label = r.account_name || r.account_login || r.recipient_email || `#${r.account_id}`;
-                map.set(id, label);
-            }
-        }
-        const arr = Array.from(map.entries()).map(([value, label]) => ({value, label}));
-        arr.sort((a, b) => a.label.localeCompare(b.label));
         const out: {value: string; label: string}[] = [{value: '', label: t.Admin_MailLog_Filter_All()}];
-        if (hasNoAccount) out.push({value: NO_ACCOUNT, label: t.Admin_MailLog_Filter_NoAccount()});
-        out.push(...arr);
+        if (filterOptions.hasNoAccount) out.push({value: NO_ACCOUNT, label: t.Admin_MailLog_Filter_NoAccount()});
+        out.push(...filterOptions.accounts.map(a => ({value: String(a.id), label: a.name})));
         return out;
-    }, [logs]);
+    }, [filterOptions]);
 
-    const typeOptions = useMemo(() => {
-        const set = new Set<string>();
-        for (const r of logs) {
-            if (r.mail_type) set.add(r.mail_type);
-        }
-        return Array.from(set).toSorted((a, b) => a.localeCompare(b));
-    }, [logs]);
-
-    const filteredLogs = useMemo(() => {
-        let res = logs;
-        if (statusFilter !== 'all') res = res.filter(l => l.status === statusFilter);
-        if (userFilter) {
-            if (userFilter === NO_ACCOUNT) res = res.filter(l => l.account_id == null);
-            else res = res.filter(l => String(l.account_id ?? '') === userFilter);
-        }
-        if (typeFilter) res = res.filter(l => l.mail_type === typeFilter);
-        if (subjectFilter.trim()) {
-            const q = subjectFilter.trim().toLowerCase();
-            res = res.filter(l => (l.subject ?? '').toLowerCase().includes(q));
-        }
-        return res;
-    }, [logs, statusFilter, userFilter, typeFilter, subjectFilter]);
+    const extraParams = useMemo(() => ({
+        status: statusFilter === 'all' ? '' : statusFilter,
+        accountId: userFilter,
+        mailType: typeFilter,
+    }), [statusFilter, userFilter, typeFilter]);
 
     return (
         <div>
@@ -116,7 +76,7 @@ export const MailLogSection: React.FC<Props> = ({logs, config}) => {
                         data-test-id="mails-type-filter"
                     >
                         <option value="">{t.Admin_MailLog_Filter_All()}</option>
-                        {typeOptions.map(tp => <option key={tp} value={tp}>{tp}</option>)}
+                        {filterOptions.types.map(tp => <option key={tp} value={tp}>{tp}</option>)}
                     </select>
                 </div>
                 <div className="filter-cell">
@@ -129,29 +89,18 @@ export const MailLogSection: React.FC<Props> = ({logs, config}) => {
                         data-test-id="mails-status-filter"
                     >
                         <option value="all">{t.Admin_MailLog_Filter_All()}</option>
-                        {STATUSES.map(s => (statusCounts[s] || 0) > 0 && (
-                            <option key={s} value={s}>{s} ({statusCounts[s]})</option>
-                        ))}
+                        {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                 </div>
-                <div className="filter-cell">
-                    <label htmlFor="mails-subject">{t.Admin_MailLog_Filter_Subject()}</label>
-                    <input
-                        id="mails-subject"
-                        type="text"
-                        className="form-control text-sm"
-                        value={subjectFilter}
-                        onChange={e => setSubjectFilter(e.target.value)}
-                        data-test-id="mails-subject-filter"
-                    />
-                </div>
-                <div className="filter-actions">
-                    <span className="filter-counter">{filteredLogs.length} / {logs.length}</span>
-                </div>
+                {/* Subject text search folded into the grid's own generic
+                    search box — config.searchFields already includes 'subject',
+                    a second dedicated field here would just duplicate it. */}
             </div>
             <AdminLogGrid
-                rows={filteredLogs}
+                pageUrl={pageUrl}
+                initialData={initialData}
                 config={config}
+                extraParams={extraParams}
                 rowKey={r => r.id}
                 rowTestId={r => `mails-row-${r.id}`}
                 emptyMessage={t.Admin_MailLog_Empty()}

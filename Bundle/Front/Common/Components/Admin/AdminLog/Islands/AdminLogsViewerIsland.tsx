@@ -1,8 +1,8 @@
 import * as React from 'react';
-import {useState, useEffect, useCallback, useMemo, lazy, Suspense} from 'react';
-import {sendPost} from '@common/Api/Send/sendPost';
+import {useState, useMemo, lazy, Suspense} from 'react';
 import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
-import {ActionLog, MailLogEntry, CronLogEntry, JsErrorEntry, GridConfig} from '../types';
+import {PageResponse} from '@common/hooks/data/usePagination';
+import {ActionLog, MailLogEntry, CronLogEntry, JsErrorEntry, GridConfig, ActionsFilterOptions, MailsFilterOptions, CronFilterOptions, JsErrorsFilterOptions} from '../types';
 import {LogsSection} from '../Sections/LogsSection';
 import {MailLogSection} from '../Sections/MailLogSection';
 import {AdminRequestLogIsland} from './AdminRequestLogIsland';
@@ -21,14 +21,14 @@ const ALL_TABS: TabId[] = ['actions', 'mails', 'requests', 'errors', 'cron', 'js
 
 interface ActionsBlock {
     gridConfig: GridConfig;
-    logs: ActionLog[];
-    loaded: boolean;
+    payload: PageResponse<ActionLog> | null;
+    filterOptions: ActionsFilterOptions;
 }
 
 interface MailsBlock {
     gridConfig: GridConfig;
-    logs: MailLogEntry[];
-    loaded: boolean;
+    payload: PageResponse<MailLogEntry> | null;
+    filterOptions: MailsFilterOptions;
 }
 
 interface RequestsBlock {
@@ -40,13 +40,13 @@ interface ErrorsBlock {
 }
 
 interface CronBlock {
-    logs: CronLogEntry[];
-    loaded: boolean;
+    payload: PageResponse<CronLogEntry> | null;
+    filterOptions: CronFilterOptions;
 }
 
 interface JsErrorsBlock {
-    logs: JsErrorEntry[];
-    loaded: boolean;
+    payload: PageResponse<JsErrorEntry> | null;
+    filterOptions: JsErrorsFilterOptions;
 }
 
 interface Endpoints {
@@ -105,109 +105,24 @@ const tabLabel = (id: TabId): string => {
     }
 };
 
-interface ActionsResponse {
-    logs: ActionLog[];
-}
-
-interface MailsResponse {
-    logs: MailLogEntry[];
-}
-
-interface CronResponse {
-    logs: CronLogEntry[];
-}
-
-interface JsErrorsResponse {
-    logs: JsErrorEntry[];
-}
-
+/**
+ * Each tab's Section owns its own AdminGrid (fetch-on-mount via
+ * usePagination) — conditionally rendering a tab IS the lazy-load: a tab
+ * visited for the first time mounts with `initialData=null` and fetches
+ * itself, exactly like AdminGrid's `initialData` contract already works
+ * everywhere else. No bespoke loaded/loading state needed here anymore.
+ */
 export const AdminLogsViewerIsland: React.FC<Props> = ({
     initialTab,
     endpoints,
-    actions: initialActions,
-    mails: initialMails,
-    requests: initialRequests,
-    errors: initialErrors,
-    cron: initialCron,
-    jsErrors: initialJsErrors,
+    actions,
+    mails,
+    requests,
+    errors,
+    cron,
+    jsErrors,
 }) => {
     const [tab, setTab] = useState<TabId>(() => readInitialTab(initialTab));
-
-    const [actionsLogs, setActionsLogs] = useState<ActionLog[]>(initialActions.logs);
-    const [actionsLoaded, setActionsLoaded] = useState<boolean>(initialActions.loaded);
-    const [actionsLoading, setActionsLoading] = useState<boolean>(false);
-
-    const [mailsLogs, setMailsLogs] = useState<MailLogEntry[]>(initialMails.logs);
-    const [mailsLoaded, setMailsLoaded] = useState<boolean>(initialMails.loaded);
-    const [mailsLoading, setMailsLoading] = useState<boolean>(false);
-
-    const [cronLogs, setCronLogs] = useState<CronLogEntry[]>(initialCron.logs);
-    const [cronLoaded, setCronLoaded] = useState<boolean>(initialCron.loaded);
-    const [cronLoading, setCronLoading] = useState<boolean>(false);
-
-    const [jsErrorLogs, setJsErrorLogs] = useState<JsErrorEntry[]>(initialJsErrors.logs);
-    const [jsErrorsLoaded, setJsErrorsLoaded] = useState<boolean>(initialJsErrors.loaded);
-    const [jsErrorsLoading, setJsErrorsLoading] = useState<boolean>(false);
-
-    const loadActions = useCallback(async (): Promise<void> => {
-        setActionsLoading(true);
-        try {
-            const res = await sendPost<object, ActionsResponse>(endpoints.actions, {});
-            setActionsLogs(res.logs ?? []);
-            setActionsLoaded(true);
-        } finally {
-            setActionsLoading(false);
-        }
-    }, [endpoints.actions]);
-
-    const loadMails = useCallback(async (): Promise<void> => {
-        setMailsLoading(true);
-        try {
-            const res = await sendPost<object, MailsResponse>(endpoints.mails, {});
-            setMailsLogs(res.logs ?? []);
-            setMailsLoaded(true);
-        } finally {
-            setMailsLoading(false);
-        }
-    }, [endpoints.mails]);
-
-    const loadCron = useCallback(async (): Promise<void> => {
-        setCronLoading(true);
-        try {
-            const res = await sendPost<object, CronResponse>(endpoints.cron, {});
-            setCronLogs(res.logs ?? []);
-            setCronLoaded(true);
-        } finally {
-            setCronLoading(false);
-        }
-    }, [endpoints.cron]);
-
-    const loadJsErrors = useCallback(async (): Promise<void> => {
-        setJsErrorsLoading(true);
-        try {
-            const res = await sendPost<object, JsErrorsResponse>(endpoints['js-errors'], {});
-            setJsErrorLogs(res.logs ?? []);
-            setJsErrorsLoaded(true);
-        } finally {
-            setJsErrorsLoading(false);
-        }
-    }, [endpoints]);
-
-    // Lazy-load on first activation of a not-yet-loaded tab.
-    useEffect(() => {
-        if (tab === 'actions' && !actionsLoaded && !actionsLoading) {
-            void loadActions();
-        }
-        if (tab === 'mails' && !mailsLoaded && !mailsLoading) {
-            void loadMails();
-        }
-        if (tab === 'cron' && !cronLoaded && !cronLoading) {
-            void loadCron();
-        }
-        if (tab === 'js-errors' && !jsErrorsLoaded && !jsErrorsLoading) {
-            void loadJsErrors();
-        }
-    }, [tab, actionsLoaded, actionsLoading, mailsLoaded, mailsLoading, cronLoaded, cronLoading, jsErrorsLoaded, jsErrorsLoading, loadActions, loadMails, loadCron, loadJsErrors]);
 
     const selectTab = (id: TabId): void => {
         setTab(id);
@@ -241,23 +156,23 @@ export const AdminLogsViewerIsland: React.FC<Props> = ({
             </ul>
 
             {tab === 'actions' && (
-                <LogsSection logs={actionsLogs} config={initialActions.gridConfig} />
+                <LogsSection pageUrl={endpoints.actions} initialData={actions.payload} config={actions.gridConfig} filterOptions={actions.filterOptions} />
             )}
             {tab === 'mails' && (
-                <MailLogSection logs={mailsLogs} config={initialMails.gridConfig} />
+                <MailLogSection pageUrl={endpoints.mails} initialData={mails.payload} config={mails.gridConfig} filterOptions={mails.filterOptions} />
             )}
             {tab === 'requests' && (
-                <AdminRequestLogIsland dates={initialRequests.dates} pageUrl={endpoints.requests} />
+                <AdminRequestLogIsland dates={requests.dates} pageUrl={endpoints.requests} />
             )}
             {tab === 'errors' && (
-                <AdminErrorsLogIsland dates={initialErrors.dates} pageUrl={endpoints.errors} />
+                <AdminErrorsLogIsland dates={errors.dates} pageUrl={endpoints.errors} />
             )}
             {tab === 'cron' && (
-                <CronLogSection logs={cronLogs} />
+                <CronLogSection pageUrl={endpoints.cron} initialData={cron.payload} filterOptions={cron.filterOptions} />
             )}
             {tab === 'js-errors' && (
                 <Suspense fallback={null}>
-                    <JsErrorLogSection logs={jsErrorLogs} />
+                    <JsErrorLogSection pageUrl={endpoints['js-errors']} initialData={jsErrors.payload} filterOptions={jsErrors.filterOptions} />
                 </Suspense>
             )}
             </div>

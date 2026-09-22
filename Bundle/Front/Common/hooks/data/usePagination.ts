@@ -13,7 +13,11 @@ export interface PageResponse<T = Record<string, unknown>> {
 export interface UsePaginationOptions<T> {
     /** POST endpoint URL */
     url: string;
-    /** Extra params to send alongside page/perPage */
+    /**
+     * Extra params to send alongside page/perPage. Reactive: a change
+     * (by reference — memoize with useMemo/useState) refetches from page 1
+     * after `debounceMs`, same as a search box or sort-column click.
+     */
     params?: Record<string, unknown>;
     /**
      * Pin the page size, ignoring the user's localStorage preference. Use
@@ -23,6 +27,8 @@ export interface UsePaginationOptions<T> {
     perPage?: number;
     /** SSR initial data — skips fetch on mount when provided */
     initialData?: PageResponse<T>;
+    /** Debounce before a `params` change triggers a refetch. Default 300ms. */
+    debounceMs?: number;
 }
 
 export interface UsePaginationResult<T> {
@@ -40,7 +46,7 @@ export interface UsePaginationResult<T> {
 }
 
 export function usePagination<T = Record<string, unknown>>(options: UsePaginationOptions<T>): UsePaginationResult<T> {
-    const {url, params, perPage: pinnedPerPage, initialData} = options;
+    const {url, params, perPage: pinnedPerPage, initialData, debounceMs = 300} = options;
     const [storedPageSize, setStoredPageSize] = usePageSize();
     const perPage = pinnedPerPage ?? storedPageSize;
 
@@ -57,13 +63,17 @@ export function usePagination<T = Record<string, unknown>>(options: UsePaginatio
         return () => { mountedRef.current = false; };
     }, []);
 
+    // Latest params/perPage via ref — fetchPage must not close over a stale
+    // value just because it wasn't re-created this render.
+    const paramsRef = useRef(params);
+    paramsRef.current = params;
+
     const fetchPage = useCallback(async (targetPage: number, targetPerPage: number = perPage) => {
-        if (loading) return;
         setLoading(true);
         try {
             const resp = await sendPost<{page: number; perPage: number} & Record<string, unknown>, PageResponse<T>>(
                 url,
-                {page: targetPage, perPage: targetPerPage, ...params}
+                {page: targetPage, perPage: targetPerPage, ...paramsRef.current}
             );
             if (!mountedRef.current) return;
             const data = ('data' in resp && resp.data) ? resp.data : resp as unknown as PageResponse<T>;
@@ -78,7 +88,7 @@ export function usePagination<T = Record<string, unknown>>(options: UsePaginatio
                 setLoading(false);
             }
         }
-    }, [url, perPage, params, loading]);
+    }, [url, perPage]);
 
     // Fetch on mount if no initialData
     useEffect(() => {
@@ -88,6 +98,20 @@ export function usePagination<T = Record<string, unknown>>(options: UsePaginatio
         }
         fetchPage(1);
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Reactive params (search query, sort column, filters…) — refetch from
+    // page 1 after a short debounce. Skips the render that just mounted
+    // (that one is covered by the effect above, or by initialData).
+    const isFirstParamsRun = useRef(true);
+    useEffect(() => {
+        if (isFirstParamsRun.current) {
+            isFirstParamsRun.current = false;
+            return;
+        }
+        const handle = setTimeout(() => fetchPage(1), debounceMs);
+        return () => clearTimeout(handle);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [params, debounceMs]);
 
     const goToPage = useCallback((p: number) => {
         if (p < 1 || p > totalPages || p === page) return;

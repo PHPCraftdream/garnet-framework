@@ -5,6 +5,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Ops\Logging\Viewer\Controllers {
     use PHPCraftdream\Garnet\Bundle\Modules\Ops\Logging\Admin\Tables\FwAdminActionLog;
     use PHPCraftdream\Garnet\Bundle\Modules\Ops\Logging\Mail\Tables\FwMailLog;
     use PHPCraftdream\Garnet\Bundle\Support\Utils\HtmlLayout;
+    use PHPCraftdream\Garnet\Bundle\Support\Utils\PaginationHelper;
     use PHPCraftdream\Garnet\Bundle\Support\Utils\RenderIsland;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Core\IGlobalReqParams;
     use PHPCraftdream\Garnet\Kernel\Interfaces\Web\Router\IRouterUriParams;
@@ -115,17 +116,43 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Ops\Logging\Viewer\Controllers {
         // ────────────────── Composition: pull data via existing Fw* helpers ──────────────────
 
         /**
-         * @return array<int, array<string, mixed>>
+         * @param array{actorId?: int, targetId?: int, action?: string, dateFrom?: int, dateTo?: int} $filters
+         * @return array<string, mixed> PageResponse shape
          */
-        protected static function fetchActions(int $limit = 100): array {
-            return FwLogsActionAdapter::run(static::actionLogTable(), $limit, static::isModerator());
+        protected static function fetchActionsPage(
+            int $page = 1,
+            int $perPage = 10,
+            string $query = '',
+            ?string $sortField = null,
+            string $sortDir = 'asc',
+            array $filters = [],
+        ): array {
+            return FwLogsActionAdapter::run(static::actionLogTable(), static::isModerator(), $page, $perPage, $query, $sortField, $sortDir, $filters);
+        }
+
+        /** @return array{actors: list<array{id: int, name: string}>, actions: list<string>} */
+        protected static function fetchActionsFilterOptions(): array {
+            return FwLogsActionAdapter::runFilterOptions(static::actionLogTable(), static::isModerator());
         }
 
         /**
-         * @return array<int, array<string, mixed>>
+         * @param array{status?: string, accountId?: int, noAccount?: bool, mailType?: string} $filters
+         * @return array<string, mixed> PageResponse shape
          */
-        protected static function fetchMails(int $limit = 200): array {
-            return FwLogsMailAdapter::run(static::mailLogTable(), static::isAdmin(), $limit, static::isModerator());
+        protected static function fetchMailsPage(
+            int $page = 1,
+            int $perPage = 10,
+            string $query = '',
+            ?string $sortField = null,
+            string $sortDir = 'asc',
+            array $filters = [],
+        ): array {
+            return FwLogsMailAdapter::run(static::mailLogTable(), static::isAdmin(), static::isModerator(), $page, $perPage, $query, $sortField, $sortDir, $filters);
+        }
+
+        /** @return array{accounts: list<array{id: int, name: string}>, hasNoAccount: bool, types: list<string>} */
+        protected static function fetchMailsFilterOptions(): array {
+            return FwLogsMailAdapter::runFilterOptions(static::mailLogTable(), static::isAdmin(), static::isModerator());
         }
 
         // ────────────────── Routes ──────────────────
@@ -156,10 +183,8 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Ops\Logging\Viewer\Controllers {
 
             // Initial-tab data: only the active tab. Other tabs render empty
             // until activated; the island POSTs to the matching endpoint.
-            $actionsLogs = $tab === self::TAB_ACTIONS ? static::fetchActions() : [];
-            $actionsLoaded = $tab === self::TAB_ACTIONS;
-            $mailsLogs = $tab === self::TAB_MAILS ? static::fetchMails() : [];
-            $mailsLoaded = $tab === self::TAB_MAILS;
+            $actionsPayload = $tab === self::TAB_ACTIONS ? static::fetchActionsPage() : null;
+            $mailsPayload = $tab === self::TAB_MAILS ? static::fetchMailsPage() : null;
 
             $islandProps = array_merge([
                 'initialTab' => $tab,
@@ -167,13 +192,13 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Ops\Logging\Viewer\Controllers {
                 'extraTabs' => static::extraTabs(),
                 'actions' => [
                     'gridConfig' => static::actionsGridConfig(),
-                    'logs' => $actionsLogs,
-                    'loaded' => $actionsLoaded,
+                    'payload' => $actionsPayload,
+                    'filterOptions' => static::fetchActionsFilterOptions(),
                 ],
                 'mails' => [
                     'gridConfig' => static::mailsGridConfig(),
-                    'logs' => $mailsLogs,
-                    'loaded' => $mailsLoaded,
+                    'payload' => $mailsPayload,
+                    'filterOptions' => static::fetchMailsFilterOptions(),
                 ],
                 'requests' => [
                     'dates' => $requestDates,
@@ -198,20 +223,64 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Ops\Logging\Viewer\Controllers {
             if (!static::isModerator()) {
                 return ControllerTools::JSON(['error' => 'Access denied'], status: 403);
             }
+            ['page' => $page, 'perPage' => $perPage] = PaginationHelper::readPageParams($globals);
+            ['query' => $query, 'sortField' => $sortField, 'sortDir' => $sortDir] = PaginationHelper::readSearchSortParams($globals);
+            $filters = [];
+            $actorId = (int)$globals->readPostValue('actorId', 0);
 
-            return ControllerTools::JSON([
-                'logs' => static::fetchActions(),
-            ]);
+            if ($actorId > 0) {
+                $filters['actorId'] = $actorId;
+            }
+            $targetId = (int)$globals->readPostValue('targetId', 0);
+
+            if ($targetId > 0) {
+                $filters['targetId'] = $targetId;
+            }
+            $action = trim((string)$globals->readPostValue('action', ''));
+
+            if ($action !== '') {
+                $filters['action'] = $action;
+            }
+            $dateFrom = (int)$globals->readPostValue('dateFrom', 0);
+
+            if ($dateFrom > 0) {
+                $filters['dateFrom'] = $dateFrom;
+            }
+            $dateTo = (int)$globals->readPostValue('dateTo', 0);
+
+            if ($dateTo > 0) {
+                $filters['dateTo'] = $dateTo;
+            }
+
+            return ControllerTools::JSON(static::fetchActionsPage($page, $perPage, $query, $sortField, $sortDir, $filters));
         }
 
         public static function post__mailsPage(IGlobalReqParams $globals, IRouterUriParams $params): mixed {
             if (!static::isModerator()) {
                 return ControllerTools::JSON(['error' => 'Access denied'], status: 403);
             }
+            ['page' => $page, 'perPage' => $perPage] = PaginationHelper::readPageParams($globals);
+            ['query' => $query, 'sortField' => $sortField, 'sortDir' => $sortDir] = PaginationHelper::readSearchSortParams($globals);
+            $filters = [];
+            $status = trim((string)$globals->readPostValue('status', ''));
 
-            return ControllerTools::JSON([
-                'logs' => static::fetchMails(),
-            ]);
+            if ($status !== '') {
+                $filters['status'] = $status;
+            }
+            $accountIdRaw = trim((string)$globals->readPostValue('accountId', ''));
+
+            if ($accountIdRaw === '__no_account__') {
+                $filters['noAccount'] = true;
+            } elseif ($accountIdRaw !== '' && (int)$accountIdRaw > 0) {
+                $filters['accountId'] = (int)$accountIdRaw;
+            }
+            $mailType = trim((string)$globals->readPostValue('mailType', ''));
+
+            if ($mailType !== '') {
+                $filters['mailType'] = $mailType;
+            }
+
+            return ControllerTools::JSON(static::fetchMailsPage($page, $perPage, $query, $sortField, $sortDir, $filters));
         }
 
         public static function post__requestsPage(IGlobalReqParams $globals, IRouterUriParams $params): mixed {

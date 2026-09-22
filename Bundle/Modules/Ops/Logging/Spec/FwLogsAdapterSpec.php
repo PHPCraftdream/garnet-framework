@@ -26,6 +26,10 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Ops\Logging\Spec\LogsAdapter {
         public function selectAll(?Closure $queryCallback = null): array {
             return [];
         }
+
+        public function getCount(?callable $queryCallback = null): int {
+            return 0;
+        }
     }
 
     class AdapterSpecMailLog extends FwMailLog {
@@ -37,6 +41,10 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Ops\Logging\Spec\LogsAdapter {
 
         public function selectAll(?Closure $queryCallback = null): array {
             return [];
+        }
+
+        public function getCount(?callable $queryCallback = null): int {
+            return 0;
         }
 
         protected static function recipientsTable(): FwMailLogRecipients {
@@ -62,15 +70,16 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Ops\Logging\Spec\LogsAdapter {
             $table = newActionLogStub();
 
             expect(function () use ($table): void {
-                FwLogsActionAdapter::run($table, 100, false);
+                FwLogsActionAdapter::run($table, false);
             })->toThrow(new LogicException('FwLogsActionAdapter::run() requires isModerator to be true.'));
         });
 
-        it('run() succeeds and returns rows when isModerator=true', function (): void {
+        it('run() succeeds and returns a PageResponse when isModerator=true', function (): void {
             $table = newActionLogStub();
-            $result = FwLogsActionAdapter::run($table, 100, true);
+            $result = FwLogsActionAdapter::run($table, true);
 
-            expect($result)->toBe([]);
+            expect($result['items'])->toBe([]);
+            expect($result['total'])->toBe(0);
         });
     });
 
@@ -83,15 +92,16 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Ops\Logging\Spec\LogsAdapter {
             $table = newMailLogStub();
 
             expect(function () use ($table): void {
-                FwLogsMailAdapter::run($table, false, 100, false);
+                FwLogsMailAdapter::run($table, false, false);
             })->toThrow(new LogicException('FwLogsMailAdapter::run() requires isModerator to be true.'));
         });
 
-        it('run() succeeds and returns rows when isModerator=true', function (): void {
+        it('run() succeeds and returns a PageResponse when isModerator=true', function (): void {
             $table = newMailLogStub();
-            $result = FwLogsMailAdapter::run($table, false, 100, true);
+            $result = FwLogsMailAdapter::run($table, false, true);
 
-            expect($result)->toBe([]);
+            expect($result['items'])->toBe([]);
+            expect($result['total'])->toBe(0);
         });
     });
 }

@@ -42,6 +42,10 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Ops\Logging\Spec\MailLogCtrl {
             return array_values($this->rows);
         }
 
+        public function getCount(?callable $queryCallback = null): int {
+            return count($this->rows);
+        }
+
         protected static function recipientsTable(): FwMailLogRecipients {
             throw new LogicException('Not used in spec');
         }
@@ -119,11 +123,13 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Ops\Logging\Spec\MailLogCtrl {
         return $inst;
     }
 
-    function callMailFetchLogs(int $limit = 200): array {
+    function callMailFetchLogs(int $perPage = 200): array {
         $ref = new ReflectionClass(TestMailLogController::class);
-        $method = $ref->getMethod('fetchLogs');
+        $method = $ref->getMethod('fetchLogsPage');
 
-        return $method->invoke(null, $limit);
+        $page = $method->invoke(null, 1, $perPage);
+
+        return $page['items'];
     }
 
     function seedMailRow(MailCtrlSpecMailLog $table, string $mailType = 'auth_code', string $status = 'sent'): void {

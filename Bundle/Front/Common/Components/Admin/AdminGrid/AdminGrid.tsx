@@ -1,18 +1,17 @@
 import * as React from 'react';
 import {useState, useMemo} from 'react';
-import {useBodyScrollLock} from '../../../hooks/ui/useBodyScrollLock';
-import {usePageSize} from '../../../hooks/data/usePageSize';
-import {PageSizeSelector} from '../../Layout/Paging/PageSizeSelector';
-import {DetailSection, DetailViewConfig, GlobalRenders, GridConfig, SubGridConfig} from './types';
-import {SubGridModal} from './SubGridModal';
-import {DetailViewModal} from './DetailViewModal';
-import {sendPost} from '@common/Api/Send/sendPost';
+import {usePagination, PageResponse} from '../../../hooks/data/usePagination';
+import Pagination from '../../Layout/Paging/Pagination';
+import {GlobalRenders, GridConfig} from './types';
 import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
 
 type RowRenders<T> = Partial<Record<string, (row: T) => React.ReactNode>>;
 
 export interface AdminGridProps<T> {
-    rows: T[];
+    /** POST endpoint returning a PageResponse<T> for {page, perPage, query, sortField, sortDir, ...extraParams}. */
+    pageUrl: string;
+    /** SSR first page, so the grid doesn't have to fetch on mount. */
+    initialData: PageResponse<T> | null;
     config: GridConfig;
     rowKey: (row: T) => string | number;
     renders?: RowRenders<T>;
@@ -23,121 +22,45 @@ export interface AdminGridProps<T> {
     onRowClick?: (row: T) => void;
     /** Override the default `grid-row-{key}` testid emitted on each <tr>. */
     rowTestId?: (row: T) => string;
-}
-
-interface SubModalState {
-    open: boolean;
-    loading: boolean;
-    title: string;
-    rows: unknown[];
-    gridConfig: GridConfig | null;
-}
-
-interface DetailModalState {
-    open: boolean;
-    loading: boolean;
-    title: string;
-    sections: DetailSection[];
+    /**
+     * Extra fixed/variable server params (e.g. an active tab filter).
+     * MUST be a stable reference (useMemo/useState) — a fresh object literal
+     * every render reads as "params changed" and refetches on every render.
+     */
+    extraParams?: Record<string, unknown>;
 }
 
 type SortDir = 'asc' | 'desc';
-
-const CLOSED_SUB: SubModalState      = {open: false, loading: false, title: '', rows: [], gridConfig: null};
-const CLOSED_DETAIL: DetailModalState = {open: false, loading: false, title: '', sections: []};
 
 function getField(row: unknown, field: string): unknown {
     return (row as Record<string, unknown>)[field];
 }
 
-function compareValues(a: unknown, b: unknown): number {
-    if (a == null && b == null) return 0;
-    if (a == null) return 1;
-    if (b == null) return -1;
-    if (typeof a === 'number' && typeof b === 'number') return a - b;
-    return String(a).localeCompare(String(b));
-}
-
-export function AdminGrid<T>({rows, config, rowKey, renders = {}, globalRenders = {}, emptyMessage, expandRenderer, expandable, onRowClick, rowTestId}: AdminGridProps<T>) {
-    const [query,       setQuery]       = useState('');
-    const [sortField,   setSortField]   = useState<string | null>(null);
-    const [sortDir,     setSortDir]     = useState<SortDir>('asc');
-    const [page,        setPage]        = useState(1);
-    const [userPageSize, setUserPageSize] = usePageSize();
-    const [subModal,    setSubModal]    = useState<SubModalState>(CLOSED_SUB);
-    const [detModal,    setDetModal]    = useState<DetailModalState>(CLOSED_DETAIL);
+export function AdminGrid<T>({pageUrl, initialData, config, rowKey, renders = {}, globalRenders = {}, emptyMessage, expandRenderer, expandable, onRowClick, rowTestId, extraParams}: AdminGridProps<T>) {
+    const [query,     setQuery]     = useState('');
+    const [sortField, setSortField] = useState<string | null>(null);
+    const [sortDir,   setSortDir]   = useState<SortDir>('asc');
     const [expandedKeys, setExpandedKeys] = useState<Set<string | number>>(new Set());
 
-    useBodyScrollLock(subModal.open || detModal.open);
+    // The server does the search/sort/paging now — this object is the
+    // reactive trigger usePagination watches to know when to refetch from
+    // page 1 (see its debounce effect).
+    const params = useMemo(
+        () => ({query, sortField, sortDir, ...extraParams}),
+        [query, sortField, sortDir, extraParams],
+    );
 
-    const filtered = useMemo(() => {
-        const q = query.trim().toLowerCase();
-        if (!q || config.searchFields.length === 0) return rows;
-        return rows.filter(row =>
-            config.searchFields.some(f => {
-                const val = getField(row, f);
-                return val != null && String(val).toLowerCase().includes(q);
-            })
-        );
-    }, [rows, query, config.searchFields]);
-
-    const sorted = useMemo(() => {
-        if (!sortField || !config.sortFields.includes(sortField)) return filtered;
-        return [...filtered].toSorted((a, b) => {
-            const cmp = compareValues(getField(a, sortField), getField(b, sortField));
-            return sortDir === 'asc' ? cmp : -cmp;
-        });
-    }, [filtered, sortField, sortDir, config.sortFields]);
-
-    // User-controlled page size (localStorage) beats the per-grid default
-    // baked into config.pageSize. `config.pageSize <= 0` still means "show
-    // everything", same legacy semantics as before.
-    const pageSize  = config.pageSize > 0 ? userPageSize : sorted.length;
-    const pageCount = Math.max(1, Math.ceil(sorted.length / pageSize));
-    const safePage  = Math.min(page, pageCount);
-    const paged     = sorted.slice((safePage - 1) * pageSize, safePage * pageSize);
-
-    const handlePageSizeChange = (n: number) => {
-        setUserPageSize(n);
-        setPage(1);
-    };
-
-    const subGrids:    SubGridConfig[]    = config.subGrids   ?? [];
-    const detailViews: DetailViewConfig[] = config.detailViews ?? [];
+    const {items: paged, page: safePage, totalPages: pageCount, total, loading, goToPage, perPage: pageSize, setPerPage} =
+        usePagination<T>({url: pageUrl, initialData: initialData ?? undefined, params});
 
     const handleSort = (key: string) => {
         if (!config.sortFields.includes(key)) return;
         if (sortField === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
         else { setSortField(key); setSortDir('asc'); }
-        setPage(1);
     };
 
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         setQuery(e.target.value);
-        setPage(1);
-    };
-
-    const openSubGrid = async (sg: SubGridConfig, row: T) => {
-        const paramValue = getField(row, sg.rowField);
-        const title = `${sg.buttonLabel} (${sg.rowField}: ${paramValue})`;
-        setSubModal({open: true, loading: true, title, rows: [], gridConfig: null});
-        try {
-            const data = await sendPost(sg.fetchUrl, {[sg.urlParam]: paramValue}) as {rows: unknown[]; gridConfig: GridConfig};
-            setSubModal({open: true, loading: false, title, rows: data.rows ?? [], gridConfig: data.gridConfig ?? null});
-        } catch {
-            setSubModal(CLOSED_SUB);
-        }
-    };
-
-    const openDetailView = async (dv: DetailViewConfig, row: T) => {
-        const paramValue = getField(row, dv.rowField);
-        const title = `${dv.buttonLabel} #${paramValue}`;
-        setDetModal({open: true, loading: true, title, sections: []});
-        try {
-            const data = await sendPost(dv.fetchUrl, {[dv.urlParam]: paramValue}) as {sections: DetailSection[]};
-            setDetModal({open: true, loading: false, title, sections: data.sections ?? []});
-        } catch {
-            setDetModal(CLOSED_DETAIL);
-        }
     };
 
     const renderCell = (row: T, key: string): React.ReactNode => {
@@ -147,24 +70,22 @@ export function AdminGrid<T>({rows, config, rowKey, renders = {}, globalRenders 
         return val == null ? '—' : String(val);
     };
 
-    const totalCols = config.columns.length + subGrids.length + detailViews.length + (expandRenderer ? 1 : 0);
+    const totalCols = config.columns.length + (expandRenderer ? 1 : 0);
 
-    // Pagination row — rendered both above and below the table so users
-    // don't have to scroll to the bottom of a long grid to switch pages
-    // or change the page size.
-    const paginationRow = config.pageSize > 0 ? (
-        <div className="flex items-center gap-3 text-sm text-secondary flex-wrap">
-            {pageCount > 1 && (
-                <>
-                    <button type="button" data-test-id="admin-grid-prev" className="btn btn-sm btn-outline-secondary" title={t.Grid_PrevPage()} disabled={safePage <= 1}       onClick={() => setPage(p => Math.max(1, p - 1))}>‹</button>
-                    <span className="font-medium">{safePage} / {pageCount}</span>
-                    <button type="button" data-test-id="admin-grid-next" className="btn btn-sm btn-outline-secondary" title={t.Grid_NextPage()} disabled={safePage >= pageCount} onClick={() => setPage(p => Math.min(pageCount, p + 1))}>›</button>
-                    <span className="text-muted ml-1">{sorted.length} {t.Grid_Items()}</span>
-                </>
-            )}
-            <PageSizeSelector value={pageSize} onChange={handlePageSizeChange} />
-        </div>
-    ) : null;
+    // Pagination row — rendered both above and below the table (by
+    // <Pagination> itself, called twice) so users don't have to scroll to
+    // the bottom of a long grid to switch pages or change the page size.
+    const paginationRow = (
+        <Pagination
+            page={safePage}
+            totalPages={pageCount}
+            total={total}
+            loading={loading}
+            onPageChange={goToPage}
+            pageSize={pageSize}
+            onPageSizeChange={setPerPage}
+        />
+    );
 
     return (
         <>
@@ -208,12 +129,6 @@ export function AdminGrid<T>({rows, config, rowKey, renders = {}, globalRenders 
                                     </th>
                                 );
                             })}
-                            {subGrids.map(sg => (
-                                <th key={`__sg_${sg.fetchUrl}`} className="w-px" />
-                            ))}
-                            {detailViews.map(dv => (
-                                <th key={`__dv_${dv.fetchUrl}`} className="w-px" />
-                            ))}
                         </tr>
                     </thead>
                     <tbody>
@@ -253,20 +168,6 @@ export function AdminGrid<T>({rows, config, rowKey, renders = {}, globalRenders 
                                                     {renderCell(row, col.key)}
                                                 </td>
                                             ))}
-                                            {subGrids.map(sg => (
-                                                <td key={`__sg_${sg.fetchUrl}`} className="px-3 py-3 w-px whitespace-nowrap">
-                                                    <button type="button" className="btn btn-sm btn-outline-secondary" onClick={e => { e.stopPropagation(); openSubGrid(sg, row); }}>
-                                                        {sg.buttonLabel}
-                                                    </button>
-                                                </td>
-                                            ))}
-                                            {detailViews.map(dv => (
-                                                <td key={`__dv_${dv.fetchUrl}`} className="px-3 py-3 w-px whitespace-nowrap">
-                                                    <button type="button" className="btn btn-sm btn-outline-primary" onClick={e => { e.stopPropagation(); openDetailView(dv, row); }}>
-                                                        {dv.buttonLabel}
-                                                    </button>
-                                                </td>
-                                            ))}
                                         </tr>
                                         {expandContent != null && (
                                             <tr>
@@ -284,37 +185,6 @@ export function AdminGrid<T>({rows, config, rowKey, renders = {}, globalRenders 
             </div>
 
             {paginationRow && <div className="mt-4">{paginationRow}</div>}
-
-            {subModal.open && (
-                subModal.loading ? (
-                    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/35">
-                        <div className="bg-surface rounded-lg px-8 py-6 shadow-xl text-secondary">Loading…</div>
-                    </div>
-                ) : subModal.gridConfig && (
-                    <SubGridModal
-                        title={subModal.title}
-                        rows={subModal.rows}
-                        gridConfig={subModal.gridConfig}
-                        globalRenders={globalRenders}
-                        onClose={() => setSubModal(CLOSED_SUB)}
-                    />
-                )
-            )}
-
-            {detModal.open && (
-                detModal.loading ? (
-                    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/35">
-                        <div className="bg-surface rounded-lg px-8 py-6 shadow-xl text-secondary">Loading…</div>
-                    </div>
-                ) : (
-                    <DetailViewModal
-                        title={detModal.title}
-                        sections={detModal.sections}
-                        globalRenders={globalRenders}
-                        onClose={() => setDetModal(CLOSED_DETAIL)}
-                    />
-                )
-            )}
         </>
     );
 }
