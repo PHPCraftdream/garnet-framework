@@ -1,13 +1,9 @@
-import * as React from 'react';
 // The event contract lives in a React-free module so the low-level API layer
 // can dispatch toasts without importing THIS component module (doing so pulled
 // React/JSX into the deepest API chunk → React #130 on auth/registration).
 import {ToastType, TOAST_EVENT, ToastEventDetail} from './toastEvent';
 
-export type {ToastType, ToastEventDetail} from './toastEvent';
-export {TOAST_EVENT} from './toastEvent';
-
-interface ToastEntry {
+export interface ToastEntry {
     id: number;
     message: string;
     type: ToastType;
@@ -117,61 +113,3 @@ class ToastManagerClass {
 }
 
 export const ToastManager = new ToastManagerClass();
-
-/**
- * Shortcut — use from any island.
- *
- * Dispatches the global TOAST_EVENT rather than calling ToastManager.show()
- * directly: bundlers can duplicate this module into more than one chunk, and a
- * direct call would land on whichever ToastManager copy the CALLER imported —
- * not necessarily the one the rendered <GlobalToastRenderer> subscribed to.
- * Every ToastManager instance listens for the event, so the subscribed one
- * always picks it up. Falls back to a direct call when there's no window (SSR).
- */
-export const showToast = (message: string, type?: ToastType) => {
-    if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent<ToastEventDetail>(TOAST_EVENT, {detail: {message, type}}));
-    } else {
-        ToastManager.show(message, type);
-    }
-};
-
-const typeClasses: Record<string, string> = {
-    primary: 'text-bg-primary',
-    success: 'text-bg-success',
-    danger: 'text-bg-danger',
-    warning: 'text-bg-warning',
-};
-
-/** Render ONCE in the layout — subscribes to ToastManager */
-export const GlobalToastRenderer: React.FC = () => {
-    const [entries, setEntries] = React.useState<ToastEntry[]>([]);
-
-    React.useEffect(() => ToastManager.subscribe(setEntries), []);
-
-    return (
-        <div className="toast-container" data-test-id="toast-container">
-            {entries.map(entry => (
-                <div
-                    key={entry.id}
-                    role="alert"
-                    aria-live="assertive"
-                    aria-atomic="true"
-                    className={`toast show ${typeClasses[entry.type] || 'text-bg-primary'}`}
-                    onMouseEnter={() => ToastManager.pause(entry.id)}
-                    onMouseLeave={() => ToastManager.resume(entry.id)}
-                >
-                    <div className="flex items-center">
-                        <div className="toast-body">{entry.message}</div>
-                        <button
-                            type="button"
-                            className="btn-close btn-close-white mr-2 ml-auto"
-                            aria-label="Close"
-                            onClick={() => ToastManager.hide(entry.id)}
-                        />
-                    </div>
-                </div>
-            ))}
-        </div>
-    );
-};

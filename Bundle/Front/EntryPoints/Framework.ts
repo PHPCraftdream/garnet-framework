@@ -4,7 +4,8 @@ import {hotClickInit} from '@common/Dom/Nav/HotClickInit';
 import {initDocumentPrefetchTriggers} from '@common/Dom/Nav/DocumentPrefetch';
 import {createElement} from 'react';
 import {createRoot} from 'react-dom/client';
-import {GlobalToastRenderer, showToast} from '@common/Components/Feedback/GlobalToast';
+import {showToast} from '@common/Components/Feedback/GlobalToast';
+import {GlobalToastRenderer} from '@common/Components/Feedback/GlobalToastRenderer';
 import {I18nFramework} from '@framework/I18nGen/I18nFramework';
 
 // Dev-only quick-login panel. Loaded dynamically and ONLY when the

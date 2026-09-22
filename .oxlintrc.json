@@ -49,7 +49,8 @@
         "**/Common/Components/ui/Select.tsx",
         "**/Common/Components/ui/Tooltip.tsx",
         "**/Common/Components/Admin/AdminPanel/UserDetailContext.tsx",
-        "**/Common/Components/UserPreviewModal/PreviewContext.tsx"
+        "**/Common/Components/UserPreviewModal/PreviewContext.tsx",
+        "**/Common/Components/Admin/SystemSettings/SystemSettingsPage/Tabs/GeneralTabs.tsx"
       ],
       "rules": {
         "garnet-tsx/one-export-per-component": "off"

@@ -13,11 +13,13 @@ import {useConfirm} from '@common/hooks/ui/useConfirm';
 import {formatTs} from '@common/Utils/Time/DateUtils';
 import {markdownToHtml} from '@common/Utils/Ui/markdownToHtml';
 import {PageHeader} from '@common/Components/Layout/PageHeader';
-import {ImageUploadArea, ImageUploadField} from '@common/Components/Controls/ImageUploadField';
+import {ImageUploadArea} from '@common/Components/Controls/ImageUploadArea';
+import {ImageUploadField} from '@common/Components/Controls/ImageUploadField';
 import {FileText} from 'lucide-react';
 import {SNIPPET_TYPES, SNIPPET_TYPE_LABELS} from '../types';
 import {StaticPage, Snippet, Labels} from '../types';
-import {HeaderEditor, FooterEditor, HeaderData, FooterData} from './HeaderFooterEditors';
+import {HeaderEditor, HeaderData} from './HeaderEditor';
+import {FooterEditor, FooterData} from './FooterEditor';
 
 // ── Snippet Editor Tab ──
 

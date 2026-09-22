@@ -1,7 +1,8 @@
 import * as React from 'react';
 import {useEffect, useRef} from 'react';
 import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
-import {EntityHistoryRow, formatHistoryTime} from './EntityHistoryTable';
+import {EntityHistoryRow} from './EntityHistoryTable';
+import {formatHistoryTime} from './entityHistoryFormat';
 import {Portal} from '@common/Components/Layout/Portal';
 
 interface Props {
