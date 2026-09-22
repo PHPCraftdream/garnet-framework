@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {useState, useCallback} from 'react';
-import {resolvedUserTz} from '@common/Utils/Time/DateUtils';
+import {appLocale, resolvedUserTz} from '@common/Utils/Time/DateUtils';
 
 interface Props {
     startDate: string;
@@ -91,7 +91,10 @@ export const Calendar: React.FC<Props> = ({
         const month0 = curM - 1; // 0-indexed for Date constructor
         const firstDay = new Date(curY, month0, 1).getDay();
         const daysInMonth = new Date(curY, month0 + 1, 0).getDate();
-        const title = new Intl.DateTimeFormat(undefined, {timeZone: resolvedUserTz(), month: 'long', year: 'numeric'}).format(new Date(curY, month0, 1));
+        // D-255: `undefined` locale falls back to the BROWSER's own language,
+        // not the site's UI language — an expert whose OS is set to English
+        // saw "September 2026" headers on an otherwise all-Russian page.
+        const title = new Intl.DateTimeFormat(appLocale(), {timeZone: resolvedUserTz(), month: 'long', year: 'numeric'}).format(new Date(curY, month0, 1));
 
         const rows: { cells: React.ReactNode[]; hasProposed: boolean }[] = [];
         let row: React.ReactNode[] = [];

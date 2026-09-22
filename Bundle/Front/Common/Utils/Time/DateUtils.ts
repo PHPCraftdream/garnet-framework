@@ -20,7 +20,7 @@ interface GarnetUser {
 
 const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-function appLocale(): string {
+export function appLocale(): string {
     const lang = (typeof window !== 'undefined' && (window as Window & {__GARNET_UI_LANG__?: string}).__GARNET_UI_LANG__) || 'RU';
     return lang === 'RU' ? 'ru-RU' : 'en-US';
 }
