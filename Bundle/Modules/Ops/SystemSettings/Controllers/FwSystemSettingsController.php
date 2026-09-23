@@ -10,6 +10,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Ops\SystemSettings\Controllers {
     use PHPCraftdream\Garnet\Kernel\Io\Http\Router\Controller\ControllerTools;
     use PHPCraftdream\Garnet\Kernel\Io\Render\Twig\TwigParams;
     use PHPCraftdream\Garnet\Kernel\Io\Services\Mailer\Mailer;
+    use PHPCraftdream\Garnet\Kernel\Io\Services\VersionInfo\AppVersionInfo;
     use Throwable;
 
     abstract class FwSystemSettingsController extends FrameworkController {
@@ -116,6 +117,7 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Ops\SystemSettings\Controllers {
                 'saveUrl' => $baseUrl . '~save',
                 'testEmailUrl' => $baseUrl . '~sendTestEmail',
                 'labels' => static::getLabels(),
+                'versionInfo' => AppVersionInfo::current(),
             ]);
 
             return ControllerTools::ok(HtmlLayout::render(

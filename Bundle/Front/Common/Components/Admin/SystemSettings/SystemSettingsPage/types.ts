@@ -93,12 +93,26 @@ export type SystemSettingsLabels = {
     opcacheResetBtn?: string;
     opcacheResetSuccess?: string;
     opcacheResetUnavailable?: string;
+    versionInfoTitle?: string;
+    versionInfoApp?: string;
+    versionInfoFramework?: string;
+    versionInfoBuiltAt?: string;
+    versionInfoUnknown?: string;
 };
 
 
 export interface MailTypeOption {
     id: string;
     label: string;
+}
+
+/** Baked-in framework/app version, computed server-side by AppVersionInfo::current(). */
+export interface VersionInfo {
+    frameworkVersion?: string | null;
+    frameworkCommit?: string | null;
+    appVersion?: string | null;
+    appCommit?: string | null;
+    builtAt?: string | null;
 }
 
 export interface SystemSettingsPageProps {
@@ -114,6 +128,8 @@ export interface SystemSettingsPageProps {
     opcacheResetUrl?: string;
     labels: SystemSettingsLabels;
     mailTypes?: MailTypeOption[];
+    /** Framework/app version+commit, baked in at build time. Omitted → panel hidden. */
+    versionInfo?: VersionInfo;
 }
 
 export type TabKey = 'smtp' | 'registration' | 'penalty' | 'contacts' | 'seo' | 'history';

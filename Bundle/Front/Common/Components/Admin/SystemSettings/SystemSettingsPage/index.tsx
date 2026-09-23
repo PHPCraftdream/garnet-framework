@@ -20,12 +20,13 @@ import {PageHeader} from '@common/Components/Layout/PageHeader';
 import {Settings} from 'lucide-react';
 import {SettingsData, SystemSettingsPageProps, TabKey} from './types';
 import {OpcacheResetPanel} from './OpcacheResetPanel';
+import {VersionInfoPanel} from './VersionInfoPanel';
 import {SmtpTab} from './Tabs/SmtpTab';
 import {RegistrationTab, PenaltyTab, ContactsTab} from './Tabs/GeneralTabs';
 import {SeoTab} from './Tabs/SeoTab';
 import {HistoryTab} from './Tabs/HistoryTab';
 
-export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({settings: initialSettings, saveUrl, testEmailUrl, historyListUrl, uploadImageUrl, deleteImageUrl, opcacheResetUrl, labels, mailTypes = []}) => {
+export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({settings: initialSettings, saveUrl, testEmailUrl, historyListUrl, uploadImageUrl, deleteImageUrl, opcacheResetUrl, labels, mailTypes = [], versionInfo}) => {
     const [settings, setSettings] = React.useState<SettingsData>(initialSettings);
     const [activeTab, setActiveTab] = React.useState<TabKey>('smtp');
     const [testEmail, setTestEmail] = React.useState('');
@@ -218,6 +219,10 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({settings:
 
             {opcacheResetUrl && (
                 <OpcacheResetPanel url={opcacheResetUrl} labels={labels} />
+            )}
+
+            {versionInfo && (
+                <VersionInfoPanel info={versionInfo} labels={labels} />
             )}
 
             {activeTab === 'history' && historyListUrl && (

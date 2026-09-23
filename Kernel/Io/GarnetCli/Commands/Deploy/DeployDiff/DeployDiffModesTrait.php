@@ -257,7 +257,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Deploy\DeployDiff {
         }
 
         /**
-         * Full-public mode: re-ship every Apps/<App>/Public/ file + 4 *Gen.php.
+         * Full-public mode: re-ship every Apps/<App>/Public/ file + 5 *Gen.php.
          *
          * No git diff, no marker check. Pre-snapshot is forced empty so every
          * file appears as 'A'. Rspack rebuild runs when --apply.
@@ -358,7 +358,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Deploy\DeployDiff {
                     $rebrandedDocroot++;
                 }
 
-                // Inject the four *Gen.php files
+                // Inject the five *Gen.php files
                 self::injectGenFiles($cat, $appName, $rebrandedGen, $pairs, $shadowDir);
 
                 echo "  rebrand: rewrote {$rebrandedDocroot} docroot file(s) + {$rebrandedGen} *Gen.php to /assets/{$publicName}/\n";

@@ -105,10 +105,10 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
                 GarnetRunner::$frameworkDir = $this->savedFrameworkDir;
             });
 
-            it('returns absolute paths to the four *Gen.php files', function (): void {
+            it('returns absolute paths to the five *Gen.php files', function (): void {
                 $files = PublicPathRebrander::genFiles('MyApp');
 
-                expect(count($files))->toBe(4);
+                expect(count($files))->toBe(5);
 
                 foreach ($files as $f) {
                     expect($f)->toContain(GARNET_ROOT);
@@ -116,12 +116,13 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Spec {
                 }
             });
 
-            it('covers both the app foreground and the framework bundle pair', function (): void {
+            it('covers the app foreground pair, the app VersionGen, and the framework bundle pair', function (): void {
                 $files = PublicPathRebrander::genFiles('MyApp');
 
                 $joined = implode('|', $files);
                 expect($joined)->toContain('Apps' . DS . 'MyApp' . DS . 'Foreground' . DS . 'ForegroundJsGen.php');
                 expect($joined)->toContain('Apps' . DS . 'MyApp' . DS . 'Foreground' . DS . 'ForegroundCssGen.php');
+                expect($joined)->toContain('Apps' . DS . 'MyApp' . DS . 'Foreground' . DS . 'VersionGen.php');
                 expect($joined)->toContain('Bundle' . DS . 'FrameworkJsGen.php');
                 expect($joined)->toContain('Bundle' . DS . 'FrameworkCssGen.php');
             });

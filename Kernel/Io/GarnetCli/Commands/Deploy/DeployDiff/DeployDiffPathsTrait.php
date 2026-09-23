@@ -212,7 +212,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Deploy\DeployDiff {
         }
 
         /**
-         * Inject the 4 *Gen.php files into the categorised set.
+         * Inject the 5 *Gen.php files into the categorised set.
          *
          * When $pairs and $shadowDir are given the files are rebranded into
          * the shadow directory. Otherwise they're added as-is.
