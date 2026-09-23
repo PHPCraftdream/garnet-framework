@@ -2,16 +2,19 @@
  * Regression guard (deterministic, static): the low-level API layer must NOT
  * transitively import a React component module.
  *
- * Background: importing a React/JSX component module (GlobalToast.tsx) from
+ * Background: importing a React/JSX component module (GlobalToastRenderer.tsx) from
  * the API layer (via maintenance503 → asyncJsonThen / sendPostFormData)
  * drags React into the deepest shared chunk and crashes island hydration on
  * pages that mount the API layer before React is ready. The framework's
  * `Common/Api/*` files must stay React-free; UI code that needs to react to
  * API events imports the event contract (`toastEvent.ts`) instead of the
  * component. This test walks the import graph from the API entrypoints and
- * fails if GlobalToast.tsx (the React component) becomes reachable again —
+ * fails if GlobalToastRenderer.tsx (the React component) becomes reachable again —
  * catching the regression at the source, without depending on a flaky load
  * race.
+ *
+ * `GlobalToast.ts` (showToast) and `toastManager.ts` are React-free and may be
+ * reachable; only the renderer component is banned.
  */
 import { test, expect } from '@playwright/test';
 import * as fs from 'node:fs';
@@ -62,8 +65,8 @@ test('low-level API layer never imports the GlobalToast React component (React #
         'Common/Api/maintenance503.ts',
     ].map((p) => path.join(FRONT, p));
 
-    const banned = path.join(FRONT, 'Common', 'Components', 'Feedback', 'GlobalToast.tsx');
-    expect(fs.existsSync(banned), 'GlobalToast.tsx should exist').toBe(true);
+    const banned = path.join(FRONT, 'Common', 'Components', 'Feedback', 'GlobalToastRenderer.tsx');
+    expect(fs.existsSync(banned), 'GlobalToastRenderer.tsx should exist').toBe(true);
 
     const seen = new Set<string>();
     const stack = [...entries];
@@ -80,7 +83,7 @@ test('low-level API layer never imports the GlobalToast React component (React #
     const reachesGlobalToast = seen.has(banned);
     expect(
         reachesGlobalToast,
-        'The API layer transitively imports GlobalToast.tsx (a React component) — this pulls React/JSX into the\n' +
+        'The API layer transitively imports GlobalToastRenderer.tsx (a React component) — this pulls React/JSX into the\n' +
         'deepest shared chunk and crashes island hydration on any page that mounts the API layer before React is\n' +
         'ready. Import the toast event contract from @common/Components/toastEvent instead.',
     ).toBe(false);
