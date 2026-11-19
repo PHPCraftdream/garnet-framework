@@ -1,5 +1,4 @@
 import * as React from 'react';
-import {useEffect, useCallback} from 'react';
 import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
 import {sendPost} from '@common/Api/Send/sendPost';
 import {Combobox} from '@common/Components/ui/Combobox';
@@ -51,7 +50,7 @@ function renderPageOption(value: number) { return <option key={value} value={val
 
 type FilterOption = {value: string; label: string};
 function compareOptionLabels(a: FilterOption, b: FilterOption): number { return a.label.localeCompare(b.label); }
-function buildUserOptions(rows: RequestLogRow[], accounts: AccountsMap): FilterOption[] {
+function buildUserOptions(rows: readonly RequestLogRow[], accounts: AccountsMap): FilterOption[] {
     const seen = new Set<string>();
     const userOptions: {value: string; label: string}[] = [];
     let hasGuest = false;
@@ -163,7 +162,7 @@ class RequestLogFilters extends AntiHookComponent<Props> {
         if (event.key === 'Enter') this.applyFilters();
     };
 
-    private renderFilters(filters: Filters, dates: string[], date: string, userFilter: string, userOptions: FilterOption[], total: number, rowCount: number, visibleCount: number, loading: boolean) {
+    private renderFilters(filters: Filters, dates: readonly string[], date: string, userFilter: string, userOptions: FilterOption[], total: number, rowCount: number, visibleCount: number, loading: boolean) {
         const minDate = dates[dates.length - 1];
         const maxDate = dates[0];
         return (
@@ -299,7 +298,7 @@ class RequestLogFilters extends AntiHookComponent<Props> {
         );
     }
 
-    private renderTable(rows: RequestLogRow[], accounts: AccountsMap, userFilter: string) {
+    private renderTable(rows: readonly RequestLogRow[], accounts: AccountsMap, userFilter: string) {
         const renderedRows: React.ReactNode[] = [];
         for (const [sourceIndex, row] of rows.entries()) {
             if (matchesUser(row, userFilter)) renderedRows.push(this.renderRow(row, renderedRows.length, sourceIndex, accounts));
@@ -386,40 +385,50 @@ class RequestLogFilters extends AntiHookComponent<Props> {
     }
 }
 
-const RequestLogNetwork: React.FC<NetworkProps> = ({pageUrl, date, perPage, appliedFilters, appliedVersion, updateRequest, setLoader}) => {
-    const load = useCallback(async (targetDate: string, targetPage: number, f: Filters) => {
-        if (!targetDate) {
-            updateRequest({rows: [], accounts: {}, total: 0});
-            return;
-        }
-        updateRequest({loading: true});
-        try {
-            const res = await sendPost<{date: string; page: number; perPage: number; status: string; method: string; uri: string; ua: string}, PageResponse>(
-                pageUrl,
-                {date: targetDate, page: targetPage, perPage, ...f},
-            );
-            updateRequest({
-                rows: res.rows ?? [], accounts: {...res.accounts},
-                total: res.total ?? 0, page: res.page ?? targetPage, userFilter: '',
-                ...(res.dates && res.dates.length ? {dates: [...res.dates]} : {}),
-            });
-        } finally {
-            updateRequest({loading: false});
-        }
-    }, [pageUrl, perPage, updateRequest]);
+async function loadRequestPage({pageUrl, perPage, updateRequest}: NetworkProps, targetDate: string, targetPage: number, filters: Filters): Promise<void> {
+    if (!targetDate) {
+        updateRequest({rows: [], accounts: {}, total: 0});
+        return;
+    }
+    updateRequest({loading: true});
+    try {
+        const res = await sendPost<{date: string; page: number; perPage: number; status: string; method: string; uri: string; ua: string}, PageResponse>(
+            pageUrl,
+            {date: targetDate, page: targetPage, perPage, ...filters},
+        );
+        updateRequest({
+            rows: res.rows ?? [], accounts: {...res.accounts},
+            total: res.total ?? 0, page: res.page ?? targetPage, userFilter: '',
+            ...(res.dates && res.dates.length ? {dates: [...res.dates]} : {}),
+        });
+    } finally {
+        updateRequest({loading: false});
+    }
+}
 
-    useEffect(() => {
-        setLoader(load);
-        return () => setLoader(null);
-    }, [load, setLoader]);
+class RequestLogNetwork extends AntiHookComponent<NetworkProps> {
+    private readonly load: LoadPage = (targetDate, targetPage, filters) => loadRequestPage(this.props, targetDate, targetPage, filters);
+    private readonly unregisterLoader = () => this.props.setLoader(null);
 
-    useEffect(() => {
-        if (date) {
-            void load(date, 1, appliedFilters);
-        }
-    }, [date, appliedFilters, appliedVersion, load]);
+    protected override useEffects(): void {
+        const props = this.props;
+        const {pageUrl, date, perPage, appliedFilters, appliedVersion, updateRequest, setLoader} = props;
+        this.useEffect('registerLoader', () => {
+            setLoader(this.load);
+            return this.unregisterLoader;
+        }, [pageUrl, perPage, updateRequest, setLoader]);
 
-    return null;
-};
+        this.useEffect('refreshFirstPage', () => {
+            if (date) {
+                // Wait until the parent has committed its subscriptions.
+                queueMicrotask(() => { void loadRequestPage(props, date, 1, appliedFilters); });
+            }
+        }, [date, appliedFilters, appliedVersion, pageUrl, perPage, updateRequest]);
+    }
+
+    public render() {
+        return null;
+    }
+}
 
 export const AdminRequestLogIsland = RequestLogFilters;

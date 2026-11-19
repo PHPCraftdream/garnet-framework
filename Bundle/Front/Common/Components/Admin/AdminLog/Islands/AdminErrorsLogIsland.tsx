@@ -1,5 +1,4 @@
 import * as React from 'react';
-import {useEffect, useCallback} from 'react';
 import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
 import {sendPost} from '@common/Api/Send/sendPost';
 import {DateInput} from '@common/Components/ui/DateInput';
@@ -80,7 +79,7 @@ class ErrorsLog extends AntiHookComponent<Props> {
     };
     private readonly closeDetail = () => this.update({selected: null});
 
-    private renderFilters(dates: string[], date: string, search: string, perPage: number, total: number, loading: boolean) {
+    private renderFilters(dates: readonly string[], date: string, search: string, perPage: number, total: number, loading: boolean) {
         return (
             <div className="admin-log-filters">
                 <div className="filter-cell">
@@ -116,7 +115,7 @@ class ErrorsLog extends AntiHookComponent<Props> {
         </tr>
     );
 
-    private renderTable(rows: ErrorRow[], page: number, perPage: number, total: number, loading: boolean) {
+    private renderTable(rows: readonly ErrorRow[], page: number, perPage: number, total: number, loading: boolean) {
         const totalPages = Math.max(1, Math.ceil(total / perPage));
         return (
             <>
@@ -153,32 +152,49 @@ class ErrorsLog extends AntiHookComponent<Props> {
     }
 }
 
-const ErrorsLogNetwork: React.FC<NetworkProps> = ({pageUrl, date, appliedSearch, perPage, update, setLoader}) => {
-    const load = useCallback(async (targetDate: string, targetPage: number, targetSearch: string, targetPerPage: number) => {
-        if (!targetDate) {
-            update({rows: [], total: 0});
-            return;
-        }
-        update({loading: true});
-        try {
-            const res = await sendPost<{date: string; page: number; perPage: number; search: string}, PageResponse>(
-                pageUrl, {date: targetDate, page: targetPage, perPage: targetPerPage, search: targetSearch},
-            );
-            update({rows: res.rows ?? [], total: res.total ?? 0, page: res.page ?? targetPage,
-                ...(res.dates && res.dates.length ? {dates: [...res.dates]} : {})});
-        } finally {
-            update({loading: false});
-        }
-    }, [pageUrl, update]);
+async function fetchErrorPage({pageUrl, update}: Pick<NetworkProps, 'pageUrl' | 'update'>, targetDate: string, targetPage: number, targetSearch: string, targetPerPage: number): Promise<void> {
+    if (!targetDate) {
+        update({rows: [], total: 0});
+        return;
+    }
+    update({loading: true});
+    try {
+        const res = await sendPost<{date: string; page: number; perPage: number; search: string}, PageResponse>(
+            pageUrl, {date: targetDate, page: targetPage, perPage: targetPerPage, search: targetSearch},
+        );
+        update({rows: res.rows ?? [], total: res.total ?? 0, page: res.page ?? targetPage,
+            ...(res.dates && res.dates.length ? {dates: [...res.dates]} : {})});
+    } finally {
+        update({loading: false});
+    }
+}
 
-    useEffect(() => {
-        setLoader(load);
-        return () => setLoader(null);
-    }, [load, setLoader]);
-    useEffect(() => {
-        if (date) void load(date, 1, appliedSearch, perPage);
-    }, [date, appliedSearch, perPage, load]);
-    return null;
-};
+function refreshAfterCommit(snapshot: Pick<NetworkProps, 'pageUrl' | 'update'>, date: string, search: string, perPage: number): void {
+    queueMicrotask(() => { void fetchErrorPage(snapshot, date, 1, search, perPage); });
+}
+
+class ErrorsLogNetwork extends AntiHookComponent<NetworkProps> {
+    private readonly loadPage: LoadPage = (date, page, search, perPage) =>
+        fetchErrorPage(this.props, date, page, search, perPage);
+
+    private readonly clearLoader = () => this.props.setLoader(null);
+
+    protected useEffects(): void {
+        const {pageUrl, date, appliedSearch, perPage, update, setLoader} = this.props;
+        this.useEffect('setLoader', () => {
+            setLoader(this.loadPage);
+            return this.clearLoader;
+        }, [pageUrl, update, setLoader]);
+        this.useEffect('loadFirstPage', () => {
+            if (date) {
+                refreshAfterCommit({pageUrl, update}, date, appliedSearch, perPage);
+            }
+        }, [date, appliedSearch, perPage, pageUrl, update]);
+    }
+
+    render() {
+        return null;
+    }
+}
 
 export const AdminErrorsLogIsland = ErrorsLog;
