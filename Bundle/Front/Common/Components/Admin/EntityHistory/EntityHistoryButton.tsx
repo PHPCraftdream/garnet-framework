@@ -29,8 +29,12 @@ interface Props {
 export class EntityHistoryButton extends AntiHookComponent<Props> {
     private readonly store = new Carburetor({open: false});
 
-    private readonly open = (): void => this.store.setData({open: true});
-    private readonly close = (): void => this.store.setData({open: false});
+    private readonly open = (): void => {
+        this.store.setData({open: true});
+    };
+    private readonly close = (): void => {
+        this.store.setData({open: false});
+    };
 
     private renderButton(label: string, testId: string, title: string) {
         const {className} = this.props;

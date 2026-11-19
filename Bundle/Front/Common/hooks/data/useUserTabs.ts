@@ -22,7 +22,7 @@ class UserTabsStore extends Carburetor<TabState> {
         const id = this.subscribe(listener);
         return () => this.unsubscribe(id);
     };
-    private update(next: TabState) {
+    private patch(next: TabState) {
         const previous = this.getData();
         if (next.tabs === previous.tabs && next.activeId === previous.activeId) return;
         const version = this.getVersion();
@@ -35,7 +35,7 @@ class UserTabsStore extends Carburetor<TabState> {
     readonly setActiveId: Dispatch<SetStateAction<string | null>> = value => {
         const previous = this.getData();
         const activeId = typeof value === 'function' ? value(previous.activeId) : value;
-        this.update({...previous, activeId});
+        this.patch({...previous, activeId});
     };
     readonly open = (accountId: number, label: string, parentId?: string) => {
         const previous = this.getData();
@@ -44,11 +44,11 @@ class UserTabsStore extends Carburetor<TabState> {
             id: tabId, label, closeable: true, parentId,
             tabKind: {kind: 'user-detail' as const, accountId},
         }];
-        this.update({tabs, activeId: tabId});
+        this.patch({tabs, activeId: tabId});
     };
     readonly close = (tabId: string) => {
         const previous = this.getData();
-        this.update({tabs: previous.tabs.filter(t => t.id !== tabId), activeId: previous.activeId === tabId ? null : previous.activeId});
+        this.patch({tabs: previous.tabs.filter(t => t.id !== tabId), activeId: previous.activeId === tabId ? null : previous.activeId});
     };
 }
 

@@ -21,14 +21,16 @@ export class PreviewProvider extends AntiHookComponent<Props> {
     private readonly openPreview = (userId: number, name?: string): void => {
         if (userId) this.store.setData({target: {userId, name}});
     };
-    private readonly close = (): void => this.store.setData({target: null});
-    private readonly context = {openPreview: this.openPreview};
+    private readonly close = (): void => {
+        this.store.setData({target: null});
+    };
+    private readonly contextValue = {openPreview: this.openPreview};
 
     public render() {
         const {target} = this.useCarburetor(this.store);
         const {labels, previewUrl, extraSection, children} = this.props;
         return (
-            <PreviewContext.Provider value={this.context}>
+            <PreviewContext.Provider value={this.contextValue}>
                 {children}
                 {target && (
                     <UserPreviewModal

@@ -21,7 +21,7 @@ export interface EntityHistoryRow {
 }
 
 interface Props {
-    rows: EntityHistoryRow[];
+    rows: readonly EntityHistoryRow[];
     onRowClick?: (row: EntityHistoryRow) => void;
     showAction?: boolean;
     dataTestId?: string;
