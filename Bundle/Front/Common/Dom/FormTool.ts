@@ -26,6 +26,22 @@ function debounce<T extends (...args: any[]) => any>(fn: T, delay: number): T {
     }) as T;
 }
 
+const hasFieldError = (field: DomEl<any>) => {
+    const parent = field.getEl()?.parentNode;
+    return parent?.querySelector('.garnet-form-error');
+};
+
+const removeErrorAlert = (error: Element) => error.remove();
+
+const removeCommonErrorAlerts = (_: DomEl<HTMLElement>, el: HTMLElement): void => {
+    const errors = el.querySelectorAll('.alert-danger');
+    errors.forEach(removeErrorAlert);
+};
+
+const clearCommonErrorContent = (_: DomEl<HTMLElement>, el: HTMLElement): void => {
+    el.innerHTML = '';
+};
+
 export class FormTool {
     protected commonErrors: DomEl<HTMLElement>;
     protected progress: DomEl<HTMLElement>;
@@ -98,16 +114,10 @@ export class FormTool {
     };
 
     protected checkCommonErrors = (): void => {
-        const hasFieldErrors = Object.values(this.fields).some(f => {
-            const parent = f.getEl()?.parentNode;
-            return parent?.querySelector('.garnet-form-error');
-        });
+        const hasFieldErrors = Object.values(this.fields).some(hasFieldError);
 
         if (!hasFieldErrors && this.commonErrors) {
-            this.commonErrors.then((_, el) => {
-                const errors = el.querySelectorAll('.alert-danger');
-                errors.forEach(e => e.remove());
-            });
+            this.commonErrors.then(removeCommonErrorAlerts);
         }
     };
 
@@ -163,9 +173,7 @@ export class FormTool {
     }
 
     public clearErrors = (): FormTool => {
-        this.commonErrors?.then((_, el) => {
-            el.innerHTML = '';
-        });
+        this.commonErrors?.then(clearCommonErrorContent);
 
         for (let el of this.form.items('.garnet-form-error')) {
             el.remove();

@@ -3,6 +3,8 @@ import {IApiSuccessResponse, IGarnetWindow} from '@common/Support/Models';
 
 const w: IGarnetWindow = window as IGarnetWindow;
 
+const parseJsonResponse = <T extends {}>(response: Response) => asyncJsonThen<T>(response);
+
 export const sendPost = <Request extends {}, Response extends {}>(url: string, params: Request): Promise<IApiSuccessResponse<Response>> => {
     const newParams = {...params};
 
@@ -19,5 +21,5 @@ export const sendPost = <Request extends {}, Response extends {}>(url: string, p
         body: JSON.stringify(newParams),
     });
 
-    return response.then((r) => asyncJsonThen<Response>(r));
+    return response.then(parseJsonResponse<Response>);
 }

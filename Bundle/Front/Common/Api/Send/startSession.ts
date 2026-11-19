@@ -12,6 +12,8 @@ export interface StartSessionResponse {
     csrf: string;
 }
 
+const emptyErrorBody = () => ({});
+
 export const startSession = async (consentMarketing: boolean): Promise<string> => {
     const payload: StartSessionPayload & { action: 'start-session' } = {
         action: 'start-session',
@@ -25,7 +27,7 @@ export const startSession = async (consentMarketing: boolean): Promise<string> =
         body: JSON.stringify(payload),
     });
     if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
+        const body = await res.json().catch(emptyErrorBody);
         throw new Error(body?.message || 'Consent request failed');
     }
     const body: StartSessionResponse = await res.json();

@@ -43,6 +43,13 @@ export const prefetchDocument = (url: string): void => {
 export const fetchDocumentPrefetched = (url: string): Promise<string> =>
     documentCache.consume(url, (signal) => getHtml(url, signal)).catch(() => getHtml(url));
 
+const onIntent = (link: HTMLAnchorElement): void => {
+    const key = linkKey(link);
+    if (key) prefetchDocument(key);
+};
+
+const onCancelIntent = () => {};
+
 /**
  * Wire hover/focus/press intent on every eligible link inside `container`
  * to prefetchDocument. Call once per container next to hotClickInit(container)
@@ -57,10 +64,4 @@ export const fetchDocumentPrefetched = (url: string): Promise<string> =>
  * settled within ttlMs) is what dedupes repeat hovers, not cancellation.
  */
 export const initDocumentPrefetchTriggers = (container: HTMLElement): (() => void) =>
-    initIntentTriggers(container, {
-        onIntent: (link) => {
-            const key = linkKey(link);
-            if (key) prefetchDocument(key);
-        },
-        onCancelIntent: () => {},
-    });
+    initIntentTriggers(container, {onIntent, onCancelIntent});

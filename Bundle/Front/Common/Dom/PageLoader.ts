@@ -1,6 +1,15 @@
 import {PageEvents} from '@common/Utils/Ui/PageEvents';
 import {ECommonEvents} from '@common/Support/Enums';
 
+const scheduleReloaded = (resolve: () => void): void => {
+    requestAnimationFrame(() => {
+        PageEvents.init().emmit(ECommonEvents.PAGE_RELOADED, null);
+        resolve();
+    });
+};
+
+const emitReloaded = (): Promise<void> => new Promise<void>(scheduleReloaded);
+
 export class PageLoader {
     static DEFAULT_TIMEOUT = 30000; // 30 seconds
 
@@ -268,14 +277,6 @@ export class PageLoader {
         // navigation-error toasts) keep working after a hot navigation.
         const persistent = document.getElementById('global-toast');
         const keep = (n: ChildNode): boolean => n === persistent;
-
-        const emitReloaded = (): Promise<void> =>
-            new Promise<void>((resolve) => {
-                requestAnimationFrame(() => {
-                    PageEvents.init().emmit(ECommonEvents.PAGE_RELOADED, null);
-                    resolve();
-                });
-            });
 
         // Plain replacement (reduced-motion / fallback path).
         const directSwap = (): Promise<void> => {

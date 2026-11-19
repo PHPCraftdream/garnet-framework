@@ -5,6 +5,8 @@ const w: IGarnetWindow = window as IGarnetWindow;
 
 const ELEMENT_ID_PROP = '__GARNET_ELEMENT_ID__';
 
+const toClassSelector = (className: string) => '.' + className;
+
 export interface IElementRemoveHandler {
     id: string;
     callback: () => void;
@@ -62,7 +64,7 @@ export class DomObserver implements IDomObserver {
         }
 
         this.addHandlers[className] = newHandler;
-        this.addSelectors = Object.keys(this.addHandlers).map((s) => '.' + s).join(', ');
+        this.addSelectors = Object.keys(this.addHandlers).map(toClassSelector).join(', ');
     }
 
     protected mutationHandler = (mutationsList: MutationRecord[]) => {

@@ -8,6 +8,8 @@ import {
 } from '@common/Support/Models';
 import {I18nFramework} from '@framework/I18nGen/I18nFramework';
 
+const wrapDomElement = <T extends HTMLElement>(el: T) => new DomEl<T>(el);
+
 /**
  * Wrapper around an element for fluent chaining of DOM operations.
  */
@@ -270,6 +272,6 @@ export class DomEl<T extends HTMLElement> {
     items = <T extends HTMLElement>(selector: string): DomEl<T>[] => {
         const items: T[] = Array.from(this.el.querySelectorAll(selector) || []);
 
-        return Array.from(items).map((el) => new DomEl<T>(el));
+        return Array.from(items).map(wrapDomElement<T>);
     };
 }

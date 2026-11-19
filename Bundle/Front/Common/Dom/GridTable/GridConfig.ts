@@ -1,5 +1,8 @@
 import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
 
+const navigate = (page: any, pages: any) => `${page} / ${pages}`;
+const formatPage = (page: any) => `${page}`;
+
 // Plain glyphs, not emoji: emoji are someone else's artwork — a different
 // picture on every platform, coloured whatever the font decides.
 export const gridConfig = () => {
@@ -17,8 +20,8 @@ export const gridConfig = () => {
             pagination: {
                 previous: '‹',
                 next: '›',
-                navigate: (page, pages) => `${page} / ${pages}`,
-                page: (page) => `${page}`,
+                navigate,
+                page: formatPage,
                 showing: ' ',
                 of: ' [',
                 to: ' ... ',

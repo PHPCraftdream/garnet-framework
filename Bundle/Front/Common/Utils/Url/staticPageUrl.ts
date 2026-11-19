@@ -7,13 +7,15 @@
  */
 export const staticPageUrl = (slug: string): string => `/page/view~${slug}`;
 
+const renderMarkdownLink = (_m: string, label: string, href: string): string => {
+    const url = href.startsWith('page:') ? staticPageUrl(href.slice(5)) : href;
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+};
+
 /**
  * Convert markdown links `[label](href)` in a translated string to safe
  * anchor HTML. An `href` of the form `page:slug` is resolved through
  * staticPageUrl(); any other href is passed through unchanged.
  */
 export const renderMarkdownLinks = (text: string): string =>
-    text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_m, label: string, href: string) => {
-        const url = href.startsWith('page:') ? staticPageUrl(href.slice(5)) : href;
-        return `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
-    });
+    text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, renderMarkdownLink);

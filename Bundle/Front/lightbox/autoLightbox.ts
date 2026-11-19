@@ -8,13 +8,29 @@ let overlay: HTMLDivElement | null = null;
 let currentGroup: HTMLAnchorElement[] = [];
 let currentIndex = 0;
 
+const onOverlayClick = (e: MouseEvent): void => {
+    if (e.target === overlay) close();
+};
+
+const onImageClick = (e: MouseEvent): void => e.stopPropagation();
+
+const makeArrow = (text: string, dir: -1 | 1) => {
+    const btn = document.createElement('button');
+    btn.innerHTML = text;
+    const side = dir === -1 ? 'left:12px' : 'right:12px';
+    btn.style.cssText = `position:absolute;top:50%;${side};transform:translateY(-50%);width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.15);color:#fff;font-size:22px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;`;
+    btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        navigate(dir);
+    });
+    return btn;
+};
+
 function show(src: string, alt?: string): void {
     if (!overlay) {
         overlay = document.createElement('div');
         overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.85);backdrop-filter:blur(4px);cursor:zoom-out;padding:16px;';
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) close();
-        });
+        overlay.addEventListener('click', onOverlayClick);
         document.body.appendChild(overlay);
     }
 
@@ -26,7 +42,7 @@ function show(src: string, alt?: string): void {
     img.src = src;
     if (alt) img.alt = alt;
     img.style.cssText = 'max-width:100%;max-height:90%;object-fit:contain;border-radius:8px;box-shadow:0 25px 50px rgba(0,0,0,0.5);cursor:default;';
-    img.addEventListener('click', (e) => e.stopPropagation());
+    img.addEventListener('click', onImageClick);
     overlay.appendChild(img);
 
     // Bottom bar: caption + counter
@@ -58,17 +74,6 @@ function show(src: string, alt?: string): void {
 
     // Nav arrows for galleries
     if (currentGroup.length > 1) {
-        const makeArrow = (text: string, dir: -1 | 1) => {
-            const btn = document.createElement('button');
-            btn.innerHTML = text;
-            const side = dir === -1 ? 'left:12px' : 'right:12px';
-            btn.style.cssText = `position:absolute;top:50%;${side};transform:translateY(-50%);width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.15);color:#fff;font-size:22px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;`;
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                navigate(dir);
-            });
-            return btn;
-        };
         overlay.appendChild(makeArrow('&#8249;', -1));
         overlay.appendChild(makeArrow('&#8250;', 1));
     }
@@ -95,19 +100,21 @@ function onKeyDown(e: KeyboardEvent): void {
     if (e.key === 'ArrowRight' && currentGroup.length > 1) navigate(1);
 }
 
+const onDocumentClick = (e: MouseEvent): void => {
+    const link = (e.target as HTMLElement).closest('a[data-lightbox]') as HTMLAnchorElement | null;
+    if (!link) return;
+    e.preventDefault();
+
+    const group = link.getAttribute('data-lightbox') || '';
+    currentGroup = Array.from(document.querySelectorAll<HTMLAnchorElement>(`a[data-lightbox="${group}"]`));
+    currentIndex = currentGroup.indexOf(link);
+    if (currentIndex < 0) currentIndex = 0;
+
+    show(link.href, link.getAttribute('data-alt') || undefined);
+};
+
 export function initAutoLightbox(): void {
-    document.addEventListener('click', (e) => {
-        const link = (e.target as HTMLElement).closest('a[data-lightbox]') as HTMLAnchorElement | null;
-        if (!link) return;
-        e.preventDefault();
-
-        const group = link.getAttribute('data-lightbox') || '';
-        currentGroup = Array.from(document.querySelectorAll<HTMLAnchorElement>(`a[data-lightbox="${group}"]`));
-        currentIndex = currentGroup.indexOf(link);
-        if (currentIndex < 0) currentIndex = 0;
-
-        show(link.href, link.getAttribute('data-alt') || undefined);
-    });
+    document.addEventListener('click', onDocumentClick.bind(undefined));
 
     document.addEventListener('keydown', onKeyDown);
 }

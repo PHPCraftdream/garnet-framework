@@ -7,6 +7,9 @@ type FilterNonNullable<T> = T extends [infer H, ...infer R]
 type TTupleFunc<T extends any[]> = (...args: T) => void;
 type TEachFunc<T extends any[]> = <Args extends T>(...args: Args) => (func: TTupleFunc<FilterNonNullable<Args>>) => void;
 
+const wrapDomElement = <T extends HTMLElement>(el: T) => new DomEl<T>(el);
+const removeErrorElement = (item: DomEl<HTMLElement>) => item.remove();
+
 export class Component {
     protected removeHandlerId: string | null = null;
     protected mainDomEl: DomEl<HTMLElement>;
@@ -52,11 +55,11 @@ export class Component {
     items = <T extends HTMLElement>(selector: string): DomEl<T>[] => {
         const items: T[] = Array.from(this.mainElement.querySelectorAll(selector) || []);
 
-        return Array.from(items).map((el) => new DomEl<T>(el));
+        return Array.from(items).map(wrapDomElement<T>);
     };
 
     clearErrors = () => {
         const errors = this.items('.garnet-form-error');
-        errors.forEach(item => item.remove());
+        errors.forEach(removeErrorElement);
     };
 }

@@ -33,6 +33,8 @@ export interface PrefetchCacheOptions {
 const DEFAULT_TTL_MS = 60000;
 const DEFAULT_MAX_ENTRIES = 50;
 
+const ignorePrefetchRejection = (): void => {};
+
 export class PrefetchCache<T = unknown> {
     private readonly entries = new Map<string, CacheEntry<T>>();
     private readonly ttlMs: number;
@@ -92,7 +94,7 @@ export class PrefetchCache<T = unknown> {
         // .then()/.catch() on the same promise via consume()'s return value,
         // which still sees the real rejection: multiple handlers on one
         // promise each fire on their own, this doesn't swallow it for them.
-        promise.catch(() => { /* swallowed for the prefetch-only path */ });
+        promise.catch(ignorePrefetchRejection);
 
         entry.promise = promise;
         this.evictOldestIfFull();

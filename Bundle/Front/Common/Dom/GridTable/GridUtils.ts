@@ -9,6 +9,8 @@ import {
 import {TzList} from '@common/Utils/Time/TzList';
 import {IDataListItem} from '@common/Support/Models';
 
+const selectValueToListItem = (el: string): IDataListItem => ({value: el, text: el});
+
 export class GridUtils {
     static isGridData<T>(data: IGridInfo | unknown): data is IGridInfo {
         const d = data as IGridInfo;
@@ -42,7 +44,7 @@ export class GridUtils {
 
     static getSelectArr(type: TGridSelectField): IDataListItem[] {
         if (GridUtils.isSelect(type)) {
-            return type.select.map((el) => ({value: el, text: el}));
+            return type.select.map(selectValueToListItem);
         } else if (GridUtils.isMap(type)) {
             return type.map;
         } else if (GridUtils.isTimeZone(type)) {

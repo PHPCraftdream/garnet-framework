@@ -16,6 +16,11 @@ const measurePanelHeight = (): number => {
     return fixedChild?.getBoundingClientRect().height ?? 0;
 };
 
+const onPanelResize = (): void => {
+    const h = measurePanelHeight();
+    document.body.style.paddingBottom = `${Math.ceil(h)}px`;
+};
+
 // Reserve room at the bottom of the document for the floating dev panel so
 // it doesn't overlap the last row of long pages (grids, lists, tables). Uses
 // ResizeObserver so wrapping the buttons to a second line on narrow viewports
@@ -28,10 +33,7 @@ const trackPanelHeight = (): void => {
         requestAnimationFrame(trackPanelHeight);
         return;
     }
-    resizeObserver = new ResizeObserver(() => {
-        const h = measurePanelHeight();
-        document.body.style.paddingBottom = `${Math.ceil(h)}px`;
-    });
+    resizeObserver = new ResizeObserver(onPanelResize);
     resizeObserver.observe(fixedChild);
 };
 

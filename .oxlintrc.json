@@ -19,7 +19,8 @@
     "**/*.gen.js",
     "**/*.gen.css",
     "**/I18nGen/**",
-    "vendor/**"
+    "vendor/**",
+    "**/ThirdParty/**"
   ],
   "rules": {
     "no-unused-vars": "warn",

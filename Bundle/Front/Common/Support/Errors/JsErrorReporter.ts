@@ -60,31 +60,34 @@ export function reportHandledError(message: string, cause?: unknown): void {
     });
 }
 
+const onWindowError = (event: ErrorEvent): void => {
+    void send({
+        message: String(event.message ?? 'Unknown error').slice(0, 1024),
+        stack: event.error instanceof Error && event.error.stack ? event.error.stack.slice(0, 8192) : undefined,
+        file: event.filename || undefined,
+        line: event.lineno || 0,
+        col: event.colno || 0,
+        url: window.location.href,
+    });
+};
+
+const onUnhandledRejection = (event: PromiseRejectionEvent): void => {
+    const reason: unknown = event.reason;
+    const msg = reason instanceof Error ? reason.message : String(reason ?? 'Unhandled rejection');
+    const stack = reason instanceof Error ? reason.stack : undefined;
+    void send({
+        message: msg.slice(0, 1024),
+        stack: stack ? stack.slice(0, 8192) : undefined,
+        file: undefined,
+        line: 0,
+        col: 0,
+        url: window.location.href,
+    });
+};
+
 export function installJsErrorReporter(): void {
     if (typeof window === 'undefined') return;
 
-    window.addEventListener('error', (event: ErrorEvent) => {
-        void send({
-            message: String(event.message ?? 'Unknown error').slice(0, 1024),
-            stack: event.error instanceof Error && event.error.stack ? event.error.stack.slice(0, 8192) : undefined,
-            file: event.filename || undefined,
-            line: event.lineno || 0,
-            col: event.colno || 0,
-            url: window.location.href,
-        });
-    });
-
-    window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
-        const reason: unknown = event.reason;
-        const msg = reason instanceof Error ? reason.message : String(reason ?? 'Unhandled rejection');
-        const stack = reason instanceof Error ? reason.stack : undefined;
-        void send({
-            message: msg.slice(0, 1024),
-            stack: stack ? stack.slice(0, 8192) : undefined,
-            file: undefined,
-            line: 0,
-            col: 0,
-            url: window.location.href,
-        });
-    });
+    window.addEventListener('error', onWindowError.bind(undefined));
+    window.addEventListener('unhandledrejection', onUnhandledRejection.bind(undefined));
 }

@@ -3,6 +3,8 @@ import * as React from 'react';
 
 type ErrorMap = Record<string, string>;
 
+const notifyErrorListener = (listener: () => void) => listener();
+
 /**
  * Pub-sub store for field-level validation errors.
  *
@@ -48,10 +50,10 @@ class FormErrorStore {
         }
         this.errors = errors;
         for (const name of changed) {
-            this.listeners.get(name)?.forEach(l => l());
+            this.listeners.get(name)?.forEach(notifyErrorListener);
         }
         if (changed.size > 0) {
-            this.anyListeners.forEach(l => l());
+            this.anyListeners.forEach(notifyErrorListener);
         }
     }
 }
