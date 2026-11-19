@@ -41,6 +41,8 @@
 
     "garnet-tsx/one-export-per-component": "warn",
     "garnet-tsx/max-component-lines": "warn",
-    "garnet-tsx/max-component-nesting": "warn"
+    "garnet-tsx/max-component-nesting": "warn",
+
+    "carburetor/no-react-hooks-in-components": "error"
   }
 }
