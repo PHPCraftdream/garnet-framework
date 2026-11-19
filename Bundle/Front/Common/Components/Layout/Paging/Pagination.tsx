@@ -32,13 +32,10 @@ const fallbackLabels = (): PaginationLabels => ({
     items: I18nFramework.Pagination_Items(),
 });
 
-/**
- * Compute which page numbers to show: first, last, current +/- 1, with ellipses.
- * Example for page=5, total=10: [1, '...', 4, 5, 6, '...', 10]
- */
 const pageIndexToNumber = (_: unknown, index: number): number => index + 1;
 const comparePageNumbers = (a: number, b: number): number => a - b;
 
+/** Keep the first, last, and nearby pages; mark gaps with ellipses. */
 function getPageNumbers(page: number, totalPages: number): (number | '...')[] {
     if (totalPages <= 7) {
         return Array.from({length: totalPages}, pageIndexToNumber);

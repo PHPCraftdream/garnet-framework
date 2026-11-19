@@ -14,9 +14,6 @@
 .fg-modal-overlay {
   @apply fixed inset-0 z-50 flex items-center justify-center bg-black/50;
 }
-.fg-modal-overlay-high {
-  @apply fixed inset-0 z-[200] flex items-center justify-center bg-black/50;
-}
 .fg-modal-card {
   @apply bg-surface rounded-xl shadow-2xl border border-default w-full mx-4 p-6;
 }
@@ -361,17 +358,6 @@
   @apply fixed bottom-4 right-20 z-[100] w-12 h-12 rounded-full bg-surface-alt text-on-surface shadow-lg hover:bg-surface-hover transition-colors flex items-center justify-center no-underline;
 }
 
-.support-widget-panel {
-  @apply fixed bottom-20 right-4 z-[100] bg-surface rounded-lg shadow-xl border border-default flex flex-col;
-  width: 380px;
-  max-height: 500px;
-}
-
 .support-widget-im-link {
   @apply flex items-center gap-2 px-4 py-2 bg-surface-alt border-b border-default text-sm no-underline hover:bg-surface-hover;
-}
-
-.support-widget-body {
-  @apply flex-1 overflow-y-auto;
-  min-height: 200px;
 }

@@ -44,6 +44,7 @@
     "garnet-tsx/max-component-nesting": "warn"
   },
   "overrides": [
+    {"files": ["**/AdminGrid/AdminGrid.tsx"], "rules": {"carburetor/require-function-class": "error"}},
     {
       "files": ["**/Common/Components/Admin/AdminLog/details/ActionLogDetail.tsx", "**/Common/Components/Admin/AdminLog/details/CronLogDetail.tsx", "**/Common/Components/Admin/AdminLog/details/ErrorLogDetail.tsx"],
       "rules": {"carburetor/require-function-class": "error", "carburetor/no-react-hooks-in-components": "error"}

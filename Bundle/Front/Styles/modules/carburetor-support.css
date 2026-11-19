@@ -37,6 +37,10 @@
   --color-supportconv-edge: var(--color-border-subtle);
   /* carburetor-disable-next-line valid-color-role */
   --color-supportconv-wash: var(--color-bg-surface-alt);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-supportpanel-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-supportpanel-wash: var(--color-bg-surface);
 }
 
 @utility tone-supportinherit-plain { @apply text-supportinherit-ink; }
@@ -90,7 +94,15 @@
 @utility type-support-ticket-title { @apply text-sm font-medium text-ellipsis whitespace-nowrap; }
 @utility shape-support-empty-line { @apply py-4; }
 
+@utility tone-supportpanel-outlined { @apply border-supportpanel-edge bg-supportpanel-wash; }
+@utility layout-support-panel { @apply fixed bottom-20 right-4 z-[100] flex flex-col; }
+@utility shape-support-panel { @apply rounded-lg border; width: 380px; max-height: 500px; }
+@utility effect-support-panel { @apply shadow-xl; }
+@utility shape-support-panel-body { min-height: 200px; }
+
 @layer components {
+  .support-widget-panel { @apply tone-supportpanel-outlined layout-support-panel shape-support-panel effect-support-panel; }
+  .support-widget-body { @apply tone-supportinherit-plain layout-support-list shape-support-panel-body; }
   .support-form-label { @apply tone-supportsecondary-plain layout-support-form-label shape-support-form-label type-support-form-label; }
   .support-widget-new-form { @apply tone-supportinherit-plain layout-support-new-form shape-support-new-form; }
   .support-widget-back-btn { @apply tone-supportlink-plain shape-support-back-button type-support-back-button; }

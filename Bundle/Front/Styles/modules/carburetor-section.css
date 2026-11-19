@@ -1,0 +1,6 @@
+@utility tone-sectioninherit-plain { @apply text-inherit; }
+@utility shape-section-soft { @apply rounded-2xl p-4; }
+
+@layer components {
+  .section-soft { @apply tone-sectioninherit-plain shape-section-soft; }
+}

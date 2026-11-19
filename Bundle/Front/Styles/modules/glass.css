@@ -175,11 +175,11 @@ body.glass-skin::after {
 /* All buttons get a hairline + a glow on hover. Non-solid variants
    (outline / secondary / ghost) also get a translucent frosted fill. */
 
-.glass-skin :is(.btn, .external-primary-action, .external-secondary-action, .send-button-primary, .send-button-primary-small, .send-button-warning, .send-button-warning-small, .snippet-save, .snippet-delete, .static-admin-create-open, .static-admin-create-submit, .static-admin-cancel, .admin-log-section-reset, .entity-history-button, .user-preview-action, .auth2-submit-primary, .auth2-submit-success, .primary-action-button, .admin-filter-reset, .confirm-modal-cancel, .confirm-modal-success, .confirm-modal-danger, .btn-outline-warning-full, .attachment-add-button, .compact-outline-action, .compact-success-action, .settings-host-button, .upload-img-btn, .change-img-btn, .del-img-btn) {
+.glass-skin :is(.btn, .external-primary-action, .external-secondary-action, .upload-img-btn, .change-img-btn, .del-img-btn, .snippet-save, .snippet-delete, .static-admin-create-open, .static-admin-create-submit, .static-admin-cancel, .admin-log-section-reset, .send-button-primary, .send-button-primary-small, .send-button-warning, .send-button-warning-small, .entity-history-button, .user-preview-action, .auth2-submit-primary, .auth2-submit-success, .slot-remove-btn, .primary-action-button, .admin-filter-reset, .confirm-modal-cancel, .confirm-modal-success, .confirm-modal-danger, .btn-outline-warning-full, .attachment-add-button, .compact-outline-action, .compact-success-action, .settings-host-button) {
     transition: box-shadow 0.18s ease, filter 0.18s ease, transform 0.12s ease;
     border: 1px solid color-mix(in srgb, white 16%, var(--color-border));
 }
-.glass-skin :is(.btn, .external-primary-action, .external-secondary-action, .send-button-primary, .send-button-primary-small, .send-button-warning, .send-button-warning-small, .snippet-save, .snippet-delete, .static-admin-create-open, .static-admin-create-submit, .static-admin-cancel, .admin-log-section-reset, .entity-history-button, .user-preview-action, .auth2-submit-primary, .auth2-submit-success, .primary-action-button, .admin-filter-reset, .confirm-modal-cancel, .confirm-modal-success, .confirm-modal-danger, .btn-outline-warning-full, .attachment-add-button, .compact-outline-action, .compact-success-action, .settings-host-button, .upload-img-btn, .change-img-btn, .del-img-btn):hover {
+.glass-skin :is(.btn, .external-primary-action, .external-secondary-action, .upload-img-btn, .change-img-btn, .del-img-btn, .snippet-save, .snippet-delete, .static-admin-create-open, .static-admin-create-submit, .static-admin-cancel, .admin-log-section-reset, .send-button-primary, .send-button-primary-small, .send-button-warning, .send-button-warning-small, .entity-history-button, .user-preview-action, .auth2-submit-primary, .auth2-submit-success, .slot-remove-btn, .primary-action-button, .admin-filter-reset, .confirm-modal-cancel, .confirm-modal-success, .confirm-modal-danger, .btn-outline-warning-full, .attachment-add-button, .compact-outline-action, .compact-success-action, .settings-host-button):hover {
     box-shadow:
         0 0 0 1px color-mix(in srgb, var(--color-accent) 32%, transparent),
         0 6px 7px -8px color-mix(in srgb, var(--color-accent) 45%, transparent),
@@ -211,7 +211,7 @@ body.glass-skin::after {
 }
 
 /* Primary action — gradient fill + permanent soft glow. */
-.glass-skin :is(.btn-primary, .external-primary-action, .send-button-primary, .send-button-primary-small, .snippet-save, .static-admin-create-open, .static-admin-create-submit, .auth2-submit-primary, .primary-action-button) {
+.glass-skin :is(.btn-primary, .external-primary-action, .snippet-save, .static-admin-create-open, .static-admin-create-submit, .send-button-primary, .send-button-primary-small, .auth2-submit-primary, .primary-action-button) {
     background-image: linear-gradient(135deg, var(--color-accent), color-mix(in srgb, var(--color-status-purple) 70%, var(--color-accent)));
     border: 1px solid color-mix(in srgb, white 22%, transparent);
     box-shadow:
@@ -219,7 +219,7 @@ body.glass-skin::after {
         0 0 7px -8px color-mix(in srgb, var(--color-status-purple) 50%, transparent),
         inset 0 1px 0 color-mix(in srgb, white 28%, transparent);
 }
-.glass-skin :is(.btn-primary, .external-primary-action, .send-button-primary, .send-button-primary-small, .snippet-save, .static-admin-create-open, .static-admin-create-submit, .auth2-submit-primary, .primary-action-button):hover {
+.glass-skin :is(.btn-primary, .external-primary-action, .snippet-save, .static-admin-create-open, .static-admin-create-submit, .send-button-primary, .send-button-primary-small, .auth2-submit-primary, .primary-action-button):hover {
     background-image: linear-gradient(135deg, var(--color-accent-hover), color-mix(in srgb, var(--color-status-purple) 78%, var(--color-accent-hover)));
     filter: brightness(1.04);
     box-shadow:

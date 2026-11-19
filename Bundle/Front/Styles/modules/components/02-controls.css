@@ -427,6 +427,5 @@
 .dropzone-area[data-disabled="true"] { @apply pointer-events-none opacity-40; }
 .dropzone-spinner { border-top-color: transparent; }
 .dropzone-preview:hover :is(.dropzone-remove, .dropzone-filename) { opacity: 1; }
-
 .radix-select-content[data-popper] { @apply translate-y-1; }
 .radix-select-viewport[data-popper] { @apply h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]; }

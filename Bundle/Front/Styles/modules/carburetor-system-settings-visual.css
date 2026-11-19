@@ -62,7 +62,6 @@
 
 @utility shape-settings-page { @apply max-w-4xl space-y-6; }
 @utility shape-settings-page-form { @apply space-y-6; }
-@utility shape-settings-page-section { @apply rounded-2xl p-4; }
 @utility shape-settings-page-message { @apply rounded-lg border px-4 py-3; }
 @utility type-settings-page-message { @apply text-sm; }
 
@@ -114,7 +113,6 @@
 @layer components {
   .settings-page { @apply tone-settingsinherit-plain shape-settings-page; }
   .settings-page-form { @apply tone-settingsinherit-plain shape-settings-page-form; }
-  .section-soft { @apply tone-settingsinherit-plain shape-settings-page-section; }
   .settings-page-success { @apply tone-settingssuccess-outlined shape-settings-page-message type-settings-page-message; }
   .settings-page-error { @apply tone-settingserror-outlined shape-settings-page-message type-settings-page-message; }
   .settings-fields-grid { @apply tone-settingsinherit-plain layout-settings-fields-grid; }
