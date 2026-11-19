@@ -1,5 +1,6 @@
 import * as React from 'react';
-import {Wallet, Mail, MessagesSquare, User, type LucideIcon} from 'lucide-react';
+import {Mail, MessagesSquare, User, type LucideIcon} from 'lucide-react';
+import {UtilityBalanceParts} from './UtilityBalanceParts';
 
 export interface UtilityClusterProps {
     unreadMessages: number;
@@ -45,18 +46,17 @@ export const UtilityCluster: React.FC<UtilityClusterProps> = ({
     const profileActive = profileUrl ? (matchesPath(pathname, profileUrl) || pathname.startsWith(profileUrl + '_')) : false;
 
     return (
-        <div className="util-cluster">
+        <div className="utility-cluster">
             <a
                 href={balanceUrl}
-                className={`util-balance-pill hot-click${balanceActive ? ' util-balance-pill--active' : ''}`}
+                // carburetor-disable-next-line require-function-class
+                className="utility-balance hot-click"
                 title={balanceLabel}
                 data-test-id="util-balance"
                 aria-current={balanceActive ? 'page' : undefined}
                 aria-label={`${balanceLabel}: ${formatRub(balance)} ₽`}
             >
-                <Wallet size={16} className="util-balance-icon" aria-hidden="true" />
-                <span className="util-balance-amount">{formatRub(balance)}</span>
-                <span className="util-balance-currency" aria-hidden="true">₽</span>
+                <UtilityBalanceParts amount={formatRub(balance)} />
             </a>
 
             <UtilityIconButton
@@ -114,7 +114,8 @@ const UtilityIconButton: React.FC<UtilityIconButtonProps> = ({
     return (
         <a
             href={href}
-            className={`util-icon-btn hot-click${active ? ' util-icon-btn--active' : ''}`}
+            // carburetor-disable-next-line require-function-class
+            className="utility-icon-button hot-click"
             title={label}
             data-test-id={testId}
             aria-current={active ? 'page' : undefined}
@@ -122,7 +123,7 @@ const UtilityIconButton: React.FC<UtilityIconButtonProps> = ({
         >
             <Icon size={18} aria-hidden="true" />
             {hasBadge && (
-                <span className="util-badge" aria-hidden="true">
+                <span className="utility-unread-badge" aria-hidden="true">
                     {display}
                 </span>
             )}

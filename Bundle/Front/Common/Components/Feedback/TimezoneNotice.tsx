@@ -54,18 +54,18 @@ export const TimezoneNotice: React.FC<Props> = ({warnOnly = false, infoOnly = fa
             )}
             {!infoOnly && mismatched && (
                 <Banner variant="warn" title={t.Tz_Mismatch_Title()} dataTestId="tz-banner-warn">
-                    <div className="tz-mismatch-row">
-                        <span className="tz-chip-inline tz-chip-active">
-                            <span className="tz-chip-check" aria-hidden="true"><Check size={12} /></span>
-                            <span className="tz-chip-label-text">{t.Tz_Mismatch_Footer([userTzName])}:</span>
-                            <span className="tz-chip-time">{nowInUser}</span>
+                    <div className="timezone-mismatch-row">
+                        <span className="timezone-active-chip">
+                            <span className="timezone-check-icon" aria-hidden="true"><Check size={12} /></span>
+                            <span className="timezone-chip-label">{t.Tz_Mismatch_Footer([userTzName])}:</span>
+                            <span className="timezone-chip-time">{nowInUser}</span>
                         </span>
-                        <span className="tz-diff-pill" aria-hidden="true">{formatDiff(offsetMin)}:</span>
-                        <span className="tz-chip-inline tz-chip-muted">
-                            <span className="tz-chip-label-text">{t.Tz_Mismatch_BrowserLabel()}:</span>
-                            <span className="tz-chip-name">{browserTzName}</span>
-                            <span className="tz-chip-sep">·</span>
-                            <span className="tz-chip-time">{nowInBrowser}</span>
+                        <span className="timezone-difference" aria-hidden="true">{formatDiff(offsetMin)}:</span>
+                        <span className="timezone-browser-chip">
+                            <span className="timezone-chip-label">{t.Tz_Mismatch_BrowserLabel()}:</span>
+                            <span className="timezone-chip-name">{browserTzName}</span>
+                            <span className="timezone-chip-separator">·</span>
+                            <span className="timezone-chip-time">{nowInBrowser}</span>
                         </span>
                     </div>
                 </Banner>

@@ -1,4 +1,6 @@
 import * as React from 'react';
+import {TabBreadcrumb} from './TabBreadcrumb';
+import {TabClose} from './TabClose';
 
 export interface TabDef {
     id: string;
@@ -15,7 +17,8 @@ interface Props {
 }
 
 function buildBreadcrumb(tabs: TabDef[], activeId: string): TabDef[] {
-    const map = new Map(tabs.map(t => [t.id, t]));
+    const map = new Map<string, TabDef>();
+    for (const tab of tabs) map.set(tab.id, tab);
     const chain: TabDef[] = [];
     let cur = map.get(activeId);
     while (cur) {
@@ -25,56 +28,48 @@ function buildBreadcrumb(tabs: TabDef[], activeId: string): TabDef[] {
     return chain;
 }
 
-export const TabNav: React.FC<Props> = ({tabs, activeId, onSelect, onClose}) => {
-    const breadcrumb = buildBreadcrumb(tabs, activeId);
-    const showBreadcrumb = breadcrumb.length > 1;
+interface TabButtonProps {
+    tab: TabDef;
+    active: boolean;
+    onSelect: (id: string) => void;
+    onClose?: (id: string) => void;
+}
 
-    return (
-        <>
-            <ul className="tab-bar mb-0">
-                {tabs.map(tab => (
-                    <li key={tab.id} className="mr-1">
-                        <button
-                            className={`tab-link ${activeId === tab.id ? 'tab-link-active' : ''}`}
-                            data-test-id={`tabnav-btn-${tab.id}`} aria-selected={activeId === tab.id} onClick={() => onSelect(tab.id)}
-                        >
-                            {tab.label}
-                            {tab.closeable && (
-                                <span
-                                    className="text-muted hover:text-secondary leading-none text-base cursor-pointer"
-                                    title="Close tab"
-                                    data-test-id={`tabnav-close-${tab.id}`} onClick={e => { e.stopPropagation(); onClose?.(tab.id); }}
-                                >
-                                    ×
-                                </span>
-                            )}
-                        </button>
-                    </li>
-                ))}
-            </ul>
+class TabButton extends React.Component<TabButtonProps> {
+    private readonly handleClick = (): void => { this.props.onSelect(this.props.tab.id); };
 
-            {showBreadcrumb ? (
-                <nav className="flex items-center gap-1 text-xs text-muted px-1 py-1.5 mb-3 border-b border-default">
-                    {breadcrumb.map((tab, i) => (
-                        <React.Fragment key={tab.id}>
-                            {i > 0 && <span className="text-muted select-none">›</span>}
-                            {i < breadcrumb.length - 1 ? (
-                                <button
-                                    data-test-id={`breadcrumb-btn-${tab.id}`}
-                                    className="hover:text-accent transition-colors"
-                                    onClick={() => onSelect(tab.id)}
-                                >
-                                    {tab.label}
-                                </button>
-                            ) : (
-                                <span className="text-secondary font-medium">{tab.label}</span>
-                            )}
-                        </React.Fragment>
-                    ))}
-                </nav>
-            ) : (
-                <div className="mb-4" />
-            )}
-        </>
-    );
-};
+    public render() {
+        const {tab, active, onClose} = this.props;
+        return (
+            <li className="tabnav-item">
+                <button
+                    className="tabnav-link"
+                    data-test-id={`tabnav-btn-${tab.id}`}
+                    aria-selected={active}
+                    onClick={this.handleClick}
+                >
+                    {tab.label}
+                    {tab.closeable && <TabClose tabId={tab.id} onClose={onClose} />}
+                </button>
+            </li>
+        );
+    }
+}
+
+export class TabNav extends React.Component<Props> {
+    private readonly renderTab = (tab: TabDef): React.ReactNode => {
+        const {activeId, onSelect, onClose} = this.props;
+        return <TabButton key={tab.id} tab={tab} active={activeId === tab.id} onSelect={onSelect} onClose={onClose} />;
+    };
+
+    public render() {
+        const {tabs, activeId, onSelect} = this.props;
+        const breadcrumb = buildBreadcrumb(tabs, activeId);
+        return (
+            <>
+                <ul className="tabnav-bar">{tabs.map(this.renderTab)}</ul>
+                <TabBreadcrumb breadcrumb={breadcrumb} onSelect={onSelect} />
+            </>
+        );
+    }
+}

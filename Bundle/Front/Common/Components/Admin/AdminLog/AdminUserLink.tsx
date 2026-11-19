@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {AntiHookComponent} from '@react-carburetor/core';
 import {UserDetailContext} from '../AdminPanel/UserDetailContext';
 import {appUrl} from '@common/Utils/Url/appUrl';
 
@@ -16,20 +17,33 @@ interface Props {
     className?: string;
 }
 
-export const AdminUserLink: React.FC<Props> = ({id, name, role, className = ''}) => {
-    const {openUser} = React.useContext(UserDetailContext);
-    if (!id) return <span className={className}>{name || '—'}</span>;
-
-    const handleClick = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        e.preventDefault();
+class AdminUserLinkView extends AntiHookComponent<Props & {openUser: React.ContextType<typeof UserDetailContext>['openUser']}> {
+    private readonly handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+        const {id, name, openUser} = this.props;
+        event.stopPropagation();
+        event.preventDefault();
         openUser(id, name || `#${id}`);
     };
 
-    return (
-        <span className={`common-entity-link ${className}`}>
-            <a href={appUrl(`/admin/#user=${id}`)} className="common-link" onClick={handleClick}>{name || `#${id}`}</a>
-            {role && <span className="common-role-tag">{role}</span>}
-        </span>
-    );
+    render() {
+        const {id, name, role, className = ''} = this.props;
+        if (!id) {
+            // Дополнительный класс — часть публичного API.
+            // carburetor-disable-next-line require-function-class
+            return <span className={className}>{name || '—'}</span>;
+        }
+        return (
+            // Дополнительный класс — часть публичного API.
+            // carburetor-disable-next-line require-function-class
+            <span className={className ? `common-entity-link ${className}` : 'common-entity-link'}>
+                <a href={appUrl(`/admin/#user=${id}`)} className="common-link" onClick={this.handleClick}>{name || `#${id}`}</a>
+                {role && <span className="common-role-tag">{role}</span>}
+            </span>
+        );
+    }
+}
+
+export const AdminUserLink: React.FC<Props> = props => {
+    const {openUser} = React.useContext(UserDetailContext);
+    return <AdminUserLinkView {...props} openUser={openUser} />;
 };

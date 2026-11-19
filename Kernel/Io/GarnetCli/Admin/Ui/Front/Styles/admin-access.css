@@ -1,0 +1,52 @@
+/* Preserve the CLI Admin's existing Tailwind palette. */
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-cliaccesscard-wash: var(--color-white);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-cliaccessdanger-ink: var(--color-red-600);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-cliaccessmessage-ink: var(--color-gray-600);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-cliaccesscommand-wash: var(--color-gray-100);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-cliaccesshint-ink: var(--color-gray-400);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-cliaccessdenied-ink: var(--color-gray-500);
+}
+
+@utility tone-cliaccessinherit-plain { @apply text-inherit; }
+@utility tone-cliaccesscard-soft { @apply bg-cliaccesscard-wash; }
+@utility tone-cliaccessdanger-plain { @apply text-cliaccessdanger-ink; }
+@utility tone-cliaccessmessage-plain { @apply text-cliaccessmessage-ink; }
+@utility tone-cliaccesscommand-soft { @apply bg-cliaccesscommand-wash; }
+@utility tone-cliaccesshint-plain { @apply text-cliaccesshint-ink; }
+@utility tone-cliaccessdenied-plain { @apply text-cliaccessdenied-ink; }
+
+@utility layout-cliaccess-page { @apply flex items-center justify-center; }
+@utility shape-cliaccess-page { @apply min-h-screen; }
+@utility shape-cliaccess-card { @apply rounded-lg p-8 max-w-md w-full; }
+@utility type-cliaccess-card { @apply text-center; }
+@utility effect-cliaccess-card { @apply shadow-lg; }
+@utility shape-cliaccess-title { @apply mb-4; }
+@utility type-cliaccess-title { @apply text-2xl font-bold; }
+@utility shape-cliaccess-message { @apply mb-4; }
+@utility layout-cliaccess-command { @apply block; }
+@utility shape-cliaccess-command { @apply rounded p-3; }
+@utility type-cliaccess-command { @apply text-sm font-mono; }
+@utility shape-cliaccess-hint { @apply mt-4; }
+@utility type-cliaccess-hint { @apply text-sm; }
+@utility shape-cliaccess-inline-command { @apply rounded px-2 py-1; }
+
+@layer components {
+  .cliaccess-body { @apply tone-cliaccesscommand-soft; }
+  .cliaccess-page { @apply tone-cliaccessinherit-plain layout-cliaccess-page shape-cliaccess-page; }
+  .cliaccess-card { @apply tone-cliaccesscard-soft shape-cliaccess-card type-cliaccess-card effect-cliaccess-card; }
+  .cliaccess-title { @apply tone-cliaccessinherit-plain shape-cliaccess-title type-cliaccess-title; }
+  .cliaccess-denied-title { @apply tone-cliaccessdanger-plain shape-cliaccess-title type-cliaccess-title; }
+  .cliaccess-message { @apply tone-cliaccessmessage-plain shape-cliaccess-message; }
+  .cliaccess-command { @apply tone-cliaccesscommand-soft layout-cliaccess-command shape-cliaccess-command type-cliaccess-command; }
+  .cliaccess-hint { @apply tone-cliaccesshint-plain shape-cliaccess-hint type-cliaccess-hint; }
+  .cliaccess-denied-hint { @apply tone-cliaccessdenied-plain type-cliaccess-hint; }
+  .cliaccess-inline-command { @apply tone-cliaccesscommand-soft shape-cliaccess-inline-command; }
+}

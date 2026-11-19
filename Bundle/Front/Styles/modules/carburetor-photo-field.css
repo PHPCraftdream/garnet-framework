@@ -1,0 +1,49 @@
+/* Photo field roles use the existing Garnet and Tailwind colours. */
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-photoinherit-ink: currentColor;
+  /* carburetor-disable-next-line valid-color-role */
+  --color-photohint-ink: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-photobutton-ink: var(--color-text-secondary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-photobutton-edge: var(--color-border-strong);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-photobutton-wash: var(--color-bg-surface-hover);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-photobutton-wash-hover: var(--color-gray-200);
+}
+
+@utility tone-photoinherit-plain { @apply text-photoinherit-ink; }
+@utility tone-photohint-plain { @apply text-photohint-ink; }
+@utility tone-photobutton-outlined { @apply text-photobutton-ink border-photobutton-edge bg-photobutton-wash [&:hover]:bg-photobutton-wash-hover; }
+@utility layout-photo-crop { @apply flex flex-row; }
+@utility shape-photo-crop { @apply p-3; }
+@utility shape-photo-image { @apply max-w-full h-auto; }
+@utility shape-photo-preview { max-width: 400px; max-height: 300px; }
+@utility layout-photo-controls { @apply flex flex-col; }
+@utility shape-photo-controls { @apply px-2; }
+@utility layout-photo-button { @apply inline-flex items-center justify-center gap-1.5; }
+@utility shape-photo-button { @apply rounded-md border; padding: 0.4375rem 0.875rem; }
+@utility shape-photo-change { @apply mb-2; }
+@utility type-photo-button { @apply font-medium leading-normal no-underline whitespace-nowrap; font-size: 0.8125rem; }
+@utility behavior-photo-button { @apply cursor-pointer disabled:cursor-not-allowed!; }
+@utility effect-photo-button { @apply disabled:opacity-50; }
+@utility motion-photo-button { transition: all 0.15s ease; @apply active:translate-y-px disabled:active:transform-none; }
+@utility shape-photo-hint { @apply mt-1; }
+@utility type-photo-hint { @apply text-xs; }
+
+@layer components {
+  .photo-field-area { @apply tone-photoinherit-plain; }
+  .photo-field-readonly { @apply tone-photoinherit-plain; }
+  .input-file { @apply tone-photoinherit-plain; }
+  .crop-block { @apply tone-photoinherit-plain layout-photo-crop shape-photo-crop; }
+  .image-src { @apply tone-photoinherit-plain shape-photo-image; }
+  .photo-preview-box { @apply tone-photoinherit-plain shape-photo-preview; }
+  .photo-controls-column { @apply tone-photoinherit-plain layout-photo-controls shape-photo-controls; }
+  .upload-img-btn { @apply tone-photobutton-outlined layout-photo-button shape-photo-button type-photo-button behavior-photo-button effect-photo-button motion-photo-button; }
+  .change-img-btn { @apply tone-photobutton-outlined layout-photo-button shape-photo-button shape-photo-change type-photo-button behavior-photo-button effect-photo-button motion-photo-button; }
+  .del-img-btn { @apply tone-photobutton-outlined layout-photo-button shape-photo-button type-photo-button behavior-photo-button effect-photo-button motion-photo-button; }
+  .photo-upload-hint { @apply tone-photohint-plain shape-photo-hint type-photo-hint; }
+}

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   },
   "scripts": {
     "build": "rspack build --config rspack.config.ts",
@@ -11,10 +11,11 @@
     "serve": "rspack serve --config rspack.config.ts",
     "lint": "cd .. && oxlint Bundle/Front FrontBuilder",
     "lint:fix": "cd .. && oxlint --fix Bundle/Front FrontBuilder",
+    "lint:carburetor": "cd .. && carburetor-lint Bundle/Front/Styles/modules/carburetor-native-select.css Bundle/Front/Styles/modules/carburetor-classes.css Bundle/Front/Styles/modules/carburetor-calendar.css Bundle/Front/Styles/modules/carburetor-attachment.css Bundle/Front/Styles/modules/carburetor-upload.css Bundle/Front/Styles/modules/carburetor-upload-field.css Bundle/Front/Styles/modules/carburetor-paging.css Bundle/Front/Styles/modules/carburetor-support.css Bundle/Front/Styles/modules/carburetor-feedback.css Bundle/Front/Styles/modules/carburetor-auth.css Bundle/Front/Styles/modules/carburetor-auth-consent.css Bundle/Front/Styles/modules/carburetor-toast.css Bundle/Front/Styles/modules/carburetor-tab-helpers.css Bundle/Front/Styles/modules/carburetor-cards.css Bundle/Front/Styles/modules/carburetor-form-row.css Bundle/Front/Styles/modules/carburetor-form-controls.css Bundle/Front/Styles/modules/carburetor-compact-action.css Bundle/Front/Styles/modules/carburetor-compact-success.css Bundle/Front/Styles/modules/carburetor-native-fields.css Bundle/Front/Styles/modules/carburetor-time-slot.css Bundle/Front/Styles/modules/carburetor-photo-field.css Bundle/Front/Styles/modules/carburetor-navigation-details.css Bundle/Front/Styles/modules/carburetor-utility-visual.css Bundle/Front/Styles/modules/carburetor-system-settings-visual.css Bundle/Front/Styles/modules/carburetor-admin-grid-visual.css Bundle/Front/Styles/modules/carburetor-foreground-modal.css Bundle/Front/Styles/modules/carburetor-warning-button.css Bundle/Front/Styles/modules/carburetor-confirm-modal.css Bundle/Front/Styles/modules/carburetor-admin-filter.css Bundle/Front/Styles/modules/carburetor-static-page.css Bundle/Front/Styles/modules/carburetor-layout.css Bundle/Front/Styles/modules/carburetor-admin-log-detail.css Bundle/Front/Styles/modules/carburetor-primary-action.css Bundle/Front/Common/Components/Admin/AdminLog/details/ActionLogDetail.tsx Bundle/Front/Common/Components/Admin/AdminLog/details/CronLogDetail.tsx Bundle/Front/Common/Components/Admin/AdminLog/details/ErrorLogDetail.tsx Bundle/Front/Common/Components/Controls/ThemeToggle.tsx Bundle/Front/Common/Components/Controls/AsyncIcon.tsx Bundle/Front/Common/Components/Controls/DurationSelect.tsx Bundle/Front/Common/Components/Controls/AsyncIconButton.tsx Bundle/Front/Common/Components/Controls/Calendar.tsx Bundle/Front/Common/Components/Controls/ImageUploadArea.tsx Bundle/Front/Common/Components/Controls/ImageUploadField.tsx Bundle/Front/Common/Components/Layout/Paging Bundle/Front/Common/Components/Feedback/Banner.tsx Bundle/Front/Common/Components/Feedback/ConfirmModal.tsx Bundle/Front/Common/Components/Feedback/TimezoneNotice.tsx Bundle/Front/auth/DevLogin.tsx Bundle/Front/auth/utils/CodeTimer.tsx Bundle/Front/auth/AuthConsentFields.tsx Bundle/Front/auth/Auth2.tsx Bundle/Front/Common/Components/Feedback/GlobalToastRenderer.tsx Bundle/Front/Common/Components/Feedback/Toast.tsx Bundle/Front/Common/Components/Feedback/TimezoneNoticeWarnIsland.tsx Bundle/Front/Common/Components/Layout/Navigation/TabBreadcrumb.tsx Bundle/Front/Common/Components/Layout/Navigation/TabClose.tsx Bundle/Front/Common/Components/Layout/Navigation/TabNav.tsx Bundle/Front/Common/Components/Form/FormBuilder/FormRow.tsx Bundle/Front/Common/Components/Form/FormBuilder/DatalistSelect.tsx Bundle/Front/Common/Components/Form/FormBuilder/FormBooleanField.tsx Bundle/Front/Common/Components/Form/FormBuilder/FormReadonlyValue.tsx Bundle/Front/Common/Components/Form/FormBuilder/FormBuilderInput.tsx Bundle/Front/Common/Components/Form/FormBuilder/FormBuilderTextarea.tsx Bundle/Front/Common/Components/Form/FormBuilder/FormBuilderSelect.tsx Bundle/Front/Common/Components/Form/FormBuilder/FormBuilderError.tsx Bundle/Front/Common/Components/Form/FormBuilder/PhotoField.tsx Bundle/Front/Common/Components/Layout/Navigation/NavigationCountBadge.tsx Bundle/Front/Common/Components/Layout/Navigation/NavigationUnreadDot.tsx Bundle/Front/Common/Components/Layout/Navigation/NavigationDivider.tsx Bundle/Front/Common/Components/Layout/Navigation/UtilityBalanceParts.tsx Bundle/Front/Common/Components/Admin/SystemSettings/SystemSettingsPage/index.tsx Bundle/Front/Common/Components/Admin/SystemSettings/SystemSettingsPage/VersionInfoPanel.tsx Bundle/Front/Common/Components/Admin/SystemSettings/SystemSettingsPage/Tabs/SaveButton.tsx Bundle/Front/Common/Components/Admin/SystemSettings/SystemSettingsPage/SettingsTabStrip.tsx Bundle/Front/Common/Components/Admin/SystemSettings/SystemSettingsPage/OpcacheResetView.tsx Bundle/Front/Common/Components/Admin/SystemSettings/SystemSettingsPage/Tabs/HistoryTab.tsx Bundle/Front/Common/Components/Admin/SystemSettings/SystemSettingsPage/Tabs/RegistrationTab.tsx Bundle/Front/Common/Components/Admin/SystemSettings/SystemSettingsPage/Tabs/PenaltyTab.tsx Bundle/Front/Common/Components/Admin/SystemSettings/SystemSettingsPage/Tabs/ContactsTab.tsx Bundle/Front/Common/Components/Admin/SystemSettings/SystemSettingsPage/Tabs/SmtpTab.tsx Bundle/Front/Common/Components/Admin/SystemSettings/SystemSettingsPage/Tabs/SeoTab.tsx Bundle/Front/Common/Components/Admin/AdminGrid/AdminGrid.tsx Bundle/Front/Common/Components/Admin/AdminGrid/AdminGridBody.tsx Bundle/Front/Common/Components/Admin/AdminGrid/AdminGridSearch.tsx Bundle/Front/Common/Components/Admin/AdminGrid/AdminGridHeader.tsx Bundle/Front/Common/Components/Admin/AdminGrid/AdminGridTableShell.tsx Bundle/Front/Common/Components/Admin/AdminGrid/AdminGridEmptyRow.tsx Bundle/Front/Common/Components/Admin/AdminGrid/AdminGridRow.tsx Bundle/Front/Common/Components/Admin/AdminGrid/AdminGridPagination.tsx",
     "test:lint-plugin": "node oxlint-plugins/garnet-tsx-rules.test.js",
     "typecheck": "tsgo --noEmit -p tsconfig.tsgo.json",
     "typecheck:tsc": "tsc --noEmit",
-    "check": "npm run test:lint-plugin && npm run lint && npm run typecheck"
+    "check": "npm run test:lint-plugin && npm run lint && npm run lint:carburetor && npm run typecheck"
   },
   "dependencies": {
     "@fancyapps/ui": "^5.0.20",
@@ -23,13 +24,14 @@
     "@radix-ui/react-popover": "^1.1.15",
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-tooltip": "^1.2.8",
+    "@react-carburetor/core": "0.3.0",
     "@vkontakte/vkui": "^6.2.0",
     "clsx": "^2.1.1",
     "cropperjs": "^1.5.13",
+    "dompurify": "^3.4.12",
     "gridjs": "^6.0.6",
     "html-to-image": "^1.11.13",
     "js-base64": "^3.7.5",
-    "dompurify": "^3.4.12",
     "lucide": "^0.576.0",
     "lucide-react": "^0.576.0",
     "marked": "^17.0.4",
@@ -40,6 +42,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@react-carburetor/lint": "0.3.0",
     "@rspack/cli": "^1.7.6",
     "@rspack/core": "^1.7.6",
     "@tailwindcss/postcss": "^4.2.1",
@@ -48,19 +51,19 @@
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@types/web": "^0.0.151",
+    "@typescript/native-preview": "latest",
     "autoprefixer": "^10.4.27",
     "cross-env": "^10.1.0",
     "cssnano": "^7.1.2",
     "less": "^4.1.3",
     "less-loader": "^12.3.1",
     "mustache": "^4.2.0",
+    "oxlint": "^1.0.0",
     "postcss": "^8.5.6",
     "postcss-loader": "^8.2.1",
     "tailwindcss": "^4.2.1",
     "ts-node": "^10.9.1",
     "tslib": "^2.6.2",
-    "typescript": "^5.3.2",
-    "oxlint": "^1.0.0",
-    "@typescript/native-preview": "latest"
+    "typescript": "^5.3.2"
   }
 }

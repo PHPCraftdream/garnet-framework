@@ -1,8 +1,10 @@
 import {readNumber} from '@common/Utils/Str/readNumber';
 import {I18nFramework} from '@framework/I18nGen/I18nFramework';
 
+// Сохраняем публичный экспорт класса.
+// oxlint-disable-next-line typescript/no-extraneous-class
 export class Validators {
-    static max_len = (value: string, args: string[], el: HTMLInputElement): string | boolean => {
+    static max_len = (value: string, args: string[], _el: HTMLInputElement): string | boolean => {
         const val = readNumber(args?.[0]);
 
         if (value.length > val) {
@@ -12,7 +14,7 @@ export class Validators {
         return true;
     }
 
-    static min_len = (value: string, args: string[], el: HTMLInputElement): string | boolean => {
+    static min_len = (value: string, args: string[], _el: HTMLInputElement): string | boolean => {
         const val = readNumber(args?.[0]);
 
         if (value.length < val) {
@@ -22,7 +24,7 @@ export class Validators {
         return true;
     }
 
-    static len = (value: string, args: string[], el: HTMLInputElement): string | boolean => {
+    static len = (value: string, args: string[], _el: HTMLInputElement): string | boolean => {
         const min = readNumber(args?.[0]);
         const max = readNumber(args?.[1]);
 
@@ -33,7 +35,7 @@ export class Validators {
         return true;
     }
 
-    static nameSymbols = (value: string, args: string[], el: HTMLInputElement): string | boolean => {
+    static nameSymbols = (value: string, _args: string[], _el: HTMLInputElement): string | boolean => {
         if (!/^[\p{L} ,]+$/u.test(value)) {
             return I18nFramework.Common_IncorrectValue();
         }
@@ -41,7 +43,7 @@ export class Validators {
         return true;
     }
 
-    static simpleText = (value: string, args: string[], el: HTMLInputElement): string | boolean => {
+    static simpleText = (value: string, _args: string[], _el: HTMLInputElement): string | boolean => {
         if (!/^[\p{L}\p{P}\p{So} -~]*$/u.test(value)) {
             return I18nFramework.Common_IncorrectValue();
         }
@@ -49,7 +51,7 @@ export class Validators {
         return true;
     }
 
-    static in_array = (value: string, args: string[], el: HTMLInputElement): string | boolean => {
+    static in_array = (value: string, args: string[], _el: HTMLInputElement): string | boolean => {
         const v = value + '';
 
         for (let arg of args) {
@@ -61,11 +63,11 @@ export class Validators {
         return I18nFramework.Common_IncorrectValue();
     }
 
-    static required = (value: string, args: string[], el: HTMLInputElement): string | boolean => {
-        return !!value ? true : I18nFramework.Common_RequiredValue();
+    static required = (value: string, _args: string[], _el: HTMLInputElement): string | boolean => {
+        return value ? true : I18nFramework.Common_RequiredValue();
     }
 
-    static tzExists = (value: string, args: string[], el: HTMLInputElement): string | boolean => {
+    static tzExists = (value: string, _args: string[], _el: HTMLInputElement): string | boolean => {
         const browserTimeZones = Intl.supportedValuesOf('timeZone');
 
         for (let tz of browserTimeZones) {
@@ -77,7 +79,7 @@ export class Validators {
         return I18nFramework.Common_IncorrectValue();
     }
 
-    static email = (value: string, args: string[], el: HTMLInputElement): string | boolean => {
+    static email = (value: string, _args: string[], _el: HTMLInputElement): string | boolean => {
         if (!value) {
             return true;
         }
@@ -91,7 +93,7 @@ export class Validators {
         return true;
     }
 
-    static int = (value: string, args: string[], el: HTMLInputElement): string | boolean => {
+    static int = (value: string, _args: string[], _el: HTMLInputElement): string | boolean => {
         if (value === '' || value === null || value === undefined) {
             return true;
         }
@@ -103,7 +105,7 @@ export class Validators {
         return true;
     }
 
-    static min = (value: string, args: string[], el: HTMLInputElement): string | boolean => {
+    static min = (value: string, args: string[], _el: HTMLInputElement): string | boolean => {
         const min = readNumber(args?.[0]);
         const numValue = value === '' ? Infinity : Number(value);
 
@@ -118,11 +120,11 @@ export class Validators {
         return true;
     }
 
-    static minVal = (value: string, args: string[], el: HTMLInputElement): string | boolean => {
-        return Validators.min(value, args, el);
+    static minVal = (value: string, args: string[], _el: HTMLInputElement): string | boolean => {
+        return Validators.min(value, args, _el);
     }
 
-    static max = (value: string, args: string[], el: HTMLInputElement): string | boolean => {
+    static max = (value: string, args: string[], _el: HTMLInputElement): string | boolean => {
         const max = readNumber(args?.[0]);
         const numValue = value === '' ? -Infinity : Number(value);
 
@@ -137,24 +139,23 @@ export class Validators {
         return true;
     }
 
-    static maxVal = (value: string, args: string[], el: HTMLInputElement): string | boolean => {
-        return Validators.max(value, args, el);
+    static maxVal = (value: string, args: string[], _el: HTMLInputElement): string | boolean => {
+        return Validators.max(value, args, _el);
     }
 
-    static url = (value: string, args: string[], el: HTMLInputElement): string | boolean => {
+    static url = (value: string, _args: string[], _el: HTMLInputElement): string | boolean => {
         if (!value) {
             return true;
         }
 
         try {
-            new URL(value);
-            return true;
+            return Boolean(new URL(value));
         } catch {
             return I18nFramework.Common_Url();
         }
     }
 
-    static alphanumeric = (value: string, args: string[], el: HTMLInputElement): string | boolean => {
+    static alphanumeric = (value: string, _args: string[], _el: HTMLInputElement): string | boolean => {
         if (!value) {
             return true;
         }
@@ -166,7 +167,7 @@ export class Validators {
         return true;
     }
 
-    static match = (value: string, args: string[], el: HTMLInputElement): string | boolean => {
+    static match = (value: string, args: string[], _el: HTMLInputElement): string | boolean => {
         const targetSelector = args?.[0];
 
         if (!targetSelector) {
@@ -186,7 +187,7 @@ export class Validators {
         return true;
     }
 
-    static pattern = (value: string, args: string[], el: HTMLInputElement): string | boolean => {
+    static pattern = (value: string, args: string[], _el: HTMLInputElement): string | boolean => {
         if (!value) {
             return true;
         }

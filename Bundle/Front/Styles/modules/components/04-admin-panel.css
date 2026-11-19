@@ -271,9 +271,6 @@
 .count-badge-accent {
   @apply inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-accent-subtle text-accent;
 }
-.count-badge-warning {
-  @apply inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-warning-subtle text-warning;
-}
 .count-badge-success {
   @apply inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-success-subtle text-success;
 }

@@ -1,0 +1,56 @@
+/* Native select roles use the existing Garnet theme. */
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetfield-ink: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetfield-wash: var(--color-bg-surface);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetfield-edge: var(--color-border-strong);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetfield-edge-focus: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetfield-ink-placeholder: var(--color-text-muted);
+}
+
+@utility tone-garnetfield-outlined {
+  @apply text-garnetfield-ink bg-garnetfield-wash border-garnetfield-edge focus:border-garnetfield-edge-focus focus:ring-garnetfield-edge-focus/15 placeholder:text-garnetfield-ink-placeholder;
+}
+
+@utility shape-native-control {
+  @apply w-full rounded-md border;
+  padding-top: 0.4375rem;
+  padding-bottom: 0.4375rem;
+}
+
+@utility shape-native-field {
+  @apply px-3;
+}
+
+@utility shape-native-select {
+  @apply pl-3 pr-8;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+}
+
+@utility behavior-native-select {
+  @apply appearance-none;
+}
+
+@utility layout-native-select {
+  @apply block;
+}
+
+@utility type-native-select {
+  @apply text-sm leading-normal;
+}
+
+@utility focus-native-select {
+  @apply focus:outline-none focus:ring-3;
+}
+
+@utility motion-native-select {
+  transition: border-color 0.15s, box-shadow 0.15s;
+}

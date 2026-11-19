@@ -1,0 +1,24 @@
+@utility shape-page-hero {
+  @apply rounded-2xl border px-5 py-4 mb-6;
+}
+@utility layout-page-hero { @apply relative overflow-hidden; }
+@utility layout-page-hero-row { @apply flex items-start justify-between gap-4; }
+@utility layout-page-hero-main { @apply flex items-start gap-3; }
+@utility shape-page-hero-text { @apply min-w-0; }
+@utility layout-page-hero-icon { @apply shrink-0 grid place-items-center; }
+@utility shape-page-hero-icon { @apply rounded-xl w-11 h-11; }
+@utility type-page-hero-title { @apply text-2xl font-bold tracking-tight; }
+@utility shape-page-hero-subtitle { @apply mt-1; }
+@utility type-page-hero-subtitle { @apply text-sm; }
+@utility layout-page-hero-actions { @apply shrink-0 flex items-center gap-2 flex-wrap; }
+
+@layer components {
+  .page-hero { @apply tone-gridborder-outline layout-page-hero shape-page-hero; }
+  .page-hero-row { @apply tone-supportinherit-plain layout-page-hero-row; }
+  .page-hero-main { @apply tone-supportinherit-plain layout-page-hero-main shape-page-hero-text; }
+  .page-hero-text { @apply tone-supportinherit-plain shape-page-hero-text; }
+  .page-hero-icon { @apply tone-supportlink-plain layout-page-hero-icon shape-page-hero-icon; }
+  .page-hero-title { @apply tone-supportprimary-plain type-page-hero-title; }
+  .page-hero-subtitle { @apply tone-supportmuted-plain shape-page-hero-subtitle type-page-hero-subtitle; }
+  .page-hero-actions { @apply tone-supportinherit-plain layout-page-hero-actions; }
+}

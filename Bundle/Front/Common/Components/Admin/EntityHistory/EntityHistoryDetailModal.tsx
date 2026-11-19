@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {useEffect, useRef} from 'react';
+import {AntiHookComponent} from '@react-carburetor/core';
 import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
 import {EntityHistoryRow} from './EntityHistoryTable';
 import {formatHistoryTime} from './entityHistoryFormat';
@@ -10,83 +10,71 @@ interface Props {
     onClose: () => void;
 }
 
-const formatValue = (v: unknown): string => {
-    if (v === null || v === undefined) return '∅';
-    if (v === '') return '""';
-    if (typeof v === 'object') return JSON.stringify(v, null, 2);
-    return String(v);
-};
+function formatValue(value: unknown): string {
+    if (value === null || value === undefined) return '∅';
+    if (value === '') return '""';
+    if (typeof value === 'object') return JSON.stringify(value, null, 2);
+    return String(value);
+}
 
-export const EntityHistoryDetailModal: React.FC<Props> = ({row, onClose}) => {
-    const overlayRef = useRef<HTMLDivElement>(null);
+function stopPropagation(event: React.MouseEvent): void {
+    event.stopPropagation();
+}
 
-    useEffect(() => {
-        const onKey = (e: KeyboardEvent): void => {
-            if (e.key === 'Escape') onClose();
-        };
-        document.addEventListener('keydown', onKey);
-        return () => document.removeEventListener('keydown', onKey);
-    }, [onClose]);
+function renderDiffRow([field, change]: [string, {old: unknown; new: unknown}]) {
+    return <tr key={field} className="entity-history-detail-row">
+        <td className="entity-history-field">{field}</td>
+        <td className="entity-history-old-value">{formatValue(change.old)}</td>
+        <td className="entity-history-new-value">{formatValue(change.new)}</td>
+    </tr>;
+}
 
-    const handleOverlayClick = (e: React.MouseEvent): void => {
-        if (e.target === overlayRef.current) onClose();
+function renderDiff(diff: NonNullable<EntityHistoryRow['diff']>) {
+    const entries = Object.entries(diff);
+    if (entries.length === 0) return null;
+    return <table className="entity-history-table">
+        <thead><tr className="entity-history-table-header">
+            <th className="entity-history-heading">{t.EntityHistory_Field()}</th>
+            <th className="entity-history-heading">{t.EntityHistory_Old()}</th>
+            <th className="entity-history-heading">{t.EntityHistory_New()}</th>
+        </tr></thead>
+        <tbody>{entries.map(renderDiffRow)}</tbody>
+    </table>;
+}
+
+export class EntityHistoryDetailModal extends AntiHookComponent<Props> {
+    public componentDidMount(): void {
+        super.componentDidMount();
+        document.addEventListener('keydown', this.onKey);
+    }
+    public componentWillUnmount(): void {
+        document.removeEventListener('keydown', this.onKey);
+        super.componentWillUnmount();
+    }
+    private readonly onKey = (event: KeyboardEvent): void => {
+        if (event.key === 'Escape') this.props.onClose();
+    };
+    private readonly handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>): void => {
+        if (event.target === event.currentTarget) this.props.onClose();
     };
 
-    const ts = formatHistoryTime(row.created_at);
-    const actor = row.actor_name || row.actor_login_resolved || row.actor_login || '—';
-    const hasDiff = row.diff && Object.keys(row.diff).length > 0;
-
-    return (
-        <Portal><div
-            ref={overlayRef}
-            className="fg-modal-overlay-high"
-            onClick={handleOverlayClick}
-            data-test-id="entity-history-detail-modal"
-        >
-            <div
-                role="dialog"
-                aria-modal="true"
-                className="fg-modal-card-flush fg-modal-card-3xl"
-                onClick={e => e.stopPropagation()}
-            >
-                <div className="fg-modal-flush-header">
-                    <h3 className="fg-modal-title">{t.EntityHistory_Title()}</h3>
-                    <button
-                        type="button"
-                        className="fg-modal-close-x"
-                        onClick={onClose}
-                        data-test-id="entity-history-detail-close"
-                    >
-                        &times;
-                    </button>
+    public render() {
+        const {row, onClose} = this.props;
+        const actor = row.actor_name || row.actor_login_resolved || row.actor_login || '—';
+        return <Portal><div className="entity-history-overlay" onClick={this.handleOverlayClick} data-test-id="entity-history-detail-modal">
+            <div role="dialog" aria-modal="true" className="entity-history-card" onClick={stopPropagation}>
+                <div className="entity-history-header">
+                    <h3 className="entity-history-title">{t.EntityHistory_Title()}</h3>
+                    <button type="button" className="entity-history-close" onClick={onClose} data-test-id="entity-history-detail-close">&times;</button>
                 </div>
-                <div className="fg-modal-flush-body">
-                    <div className="mb-4 text-sm text-muted">
-                        <div><strong>{t.EntityHistory_When()}:</strong> {ts}</div>
+                <div className="entity-history-body">
+                    <div className="entity-history-metadata">
+                        <div><strong>{t.EntityHistory_When()}:</strong> {formatHistoryTime(row.created_at)}</div>
                         <div><strong>{t.EntityHistory_Actor()}:</strong> {actor}</div>
                     </div>
-                    {hasDiff && (
-                        <table className="admin-table">
-                            <thead>
-                                <tr className="border-b border-subtle text-left">
-                                    <th>{t.EntityHistory_Field()}</th>
-                                    <th>{t.EntityHistory_Old()}</th>
-                                    <th>{t.EntityHistory_New()}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {Object.entries(row.diff!).map(([field, {old, new: nv}]) => (
-                                    <tr key={field} className="border-b border-subtle align-top">
-                                        <td className="font-mono text-xs whitespace-nowrap">{field}</td>
-                                        <td className="text-danger break-all whitespace-pre-wrap">{formatValue(old)}</td>
-                                        <td className="text-success break-all whitespace-pre-wrap">{formatValue(nv)}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
+                    {row.diff && renderDiff(row.diff)}
                 </div>
             </div>
-        </div></Portal>
-    );
-};
+        </div></Portal>;
+    }
+}

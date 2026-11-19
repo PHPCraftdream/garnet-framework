@@ -1,0 +1,178 @@
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-requestpager-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-requestpager-ink: var(--color-text-secondary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-requestpager-wash-hover: var(--color-bg-surface-hover);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-logtab-edge: transparent;
+  /* carburetor-disable-next-line valid-color-role */
+  --color-logtab-edge-hover: var(--color-border-strong);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-logtab-ink: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-logtab-ink-hover: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-logtabactive-edge: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-logtabactive-ink: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-logstatussuccess-ink: var(--color-status-green);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-logstatussuccess-wash: var(--color-status-green-bg);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-logstatusdanger-ink: var(--color-status-red);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-logstatusdanger-wash: var(--color-status-red-bg);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-logstatuswarning-ink: var(--color-status-yellow);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-logstatuswarning-wash: var(--color-status-yellow-bg);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-logstatusmuted-ink: var(--color-status-gray);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-logstatusmuted-wash: var(--color-status-gray-bg);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-logstatusinfo-ink: var(--color-status-blue);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-logstatusinfo-wash: var(--color-status-blue-bg);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-logreset-edge: var(--color-border-strong);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-logreset-edge-hover: var(--color-gray-400);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-logreset-ink: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-logreset-ink-hover: var(--color-text-secondary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-logreset-wash-hover: var(--color-bg-surface-hover);
+}
+
+@utility tone-logreset-outlined { @apply border-logreset-edge text-logreset-ink bg-transparent hover:border-logreset-edge-hover hover:text-logreset-ink-hover hover:bg-logreset-wash-hover; }
+@utility layout-admin-log-filters { @apply grid gap-3 items-end; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+@utility shape-admin-log-filters { @apply mb-4; }
+@utility layout-admin-log-person-filter { @apply flex flex-col col-span-2; }
+@utility shape-admin-log-person-filter { @apply min-w-0; }
+
+@utility type-admin-log-time { @apply text-xs whitespace-nowrap; }
+@utility type-admin-log-mono { @apply font-mono text-sm; }
+@utility layout-admin-log-truncated { @apply inline-block overflow-hidden; }
+@utility shape-admin-log-output { @apply max-w-[300px]; }
+@utility shape-admin-log-message { @apply max-w-[400px]; }
+@utility shape-admin-log-error { @apply max-w-[200px]; }
+@utility type-admin-log-truncated { @apply text-sm text-ellipsis whitespace-nowrap; }
+@utility layout-admin-log-status { @apply inline-flex items-center; }
+@utility shape-admin-log-status { @apply rounded-full px-2.5 py-0.5; }
+@utility type-admin-log-status { @apply font-semibold leading-normal tracking-wide; font-size: 0.6875rem; }
+@utility tone-logstatussuccess-soft { @apply bg-logstatussuccess-wash text-logstatussuccess-ink; }
+@utility tone-logstatusdanger-soft { @apply bg-logstatusdanger-wash text-logstatusdanger-ink; }
+@utility tone-logstatuswarning-soft { @apply bg-logstatuswarning-wash text-logstatuswarning-ink; }
+@utility tone-logstatusmuted-soft { @apply bg-logstatusmuted-wash text-logstatusmuted-ink; }
+@utility tone-logstatusinfo-soft { @apply bg-logstatusinfo-wash text-logstatusinfo-ink; }
+@utility type-admin-log-recipient { @apply text-sm; }
+@utility shape-admin-log-recipient-account { @apply ml-1; }
+
+@utility tone-logtab-outline { @apply border-logtab-edge text-logtab-ink hover:border-logtab-edge-hover hover:text-logtab-ink-hover; }
+@utility tone-logtabactive-outline { @apply border-logtabactive-edge text-logtabactive-ink; }
+@utility layout-admin-log-tabs { @apply flex flex-wrap; }
+@utility shape-admin-log-tabs { @apply border-b mb-4; }
+@utility shape-admin-log-tab-item { @apply mr-1; }
+@utility layout-admin-log-tab-button { @apply inline-block; }
+@utility shape-admin-log-tab-button { @apply px-4 py-2 rounded-t-lg border-b-2; }
+@utility type-admin-log-tab-button { @apply text-sm font-medium; }
+@utility motion-admin-log-tab-button { @apply transition-colors; }
+
+@utility layout-request-filter-cell { @apply flex flex-col; }
+@utility shape-request-filter-cell { @apply min-w-0 [&_input]:w-full [&_select]:w-full; }
+@utility type-request-filter-cell { @apply [&_input]:text-sm [&_select]:text-sm; }
+
+@utility layout-request-filter-actions { @apply flex items-center gap-2 flex-wrap; }
+@utility layout-request-filter-label { @apply block; }
+@utility shape-request-filter-label { @apply mb-1; }
+@utility type-request-filter-label { @apply text-xs; }
+@utility shape-request-counter { @apply ml-1; }
+@utility type-request-counter { @apply text-xs whitespace-nowrap; }
+@utility tone-requestpager-outlined { @apply border-requestpager-edge text-requestpager-ink hover:bg-requestpager-wash-hover; }
+@utility layout-request-table { @apply border-collapse; }
+@utility layout-request-ua { @apply overflow-hidden; }
+@utility layout-request-table-scroll { @apply overflow-x-auto; }
+@utility shape-request-table { @apply w-full; }
+@utility type-request-table { @apply text-sm; }
+@utility shape-request-table-row { @apply border-b; }
+@utility type-request-heading-row { @apply text-left text-xs; }
+@utility shape-request-heading { @apply py-1 pr-3 last:pr-0; }
+@utility type-request-heading { @apply font-medium; }
+@utility shape-request-cell { @apply py-1 pr-3 last:pr-0; }
+@utility type-request-time { @apply text-xs whitespace-nowrap; }
+@utility type-request-uri { @apply font-mono text-sm break-all; }
+@utility type-request-duration { @apply text-right; }
+@utility shape-request-ua { @apply max-w-[280px]; }
+@utility type-request-ua { @apply text-xs text-ellipsis whitespace-nowrap; }
+@utility layout-request-pagination { @apply flex items-center gap-3; }
+@utility shape-request-pagination { @apply mt-3; }
+@utility layout-request-page-button { @apply inline-flex items-center; }
+@utility shape-request-page-button { @apply px-3 py-1.5 rounded-md border; }
+@utility type-request-page-button { @apply text-sm font-medium; }
+@utility shape-request-page-select { @apply w-auto ml-auto py-1 pl-2 pr-8 rounded-md border; }
+@utility type-request-page-select { @apply leading-normal; font-size: 0.8rem; }
+@utility type-request-empty { @apply text-sm; }
+@utility type-request-meta { @apply text-xs; }
+
+@utility type-admin-errors-heading-time { @apply whitespace-nowrap; }
+@utility type-admin-errors-time { @apply whitespace-nowrap align-top; }
+@utility type-admin-errors-name { @apply font-mono text-sm align-top break-all; }
+@utility type-admin-errors-cell { @apply align-top; }
+@utility type-admin-errors-message { @apply font-mono text-sm whitespace-pre-wrap break-words; }
+
+@layer components {
+  .admin-errors-heading-time { @apply tone-supportmuted-plain shape-request-heading type-request-heading type-admin-errors-heading-time; }
+  .admin-errors-row { @apply tone-supportrow-outlined shape-request-table-row behavior-admin-grid-row motion-admin-grid-row; }
+  .admin-errors-time { @apply tone-supportmuted-plain shape-request-cell type-request-meta type-admin-errors-time; }
+  .admin-errors-name { @apply tone-supportinherit-plain shape-request-cell type-admin-errors-name; }
+  .admin-errors-cell { @apply tone-supportinherit-plain shape-request-cell type-admin-errors-cell; }
+  .admin-errors-message { @apply tone-supportinherit-plain type-admin-errors-message; }
+  .admin-request-filter-cell { @apply tone-supportinherit-plain layout-request-filter-cell shape-request-filter-cell type-request-filter-cell; }
+  .admin-request-filter-actions { @apply tone-supportinherit-plain layout-request-filter-actions; }
+  .admin-request-filter-label { @apply tone-supportmuted-plain layout-request-filter-label shape-request-filter-label type-request-filter-label; }
+  .admin-request-apply { @apply tone-compactaction-outlined layout-history-button shape-history-button type-history-button behavior-history-button effect-history-button motion-history-button; }
+  .admin-request-counter { @apply tone-supportmuted-plain shape-request-counter type-request-counter; }
+  .admin-request-empty { @apply tone-supportmuted-plain type-request-empty; }
+  .admin-request-table-scroll { @apply tone-supportinherit-plain layout-request-table-scroll; }
+  .admin-request-table { @apply tone-supportinherit-plain layout-request-table shape-request-table type-request-table; }
+  .admin-request-heading-row { @apply tone-supportconv-outline shape-request-table-row type-request-heading-row; }
+  .admin-request-heading { @apply tone-supportmuted-plain shape-request-heading type-request-heading; }
+  .admin-request-row { @apply tone-supportrow-outlined shape-request-table-row behavior-admin-grid-row motion-admin-grid-row; }
+  .admin-request-cell { @apply tone-supportinherit-plain shape-request-cell; }
+  .admin-request-time { @apply tone-supportmuted-plain shape-request-cell type-request-time; }
+  .admin-request-mono { @apply tone-supportinherit-plain shape-request-cell type-admin-log-mono; }
+  .admin-request-uri { @apply tone-supportinherit-plain shape-request-cell type-request-uri; }
+  .admin-request-duration { @apply tone-supportinherit-plain shape-request-cell type-request-duration; }
+  .admin-request-ua { @apply tone-supportmuted-plain shape-request-cell shape-request-ua layout-request-ua type-request-ua; }
+  .admin-request-pagination { @apply tone-supportinherit-plain layout-request-pagination shape-request-pagination; }
+  .admin-request-page-button { @apply tone-requestpager-outlined layout-request-page-button shape-request-page-button type-request-page-button motion-admin-grid-row; }
+  .admin-request-page-meta { @apply tone-supportmuted-plain type-request-meta; }
+  .admin-request-page-select { @apply tone-garnetfield-outlined shape-request-page-select layout-native-select focus-native-select motion-native-select type-request-page-select; }
+  .admin-log-tab-list { @apply tone-gridborder-outline layout-admin-log-tabs shape-admin-log-tabs; }
+  .admin-log-tab-item { @apply tone-supportinherit-plain shape-admin-log-tab-item; }
+  .admin-log-tab-button { @apply tone-logtab-outline layout-admin-log-tab-button shape-admin-log-tab-button type-admin-log-tab-button motion-admin-log-tab-button; }
+  .admin-log-tab-button[aria-selected="true"] { @apply tone-logtabactive-outline; }
+  .admin-log-filters { @apply tone-supportinherit-plain layout-admin-log-filters shape-admin-log-filters; }
+  .admin-log-person-filter { @apply tone-supportinherit-plain layout-admin-log-person-filter shape-admin-log-person-filter; }
+  .admin-log-section-select { @apply tone-garnetfield-outlined shape-native-control shape-native-select layout-native-select type-native-select behavior-native-select focus-native-select motion-native-select; }
+  .admin-log-section-reset { @apply tone-logreset-outlined layout-history-button shape-history-button type-history-button behavior-history-button effect-history-button motion-history-button; }
+  .admin-log-section-time { @apply tone-supportmuted-plain type-admin-log-time; }
+  .admin-log-section-mono { @apply tone-supportinherit-plain type-admin-log-mono; }
+  .admin-log-section-output { @apply tone-supportinherit-plain layout-admin-log-truncated shape-admin-log-output type-admin-log-truncated; }
+  .admin-log-section-message { @apply tone-supportinherit-plain layout-admin-log-truncated shape-admin-log-message type-admin-log-truncated; }
+  .admin-log-section-muted { @apply tone-supportmuted-plain; }
+  .admin-log-section-error { @apply tone-garnetdanger-plain layout-admin-log-truncated shape-admin-log-error type-admin-log-truncated; }
+  .admin-log-section-status-success { @apply tone-logstatussuccess-soft layout-admin-log-status shape-admin-log-status type-admin-log-status; }
+  .admin-log-section-status-danger { @apply tone-logstatusdanger-soft layout-admin-log-status shape-admin-log-status type-admin-log-status; }
+  .admin-log-section-status-warning { @apply tone-logstatuswarning-soft layout-admin-log-status shape-admin-log-status type-admin-log-status; }
+  .admin-log-section-status-muted { @apply tone-logstatusmuted-soft layout-admin-log-status shape-admin-log-status type-admin-log-status; }
+  .admin-log-section-status-info { @apply tone-logstatusinfo-soft layout-admin-log-status shape-admin-log-status type-admin-log-status; }
+  .admin-log-section-recipient { @apply tone-supportinherit-plain type-admin-log-recipient; }
+  .admin-log-section-recipient-account { @apply tone-supportmuted-plain shape-admin-log-recipient-account; }
+}

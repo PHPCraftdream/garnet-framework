@@ -1,0 +1,8 @@
+@layer components {
+  .uncontrolled-field {
+    @apply tone-garnetfield-outlined shape-native-control shape-native-field layout-native-select type-native-select focus-native-select motion-native-select;
+  }
+  .uncontrolled-select {
+    @apply tone-garnetfield-outlined shape-native-control shape-native-select behavior-native-select layout-native-select type-native-select focus-native-select motion-native-select;
+  }
+}

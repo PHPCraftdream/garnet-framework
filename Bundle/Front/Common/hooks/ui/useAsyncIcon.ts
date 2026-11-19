@@ -1,4 +1,5 @@
-import {useCallback, useEffect, useRef, useState} from 'react';
+import {useCallback, useEffect, useRef, useState, useSyncExternalStore} from 'react';
+import {Carburetor} from '@react-carburetor/core';
 import {showToast} from '@common/Components/Feedback/GlobalToast';
 import {I18nFramework} from '@framework/I18nGen/I18nFramework';
 import {isMaintenanceError} from '@common/Api/maintenance503';
@@ -36,10 +37,33 @@ export interface AsyncIconControls {
     run: (action: () => unknown | Promise<unknown>) => Promise<void>;
 }
 
+class AsyncIconStore extends Carburetor<{state: AsyncIconState}> {
+    constructor() { super({state: 'idle'}); }
+    readonly snapshot = () => this.getData();
+    readonly subscribeSnapshot = (listener: () => void) => {
+        const id = this.subscribe(listener);
+        return () => this.unsubscribe(id);
+    };
+    readonly setState = (state: AsyncIconState) => {
+        const previous = this.getData();
+        if (previous.state === state) return;
+        const version = this.getVersion();
+        this.setData({state});
+        if (this.getData() !== previous && this.getVersion() === version) {
+            this.markAllChanged();
+            this.emitUpdate();
+        }
+    };
+}
+
+function createAsyncIconStore(): AsyncIconStore { return new AsyncIconStore(); }
+
 export function useAsyncIcon(options: UseAsyncIconOptions = {}): AsyncIconControls {
     const {errorToast, errorMs = 2000, onError, rethrow = false} = options;
 
-    const [state, setState] = useState<AsyncIconState>('idle');
+    const [store] = useState(createAsyncIconStore);
+    const {state} = useSyncExternalStore(store.subscribeSnapshot, store.snapshot, store.snapshot);
+    const setState = store.setState;
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const mountedRef = useRef(true);
 
@@ -79,7 +103,7 @@ export function useAsyncIcon(options: UseAsyncIconOptions = {}): AsyncIconContro
             }
             if (rethrow) throw error;
         }
-    }, [errorToast, errorMs, onError, rethrow]);
+    }, [errorToast, errorMs, onError, rethrow, setState]);
 
     return {state, isLoading: state === 'loading', isError: state === 'error', run};
 }

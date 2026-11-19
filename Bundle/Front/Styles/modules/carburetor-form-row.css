@@ -1,0 +1,33 @@
+/* Form roles bridge existing Garnet colours. */
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-formrowinherit-ink: currentColor;
+  /* carburetor-disable-next-line valid-color-role */
+  --color-formrowerror-ink: var(--color-danger);
+}
+
+@utility tone-formrowinherit-plain { @apply text-formrowinherit-ink; }
+@utility tone-formrowerror-plain { @apply text-formrowerror-ink; }
+@utility layout-form-row-start { @apply grid sm:grid-cols-12 gap-x-3 items-start; }
+@utility layout-form-row-center { @apply grid sm:grid-cols-12 gap-x-3 items-center; }
+@utility shape-form-row { @apply mb-4; }
+@utility layout-form-row-label { @apply sm:col-span-2; }
+@utility shape-form-row-label { padding-top: calc(0.4375rem + 1px); padding-bottom: calc(0.4375rem + 1px); }
+@utility type-form-row-label { @apply leading-normal [@media_screen_and_(min-width:576px)]:text-right; font-size: inherit; }
+@utility effect-form-row-label { text-shadow: 0 0 3px rgba(0, 0, 0, 0.3); }
+@utility layout-form-row-field { @apply sm:col-span-10; }
+@utility behavior-form-error { @apply cursor-default; }
+
+@layer components {
+  .form-row-start { @apply tone-formrowinherit-plain layout-form-row-start shape-form-row; }
+  .form-row-center { @apply tone-formrowinherit-plain layout-form-row-center shape-form-row; }
+  .form-row-label { @apply tone-formrowinherit-plain layout-form-row-label shape-form-row-label type-form-row-label effect-form-row-label; }
+  .form-row-field { @apply tone-formrowinherit-plain layout-form-row-field; }
+  .garnet-form-error {
+    @apply tone-formrowinherit-plain behavior-form-error;
+    &[data-form-row-error="true"] { @apply tone-formrowerror-plain; }
+    &[data-uncontrolled-error="true"] { @apply tone-formrowerror-plain; }
+  }
+  .form-datalist-select { @apply tone-garnetfield-outlined shape-native-control shape-native-select behavior-native-select layout-native-select type-native-select focus-native-select motion-native-select; }
+}

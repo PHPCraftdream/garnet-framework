@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {useRef, useCallback} from 'react';
+import {AntiHookComponent} from '@react-carburetor/core';
 import {FormErrorProvider, FormErrorStore} from './useFormErrors';
 
 interface FormProps {
@@ -36,38 +36,44 @@ export interface UncontrolledFormHandle {
  */
 export const UncontrolledForm = React.forwardRef<UncontrolledFormHandle, FormProps>(
     function UncontrolledForm(props, ref) {
-        const storeRef = useRef<FormErrorStore>(new FormErrorStore());
+        const viewRef = React.useRef<FormView>(null);
+        React.useImperativeHandle(ref, () => viewRef.current!, []);
+        return <FormView {...props} ref={viewRef} />;
+    },
+);
 
-        React.useImperativeHandle(ref, () => ({
-            setFieldErrors(errors: Record<string, string>) {
-                storeRef.current.setErrors(errors);
-            },
-            getFieldErrors() {
-                return storeRef.current.getErrors();
-            },
-        }));
+class FormView extends AntiHookComponent<FormProps> implements UncontrolledFormHandle {
+    private readonly errors = new FormErrorStore();
 
-        const handleSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
-            e.preventDefault();
-            const form = e.currentTarget;
-            const fd = new FormData(form);
-            const values: Record<string, string> = {};
-            fd.forEach((v, k) => {
-                values[k] = typeof v === 'string' ? v : '';
-            });
-            props.onSubmit(values, form);
-        }, [props.onSubmit]);
+    public readonly setFieldErrors = (errors: Record<string, string>): void => {
+        this.errors.setErrors(errors);
+    };
 
+    public readonly getFieldErrors = (): Record<string, string> => this.errors.getErrors();
+
+    private readonly handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
+        e.preventDefault();
+        const form = e.currentTarget;
+        const fd = new FormData(form);
+        const values: Record<string, string> = {};
+        fd.forEach((v, k) => {
+            values[k] = typeof v === 'string' ? v : '';
+        });
+        this.props.onSubmit(values, form);
+    };
+
+    public render() {
         return (
-            <FormErrorProvider value={storeRef.current}>
+            <FormErrorProvider value={this.errors}>
                 <form
-                    onSubmit={handleSubmit}
-                    className={props.className}
-                    data-test-id={props['data-test-id']}
+                    onSubmit={this.handleSubmit}
+                    // carburetor-disable-next-line require-function-class
+                    className={this.props.className}
+                    data-test-id={this.props['data-test-id']}
                 >
-                    {props.children}
+                    {this.props.children}
                 </form>
             </FormErrorProvider>
         );
-    },
-);
+    }
+}

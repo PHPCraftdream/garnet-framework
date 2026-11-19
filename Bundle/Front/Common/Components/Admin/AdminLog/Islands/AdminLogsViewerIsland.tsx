@@ -1,5 +1,6 @@
 import * as React from 'react';
-import {useState, useMemo, lazy, Suspense} from 'react';
+import {lazy, Suspense} from 'react';
+import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
 import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
 import {PageResponse} from '@common/hooks/data/usePagination';
 import {ActionLog, MailLogEntry, CronLogEntry, JsErrorEntry, GridConfig, ActionsFilterOptions, MailsFilterOptions, CronFilterOptions, JsErrorsFilterOptions} from '../types';
@@ -13,7 +14,10 @@ import {PageHeader} from '@common/Components/Layout/PageHeader';
 import {ScrollText} from 'lucide-react';
 import {goTo} from '@common/Dom/Nav/GoTo';
 
-const JsErrorLogSection = lazy(() => import('../Sections/JsErrorLogSection').then(m => ({default: m.JsErrorLogSection})));
+const JsErrorLogSection = lazy(async () => {
+    const {JsErrorLogSection: Section} = await import('../Sections/JsErrorLogSection');
+    return {default: Section};
+});
 
 type TabId = 'actions' | 'mails' | 'requests' | 'errors' | 'cron' | 'js-errors';
 
@@ -105,78 +109,76 @@ const tabLabel = (id: TabId): string => {
     }
 };
 
-/**
- * Each tab's Section owns its own AdminGrid (fetch-on-mount via
- * usePagination) — conditionally rendering a tab IS the lazy-load: a tab
- * visited for the first time mounts with `initialData=null` and fetches
- * itself, exactly like AdminGrid's `initialData` contract already works
- * everywhere else. No bespoke loaded/loading state needed here anymore.
- */
-export const AdminLogsViewerIsland: React.FC<Props> = ({
-    initialTab,
-    endpoints,
-    actions,
-    mails,
-    requests,
-    errors,
-    cron,
-    jsErrors,
-}) => {
-    const [tab, setTab] = useState<TabId>(() => readInitialTab(initialTab));
+function openUser(id: number): void {
+    goTo(`/admin/#user=${id}`);
+}
 
-    const selectTab = (id: TabId): void => {
-        setTab(id);
+const LOGS_ICON = <ScrollText size={22} aria-hidden="true" />;
+
+class AdminLogsViewer extends AntiHookComponent<Props> {
+    private readonly ui = new Carburetor({tab: readInitialTab(this.props.initialTab)});
+    private readonly userContext = {openUser};
+
+    private readonly selectTab = (event: React.MouseEvent<HTMLButtonElement>): void => {
+        const id = event.currentTarget.value;
+        if (!isTabId(id)) return;
+        this.ui.setData({tab: id});
         writeTabToUrl(id);
     };
 
-    const userContext = useMemo(() => ({
-        openUser: (id: number) => goTo(`/admin/#user=${id}`),
-    }), []);
-
-    return (
-        <UserDetailContext.Provider value={userContext}>
-        <div data-test-id="admin-logs-viewer">
-            <PageHeader title={t.Logs_Title()} icon={<ScrollText size={22} aria-hidden="true" />} />
-
-            <div className="section-soft">
-            <ul className="flex flex-wrap border-b border-default mb-4">
+    private renderTabs(tab: TabId) {
+        return (
+            <ul className="admin-log-tab-list">
                 {ALL_TABS.map(id => (
-                    <li key={id} className="admin-tabnav-item">
+                    <li key={id} className="admin-log-tab-item">
                         <button
                             type="button"
-                            className={`admin-tabnav-btn ${tab === id ? 'admin-tabnav-btn-active' : ''}`}
+                            value={id}
+                            className="admin-log-tab-button"
                             data-test-id={`tabnav-btn-${id}`}
                             aria-selected={tab === id}
-                            onClick={() => selectTab(id)}
+                            onClick={this.selectTab}
                         >
                             {tabLabel(id)}
                         </button>
                     </li>
                 ))}
             </ul>
+        );
+    }
 
-            {tab === 'actions' && (
-                <LogsSection pageUrl={endpoints.actions} initialData={actions.payload} config={actions.gridConfig} filterOptions={actions.filterOptions} />
-            )}
-            {tab === 'mails' && (
-                <MailLogSection pageUrl={endpoints.mails} initialData={mails.payload} config={mails.gridConfig} filterOptions={mails.filterOptions} />
-            )}
-            {tab === 'requests' && (
-                <AdminRequestLogIsland dates={requests.dates} pageUrl={endpoints.requests} />
-            )}
-            {tab === 'errors' && (
-                <AdminErrorsLogIsland dates={errors.dates} pageUrl={endpoints.errors} />
-            )}
-            {tab === 'cron' && (
-                <CronLogSection pageUrl={endpoints.cron} initialData={cron.payload} filterOptions={cron.filterOptions} />
-            )}
-            {tab === 'js-errors' && (
-                <Suspense fallback={null}>
-                    <JsErrorLogSection pageUrl={endpoints['js-errors']} initialData={jsErrors.payload} filterOptions={jsErrors.filterOptions} />
-                </Suspense>
-            )}
-            </div>
-        </div>
-        </UserDetailContext.Provider>
-    );
-};
+    private renderContent(tab: TabId) {
+        const {endpoints, actions, mails, requests, errors, cron, jsErrors} = this.props;
+        switch (tab) {
+            case 'actions':
+                return <LogsSection pageUrl={endpoints.actions} initialData={actions.payload} config={actions.gridConfig} filterOptions={actions.filterOptions} />;
+            case 'mails':
+                return <MailLogSection pageUrl={endpoints.mails} initialData={mails.payload} config={mails.gridConfig} filterOptions={mails.filterOptions} />;
+            case 'requests':
+                return <AdminRequestLogIsland dates={requests.dates} pageUrl={endpoints.requests} />;
+            case 'errors':
+                return <AdminErrorsLogIsland dates={errors.dates} pageUrl={endpoints.errors} />;
+            case 'cron':
+                return <CronLogSection pageUrl={endpoints.cron} initialData={cron.payload} filterOptions={cron.filterOptions} />;
+            case 'js-errors':
+                return <Suspense fallback={null}><JsErrorLogSection pageUrl={endpoints['js-errors']} initialData={jsErrors.payload} filterOptions={jsErrors.filterOptions} /></Suspense>;
+        }
+    }
+
+    render() {
+        const {tab} = this.useCarburetor(this.ui);
+        return (
+            <UserDetailContext.Provider value={this.userContext}>
+                <div data-test-id="admin-logs-viewer">
+                    <PageHeader title={t.Logs_Title()} icon={LOGS_ICON} />
+                    <div className="section-soft">
+                        {this.renderTabs(tab)}
+                        {this.renderContent(tab)}
+                    </div>
+                </div>
+            </UserDetailContext.Provider>
+        );
+    }
+}
+
+export const AdminLogsViewerIsland: React.FC<Props> = props => <AdminLogsViewer {...props} />;

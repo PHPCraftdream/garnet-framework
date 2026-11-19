@@ -16,6 +16,7 @@ interface IParams {
     photo?: string | null;
     crop?: TCropInfo | false;
     readOnly?: boolean;
+    visibilityMode?: 'photo-data-attribute';
 }
 
 export const componentUploadPhotoHandler = (params: IParams): Promise<IResult> => {
@@ -24,9 +25,18 @@ export const componentUploadPhotoHandler = (params: IParams): Promise<IResult> =
         onChange,
         crop,
         photo,
-        readOnly
+        readOnly,
+        visibilityMode,
     } = params;
 
+    const toggle = (element: DomEl<HTMLElement>, visible: boolean): void => {
+        if (visibilityMode === 'photo-data-attribute') {
+            if (visible) element.getEl().removeAttribute('data-photo-hidden');
+            else element.getEl().setAttribute('data-photo-hidden', 'true');
+        } else {
+            element.toggle(visible);
+        }
+    };
     const uploadBtn = photoBlock.get<HTMLElement>('.upload-img-btn');
     const crpOpt = cropperOptions();
 
@@ -46,14 +56,14 @@ export const componentUploadPhotoHandler = (params: IParams): Promise<IResult> =
                 imgSrc,
                 crpOpt,
                 () => {
-                    uploadBtn.toggle(false);
-                    cropBlock.toggle(true);
+                    toggle(uploadBtn, false);
+                    toggle(cropBlock, true);
                 },
                 (data: Blob | null) => {
                     const isNull = data === null;
-                    uploadBtn.toggle(isNull);
+                    toggle(uploadBtn, isNull);
 
-                    isNull && cropBlock.toggle(false);
+                    if (isNull) toggle(cropBlock, false);
                     onChange(data, isNull ? null : uploader.getCropData());
                 },
                 // Existing photo, crop-only change: keep the stored original
@@ -91,12 +101,12 @@ export const componentUploadPhotoHandler = (params: IParams): Promise<IResult> =
             }
 
             if (!photo) {
-                uploadBtn?.toggle(true);
+                if (uploadBtn) toggle(uploadBtn, true);
             }
 
             if (photo) {
                 uploader.selectImageData(photo).then(() => {
-                    uploadBtn?.toggle(false);
+                    if (uploadBtn) toggle(uploadBtn, false);
 
                     if (crop) {
                         uploader.getCropper().setData({

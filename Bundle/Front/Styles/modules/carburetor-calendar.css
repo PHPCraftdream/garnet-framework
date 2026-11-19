@@ -1,0 +1,173 @@
+/* Calendar roles bridge the existing Garnet theme. */
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetcalendar-ink: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetcalendar-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetcalendar-wash: var(--color-bg-surface-alt);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-calnormal-ink: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-calnormal-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-calnormal-wash: var(--color-bg-surface-alt);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-calrestricted-ink: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-calrestricted-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-calrestricted-wash: var(--color-danger-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-calavailable-ink: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-calavailable-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-calavailable-wash: var(--color-success-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-calavailable-wash-hover: var(--color-accent-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-calproposed-ink: var(--color-accent-text);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-calproposed-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-calproposed-wash: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-calproposed-wash-hover: var(--color-accent-hover);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-calover-ink: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-calover-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-calover-wash: var(--color-accent-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-calover-wash-hover: var(--color-accent-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-caloverproposed-ink: var(--color-accent-text);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-caloverproposed-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-caloverproposed-wash: var(--color-accent-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-caloverproposed-wash-hover: var(--color-accent-hover);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-calendarplain-ink: currentColor;
+}
+
+@utility tone-calendarplain-plain { @apply text-calendarplain-ink; }
+
+@utility tone-calnormal-outlined {
+  @apply text-calnormal-ink border-calnormal-edge bg-calnormal-wash;
+}
+@utility tone-calrestricted-outlined {
+  @apply text-calrestricted-ink border-calrestricted-edge bg-calrestricted-wash;
+}
+@utility tone-calavailable-outlined {
+  @apply text-calavailable-ink border-calavailable-edge bg-calavailable-wash;
+}
+@utility tone-calavailable-interactive {
+  @apply text-calavailable-ink border-calavailable-edge bg-calavailable-wash hover:bg-calavailable-wash-hover;
+}
+@utility tone-calproposed-outlined {
+  @apply text-calproposed-ink border-calproposed-edge bg-calproposed-wash;
+}
+@utility tone-calproposed-interactive {
+  @apply text-calproposed-ink border-calproposed-edge bg-calproposed-wash hover:bg-calproposed-wash-hover;
+}
+@utility tone-calover-outlined {
+  @apply text-calover-ink border-calover-edge bg-calover-wash;
+}
+@utility tone-calover-interactive {
+  @apply text-calover-ink border-calover-edge bg-calover-wash hover:bg-calover-wash-hover;
+}
+@utility tone-caloverproposed-outlined {
+  @apply text-caloverproposed-ink border-caloverproposed-edge bg-caloverproposed-wash;
+}
+@utility tone-caloverproposed-interactive {
+  @apply text-caloverproposed-ink border-caloverproposed-edge bg-caloverproposed-wash hover:bg-caloverproposed-wash-hover;
+}
+@utility behavior-calendar-help { @apply cursor-help; }
+@utility behavior-calendar-pointer { @apply cursor-pointer; }
+@utility behavior-calendar-grab { @apply cursor-grab; }
+@utility type-calendar-proposed { @apply text-center text-sm font-bold; }
+
+@utility tone-garnetcalendar-outlined {
+  @apply text-garnetcalendar-ink border-garnetcalendar-edge bg-garnetcalendar-wash;
+}
+
+@utility shape-calendar-cell {
+  @apply py-1 px-1.5 border;
+}
+
+@utility type-calendar-empty {
+  @apply text-center text-sm;
+}
+
+@utility type-calendar-weekday {
+  @apply text-center text-xs;
+}
+
+@utility shape-calendar-month {
+  @apply mb-3;
+}
+
+@utility shape-calendar-table {
+  @apply w-full;
+}
+
+@utility layout-calendar-table {
+  @apply border-collapse;
+}
+
+@layer components {
+  .calendar-normal-day {
+    @apply tone-calnormal-outlined shape-calendar-cell type-calendar-empty;
+    &[data-over="true"] { @apply tone-calover-outlined; }
+  }
+  .calendar-restricted-day {
+    @apply tone-calrestricted-outlined shape-calendar-cell type-calendar-empty behavior-calendar-help;
+    &[data-over="true"] { @apply tone-calover-outlined; }
+  }
+  .calendar-available-day {
+    @apply tone-calavailable-outlined shape-calendar-cell type-calendar-empty;
+    &[data-over="true"] { @apply tone-calover-outlined; }
+  }
+  .calendar-available-action {
+    @apply tone-calavailable-interactive shape-calendar-cell type-calendar-empty behavior-calendar-pointer;
+    &[data-over="true"] { @apply tone-calover-interactive; }
+  }
+  .calendar-proposed-day {
+    @apply tone-calproposed-outlined shape-calendar-cell type-calendar-proposed;
+    &[data-over="true"] { @apply tone-caloverproposed-outlined; }
+  }
+  .calendar-proposed-drag {
+    @apply tone-calproposed-outlined shape-calendar-cell type-calendar-proposed behavior-calendar-grab;
+    &[data-over="true"] { @apply tone-caloverproposed-outlined; }
+  }
+  .calendar-proposed-action {
+    @apply tone-calproposed-interactive shape-calendar-cell type-calendar-proposed behavior-calendar-pointer;
+    &[data-over="true"] { @apply tone-caloverproposed-interactive; }
+  }
+  .calendar-proposed-drag-action {
+    @apply tone-calproposed-interactive shape-calendar-cell type-calendar-proposed behavior-calendar-pointer;
+    &[data-over="true"] { @apply tone-caloverproposed-interactive; }
+  }
+
+  .calendar-empty-cell {
+    @apply tone-garnetcalendar-outlined shape-calendar-cell type-calendar-empty;
+  }
+
+  .calendar-weekday {
+    @apply tone-garnetcalendar-outlined shape-calendar-cell type-calendar-weekday;
+  }
+
+  .calendar-month {
+    @apply tone-calendarplain-plain shape-calendar-month;
+  }
+
+  .calendar-month-table {
+    @apply tone-calendarplain-plain shape-calendar-table layout-calendar-table;
+  }
+
+}

@@ -18,21 +18,21 @@
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
-.admin-log-filters .filter-cell {
+.admin-log-filters :is(.filter-cell, .admin-log-person-filter) {
   @apply flex flex-col min-w-0;
 }
 
-.admin-log-filters .filter-cell label {
+.admin-log-filters :is(.filter-cell, .admin-log-person-filter) label {
   @apply block text-xs text-muted mb-1;
 }
 
-.admin-log-filters .filter-cell input,
-.admin-log-filters .filter-cell select {
+.admin-log-filters :is(.filter-cell, .admin-log-person-filter) input,
+.admin-log-filters :is(.filter-cell, .admin-log-person-filter) select {
   @apply text-sm w-full;
 }
 
 /* Searchable user filter takes a wider slot to avoid looking cramped. */
-.admin-log-filters .filter-cell-user {
+.admin-log-filters :is(.filter-cell-user, .admin-log-person-filter) {
   grid-column: span 2 / span 2;
 }
 
@@ -50,7 +50,7 @@
   .admin-log-filters {
     grid-template-columns: 1fr;
   }
-  .admin-log-filters .filter-cell-user {
+  .admin-log-filters :is(.filter-cell-user, .admin-log-person-filter) {
     grid-column: auto;
   }
 }
@@ -60,15 +60,6 @@
 /* Unified filter grid for admin bookings/slots/cancellations tabs.
    Same auto-fit grid as admin-log-filters but with a denser min-column to fit
    more compact controls (status select, ID search, date inputs). */
-.admin-bookings-filters {
-  @apply grid gap-2 mb-4 items-end;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-}
-
-.admin-bookings-filters .filter-cell {
-  @apply flex flex-col min-w-0;
-}
-
 .admin-bookings-filters .filter-cell label {
   @apply block text-xs text-muted mb-1;
 }
@@ -76,10 +67,6 @@
 .admin-bookings-filters .filter-cell input,
 .admin-bookings-filters .filter-cell select {
   @apply text-sm w-full;
-}
-
-.admin-bookings-filters .filter-actions {
-  @apply flex items-end justify-end;
 }
 
 @media (max-width: 640px) {
@@ -153,7 +140,7 @@
   @apply rounded-lg border border-default p-3 transition-opacity;
 }
 
-.blk-card-dimmed {
+.blk-card-dimmed, .blk-card[data-hidden="true"] {
   @apply opacity-50;
 }
 
@@ -176,17 +163,6 @@
 .sp-gallery-row { @apply grid gap-2; }
 .sp-gallery-image { @apply w-full h-full object-cover rounded-lg; }
 
-/* Static Page Admin: image upload area */
-.blk-upload-area {
-  @apply border-2 border-dashed border-subtle rounded-lg p-6 text-center cursor-pointer transition-colors bg-surface-alt;
-}
-.blk-upload-area-active {
-  @apply border-accent bg-accent-subtle;
-}
-.blk-upload-hint {
-  @apply text-sm text-muted;
-}
-
 /* Static Page Admin: gallery thumbnail grid */
 .blk-gal-grid {
   @apply grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3;
@@ -204,79 +180,13 @@
   opacity: 1;
 }
 
-/* Static Page Admin: image block preview */
-.blk-img-preview {
-  @apply relative inline-block;
-}
-.blk-img-preview-img {
-  @apply max-h-48 rounded-lg;
-}
-.blk-img-preview-remove {
-  @apply absolute top-1 right-1 inline-flex items-center justify-center w-7 h-7 rounded-md text-xs text-danger bg-surface-hover hover:bg-danger-subtle transition-colors;
-}
-
-/* Static pages navigation (header snippet).
-   Floats on top; the frosted-glass fill is supplied by the shared
-   `glass-skin` chrome rule (glass.css) and the bottom divider matches the
-   admin top bar exactly (border-b border-default) so the line under the
-   menu reads identically across the app and the public static pages. */
-.sp-nav {
-  @apply sticky top-0 z-40 py-3 px-4 border-b border-default;
-  position: sticky; /* floats on every page, not just sticky-flagged ones */
-}
-.sp-nav-inner { @apply flex items-center gap-4 md:gap-6 max-w-5xl mx-auto; }
-.sp-nav-center .sp-nav-inner { @apply md:justify-center; }
-/* sp-nav-sticky kept as an explicit alias; the base nav already floats. */
-.sp-nav-sticky { @apply sticky top-0 z-40; }
-.sp-nav-logo img { @apply block; }
-/* Menu: inline row on desktop; collapsed behind the burger on mobile and
-   shown as a full-width frosted dropdown when the nav is open. */
-.sp-nav-menu { @apply hidden md:flex items-center gap-4 list-none m-0 p-0; }
-/* Pure CSS checkbox-hack: the hidden .sp-nav-toggle drives the open state.
-   On mobile the menu drops down as a frosted panel; md: resets restore the
-   inline row on desktop regardless of checked state (handles resize). */
-.sp-nav-toggle { @apply hidden; }
-.sp-nav-toggle:checked ~ .sp-nav-inner .sp-nav-menu {
-  @apply flex flex-col absolute left-0 right-0 top-full px-4 py-3 gap-3 z-40
-         border-b border-subtle
-         md:static md:flex-row md:items-center md:gap-4 md:p-0 md:border-0;
-  background: color-mix(in srgb, var(--color-bg-surface) 92%, transparent);
-  -webkit-backdrop-filter: blur(12px) saturate(1.4);
-  backdrop-filter: blur(12px) saturate(1.4);
-  box-shadow: 0 6px 14px -8px color-mix(in srgb, var(--color-accent) 45%, transparent);
-}
-@media (min-width: 768px) {
-  .sp-nav-toggle:checked ~ .sp-nav-inner .sp-nav-menu { background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; }
-}
-.sp-nav-link { @apply text-sm text-secondary no-underline transition-colors; }
-.sp-nav-link:hover { @apply text-accent; }
-.sp-nav-divider { @apply hidden md:block h-4 self-center border-l border-subtle; }
-.sp-nav-theme-toggle { @apply ml-auto md:ml-1; }
-.sp-nav-theme-toggle .spnt-icon { @apply block; }
-/* Hamburger (the toggle's <label>) — mobile only; bars animate into an X. */
-.sp-nav-burger { @apply md:hidden inline-flex flex-col justify-center items-center gap-[5px] w-9 h-9 rounded-md text-on-surface cursor-pointer; }
-.sp-nav-burger span { @apply block h-0.5 w-5 rounded bg-current transition-all; }
-.sp-nav-toggle:checked ~ .sp-nav-inner .sp-nav-burger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-.sp-nav-toggle:checked ~ .sp-nav-inner .sp-nav-burger span:nth-child(2) { opacity: 0; }
-.sp-nav-toggle:checked ~ .sp-nav-inner .sp-nav-burger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
-
 /* Static pages footer (footer snippet). Frosted-glass fill is supplied by
    the shared glass-skin chrome rule (glass.css) to match the admin chrome. */
-.sp-footer {
-  @apply border-t border-subtle mt-auto pt-6 pb-4 px-4;
-}
-.sp-footer-inner { @apply max-w-5xl mx-auto; }
-.sp-footer-cols { @apply grid gap-8 mb-4; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
-.sp-footer-col-title { @apply text-sm font-semibold text-on-surface mb-2; }
-.sp-footer-col-links { @apply list-none m-0 p-0 space-y-1; }
-.sp-footer-link { @apply text-sm text-secondary no-underline transition-colors; }
 .sp-footer-link:hover { @apply text-accent; }
-.sp-footer-copyright { @apply text-xs text-muted text-center pt-4 border-t border-subtle; }
 /* Single-column meta-footer fallback: when only one column survived
    placeholder filtering, the footer renders a flat horizontal row of
    links separated by bullets. Keeps the slim look of a marketing
    site footer instead of a half-empty grid. Wraps on narrow screens. */
-.sp-footer-row { @apply flex flex-wrap items-center justify-center gap-x-4 gap-y-2 list-none m-0 p-0 mb-4; }
 .sp-footer-row li { @apply flex items-center; }
 .sp-footer-row li + li::before { content: "·"; @apply text-muted mr-4; }
 
@@ -311,7 +221,6 @@
  * and the headers + row underlines come for free; no need to dust each
  * <thead>/<tr> with the same Tailwind cocktail.
  */
-.admin-table { @apply w-full text-sm; }
 .admin-table thead tr { @apply bg-surface-alt border-b border-subtle text-left text-secondary; }
 .admin-table thead th { @apply px-4 py-3 font-semibold; }
 .admin-table tbody tr { @apply border-b border-subtle; }

@@ -1,0 +1,104 @@
+/* Feedback roles reference the existing Garnet theme. */
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-fbinherit-ink: currentColor;
+  /* carburetor-disable-next-line valid-color-role */
+  --color-fbmuted-ink: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-fbinfo-ink: var(--color-text-secondary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-fbinfo-wash: var(--color-bg-surface-alt);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-fbinfo-edge: var(--border-default-color, transparent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-fbwarn-ink: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-fbwarn-wash: var(--color-warning-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-fbwarn-edge: var(--color-warning);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-fbdanger-ink: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-fbdanger-wash: var(--color-danger-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-fbdanger-edge: var(--color-danger);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-fbsuccess-ink: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-fbsuccess-wash: var(--color-success-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-fbsuccess-edge: var(--color-success);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-fbactive-ink: currentColor;
+  /* carburetor-disable-next-line valid-color-role */
+  --color-fbactive-wash: color-mix(in srgb, var(--color-success, #16a34a) 12%, transparent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-fbactive-edge: color-mix(in srgb, var(--color-success, #16a34a) 45%, transparent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-fbbrowser-ink: currentColor;
+  /* carburetor-disable-next-line valid-color-role */
+  --color-fbbrowser-wash: color-mix(in srgb, var(--color-bg-surface) 55%, transparent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-fbbrowser-edge: color-mix(in srgb, var(--color-warning, #d97706) 25%, transparent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-fbcheck-ink: var(--color-success, #16a34a);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-fbdiff-ink: var(--color-warning, #b45309);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-fbdiff-wash: color-mix(in srgb, var(--color-warning, #d97706) 18%, transparent);
+}
+
+@utility tone-fbinherit-plain { @apply text-fbinherit-ink; }
+@utility tone-fbmuted-plain { @apply text-fbmuted-ink; }
+@utility tone-fbinfo-outlined { @apply text-fbinfo-ink bg-fbinfo-wash border-fbinfo-edge; }
+@utility tone-fbwarn-outlined { @apply text-fbwarn-ink bg-fbwarn-wash border-fbwarn-edge; }
+@utility tone-fbdanger-outlined { @apply text-fbdanger-ink bg-fbdanger-wash border-fbdanger-edge; }
+@utility tone-fbsuccess-outlined { @apply text-fbsuccess-ink bg-fbsuccess-wash border-fbsuccess-edge; }
+@utility tone-fbactive-outlined { @apply text-fbactive-ink bg-fbactive-wash border-fbactive-edge; }
+@utility tone-fbbrowser-outlined { @apply text-fbbrowser-ink bg-fbbrowser-wash border-fbbrowser-edge; }
+@utility tone-fbcheck-plain { @apply text-fbcheck-ink; }
+@utility tone-fbdiff-soft { @apply text-fbdiff-ink bg-fbdiff-wash; }
+
+@utility layout-feedback-banner { @apply flex items-start gap-2; }
+@utility shape-feedback-banner { @apply rounded-md px-3 py-2 mb-3 border; }
+@utility type-feedback-banner { @apply text-sm; }
+@utility layout-feedback-icon { @apply shrink-0; }
+@utility type-feedback-icon { @apply text-base leading-none; }
+@utility shape-feedback-content { @apply min-w-0; }
+@utility layout-feedback-content { @apply flex-1; }
+@utility layout-feedback-title { @apply block; }
+@utility type-feedback-title { @apply font-semibold; }
+@utility layout-timezone-row { @apply flex flex-wrap items-center gap-x-2 gap-y-1; }
+@utility type-timezone-row { @apply leading-tight; }
+@utility layout-timezone-chip { @apply inline-flex items-start gap-1.5; }
+@utility shape-timezone-chip { @apply rounded-md px-2 py-0.5 max-w-full min-w-0 border; }
+@utility type-timezone-chip { @apply text-sm; }
+@utility effect-timezone-muted { @apply opacity-80; }
+@utility type-timezone-check { @apply font-bold; }
+@utility shape-timezone-label { @apply min-w-0; }
+@utility type-timezone-label { @apply text-xs; }
+@utility type-timezone-name { @apply font-medium; }
+@utility type-timezone-time { @apply font-mono tabular-nums; }
+@utility layout-timezone-diff { @apply inline-flex items-center; }
+@utility shape-timezone-diff { @apply rounded-full px-2 py-0.5; }
+@utility type-timezone-diff { @apply text-xs font-medium whitespace-nowrap; }
+
+@layer components {
+  .feedback-banner-info { @apply tone-fbinfo-outlined layout-feedback-banner shape-feedback-banner type-feedback-banner; }
+  .feedback-banner-warn { @apply tone-fbwarn-outlined layout-feedback-banner shape-feedback-banner type-feedback-banner; }
+  .feedback-banner-danger { @apply tone-fbdanger-outlined layout-feedback-banner shape-feedback-banner type-feedback-banner; }
+  .feedback-banner-success { @apply tone-fbsuccess-outlined layout-feedback-banner shape-feedback-banner type-feedback-banner; }
+  .feedback-banner-icon { @apply tone-fbinherit-plain layout-feedback-icon type-feedback-icon; }
+  .feedback-banner-content { @apply tone-fbinherit-plain shape-feedback-content layout-feedback-content; }
+  .feedback-banner-title { @apply tone-fbinherit-plain layout-feedback-title type-feedback-title; }
+  .timezone-mismatch-row { @apply tone-fbinherit-plain layout-timezone-row type-timezone-row; }
+  .timezone-active-chip { @apply tone-fbactive-outlined layout-timezone-chip shape-timezone-chip type-timezone-chip; }
+  .timezone-browser-chip { @apply tone-fbbrowser-outlined layout-timezone-chip shape-timezone-chip type-timezone-chip effect-timezone-muted; }
+  .timezone-check-icon { @apply tone-fbcheck-plain type-timezone-check; }
+  .timezone-chip-label { @apply tone-fbmuted-plain shape-timezone-label type-timezone-label; }
+  .timezone-chip-name { @apply tone-fbinherit-plain type-timezone-name; }
+  .timezone-chip-separator { @apply tone-fbmuted-plain; }
+  .timezone-chip-time { @apply tone-fbinherit-plain type-timezone-time; }
+  .timezone-difference { @apply tone-fbdiff-soft layout-timezone-diff shape-timezone-diff type-timezone-diff; }
+}

@@ -7,7 +7,7 @@ The same toolchain on every platform — no bundled web-server binary:
 | Tool | Why | Install |
 |---|---|---|
 | **PHP 8.1+** (CLI) with `pdo`, `mbstring`, `mysqli` | Runs the app + the dev-server worker pool (`php -S`). | Windows: php.net build · macOS: `brew install php` · Linux: `apt install php-cli php-mysql` |
-| **Node 20+** | The dev server (`tooling/server/garnet-serve.mjs`) and the rspack frontend build. | [nodejs.org](https://nodejs.org) · `brew install node` · `apt install nodejs` |
+| **Node 24+** | The dev server (`tooling/server/garnet-serve.mjs`), frontend build, and React Carburetor tooling. | [nodejs.org](https://nodejs.org) · `brew install node` · `apt install nodejs` |
 | **Composer 2** | PHP dependencies. | [getcomposer.org](https://getcomposer.org) |
 | **MySQL 8.0+ / MariaDB 10.6+** | Database. | platform package |
 
@@ -33,6 +33,22 @@ composer install            # PHP deps + npm + node_modules junction
 run it any time to (re)install. It degrades gracefully when npm is missing
 (the PHP half still completes; finish the node half later with the same
 command once Node.js is on your PATH).
+
+The FrontBuilder installs `@react-carburetor/core` and the native
+`@react-carburetor/lint` at 0.3.0. Its oxlint preset runs alongside the
+Garnet rules. `npm --prefix FrontBuilder run lint:carburetor` checks the
+functional stylesheets and the scoped controls. The stylesheets are imported by
+`framework.less`; their Garnet roles bridge existing theme variables so custom
+and dark themes keep working. Those role aliases and the missing stock-colour
+reset have narrowly scoped native-lint suppressions during migration.
+
+DurationSelect accepts `variant="compact"` instead of an arbitrary `className`;
+its default and compact styles follow the framework's `form-select` and
+`form-select-sm` rules. AsyncIconButton accepts `variant="muted-outline"` or
+`variant="accent-outline"` instead of `className`, and is unstyled by default.
+Applications must migrate callers and any app-specific selector styling.
+For attachment actions, `attachment-add-button` provides the framework's
+outline-secondary button appearance, including the glass skin.
 
 ## Creating a New App
 

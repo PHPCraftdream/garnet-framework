@@ -36,9 +36,12 @@ const fallbackLabels = (): PaginationLabels => ({
  * Compute which page numbers to show: first, last, current +/- 1, with ellipses.
  * Example for page=5, total=10: [1, '...', 4, 5, 6, '...', 10]
  */
+const pageIndexToNumber = (_: unknown, index: number): number => index + 1;
+const comparePageNumbers = (a: number, b: number): number => a - b;
+
 function getPageNumbers(page: number, totalPages: number): (number | '...')[] {
     if (totalPages <= 7) {
-        return Array.from({length: totalPages}, (_, i) => i + 1);
+        return Array.from({length: totalPages}, pageIndexToNumber);
     }
 
     const pages: (number | '...')[] = [];
@@ -53,7 +56,7 @@ function getPageNumbers(page: number, totalPages: number): (number | '...')[] {
         if (i >= 1 && i <= totalPages) near.add(i);
     }
 
-    const sorted = Array.from(near).toSorted((a, b) => a - b);
+    const sorted = Array.from(near).toSorted(comparePageNumbers);
 
     for (let i = 0; i < sorted.length; i++) {
         if (i > 0 && sorted[i] - sorted[i - 1] > 1) {
@@ -65,94 +68,57 @@ function getPageNumbers(page: number, totalPages: number): (number | '...')[] {
     return pages;
 }
 
-export default function Pagination({page, totalPages, onPageChange, total, loading, compact, labels, pageSize, onPageSizeChange}: Props) {
-    const l = labels || fallbackLabels();
-    const showSelector = pageSize != null && onPageSizeChange != null;
+export default class Pagination extends React.Component<Props> {
+    private readonly handlePrev = (): void => {
+        this.props.onPageChange(this.props.page - 1);
+    };
 
-    // The selector is useful even when there's only one page (the user may
-    // want to switch back to a larger size after filtering down). Bail out
-    // only when both controls would be empty.
-    if (totalPages <= 1 && !showSelector) return null;
+    private readonly handleNext = (): void => {
+        this.props.onPageChange(this.props.page + 1);
+    };
 
-    const prevDisabled = page <= 1 || loading;
-    const nextDisabled = page >= totalPages || loading;
-
-    const btnNav = 'common-pgn-btn';
-
-    if (compact) {
+    private renderCompact(labels: PaginationLabels) {
+        const {page, totalPages, loading} = this.props;
         return (
-            <nav className="flex items-center gap-3 flex-wrap" aria-label="Pagination" data-test-id="pagination">
-                {totalPages > 1 && (
-                    <div className="flex items-center gap-2">
-                        <button
-                            type="button"
-                            className={btnNav}
-                            disabled={prevDisabled}
-                            onClick={() => onPageChange(page - 1)}
-                            data-test-id="pagination-prev"
-                        >
-                            {l.prev}
-                        </button>
-                        <span className="common-pgn-info" data-test-id="pagination-info">
-                            {page} {l.of} {totalPages}
-                        </span>
-                        <button
-                            type="button"
-                            className={btnNav}
-                            disabled={nextDisabled}
-                            onClick={() => onPageChange(page + 1)}
-                            data-test-id="pagination-next"
-                        >
-                            {l.next}
-                        </button>
-                    </div>
-                )}
+            <div className="paging-compact-row">
+                <button type="button" className="common-pgn-btn" disabled={page <= 1 || loading} onClick={this.handlePrev} data-test-id="pagination-prev">
+                    {labels.prev}
+                </button>
+                <span className="common-pgn-info" data-test-id="pagination-info">{page} {labels.of} {totalPages}</span>
+                <button type="button" className="common-pgn-btn" disabled={page >= totalPages || loading} onClick={this.handleNext} data-test-id="pagination-next">
+                    {labels.next}
+                </button>
+            </div>
+        );
+    }
+
+    private renderPages(labels: PaginationLabels, pages: (number | '...')[]) {
+        const {page, totalPages, total, loading, onPageChange} = this.props;
+        return (
+            <div className="paging-pages-row">
+                <button type="button" className="common-pgn-btn" disabled={page <= 1 || loading} onClick={this.handlePrev} data-test-id="pagination-prev">
+                    {labels.prev}
+                </button>
+                <PageNumberButtons pages={pages} currentPage={page} loading={loading} onPageChange={onPageChange} />
+                <button type="button" className="common-pgn-btn" disabled={page >= totalPages || loading} onClick={this.handleNext} data-test-id="pagination-next">
+                    {labels.next}
+                </button>
+                {total != null && <span className="paging-total-info" data-test-id="pagination-info">{total} {labels.items}</span>}
+            </div>
+        );
+    }
+
+    public render() {
+        const {page, totalPages, compact, labels, pageSize, onPageSizeChange} = this.props;
+        const l = labels || fallbackLabels();
+        const showSelector = pageSize != null && onPageSizeChange != null;
+        if (totalPages <= 1 && !showSelector) return null;
+        const pages = compact ? null : getPageNumbers(page, totalPages);
+        return (
+            <nav className="paging-navigation" aria-label="Pagination" data-test-id="pagination">
+                {totalPages > 1 && (compact ? this.renderCompact(l) : this.renderPages(l, pages!))}
                 {showSelector && <PageSizeSelector value={pageSize!} onChange={onPageSizeChange!} />}
             </nav>
         );
     }
-
-    const pages = getPageNumbers(page, totalPages);
-
-    return (
-        <nav className="flex items-center gap-3 flex-wrap" aria-label="Pagination" data-test-id="pagination">
-            {totalPages > 1 && (
-                <div className="flex items-center gap-1 flex-wrap">
-                    <button
-                        type="button"
-                        className={btnNav}
-                        disabled={prevDisabled}
-                        onClick={() => onPageChange(page - 1)}
-                        data-test-id="pagination-prev"
-                    >
-                        {l.prev}
-                    </button>
-
-                    <PageNumberButtons
-                        pages={pages}
-                        currentPage={page}
-                        loading={loading}
-                        onPageChange={onPageChange}
-                    />
-
-                    <button
-                        type="button"
-                        className={btnNav}
-                        disabled={nextDisabled}
-                        onClick={() => onPageChange(page + 1)}
-                        data-test-id="pagination-next"
-                    >
-                        {l.next}
-                    </button>
-
-                    {total != null && (
-                        <span className="common-pgn-info ml-2" data-test-id="pagination-info">
-                            {total} {l.items}
-                        </span>
-                    )}
-                </div>
-            )}
-            {showSelector && <PageSizeSelector value={pageSize!} onChange={onPageSizeChange!} />}
-        </nav>
-    );
 }

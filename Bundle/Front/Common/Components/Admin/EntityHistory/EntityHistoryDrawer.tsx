@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {useEffect, useRef, useState, useCallback} from 'react';
+import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
 import {sendPost} from '@common/Api/Send/sendPost';
 import {appUrl} from '@common/Utils/Url/appUrl';
 import {useBodyScrollLock} from '@common/hooks/ui/useBodyScrollLock';
@@ -9,111 +9,88 @@ import {Portal} from '@common/Components/Layout/Portal';
 
 export type {EntityHistoryRow} from './EntityHistoryTable';
 
-interface ListResponse {
-    success: boolean;
-    rows: EntityHistoryRow[];
-}
-
+interface ListResponse { success: boolean; rows: EntityHistoryRow[] }
 interface Props {
     entityType: string;
     entityId: string | number;
     title?: string;
-    /** Override endpoint URL. Defaults to /admin/entity-history/~list (with route prefix). */
     listUrl?: string;
     onClose: () => void;
 }
 
-const DEFAULT_LIST_URL = '/admin/entity-history/~list';
-
-/**
- * Generic, drop-in viewer for the entity-history audit log of a single record.
- * Shows newest changes first; each row has timestamp, actor, action and a diff.
- *
- * Wire it in by mounting `<EntityHistoryButton entityType=… entityId=… />` —
- * which is the user-facing API. This Drawer is the modal it opens.
- */
-export const EntityHistoryDrawer: React.FC<Props> = ({entityType, entityId, title, listUrl, onClose}) => {
+const ScrollLock: React.FC = () => {
     useBodyScrollLock(true);
-    const overlayRef = useRef<HTMLDivElement>(null);
+    return null;
+};
 
-    const [rows, setRows] = useState<EntityHistoryRow[]>([]);
-    const [loading, setLoading] = useState<boolean>(false);
-    const [error, setError] = useState<string>('');
+function stopPropagation(event: React.MouseEvent): void {
+    event.stopPropagation();
+}
 
-    const load = useCallback(async (): Promise<void> => {
-        setLoading(true);
-        setError('');
+export class EntityHistoryDrawer extends AntiHookComponent<Props> {
+    private readonly store = new Carburetor<{rows: EntityHistoryRow[]; loading: boolean; error: string}>({rows: [], loading: false, error: ''});
+    private readonly rows = this.connectSelection(this.store, state => state.rows);
+    private request = 0;
+
+    public componentDidMount(): void {
+        super.componentDidMount();
+        document.addEventListener('keydown', this.onKey);
+        void this.load();
+    }
+
+    public componentDidUpdate(previous: Readonly<Props>): void {
+        super.componentDidUpdate(previous);
+        if (previous.entityType !== this.props.entityType || previous.entityId !== this.props.entityId || previous.listUrl !== this.props.listUrl) void this.load();
+    }
+
+    public componentWillUnmount(): void {
+        this.request++;
+        document.removeEventListener('keydown', this.onKey);
+        super.componentWillUnmount();
+    }
+
+    private async load(): Promise<void> {
+        const request = ++this.request;
+        const {entityType, entityId, listUrl} = this.props;
+        this.store.setData({...this.store.getData(), loading: true, error: ''});
         try {
-            const res = await sendPost<
-                {entity_type: string; entity_id: string; limit: number},
-                ListResponse
-            >(appUrl(listUrl ?? DEFAULT_LIST_URL), {
-                entity_type: entityType,
-                entity_id: String(entityId),
-                limit: 200,
-            });
-            setRows(res.rows ?? []);
+            const res = await sendPost<{entity_type: string; entity_id: string; limit: number}, ListResponse>(
+                appUrl(listUrl ?? '/admin/entity-history/~list'),
+                {entity_type: entityType, entity_id: String(entityId), limit: 200},
+            );
+            if (request === this.request) this.store.setData({...this.store.getData(), rows: res.rows ?? []});
         } catch (e: any) {
-            setError(e?.message || 'Error loading history');
+            if (request === this.request) this.store.setData({...this.store.getData(), error: e?.message || 'Error loading history'});
         } finally {
-            setLoading(false);
+            if (request === this.request) this.store.setData({...this.store.getData(), loading: false});
         }
-    }, [entityType, entityId, listUrl]);
+    }
 
-    useEffect(() => {
-        void load();
-    }, [load]);
-
-    useEffect(() => {
-        const onKey = (e: KeyboardEvent): void => {
-            if (e.key === 'Escape') onClose();
-        };
-        document.addEventListener('keydown', onKey);
-        return () => document.removeEventListener('keydown', onKey);
-    }, [onClose]);
-
-    const handleOverlayClick = (e: React.MouseEvent): void => {
-        if (e.target === overlayRef.current) onClose();
+    private readonly onKey = (event: KeyboardEvent): void => {
+        if (event.key === 'Escape') this.props.onClose();
+    };
+    private readonly onOverlay = (event: React.MouseEvent<HTMLDivElement>): void => {
+        if (event.target === event.currentTarget) this.props.onClose();
     };
 
-    const heading = title ?? `${t.EntityHistory_Title()} — ${entityType} #${entityId}`;
-
-    return (
-        <Portal><div
-            ref={overlayRef}
-            className="fg-modal-overlay-high"
-            onClick={handleOverlayClick}
-            data-test-id="entity-history-modal"
-        >
-            <div
-                role="dialog"
-                aria-modal="true"
-                aria-label={heading}
-                className="fg-modal-card-flush fg-modal-card-3xl"
-                onClick={e => e.stopPropagation()}
-            >
-                <div className="fg-modal-flush-header">
-                    <h3 className="fg-modal-title">{heading}</h3>
-                    <button
-                        type="button"
-                        className="fg-modal-close-x"
-                        onClick={onClose}
-                        data-test-id="entity-history-close"
-                    >
-                        &times;
-                    </button>
+    public render() {
+        const {entityType, entityId, title, onClose} = this.props;
+        const {loading, error} = this.useCarburetor(this.store);
+        const rows = this.rows();
+        const heading = title ?? `${t.EntityHistory_Title()} — ${entityType} #${entityId}`;
+        return <Portal><ScrollLock /><div className="entity-history-overlay" onClick={this.onOverlay} data-test-id="entity-history-modal">
+            <div role="dialog" aria-modal="true" aria-label={heading} className="entity-history-card" onClick={stopPropagation}>
+                <div className="entity-history-header">
+                    <h3 className="entity-history-title">{heading}</h3>
+                    <button type="button" className="entity-history-close" onClick={onClose} data-test-id="entity-history-close">&times;</button>
                 </div>
-                <div className="fg-modal-flush-body">
-                    {loading && <div className="text-muted">{t.EntityHistory_Loading()}</div>}
-                    {error && <div className="text-error">{error}</div>}
-                    {!loading && !error && rows.length === 0 && (
-                        <div className="text-muted" data-test-id="entity-history-empty">{t.EntityHistory_Empty()}</div>
-                    )}
-                    {!loading && rows.length > 0 && (
-                        <EntityHistoryTable rows={rows} />
-                    )}
+                <div className="entity-history-body">
+                    {loading && <div className="entity-history-muted">{t.EntityHistory_Loading()}</div>}
+                    {error && <div className="entity-history-error">{error}</div>}
+                    {!loading && !error && rows.length === 0 && <div className="entity-history-muted" data-test-id="entity-history-empty">{t.EntityHistory_Empty()}</div>}
+                    {!loading && rows.length > 0 && <EntityHistoryTable rows={rows} />}
                 </div>
             </div>
-        </div></Portal>
-    );
-};
+        </div></Portal>;
+    }
+}

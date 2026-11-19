@@ -1,0 +1,87 @@
+/* Tab helper roles reference the existing Garnet theme. */
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-tabcrumb-ink: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-tabcrumb-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-tabaction-ink: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-tabaction-ink-hover: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-tabclose-ink: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-tabclose-ink-hover: var(--color-text-secondary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-tabcurrent-ink: var(--color-text-secondary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-tabinherit-ink: currentColor;
+  /* carburetor-disable-next-line valid-color-role */
+  --color-tabbar-ink: currentColor;
+  /* carburetor-disable-next-line valid-color-role */
+  --color-tabbar-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-tabnavinactive-ink: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-tabnavinactive-ink-hover: var(--color-text-secondary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-tabnavinactive-edge: transparent;
+  /* carburetor-disable-next-line valid-color-role */
+  --color-tabnavinactive-edge-hover: var(--color-border-strong);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-tabnavactive-ink: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-tabnavactive-ink-hover: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-tabnavactive-edge: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-tabnavactive-edge-hover: var(--color-accent);
+}
+
+@utility tone-tabcrumb-outline { @apply text-tabcrumb-ink border-tabcrumb-edge; }
+@utility tone-tabcrumb-plain { @apply text-tabcrumb-ink; }
+@utility tone-tabaction-plain { @apply text-tabaction-ink [&:hover]:text-tabaction-ink-hover; }
+@utility tone-tabclose-plain { @apply text-tabclose-ink [&:hover]:text-tabclose-ink-hover; }
+@utility tone-tabcurrent-plain { @apply text-tabcurrent-ink; }
+@utility tone-tabinherit-plain { @apply text-tabinherit-ink; }
+@utility tone-tabbar-outline { @apply text-tabbar-ink border-tabbar-edge; }
+@utility tone-tabnavinactive-outline {
+  @apply text-tabnavinactive-ink border-tabnavinactive-edge hover:text-tabnavinactive-ink-hover hover:border-tabnavinactive-edge-hover;
+}
+@utility tone-tabnavactive-outline {
+  @apply text-tabnavactive-ink border-tabnavactive-edge hover:text-tabnavactive-ink-hover hover:border-tabnavactive-edge-hover;
+}
+
+@utility layout-tab-bar { @apply flex flex-wrap; }
+@utility shape-tab-bar { @apply border-b mb-0; }
+@utility shape-tab-item { @apply mr-1; }
+@utility layout-tab-link { @apply inline-flex items-center gap-1; }
+@utility shape-tab-link { @apply px-4 py-2 rounded-t-lg border-b-2; }
+@utility type-tab-link { @apply text-sm font-medium; }
+@utility motion-tab-link { @apply transition-colors; }
+
+@utility layout-tab-breadcrumb { @apply flex items-center gap-1; }
+@utility shape-tab-breadcrumb { @apply px-1 py-1.5 mb-3 border-b; }
+@utility type-tab-breadcrumb { @apply text-xs; }
+@utility behavior-tab-separator { @apply select-none; }
+@utility motion-tab-breadcrumb { @apply transition-colors; }
+@utility type-tab-current { @apply font-medium; }
+@utility shape-tab-placeholder { @apply mb-4; }
+@utility type-tab-close { @apply leading-none text-base; }
+@utility behavior-tab-close { @apply cursor-pointer; }
+
+@layer components {
+  .tabnav-bar { @apply tone-tabbar-outline layout-tab-bar shape-tab-bar; }
+  .tabnav-item { @apply tone-tabinherit-plain shape-tab-item; }
+  .tabnav-link {
+    @apply tone-tabnavinactive-outline layout-tab-link shape-tab-link type-tab-link motion-tab-link;
+    &[aria-selected="true"] { @apply tone-tabnavactive-outline; }
+  }
+  .navigation-breadcrumb { @apply tone-tabcrumb-outline layout-tab-breadcrumb shape-tab-breadcrumb type-tab-breadcrumb; }
+  .breadcrumb-separator { @apply tone-tabcrumb-plain behavior-tab-separator; }
+  .breadcrumb-action { @apply tone-tabaction-plain motion-tab-breadcrumb; }
+  .breadcrumb-current { @apply tone-tabcurrent-plain type-tab-current; }
+  .breadcrumb-placeholder { @apply tone-tabinherit-plain shape-tab-placeholder; }
+  .navigation-tab-close { @apply tone-tabclose-plain type-tab-close behavior-tab-close; }
+}

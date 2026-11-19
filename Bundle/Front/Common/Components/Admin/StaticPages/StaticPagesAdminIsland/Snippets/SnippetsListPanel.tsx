@@ -1,21 +1,8 @@
-/**
- * Список сниппетов с группировкой по типу.
- */
 import * as React from 'react';
+import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
 import {sendPost} from '@common/Api/Send/sendPost';
-import {sendPostFormData} from '@common/Api/Send/sendPostFormData';
 import {showToast} from '@common/Components/Feedback/GlobalToast';
-import {ConfirmModal} from '@common/Components/Feedback/ConfirmModal';
-import {EntityHistoryButton} from '@common/Components/Admin/EntityHistory/EntityHistoryButton';
-import {TabNav, TabDef} from '@common/Components/Layout/Navigation/TabNav';
-import {useSending} from '@common/hooks/data/useSending';
-import {useConfirm} from '@common/hooks/ui/useConfirm';
 import {formatTs} from '@common/Utils/Time/DateUtils';
-import {markdownToHtml} from '@common/Utils/Ui/markdownToHtml';
-import {PageHeader} from '@common/Components/Layout/PageHeader';
-import {ImageUploadArea} from '@common/Components/Controls/ImageUploadArea';
-import {ImageUploadField} from '@common/Components/Controls/ImageUploadField';
-import {FileText} from 'lucide-react';
 import {SnippetTabInfo, SNIPPET_TYPES, SNIPPET_TYPE_LABELS} from '../types';
 import {Snippet, Labels} from '../types';
 
@@ -36,221 +23,155 @@ export interface SnippetsListPanelProps {
     snippetTabs: SnippetTabInfo[];
 }
 
+type ListState = {showCreateForm: boolean; newSlug: string; newName: string; newType: string; filterType: string};
 
-export const SnippetsListPanel: React.FC<SnippetsListPanelProps> = ({
-    snippets, loaded, labels,
-    snippetCreateUrl, snippetDeleteUrl,
-    sending, withSending, confirm,
-    onSnippetCreated, onSnippetDeleted, onToggleActive, onOpenSnippet,
-    snippetTabs,
-}) => {
-    const [showCreateForm, setShowCreateForm] = React.useState(false);
-    const [newSlug, setNewSlug] = React.useState('');
-    const [newName, setNewName] = React.useState('');
-    const [newType, setNewType] = React.useState<string>('block');
-    const [filterType, setFilterType] = React.useState<string>('');
+export class SnippetsListPanel extends AntiHookComponent<SnippetsListPanelProps> {
+    private readonly ui = new Carburetor<ListState>({showCreateForm: false, newSlug: '', newName: '', newType: 'block', filterType: ''});
+    private readonly view = this.connectSelection(() => this.ui, state => state);
 
-    const handleCreate = () => {
+    private readonly toggleCreate = () => {
+        const state = this.ui.getData();
+        this.ui.setData({...state, showCreateForm: !state.showCreateForm});
+    };
+    private readonly cancelCreate = () => this.ui.setData({...this.ui.getData(), showCreateForm: false});
+    private readonly changeSlug = (event: React.ChangeEvent<HTMLInputElement>) => this.ui.setData({...this.ui.getData(), newSlug: event.target.value});
+    private readonly changeName = (event: React.ChangeEvent<HTMLInputElement>) => this.ui.setData({...this.ui.getData(), newName: event.target.value});
+    private readonly changeType = (event: React.ChangeEvent<HTMLSelectElement>) => this.ui.setData({...this.ui.getData(), newType: event.target.value});
+    private readonly changeFilter = (event: React.MouseEvent<HTMLButtonElement>) => {
+        const type = event.currentTarget.dataset.type ?? '';
+        const state = this.ui.getData();
+        this.ui.setData({...state, filterType: state.filterType === type ? '' : type});
+    };
+
+    private readonly handleCreate = () => {
+        const {newSlug, newName, newType} = this.ui.getData();
+        const {withSending, snippetCreateUrl, onSnippetCreated, labels} = this.props;
         if (!newSlug.trim()) return;
         void withSending(async () => {
             try {
                 const res = await sendPost<any, {success: boolean; snippet: Snippet}>(snippetCreateUrl, {
-                    slug: newSlug.trim(),
-                    name: newName.trim(),
-                    snippet_type: newType,
+                    slug: newSlug.trim(), name: newName.trim(), snippet_type: newType,
                 });
-                if ((res as any)?.error) {
-                    showToast((res as any).error, 'danger');
-                    return;
-                }
+                if ((res as any)?.error) { showToast((res as any).error, 'danger'); return; }
                 onSnippetCreated(res.snippet);
-                setNewSlug('');
-                setNewName('');
-                setNewType('block');
-                setShowCreateForm(false);
+                this.ui.setData({...this.ui.getData(), newSlug: '', newName: '', newType: 'block', showCreateForm: false});
                 showToast('OK', 'success');
-            } catch (err: any) {
-                showToast(err?.message ?? labels.error, 'danger');
-            }
+            } catch (err: any) { showToast(err?.message ?? labels.error, 'danger'); }
         });
     };
 
-    const handleDelete = async (s: Snippet) => {
-        const ok = await confirm(
-            labels.snippetsDeleteConfirm,
-            {variant: 'danger', confirmLabel: labels.actionDelete},
-        );
+    private snippetFor(event: React.MouseEvent<HTMLButtonElement>): Snippet | undefined {
+        const id = Number(event.currentTarget.dataset.snippetId);
+        return this.props.snippets.find(snippet => snippet.id === id);
+    }
+    private readonly toggleSnippet = (event: React.MouseEvent<HTMLButtonElement>) => {
+        const snippet = this.snippetFor(event);
+        if (snippet) this.props.onToggleActive(snippet);
+    };
+    private readonly openSnippet = (event: React.MouseEvent<HTMLButtonElement>) => {
+        const snippet = this.snippetFor(event);
+        if (snippet) this.props.onOpenSnippet(snippet);
+    };
+    private readonly deleteSnippet = (event: React.MouseEvent<HTMLButtonElement>) => {
+        const snippet = this.snippetFor(event);
+        if (snippet) void this.handleDelete(snippet);
+    };
+    private readonly handleDelete = async (snippet: Snippet) => {
+        const {confirm, labels, withSending, snippetDeleteUrl, onSnippetDeleted} = this.props;
+        const ok = await confirm(labels.snippetsDeleteConfirm, {variant: 'danger', confirmLabel: labels.actionDelete});
         if (!ok) return;
         void withSending(async () => {
             try {
-                const res = await sendPost<{id: number}, {success: boolean}>(snippetDeleteUrl, {id: s.id});
-                if ((res as any)?.error) {
-                    showToast((res as any).error, 'danger');
-                    return;
-                }
-                onSnippetDeleted(s.id);
-            } catch (err: any) {
-                showToast(err?.message ?? labels.error, 'danger');
-            }
+                const res = await sendPost<{id: number}, {success: boolean}>(snippetDeleteUrl, {id: snippet.id});
+                if ((res as any)?.error) { showToast((res as any).error, 'danger'); return; }
+                onSnippetDeleted(snippet.id);
+            } catch (err: any) { showToast(err?.message ?? labels.error, 'danger'); }
         });
     };
 
-    const filtered = filterType ? snippets.filter(s => s.snippet_type === filterType) : snippets;
+    private readonly renderTypeOption = (type: string) => (
+        <option key={type} value={type}>{(SNIPPET_TYPE_LABELS[type] ?? (() => type))(this.props.labels)}</option>
+    );
+    private readonly renderFilter = (type: string) => (
+        <button key={type} type="button" className="static-admin-filter" data-active={this.ui.getData().filterType === type}
+            data-type={type} onClick={this.changeFilter}>
+            {(SNIPPET_TYPE_LABELS[type] ?? (() => type))(this.props.labels)}
+        </button>
+    );
+    private readonly renderRow = (snippet: Snippet) => {
+        const {labels, sending, snippetTabs} = this.props;
+        const isOpen = snippetTabs.some(tab => tab.snippetId === snippet.id);
+        return (
+            <tr key={snippet.id} className={isOpen ? 'static-admin-row-open' : undefined}>
+                <td className="static-admin-slug-cell">{snippet.slug}</td>
+                <td className="static-admin-cell">{snippet.name}</td>
+                <td className="static-admin-type-cell">{(SNIPPET_TYPE_LABELS[snippet.snippet_type] ?? (() => snippet.snippet_type))(labels)}</td>
+                <td className="static-admin-cell">
+                    <button type="button" className="static-admin-status" data-published={!!snippet.is_active}
+                        data-snippet-id={snippet.id} onClick={this.toggleSnippet} disabled={sending}>
+                        {snippet.is_active ? labels.snippetsActive : labels.snippetsInactive}
+                    </button>
+                </td>
+                <td className="static-admin-time-cell">{formatTs(snippet.updated_at)}</td>
+                <td className="static-admin-cell"><div className="static-admin-row-actions">
+                    <button type="button" className="static-admin-link" data-snippet-id={snippet.id} onClick={this.openSnippet}>{labels.editPage}</button>
+                    <button type="button" className="static-admin-delete" data-snippet-id={snippet.id} onClick={this.deleteSnippet} disabled={sending}>{labels.actionDelete}</button>
+                </div></td>
+            </tr>
+        );
+    };
 
-    return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-semibold text-on-surface">{labels.snippets}</h1>
-                <button
-                    type="button"
-                    className="btn btn-primary disabled:opacity-60"
-                    onClick={() => setShowCreateForm(!showCreateForm)}
-                    disabled={sending}
-                >
-                    + {labels.snippetsCreateOpen || labels.snippetsCreate}
-                </button>
-            </div>
+    public render() {
+        return this.renderList(this.view() as ListState);
+    }
 
-            {showCreateForm && (
-                <section className="rounded-lg border border-default bg-surface p-5">
-                    <h2 className="text-lg font-semibold text-on-surface mb-3">{labels.snippetsCreateTitle}</h2>
-                    <div className="grid gap-4 md:grid-cols-3">
-                        <label className="block">
-                            <span className="mb-1 block text-sm font-medium text-on-surface">{labels.snippetsSlug}</span>
-                            <input
-                                className="form-control w-full border-default"
-                                value={newSlug}
-                                onChange={e => setNewSlug(e.target.value)}
-                            />
+    private renderList(state: ListState) {
+        const {snippets, loaded, labels, sending} = this.props;
+        const {showCreateForm, newSlug, newName, newType, filterType} = state;
+        const filtered = filterType ? snippets.filter(snippet => snippet.snippet_type === filterType) : snippets;
+        return (
+            <div className="static-admin-pages">
+                <div className="static-admin-snippets-header">
+                    <h1 className="static-admin-snippets-title">{labels.snippets}</h1>
+                    <button type="button" className="static-admin-snippets-create" onClick={this.toggleCreate} disabled={sending}>
+                        + {labels.snippetsCreateOpen || labels.snippetsCreate}
+                    </button>
+                </div>
+                {showCreateForm && <section className="static-admin-create-panel">
+                    <h2 className="static-admin-create-title">{labels.snippetsCreateTitle}</h2>
+                    <div className="static-admin-snippets-fields">
+                        <label className="static-admin-label"><span className="static-admin-caption">{labels.snippetsSlug}</span>
+                            <input className="static-admin-input" value={newSlug} onChange={this.changeSlug} />
                         </label>
-                        <label className="block">
-                            <span className="mb-1 block text-sm font-medium text-on-surface">{labels.snippetsName}</span>
-                            <input
-                                className="form-control w-full border-default"
-                                value={newName}
-                                onChange={e => setNewName(e.target.value)}
-                            />
+                        <label className="static-admin-label"><span className="static-admin-caption">{labels.snippetsName}</span>
+                            <input className="static-admin-input" value={newName} onChange={this.changeName} />
                         </label>
-                        <label className="block">
-                            <span className="mb-1 block text-sm font-medium text-on-surface">{labels.snippetsType}</span>
-                            <select
-                                className="form-control w-full border-default"
-                                value={newType}
-                                onChange={e => setNewType(e.target.value)}
-                            >
-                                {SNIPPET_TYPES.map(t => (
-                                    <option key={t} value={t}>{(SNIPPET_TYPE_LABELS[t] ?? (() => t))(labels)}</option>
-                                ))}
+                        <label className="static-admin-label"><span className="static-admin-caption">{labels.snippetsType}</span>
+                            <select className="static-admin-input" value={newType} onChange={this.changeType}>
+                                {SNIPPET_TYPES.map(this.renderTypeOption)}
                             </select>
                         </label>
                     </div>
-                    <div className="mt-4 flex gap-2">
-                        <button
-                            type="button"
-                            className="btn btn-primary disabled:opacity-60"
-                            onClick={handleCreate}
-                            disabled={sending || !newSlug.trim()}
-                        >
-                            {labels.snippetsCreate}
-                        </button>
-                        <button
-                            type="button"
-                            className="btn btn-secondary"
-                            onClick={() => setShowCreateForm(false)}
-                        >
-                            {labels.actionCancel}
-                        </button>
+                    <div className="static-admin-create-actions">
+                        <button type="button" className="static-admin-create-submit" onClick={this.handleCreate} disabled={sending || !newSlug.trim()}>{labels.snippetsCreate}</button>
+                        <button type="button" className="static-admin-cancel" onClick={this.cancelCreate}>{labels.actionCancel}</button>
                     </div>
-                </section>
-            )}
-
-            <div className="flex items-center gap-2 text-sm">
-                <button
-                    type="button"
-                    className={`px-2 py-1 rounded text-xs font-medium ${!filterType ? 'status-active' : 'status-muted'}`}
-                    onClick={() => setFilterType('')}
-                >
-                    {labels.snippetsFilterAll}
-                </button>
-                {SNIPPET_TYPES.map(t => (
-                    <button
-                        key={t}
-                        type="button"
-                        className={`px-2 py-1 rounded text-xs font-medium ${filterType === t ? 'status-active' : 'status-muted'}`}
-                        onClick={() => setFilterType(filterType === t ? '' : t)}
-                    >
-                        {(SNIPPET_TYPE_LABELS[t] ?? (() => t))(labels)}
-                    </button>
-                ))}
-            </div>
-
-            {loaded && filtered.length === 0 && (
-                <div className="text-center text-muted py-8">{labels.snippetsEmpty}</div>
-            )}
-            {filtered.length > 0 && (
-                <div className="overflow-x-auto rounded-lg border border-default">
-                    <table className="admin-table">
-                        <thead>
-                            <tr className="border-b border-subtle text-left">
-                                <th className="px-4 py-3">{labels.snippetsSlug}</th>
-                                <th className="px-4 py-3">{labels.snippetsName}</th>
-                                <th className="px-4 py-3">{labels.snippetsType}</th>
-                                <th className="px-4 py-3"></th>
-                                <th className="px-4 py-3"></th>
-                                <th className="px-4 py-3"></th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-subtle bg-surface">
-                            {filtered.map(s => {
-                                const isOpenInTab = snippetTabs.some(t => t.snippetId === s.id);
-                                return (
-                                    <tr key={s.id} className={isOpenInTab ? 'bg-accent-subtle' : ''}>
-                                        <td className="px-4 py-3 font-mono text-xs">{s.slug}</td>
-                                        <td className="px-4 py-3">{s.name}</td>
-                                        <td className="px-4 py-3 text-xs">
-                                            {(SNIPPET_TYPE_LABELS[s.snippet_type] ?? (() => s.snippet_type))(labels)}
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <button
-                                                type="button"
-                                                className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${s.is_active ? 'status-success' : 'status-muted'}`}
-                                                onClick={() => onToggleActive(s)}
-                                                disabled={sending}
-                                            >
-                                                {s.is_active ? labels.snippetsActive : labels.snippetsInactive}
-                                            </button>
-                                        </td>
-                                        <td className="px-4 py-3 text-muted text-xs">{formatTs(s.updated_at)}</td>
-                                        <td className="px-4 py-3">
-                                            <div className="flex items-center gap-2">
-                                                <button
-                                                    type="button"
-                                                    className="text-accent hover:text-on-surface text-xs underline"
-                                                    onClick={() => onOpenSnippet(s)}
-                                                >
-                                                    {labels.editPage}
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    className="text-danger hover:text-on-surface text-xs underline"
-                                                    onClick={() => void handleDelete(s)}
-                                                    disabled={sending}
-                                                >
-                                                    {labels.actionDelete}
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                </section>}
+                <div className="static-admin-filters">
+                    <button type="button" className="static-admin-filter" data-active={!filterType} data-type="" onClick={this.changeFilter}>{labels.snippetsFilterAll}</button>
+                    {SNIPPET_TYPES.map(this.renderFilter)}
                 </div>
-            )}
-
-            <div className="text-xs text-muted">
-                {labels.snippetsUsageHint}
+                {loaded && filtered.length === 0 && <div className="static-admin-empty">{labels.snippetsEmpty}</div>}
+                {filtered.length > 0 && <div className="static-admin-table-scroll"><table className="static-admin-table">
+                    <thead><tr className="static-admin-heading-row">
+                        <th className="static-admin-cell">{labels.snippetsSlug}</th><th className="static-admin-cell">{labels.snippetsName}</th>
+                        <th className="static-admin-cell">{labels.snippetsType}</th><th className="static-admin-cell"></th>
+                        <th className="static-admin-cell"></th><th className="static-admin-cell"></th>
+                    </tr></thead>
+                    <tbody className="static-admin-table-body">{filtered.map(this.renderRow)}</tbody>
+                </table></div>}
+                <div className="static-admin-usage">{labels.snippetsUsageHint}</div>
             </div>
-        </div>
-    );
-};
+        );
+    }
+}

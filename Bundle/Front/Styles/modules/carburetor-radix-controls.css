@@ -1,0 +1,84 @@
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-radixpanel-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-radixpanel-wash: var(--color-bg-surface);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-radixpanel-ink: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-radixpanel-ink-placeholder: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-radixpanel-edge-focus: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-radixoption-wash-focus: var(--color-accent-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-radixoption-ink-focus: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-radixshade-wash: rgb(0 0 0 / 50%);
+}
+
+@utility layout-radix-dialog-overlay { @apply fixed inset-0 z-50; }
+@utility effect-radix-dialog-overlay { @apply backdrop-blur-sm; }
+@utility layout-radix-dialog-content { @apply fixed left-[50%] top-[50%] z-50 grid gap-4; }
+@utility shape-radix-dialog-content { @apply w-full max-w-lg rounded-lg border p-6; }
+@utility effect-radix-dialog-content { @apply shadow-lg; }
+@utility motion-radix-dialog-center { @apply translate-x-[-50%] translate-y-[-50%]; }
+@utility layout-radix-dialog-close { @apply absolute right-4 top-4; }
+@utility shape-radix-dialog-close { @apply rounded-sm; }
+@utility effect-radix-dialog-close { @apply opacity-70 hover:opacity-100; }
+@utility motion-radix-dialog-close { @apply transition-opacity; }
+@utility behavior-radix-dialog-close { @apply disabled:pointer-events-none; }
+@utility layout-radix-dialog-close-label { @apply sr-only; }
+@utility layout-radix-dialog-header { @apply flex flex-col; }
+@utility shape-radix-dialog-header { @apply space-y-1.5; }
+@utility type-radix-dialog-header { @apply text-center sm:text-left; }
+@utility type-radix-dialog-title { @apply text-lg font-semibold leading-none tracking-tight; }
+@utility type-radix-dialog-description { @apply text-sm; }
+
+@utility layout-radix-select-trigger { @apply flex items-center justify-between; }
+@utility shape-radix-select-trigger { @apply h-9 w-full rounded-md border px-3 py-2; }
+@utility type-radix-select-trigger { @apply text-sm; }
+@utility focus-radix-select-trigger { @apply focus:outline-none focus:ring-2 focus:ring-offset-1; }
+@utility behavior-radix-select-trigger { @apply disabled:cursor-not-allowed; }
+@utility effect-radix-select-trigger { @apply disabled:opacity-50; }
+@utility layout-radix-select-content { @apply relative z-50 overflow-hidden; }
+@utility shape-radix-select-content { @apply max-h-72 min-w-[8rem] rounded-md border; }
+@utility effect-radix-select-content { @apply shadow-lg; }
+@utility shape-radix-select-viewport { @apply p-1; }
+@utility layout-radix-select-item { @apply relative flex items-center; }
+@utility shape-radix-select-item { @apply w-full rounded-sm py-1.5 pl-2 pr-8; }
+@utility type-radix-select-item { @apply text-sm; }
+@utility focus-radix-select-item { @apply outline-none; }
+@utility behavior-radix-select-item { @apply cursor-pointer select-none data-[disabled]:pointer-events-none; }
+@utility effect-radix-select-item { @apply data-[disabled]:opacity-50; }
+@utility layout-radix-select-indicator { @apply absolute right-2 flex items-center justify-center; }
+@utility shape-radix-select-indicator { @apply h-3.5 w-3.5; }
+@utility shape-radix-select-label { @apply px-2 py-1.5; }
+@utility type-radix-select-label { @apply text-sm font-semibold; }
+@utility layout-radix-tooltip-content { @apply z-50 overflow-hidden; }
+@utility shape-radix-tooltip-content { @apply rounded-lg border px-3 py-2; }
+@utility type-radix-tooltip-content { @apply text-xs; }
+@utility effect-radix-tooltip-content { @apply shadow-md; }
+
+@utility tone-radixpanel-outlined { @apply border-radixpanel-edge bg-radixpanel-wash text-radixpanel-ink; }
+@utility tone-radixpanel-interactive { @apply border-radixpanel-edge bg-radixpanel-wash text-radixpanel-ink placeholder:text-radixpanel-ink-placeholder focus:ring-radixpanel-edge-focus; }
+@utility tone-radixoption-soft { @apply focus:bg-radixoption-wash-focus focus:text-radixoption-ink-focus; }
+@utility tone-radixshade-outlined { @apply bg-radixshade-wash; }
+
+@layer components {
+  .radix-select-trigger { @apply tone-radixpanel-interactive layout-radix-select-trigger shape-radix-select-trigger type-radix-select-trigger focus-radix-select-trigger behavior-radix-select-trigger effect-radix-select-trigger; }
+  .radix-select-content { @apply tone-radixpanel-outlined layout-radix-select-content shape-radix-select-content effect-radix-select-content; }
+  .radix-select-viewport { @apply tone-supportinherit-plain shape-radix-select-viewport; }
+  .radix-select-item { @apply tone-radixoption-soft layout-radix-select-item shape-radix-select-item type-radix-select-item focus-radix-select-item behavior-radix-select-item effect-radix-select-item; }
+  .radix-select-indicator { @apply tone-supportinherit-plain layout-radix-select-indicator shape-radix-select-indicator; }
+  .radix-select-label { @apply tone-supportmuted-plain shape-radix-select-label type-radix-select-label; }
+  .radix-tooltip-content { @apply tone-radixpanel-outlined layout-radix-tooltip-content shape-radix-tooltip-content type-radix-tooltip-content effect-radix-tooltip-content; }
+  .radix-dialog-overlay { @apply tone-radixshade-outlined layout-radix-dialog-overlay effect-radix-dialog-overlay; }
+  .radix-dialog-content { @apply tone-cardsurface-outlined layout-radix-dialog-content shape-radix-dialog-content effect-radix-dialog-content motion-radix-dialog-center; }
+  .radix-dialog-close { @apply tone-supportinherit-plain layout-radix-dialog-close shape-radix-dialog-close effect-radix-dialog-close motion-radix-dialog-close behavior-radix-dialog-close; }
+  .radix-dialog-close-label { @apply tone-supportinherit-plain layout-radix-dialog-close-label; }
+  .radix-dialog-header { @apply tone-supportinherit-plain layout-radix-dialog-header shape-radix-dialog-header type-radix-dialog-header; }
+  .radix-dialog-title { @apply tone-supportprimary-plain type-radix-dialog-title; }
+  .radix-dialog-description { @apply tone-supportmuted-plain type-radix-dialog-description; }
+}

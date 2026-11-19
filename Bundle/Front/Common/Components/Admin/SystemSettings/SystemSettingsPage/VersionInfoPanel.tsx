@@ -20,27 +20,27 @@ export const VersionInfoPanel: React.FC<{info: VersionInfo; labels: SystemSettin
     const unknown = labels.versionInfoUnknown ?? '—';
 
     return (
-        <section className="rounded-lg border border-default bg-surface p-5 mt-6" data-test-id="version-info-section">
-            <h2 className="text-lg font-semibold text-on-surface mb-3">
+        <section className="settings-version-panel" data-test-id="version-info-section">
+            <h2 className="settings-version-title">
                 {labels.versionInfoTitle ?? 'Version'}
             </h2>
-            <dl className="text-sm space-y-1">
-                <div className="flex gap-2">
-                    <dt className="text-muted min-w-[140px]">{labels.versionInfoApp ?? 'App'}</dt>
-                    <dd className="font-mono" data-test-id="version-info-app">
+            <dl className="settings-version-list">
+                <div className="settings-version-row">
+                    <dt className="settings-version-label">{labels.versionInfoApp ?? 'App'}</dt>
+                    <dd className="settings-version-value" data-test-id="version-info-app">
                         {versionLine(info.appVersion, info.appCommit, unknown)}
                     </dd>
                 </div>
-                <div className="flex gap-2">
-                    <dt className="text-muted min-w-[140px]">{labels.versionInfoFramework ?? 'Framework'}</dt>
-                    <dd className="font-mono" data-test-id="version-info-framework">
+                <div className="settings-version-row">
+                    <dt className="settings-version-label">{labels.versionInfoFramework ?? 'Framework'}</dt>
+                    <dd className="settings-version-value" data-test-id="version-info-framework">
                         {versionLine(info.frameworkVersion, info.frameworkCommit, unknown)}
                     </dd>
                 </div>
                 {info.builtAt && (
-                    <div className="flex gap-2">
-                        <dt className="text-muted min-w-[140px]">{labels.versionInfoBuiltAt ?? 'Built at'}</dt>
-                        <dd className="font-mono" data-test-id="version-info-built-at">{info.builtAt}</dd>
+                    <div className="settings-version-row">
+                        <dt className="settings-version-label">{labels.versionInfoBuiltAt ?? 'Built at'}</dt>
+                        <dd className="settings-version-value" data-test-id="version-info-built-at">{info.builtAt}</dd>
                     </div>
                 )}
             </dl>

@@ -78,8 +78,8 @@ h4 { @apply text-base mb-2; }
 h5 { @apply mb-1.5; font-size: 0.9375rem; }
 h6 { @apply text-sm mb-1; }
 
-a:not(.btn):not([class*="bg-"]) { @apply text-accent; }
-a:not(.btn):not([class*="bg-"]):hover { @apply text-accent-hover; }
+a:not(.btn):not([class*="bg-"]):not(:where(.user-preview-action, .async-accent-action, .async-muted-action, .compact-outline-action, .compact-success-action, .btn-outline-warning-full, .admin-filter-reset, .primary-action-button, .external-primary-action, .external-secondary-action)) { @apply text-accent; }
+a:not(.btn):not([class*="bg-"]):not(:where(.user-preview-action, .async-accent-action, .async-muted-action, .compact-outline-action, .compact-success-action, .btn-outline-warning-full, .admin-filter-reset, .primary-action-button, .external-primary-action, .external-secondary-action)):hover { @apply text-accent-hover; }
 
 hr {
   @apply border-0 border-t border-default my-4;
@@ -143,49 +143,8 @@ input.custom-date-input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   appearance: none;
 }
-.cdp-popup {
-  @apply fixed z-50 bg-surface border border-default rounded-md shadow-lg p-2 text-sm text-on-surface;
-  min-width: 18rem;
-}
-.cdp-header {
-  @apply flex items-center justify-between mb-2;
-}
-.cdp-title {
-  @apply font-semibold;
-}
-.cdp-nav {
-  @apply w-7 h-7 inline-flex items-center justify-center rounded hover:bg-surface-alt text-on-surface;
-}
-.cdp-weekdays {
-  @apply grid grid-cols-7 gap-1 mb-1 text-xs text-muted text-center;
-}
-.cdp-weekday {
-  @apply font-medium;
-}
-.cdp-grid {
-  @apply grid grid-cols-7 gap-1;
-}
-.cdp-day {
-  @apply h-8 inline-flex items-center justify-center rounded text-on-surface hover:bg-surface-alt;
-}
-.cdp-day-outside {
-  @apply text-muted;
-}
-.cdp-day-today {
-  @apply border border-default;
-}
-.cdp-day-selected {
-  @apply bg-accent text-white hover:bg-accent;
-}
-.cdp-day-disabled {
-  @apply text-muted opacity-40 cursor-not-allowed hover:bg-transparent;
-}
-.cdp-footer {
-  @apply flex justify-between mt-2 pt-2 border-t border-default;
-}
-.cdp-foot-link {
-  @apply text-accent text-sm hover:underline cursor-pointer;
-}
+.cdp-day[data-today="true"] { @apply border border-default; }
+.cdp-day:disabled { @apply opacity-40 cursor-not-allowed hover:bg-transparent; }
 
 .form-select {
   @apply block w-full pl-3 pr-8 text-sm leading-normal text-on-surface bg-surface border border-strong rounded-md appearance-none;
@@ -227,3 +186,5 @@ input.custom-date-input::-webkit-inner-spin-button {
     @apply text-right;
   }
 }
+
+.garnet-form-error[data-uncontrolled-error="true"] { font-size: 0.875em; }

@@ -1,0 +1,49 @@
+@utility layout-mobile-menu-checkbox { @apply hidden; }
+@utility layout-mobile-topbar { @apply sticky top-0 z-30 flex items-center justify-between; }
+@utility shape-mobile-topbar { @apply px-2 h-14 border-b; }
+@utility layout-mobile-topbar-logo { @apply inline-flex items-center; }
+@utility type-mobile-topbar-logo { @apply no-underline; }
+@utility layout-hamburger-btn { @apply relative inline-flex items-center justify-center; }
+@utility shape-hamburger-btn { @apply w-10 h-10 rounded-md ml-auto; }
+@utility motion-hamburger-btn { @apply transition-colors; }
+@utility layout-mobile-drawer { @apply fixed top-0 bottom-0 right-0 z-50 flex flex-col; }
+@utility shape-mobile-drawer { @apply w-72 max-w-[80vw]; }
+@utility layout-mobile-overlay { @apply fixed inset-0 z-40 block; }
+@utility effect-mobile-overlay { @apply opacity-0; }
+@utility behavior-mobile-overlay { @apply pointer-events-none; }
+@utility layout-drawer-header { @apply flex items-center justify-between; }
+@utility shape-drawer-header { @apply px-4 h-14 border-b; }
+@utility type-drawer-brand { @apply font-semibold text-base; }
+@utility layout-drawer-close { @apply inline-flex items-center justify-center; }
+@utility shape-drawer-close { @apply w-8 h-8 rounded-md; }
+@utility motion-drawer-close { @apply transition-colors; }
+@utility layout-drawer-nav { @apply flex-1 overflow-y-auto; }
+@utility shape-drawer-nav { @apply py-2; }
+@utility layout-drawer-section { @apply flex flex-col; }
+@utility layout-drawer-section-bordered { @apply flex flex-col; }
+@utility shape-drawer-section-bordered { @apply border-t mt-2 pt-2; }
+@utility layout-drawer-nav-link { @apply flex items-center gap-3; }
+@utility shape-drawer-nav-link { @apply px-4 py-3; }
+@utility type-drawer-nav-link { @apply font-medium no-underline text-sm; }
+@utility motion-drawer-nav-link { @apply transition-colors; }
+@utility layout-drawer-footer { @apply flex items-center gap-2; }
+@utility shape-drawer-footer { @apply border-t p-3; }
+@utility shape-mobilemenu-logout { @apply w-9 h-9 rounded-lg; }
+
+@layer components {
+  .mobile-menu-checkbox { @apply tone-supportinherit-plain layout-mobile-menu-checkbox; }
+  .mobile-topbar { @apply tone-cardsurface-outlined layout-mobile-topbar shape-mobile-topbar; }
+  .mobile-topbar-logo { @apply tone-supportinherit-plain layout-mobile-topbar-logo type-mobile-topbar-logo; }
+  .hamburger-btn { @apply tone-supportinherit-plain layout-hamburger-btn shape-hamburger-btn motion-hamburger-btn; }
+  .mobile-drawer { @apply tone-cardsurface-outlined layout-mobile-drawer shape-mobile-drawer; }
+  .mobile-overlay { @apply tone-supportinherit-plain layout-mobile-overlay effect-mobile-overlay behavior-mobile-overlay; }
+  .drawer-header { @apply tone-gridborder-outline layout-drawer-header shape-drawer-header; }
+  .drawer-brand { @apply tone-supportinherit-plain type-drawer-brand; }
+  .drawer-close { @apply tone-supportinherit-plain layout-drawer-close shape-drawer-close motion-drawer-close; }
+  .drawer-nav { @apply tone-supportinherit-plain layout-drawer-nav shape-drawer-nav; }
+  .drawer-section { @apply tone-supportinherit-plain layout-drawer-section; }
+  .drawer-section-bordered { @apply tone-gridborder-outline layout-drawer-section-bordered shape-drawer-section-bordered; }
+  .drawer-nav-link { @apply tone-supportinherit-plain layout-drawer-nav-link shape-drawer-nav-link type-drawer-nav-link motion-drawer-nav-link; }
+  .drawer-footer { @apply tone-gridborder-outline layout-drawer-footer shape-drawer-footer; }
+  .mobile-menu-logout { @apply tone-supportmuted-plain layout-hamburger-btn shape-mobilemenu-logout motion-hamburger-btn; }
+}

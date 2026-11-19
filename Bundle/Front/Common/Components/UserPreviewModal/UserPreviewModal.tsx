@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
 import {sendPost} from '@common/Api/Send/sendPost';
 import {useBodyScrollLock} from '@common/hooks/ui/useBodyScrollLock';
 import {appUrl} from '@common/Utils/Url/appUrl';
@@ -67,182 +68,153 @@ interface Props {
     onClose: () => void;
 }
 
-export const UserPreviewModal: React.FC<Props> = ({
-    userId, initialName, previewUrl = '/users/~preview', profileUrl, messageUrl, labels, extraSection, onClose,
-}) => {
+const ScrollLock: React.FC = () => {
     useBodyScrollLock(true);
-    const [user, setUser] = React.useState<PreviewUser | null>(null);
-    const [loading, setLoading] = React.useState(true);
-    const [error, setError] = React.useState<string | null>(null);
+    return null;
+};
 
-    React.useEffect(() => {
-        let cancelled = false;
-        setLoading(true);
-        setError(null);
+type PreviewState = {user: PreviewUser | null; loading: boolean; error: string | null};
+
+function firstInitial(word: string): string {
+    return word[0]?.toUpperCase() || '';
+}
+
+function renderTile(value: number, label: string) {
+    return <div className="user-preview-stat"><div className="user-preview-stat-value">{value}</div><div className="user-preview-stat-label">{label}</div></div>;
+}
+
+export class UserPreviewModal extends AntiHookComponent<Props> {
+    private readonly store = new Carburetor<PreviewState>({user: null, loading: true, error: null});
+    private request = 0;
+
+    public componentDidMount(): void {
+        super.componentDidMount();
+        document.addEventListener('keydown', this.onKey);
+        this.load();
+    }
+
+    public componentDidUpdate(previous: Readonly<Props>): void {
+        super.componentDidUpdate(previous);
+        if (previous.userId !== this.props.userId || previous.previewUrl !== this.props.previewUrl || previous.labels.loadError !== this.props.labels.loadError) this.load();
+    }
+
+    public componentWillUnmount(): void {
+        this.request++;
+        document.removeEventListener('keydown', this.onKey);
+        super.componentWillUnmount();
+    }
+
+    private load(): void {
+        const request = ++this.request;
+        const {userId, previewUrl = '/users/~preview', labels} = this.props;
+        this.store.setData({...this.store.getData(), loading: true, error: null});
         sendPost<{user_id: number}, {user: PreviewUser}>(previewUrl, {user_id: userId})
-            .then((resp) => {
-                if (cancelled) return;
+            .then(resp => {
+                if (request !== this.request) return;
                 const data: any = (resp as any)?.data ?? resp;
-                setUser((data?.user as PreviewUser) ?? null);
+                this.store.setData({...this.store.getData(), user: (data?.user as PreviewUser) ?? null});
             })
             .catch((err: unknown) => {
-                if (cancelled) return;
-                const msg = (err && typeof err === 'object' && 'message' in err && typeof (err as {message?: unknown}).message === 'string')
-                    ? (err as {message: string}).message
-                    : labels.loadError;
-                setError(msg);
+                if (request !== this.request) return;
+                const error = (err && typeof err === 'object' && 'message' in err && typeof (err as {message?: unknown}).message === 'string')
+                    ? (err as {message: string}).message : labels.loadError;
+                this.store.setData({...this.store.getData(), error});
             })
-            .finally(() => { if (!cancelled) setLoading(false); });
-        return () => { cancelled = true; };
-    }, [userId, previewUrl, labels.loadError]);
+            .finally(() => {
+                if (request === this.request) this.store.setData({...this.store.getData(), loading: false});
+            });
+    }
 
-    React.useEffect(() => {
-        const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-        document.addEventListener('keydown', onKey);
-        return () => document.removeEventListener('keydown', onKey);
-    }, [onClose]);
-
-    const onOverlay = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (e.target === e.currentTarget) onClose();
+    private readonly onKey = (event: KeyboardEvent): void => {
+        if (event.key === 'Escape') this.props.onClose();
+    };
+    private readonly onOverlay = (event: React.MouseEvent<HTMLDivElement>): void => {
+        if (event.target === event.currentTarget) this.props.onClose();
     };
 
-    const displayName = user?.extendedProfile?.display_name?.trim()
-        || user?.name
-        || initialName
-        || `#${userId}`;
+    public render() {
+        const {user, loading, error} = this.useCarburetor(this.store);
+        const snapshot: PreviewUser | null = user ? {
+            id: user.id, name: user.name, type: user.type, avatar: user.avatar,
+            extendedProfile: user.extendedProfile ? {
+                display_name: user.extendedProfile.display_name,
+                specialization: user.extendedProfile.specialization,
+                bio: user.extendedProfile.bio,
+                rating: user.extendedProfile.rating,
+            } : null,
+            stats: {
+                conducted: user.stats.conducted, totalBookings: user.stats.totalBookings,
+                cancellations: user.stats.cancellations, completedBookings: user.stats.completedBookings,
+            },
+        } : null;
+        return this.renderModal(snapshot, loading, error);
+    }
 
-    const initials = (displayName || '?')
-        .split(' ')
-        .map(w => w[0]?.toUpperCase() || '')
-        .slice(0, 2)
-        .join('');
-
-    const hasExtendedProfile = user?.type === 'expert';
-    const profileHref = appUrl(profileUrl ?? (hasExtendedProfile ? `/expert/id~${userId}` : `/user/id~${userId}`));
-
-    return (
-        <Portal><div
-            className="fg-modal-overlay-high"
-            onClick={onOverlay}
-            data-test-id="preview-modal"
-        >
-            <div className="fg-modal-card-flush fg-modal-card-lg" role="dialog" aria-modal="true">
-                <div className="fg-modal-flush-header">
-                    <h3 className="fg-modal-title">{labels.title}</h3>
-                    <button
-                        type="button"
-                        className="fg-modal-close-x"
-                        onClick={onClose}
-                        title={labels.close}
-                        aria-label={labels.close}
-                        data-test-id="preview-close"
-                    >
-                        &times;
-                    </button>
+    private renderModal(user: PreviewUser | null, loading: boolean, error: string | null) {
+        const {labels, onClose} = this.props;
+        return (
+            <Portal><ScrollLock /><div className="fg-modal-overlay-high" onClick={this.onOverlay} data-test-id="preview-modal">
+                <div className="fg-modal-card-flush-lg" role="dialog" aria-modal="true">
+                    <div className="user-preview-modal-header">
+                        <h3 className="user-preview-modal-title">{labels.title}</h3>
+                        <button type="button" className="user-preview-modal-close" onClick={onClose}
+                            title={labels.close} aria-label={labels.close} data-test-id="preview-close">&times;</button>
+                    </div>
+                    <div className="user-preview-modal-body">
+                        {loading ? <div className="user-preview-loading" data-test-id="preview-loading">{labels.loading}</div>
+                            : error ? <div className="user-preview-error">{error}</div>
+                            : user ? this.renderUser(user) : null}
+                    </div>
                 </div>
+            </div></Portal>
+        );
+    }
 
-                <div className="fg-modal-flush-body">
-                    {loading ? (
-                        <div className="muted-empty-state" data-test-id="preview-loading">{labels.loading}</div>
-                    ) : error ? (
-                        <div className="text-danger text-sm">{error}</div>
-                    ) : user ? (
-                        <>
-                            <div className="preview-header-row">
-                                {user.avatar ? (
-                                    <img src={user.avatar} alt={displayName} className="avatar-circle-lg-img" data-test-id="preview-avatar" />
-                                ) : (
-                                    <div className="avatar-circle-lg" data-test-id="preview-avatar-fallback">{initials}</div>
-                                )}
-                                <div className="preview-identity">
-                                    <div className="preview-name">{displayName}</div>
-                                    <div className="role-badge preview-role-badge">
-                                        {hasExtendedProfile ? labels.roleExpert : labels.roleUser}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {user.extendedProfile && (
-                                <div className="preview-section">
-                                    {user.extendedProfile.specialization && (
-                                        <div className="preview-row">
-                                            <span className="preview-label">{labels.specialization}:</span>{' '}
-                                            <span>{user.extendedProfile.specialization}</span>
-                                        </div>
-                                    )}
-                                    {user.extendedProfile.rating > 0 && (
-                                        <div className="preview-row">
-                                            <span className="preview-label">{labels.rating}:</span>{' '}
-                                            <span>{user.extendedProfile.rating.toFixed(2)}</span>
-                                        </div>
-                                    )}
-                                    {user.extendedProfile.bio && (
-                                        <div className="preview-row preview-bio">
-                                            <span className="preview-label">{labels.bio}:</span>{' '}
-                                            <span>{user.extendedProfile.bio}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            <div className="preview-stats-grid">
-                                {hasExtendedProfile ? (
-                                    <>
-                                        <div className="stat-tile">
-                                            <div className="stat-tile-value">{user.stats.conducted ?? 0}</div>
-                                            <div className="stat-tile-label">{labels.conducted}</div>
-                                        </div>
-                                        <div className="stat-tile">
-                                            <div className="stat-tile-value">{user.stats.totalBookings ?? 0}</div>
-                                            <div className="stat-tile-label">{labels.totalBookings}</div>
-                                        </div>
-                                        <div className="stat-tile">
-                                            <div className="stat-tile-value">{user.stats.cancellations ?? 0}</div>
-                                            <div className="stat-tile-label">{labels.cancellations}</div>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <>
-                                        <div className="stat-tile">
-                                            <div className="stat-tile-value">{user.stats.totalBookings ?? 0}</div>
-                                            <div className="stat-tile-label">{labels.totalBookings}</div>
-                                        </div>
-                                        <div className="stat-tile">
-                                            <div className="stat-tile-value">{user.stats.completedBookings ?? 0}</div>
-                                            <div className="stat-tile-label">{labels.completedBookings}</div>
-                                        </div>
-                                        <div className="stat-tile">
-                                            <div className="stat-tile-value">{user.stats.cancellations ?? 0}</div>
-                                            <div className="stat-tile-label">{labels.cancellations}</div>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-
-                            {extraSection && (
-                                <div className="preview-section">{extraSection}</div>
-                            )}
-
-                            <div className="preview-actions">
-                                <a
-                                    href={profileHref}
-                                    className="btn btn-sm btn-outline-primary"
-                                    data-test-id="preview-open-profile"
-                                >
-                                    {labels.openProfile}
-                                </a>
-                                <a
-                                    href={appUrl(messageUrl ?? `/im/#to=${userId}`)}
-                                    className="btn btn-sm btn-outline-primary"
-                                    data-test-id="preview-message"
-                                >
-                                    {labels.sendMessage}
-                                </a>
-                            </div>
-                        </>
-                    ) : null}
+    private renderUser(user: PreviewUser) {
+        const {userId, initialName, labels, extraSection} = this.props;
+        const displayName = user.extendedProfile?.display_name?.trim() || user.name || initialName || `#${userId}`;
+        const initials = (displayName || '?').split(' ').map(firstInitial).slice(0, 2).join('');
+        const expert = user.type === 'expert';
+        return <>
+            <div className="user-preview-header">
+                {user.avatar ? <img src={user.avatar} alt={displayName} className="user-preview-avatar-image" data-test-id="preview-avatar" />
+                    : <div className="user-preview-avatar" data-test-id="preview-avatar-fallback">{initials}</div>}
+                <div className="user-preview-identity">
+                    <div className="user-preview-name">{displayName}</div>
+                    <div className="user-preview-role">{expert ? labels.roleExpert : labels.roleUser}</div>
                 </div>
             </div>
-        </div></Portal>
-    );
-};
+            {user.extendedProfile && this.renderProfile(user.extendedProfile)}
+            {this.renderStats(user.stats, expert)}
+            {extraSection && <div className="user-preview-section">{extraSection}</div>}
+            {this.renderActions(expert)}
+        </>;
+    }
+
+    private renderProfile(profile: ExtendedProfile) {
+        const {labels} = this.props;
+        return <div className="user-preview-section">
+            {profile.specialization && <div className="user-preview-row"><span className="user-preview-label">{labels.specialization}:</span>{' '}<span>{profile.specialization}</span></div>}
+            {profile.rating > 0 && <div className="user-preview-row"><span className="user-preview-label">{labels.rating}:</span>{' '}<span>{profile.rating.toFixed(2)}</span></div>}
+            {profile.bio && <div className="user-preview-bio"><span className="user-preview-label">{labels.bio}:</span>{' '}<span>{profile.bio}</span></div>}
+        </div>;
+    }
+
+    private renderStats(stats: UserStats, expert: boolean) {
+        const {labels} = this.props;
+        return <div className="user-preview-stats">
+            {expert ? renderTile(stats.conducted ?? 0, labels.conducted) : renderTile(stats.totalBookings ?? 0, labels.totalBookings)}
+            {expert ? renderTile(stats.totalBookings ?? 0, labels.totalBookings) : renderTile(stats.completedBookings ?? 0, labels.completedBookings)}
+            {renderTile(stats.cancellations ?? 0, labels.cancellations)}
+        </div>;
+    }
+
+    private renderActions(expert: boolean) {
+        const {userId, profileUrl, messageUrl, labels} = this.props;
+        const profileHref = appUrl(profileUrl ?? (expert ? `/expert/id~${userId}` : `/user/id~${userId}`));
+        return <div className="user-preview-actions">
+            <a href={profileHref} className="user-preview-action" data-test-id="preview-open-profile">{labels.openProfile}</a>
+            <a href={appUrl(messageUrl ?? `/im/#to=${userId}`)} className="user-preview-action" data-test-id="preview-message">{labels.sendMessage}</a>
+        </div>;
+    }
+}

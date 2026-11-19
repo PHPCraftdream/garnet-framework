@@ -1,7 +1,8 @@
 import * as React from 'react';
-import {useState} from 'react';
+import {AntiHookComponent} from '@react-carburetor/core';
 import * as Popover from '@radix-ui/react-popover';
 import {cn} from '@common/Utils/Ui/cn';
+import {ComboboxState} from './ComboboxState';
 
 interface ComboboxOption {
     value: string;
@@ -19,100 +20,53 @@ interface ComboboxProps {
     testId?: string;
 }
 
-/**
- * Searchable dropdown (shadcn Combobox pattern).
- * Used for timezone selector, recipient search, etc.
- */
-export function Combobox({options, value, onChange, placeholder = 'Select...', searchPlaceholder = 'Search...', emptyText = 'No results', className, testId}: ComboboxProps) {
-    const [open, setOpen] = useState(false);
-    const [search, setSearch] = useState('');
+export class Combobox extends AntiHookComponent<ComboboxProps> {
+    private readonly ui = new ComboboxState();
+    private readonly view = this.connectSelection(() => this.ui.store, state => state);
 
-    const selectedLabel = options.find(o => o.value === value)?.label || '';
+    private readonly changeSearch = (event: React.ChangeEvent<HTMLInputElement>) => this.ui.setSearch(event.target.value);
+    private readonly selectOption = (event: React.MouseEvent<HTMLButtonElement>) => {
+        this.props.onChange(event.currentTarget.value);
+        this.ui.clearAndClose();
+    };
+    private readonly renderOption = (option: ComboboxOption) => {
+        const {value, testId} = this.props;
+        return <button key={option.value} type="button" className="combobox-option" data-selected={option.value === value}
+            value={option.value} onClick={this.selectOption} data-test-id={testId ? `${testId}-option-${option.value}` : undefined}>
+            <span className="combobox-option-label">{option.label}</span>
+            {option.value === value && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="combobox-check"><polyline points="20 6 9 17 4 12" /></svg>}
+        </button>;
+    };
 
-    const filtered = search.trim()
-        ? options.filter(o => o.label.toLowerCase().includes(search.toLowerCase()))
-        : options;
+    public render() {
+        return this.renderContent(this.view() as {open: boolean; search: string});
+    }
 
-    return (
-        <Popover.Root open={open} onOpenChange={setOpen}>
+    private readonly isSelected = (option: ComboboxOption) => option.value === this.props.value;
+
+    private selectedLabel(): string {
+        return this.props.options.find(this.isSelected)?.label || '';
+    }
+
+    private renderContent({open, search}: {open: boolean; search: string}) {
+        const {options, value, placeholder = 'Select...', searchPlaceholder = 'Search...', emptyText = 'No results', className, testId} = this.props;
+        const selectedLabel = this.selectedLabel();
+        const filtered = search.trim() ? options.filter(option => option.label.toLowerCase().includes(search.toLowerCase())) : options;
+        // Внешний className остаётся на кнопке для совместимости.
+        // carburetor-disable-next-line require-function-class
+        const trigger = (<button type="button" role="combobox" aria-expanded={open} className={className ? cn('combobox-trigger', className) : 'combobox-trigger'} data-empty={!value} data-test-id={testId}>
+            <span className="combobox-trigger-label">{selectedLabel || placeholder}</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="combobox-chevron"><path d="m6 9 6 6 6-6" /></svg>
+        </button>);
+        return <Popover.Root open={open} onOpenChange={this.ui.setOpen}>
             <Popover.Trigger asChild>
-                <button
-                    type="button"
-                    role="combobox"
-                    aria-expanded={open}
-                    className={cn(
-                        'flex h-9 w-full items-center justify-between rounded-md border px-3 py-2 text-sm',
-                        'border-default bg-surface text-on-surface',
-                        'hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-accent',
-                        !value && 'text-muted',
-                        className,
-                    )}
-                    data-test-id={testId}
-                >
-                    <span className="truncate">{selectedLabel || placeholder}</span>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="ml-2 shrink-0 opacity-50">
-                        <path d="m6 9 6 6 6-6" />
-                    </svg>
-                </button>
+                {trigger}
             </Popover.Trigger>
-
-            <Popover.Portal>
-                <Popover.Content
-                    className={cn(
-                        'z-50 w-[var(--radix-popover-trigger-width)] rounded-md border shadow-lg',
-                        'border-default bg-surface',
-                    )}
-                    sideOffset={4}
-                    align="start"
-                >
-                    {/* Search input */}
-                    <div className="p-2 border-b border-default">
-                        <input
-                            type="text"
-                            className="w-full px-2 py-1.5 text-sm rounded border-0 outline-none bg-surface-alt text-on-surface placeholder:text-muted"
-                            placeholder={searchPlaceholder}
-                            value={search}
-                            onChange={e => setSearch(e.target.value)}
-                            autoFocus
-                            data-test-id={testId ? `${testId}-search` : undefined}
-                        />
-                    </div>
-
-                    {/* Options list */}
-                    <div className="max-h-60 overflow-y-auto p-1">
-                        {filtered.length === 0 ? (
-                            <div className="py-4 text-center text-sm text-muted">
-                                {emptyText}
-                            </div>
-                        ) : (
-                            filtered.map(option => (
-                                <button
-                                    key={option.value}
-                                    type="button"
-                                    className={cn(
-                                        'flex w-full items-center rounded-sm px-2 py-1.5 text-sm cursor-pointer',
-                                        'hover:bg-accent-subtle text-on-surface',
-                                        option.value === value && 'bg-accent-subtle text-accent',
-                                    )}
-                                    onClick={() => {
-                                        onChange(option.value);
-                                        setSearch('');
-                                        setOpen(false);
-                                    }}
-                                    data-test-id={testId ? `${testId}-option-${option.value}` : undefined}
-                                >
-                                    <span className="flex-1 text-left truncate">{option.label}</span>
-                                    {option.value === value && (
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="shrink-0">
-                                            <polyline points="20 6 9 17 4 12" />
-                                        </svg>
-                                    )}
-                                </button>
-                            ))
-                        )}
-                    </div>
-                </Popover.Content>
-            </Popover.Portal>
-        </Popover.Root>
-    );
+            <Popover.Portal><Popover.Content className="combobox-content" sideOffset={4} align="start">
+                <div className="combobox-search-wrap"><input type="text" className="combobox-search" placeholder={searchPlaceholder}
+                    value={search} onChange={this.changeSearch} autoFocus data-test-id={testId ? `${testId}-search` : undefined} /></div>
+                <div className="combobox-options">{filtered.length === 0 ? <div className="combobox-empty">{emptyText}</div> : filtered.map(this.renderOption)}</div>
+            </Popover.Content></Popover.Portal>
+        </Popover.Root>;
+    }
 }

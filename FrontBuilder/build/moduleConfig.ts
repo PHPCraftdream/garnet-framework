@@ -11,6 +11,8 @@ export const resolveConfig = (modules: string[]) => ({
 	modules: modules,
 	extensions: ['.ts', '.tsx', '.js', '.jsx', '.less', '.css'],
 	alias: {
+		'react': path.resolve(frameworkRoot, 'FrontBuilder', 'node_modules', 'react'),
+		'react-dom': path.resolve(frameworkRoot, 'FrontBuilder', 'node_modules', 'react-dom'),
 		'@common': path.resolve(fwFrontDir, 'Common'),
 		'@framework': fwFrontDir,
 	},

@@ -1,0 +1,83 @@
+/* Paging roles reference the existing Garnet theme. */
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-paginginherit-ink: currentColor;
+  /* carburetor-disable-next-line valid-color-role */
+  --color-pagingtext-ink: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-pagingnormal-ink: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-pagingnormal-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-pagingnormal-wash: var(--color-bg-surface);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-pagingnormal-wash-hover: var(--color-bg-surface-hover);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-pagingactive-ink: var(--color-accent-text);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-pagingactive-edge: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-pagingactive-wash: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-pagingactive-wash-hover: var(--color-accent-hover);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-pagingactive-wash-focus: var(--color-accent-hover);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-pagingactive-wash-active: var(--color-accent-hover);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-pagingform-ink: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-pagingform-edge: var(--color-border-strong);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-pagingform-edge-focus: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-pagingform-wash: var(--color-bg-surface);
+}
+
+@utility tone-paginginherit-plain { @apply text-paginginherit-ink; }
+@utility tone-pagingtext-plain { @apply text-pagingtext-ink; }
+@utility tone-pagingnormal-outlined {
+  @apply text-pagingnormal-ink border-pagingnormal-edge bg-pagingnormal-wash hover:bg-pagingnormal-wash-hover;
+}
+@utility tone-pagingactive-outlined {
+  @apply text-pagingactive-ink border-pagingactive-edge bg-pagingactive-wash [&:hover]:bg-pagingactive-wash-hover [&:focus]:bg-pagingactive-wash-focus [&:active]:bg-pagingactive-wash-active;
+}
+@utility tone-pagingform-outlined {
+  @apply text-pagingform-ink border-pagingform-edge bg-pagingform-wash focus:border-pagingform-edge-focus focus:ring-pagingform-edge-focus/15;
+}
+
+@utility layout-paging-nav { @apply flex items-center gap-3 flex-wrap; }
+@utility layout-paging-compact { @apply flex items-center gap-2; }
+@utility layout-paging-pages { @apply flex items-center gap-1 flex-wrap; }
+@utility layout-paging-button { @apply inline-flex items-center justify-center; }
+@utility layout-paging-size-label { @apply inline-flex items-center gap-2; }
+@utility layout-paging-select { @apply block; }
+@utility shape-paging-button { @apply min-w-[2rem] h-8 px-2 rounded border; }
+@utility shape-paging-ellipsis { @apply px-1; }
+@utility shape-paging-total { @apply ml-2; }
+@utility shape-paging-select { @apply w-full px-2 py-1 rounded-md border; }
+@utility type-paging-label { @apply text-sm; }
+@utility type-paging-active { @apply text-sm font-semibold; }
+@utility type-paging-size-label { @apply text-sm whitespace-nowrap; }
+@utility type-paging-select { @apply leading-normal; font-size: 0.8rem; }
+/* Override the unlayered global button cursor when disabled. */
+@utility behavior-paging-button { @apply disabled:cursor-not-allowed!; }
+@utility behavior-paging-ellipsis { @apply select-none; }
+@utility effect-paging-button { @apply disabled:opacity-40; }
+@utility motion-paging-button { @apply transition-colors; }
+@utility motion-paging-select { transition: border-color 0.15s, box-shadow 0.15s; }
+@utility focus-paging-select { @apply focus:outline-none focus:ring-3; }
+
+@layer components {
+  .paging-navigation { @apply tone-paginginherit-plain layout-paging-nav; }
+  .paging-compact-row { @apply tone-paginginherit-plain layout-paging-compact; }
+  .paging-pages-row { @apply tone-paginginherit-plain layout-paging-pages; }
+  .common-pgn-btn { @apply tone-pagingnormal-outlined layout-paging-button shape-paging-button type-paging-label behavior-paging-button effect-paging-button motion-paging-button; }
+  .common-pgn-btn-active { @apply tone-pagingactive-outlined layout-paging-button shape-paging-button type-paging-active behavior-paging-button effect-paging-button motion-paging-button; }
+  .common-pgn-ellipsis { @apply tone-pagingtext-plain shape-paging-ellipsis type-paging-label behavior-paging-ellipsis; }
+  .common-pgn-info { @apply tone-pagingtext-plain type-paging-label; }
+  .paging-total-info { @apply tone-pagingtext-plain shape-paging-total type-paging-label; }
+  .paging-size-label { @apply tone-pagingtext-plain layout-paging-size-label type-paging-size-label; }
+  .paging-size-select { @apply tone-pagingform-outlined layout-paging-select shape-paging-select type-paging-select focus-paging-select motion-paging-select; }
+}

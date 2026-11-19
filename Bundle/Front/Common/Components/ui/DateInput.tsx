@@ -1,5 +1,7 @@
 import * as React from 'react';
 import {Portal} from '../Layout/Portal';
+import {AntiHookComponent} from '@react-carburetor/core';
+import {DateInputState} from './DateInputState';
 
 type DateInputType = 'date' | 'time' | 'datetime-local' | 'month' | 'week';
 
@@ -33,117 +35,134 @@ interface Props extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'
  * widgets (time, datetime-local, month, week) are less language-sensitive
  * and the rewrite stays scoped to the most-visible offender.
  */
-export const DateInput = React.forwardRef<HTMLInputElement, Props>(function DateInput(
-    {type = 'date', onFocus, onClick, onChange, onBlur, className, value, defaultValue, name, min, max, ...rest},
-    forwardedRef,
-) {
-    if (type !== 'date') {
-        return <LegacyNativeInput type={type} className={className} onFocus={onFocus} onClick={onClick} onChange={onChange} onBlur={onBlur} value={value} defaultValue={defaultValue} name={name} min={min} max={max} ref={forwardedRef} {...rest} />;
+export const DateInput = React.forwardRef<HTMLInputElement, Props>(function DateInput(props, ref) {
+    return <DateInputView {...props} inputRef={ref} />;
+});
+
+interface DateInputViewProps extends Props {
+    inputRef: React.ForwardedRef<HTMLInputElement>;
+}
+
+function assignInputRef(ref: React.ForwardedRef<HTMLInputElement>, input: HTMLInputElement | null): void {
+    if (typeof ref === 'function') ref(input);
+    else if (ref) ref.current = input;
+}
+
+class DateInputView extends AntiHookComponent<DateInputViewProps> {
+    private readonly ui = new DateInputState();
+    private readonly view = this.connectSelection(() => this.ui.store, state => state);
+    private wrapper: HTMLDivElement | null = null;
+    private input: HTMLInputElement | null = null;
+    private popup: HTMLDivElement | null = null;
+
+    public componentDidMount(): void {
+        super.componentDidMount();
+        document.addEventListener('mousedown', this.outsideClick);
+        document.addEventListener('keydown', this.documentKey);
+        window.addEventListener('scroll', this.reposition, true);
+        window.addEventListener('resize', this.reposition);
     }
 
-    const wrapperRef = React.useRef<HTMLDivElement>(null);
-    const innerRef = React.useRef<HTMLInputElement>(null);
-    const popupRef = React.useRef<HTMLDivElement>(null);
-    // Forward the inner input to the caller so existing refs keep working.
-    React.useImperativeHandle(forwardedRef, () => innerRef.current as HTMLInputElement, []);
+    public componentWillUnmount(): void {
+        document.removeEventListener('mousedown', this.outsideClick);
+        document.removeEventListener('keydown', this.documentKey);
+        window.removeEventListener('scroll', this.reposition, true);
+        window.removeEventListener('resize', this.reposition);
+        super.componentWillUnmount();
+    }
 
-    const [open, setOpen] = React.useState(false);
-    const [pos, setPos] = React.useState<{top: number; left: number} | null>(null);
+    private readonly setInput = (input: HTMLInputElement | null): void => {
+        this.input = input;
+        assignInputRef(this.props.inputRef, input);
+    };
 
-    // The controlled / uncontrolled string value of the underlying input.
-    const currentIsoValue = String(value ?? defaultValue ?? '');
-
-    const closePopup = React.useCallback(() => setOpen(false), []);
-
-    // Close on outside click / Escape. Popup lives in a portal on <body>, so
-    // an "outside" click is anywhere outside BOTH the input wrapper and the
-    // portalled popup itself — checking only the wrapper would close the
-    // popup the moment the user clicks a day cell.
-    React.useEffect(() => {
-        if (!open) return undefined;
-        const onDocMouseDown = (e: MouseEvent): void => {
-            const t = e.target as Node;
-            if (wrapperRef.current?.contains(t)) return;
-            if (popupRef.current?.contains(t)) return;
-            closePopup();
-        };
-        const onKey = (e: KeyboardEvent): void => {
-            if (e.key === 'Escape') closePopup();
-        };
-        document.addEventListener('mousedown', onDocMouseDown);
-        document.addEventListener('keydown', onKey);
-        return () => {
-            document.removeEventListener('mousedown', onDocMouseDown);
-            document.removeEventListener('keydown', onKey);
-        };
-    }, [open, closePopup]);
-
-    // Recompute the popup position on open and whenever the page scrolls /
-    // resizes. `scroll` is captured (third arg `true`) so nested scroll
-    // containers also trigger the reflow, not just the document.
-    React.useLayoutEffect(() => {
-        if (!open) return undefined;
-        const recompute = (): void => {
-            const el = innerRef.current;
-            if (!el) return;
-            const r = el.getBoundingClientRect();
-            const popupH = popupRef.current?.offsetHeight ?? 320;
-            const gap = 4;
-            const fitsBelow = r.bottom + gap + popupH <= window.innerHeight;
-            const top = fitsBelow ? r.bottom + gap : Math.max(8, r.top - gap - popupH);
-            setPos({top, left: r.left});
-        };
-        recompute();
-        window.addEventListener('scroll', recompute, true);
-        window.addEventListener('resize', recompute);
-        return () => {
-            window.removeEventListener('scroll', recompute, true);
-            window.removeEventListener('resize', recompute);
-        };
-    }, [open]);
-
-    const pickDate = React.useCallback((iso: string): void => {
-        const el = innerRef.current;
-        if (!el) return;
-        // Drive the controlled / uncontrolled field through the native value
-        // setter so React notices the change and existing onChange handlers
-        // fire — identical to a hand-typed value.
-        const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
-        if (setter) {
-            setter.call(el, iso);
-        } else {
-            el.value = iso;
+    public componentDidUpdate(previous: Readonly<DateInputViewProps>): void {
+        super.componentDidUpdate(previous);
+        if ((previous.type ?? 'date') === 'date' && this.input && previous.inputRef !== this.props.inputRef) {
+            assignInputRef(previous.inputRef, null);
+            assignInputRef(this.props.inputRef, this.input);
         }
+    }
+    private readonly setWrapper = (wrapper: HTMLDivElement | null): void => { this.wrapper = wrapper; };
+    private readonly setPopup = (popup: HTMLDivElement | null): void => {
+        this.popup = popup;
+        if (popup) this.reposition();
+    };
+    private readonly reposition = (): void => {
+        if (!this.ui.store.getData().open || !this.input || !this.popup) return;
+        const rect = this.input.getBoundingClientRect();
+        const height = this.popup.offsetHeight;
+        const top = rect.bottom + 4 + height <= window.innerHeight
+            ? rect.bottom + 4 : Math.max(8, rect.top - 4 - height);
+        const state = this.ui.store.getData();
+        if (!state.positioned || state.top !== top || state.left !== rect.left) this.ui.setPosition(top, rect.left);
+    };
+    private readonly outsideClick = (event: MouseEvent): void => {
+        if (!this.ui.store.getData().open) return;
+        const target = event.target as Node;
+        if (!this.wrapper?.contains(target) && !this.popup?.contains(target)) this.ui.close();
+    };
+    private readonly documentKey = (event: KeyboardEvent): void => {
+        if (event.key === 'Escape' && this.ui.store.getData().open) this.ui.close();
+    };
+    private readonly openPopup = (): void => {
+        if (!this.ui.store.getData().open) this.ui.open(0, 0);
+    };
+    private readonly closePopup = (): void => this.ui.close();
+    private readonly mouseDown = (event: React.MouseEvent<HTMLInputElement>): void => {
+        event.preventDefault();
+        if (this.ui.store.getData().open) this.closePopup();
+        else this.openPopup();
+        this.input?.focus();
+    };
+    private readonly click = (event: React.MouseEvent<HTMLInputElement>): void => {
+        event.preventDefault();
+        this.props.onClick?.(event);
+    };
+    private readonly keyDown = (event: React.KeyboardEvent<HTMLInputElement>): void => {
+        if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') {
+            event.preventDefault();
+            this.openPopup();
+        } else if (event.key === 'Escape') this.closePopup();
+    };
+    private readonly pickDate = (iso: string): void => {
+        const el = this.input;
+        if (!el) return;
+        const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+        if (setter) setter.call(el, iso);
+        else el.value = iso;
         el.dispatchEvent(new Event('input', {bubbles: true}));
         el.dispatchEvent(new Event('change', {bubbles: true}));
-        closePopup();
-    }, [closePopup]);
+        this.closePopup();
+    };
 
-    const inputCls = ['form-control', 'cursor-pointer', 'custom-date-input', className].filter(Boolean).join(' ');
+    public render() {
+        return this.renderField(this.view());
+    }
 
-    return (
-        <div ref={wrapperRef} className="relative inline-block w-full" data-custom-datepicker>
+    private renderField({open, positioned, top, left}: ReturnType<DateInputState['store']['getData']>) {
+        const {inputRef, type = 'date', onFocus, onClick, onChange, onBlur, className, value, defaultValue, name, min, max, ...rest} = this.props;
+        if (type !== 'date') {
+            return <LegacyNativeInput type={type} extraClass={className} onFocus={onFocus} onClick={onClick} onChange={onChange} onBlur={onBlur} value={value} defaultValue={defaultValue} name={name} min={min} max={max} ref={inputRef} {...rest} />;
+        }
+        const currentIsoValue = String(value ?? defaultValue ?? '');
+        const inputCls = ['custom-date-input', className].filter(Boolean).join(' ');
+
+        return (
+        <div ref={this.setWrapper} className="cdp-wrapper" data-custom-datepicker>
             <input
-                ref={innerRef}
+                ref={this.setInput}
                 type="date"
+                // carburetor-disable-next-line require-function-class
                 className={inputCls}
                 value={value as string | number | readonly string[] | undefined}
                 defaultValue={defaultValue as string | number | readonly string[] | undefined}
                 name={name}
                 min={min}
                 max={max}
-                // Block the native picker — we paint our own. preventDefault on
-                // mousedown stops Chromium's calendar dropdown from opening.
-                onMouseDown={e => { e.preventDefault(); setOpen(o => !o); innerRef.current?.focus(); }}
-                onClick={e => { e.preventDefault(); onClick?.(e); }}
-                onKeyDown={e => {
-                    if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
-                        e.preventDefault();
-                        setOpen(true);
-                    } else if (e.key === 'Escape') {
-                        closePopup();
-                    }
-                }}
+                onMouseDown={this.mouseDown}
+                onClick={this.click}
+                onKeyDown={this.keyDown}
                 onFocus={onFocus}
                 onChange={onChange}
                 onBlur={onBlur}
@@ -152,42 +171,56 @@ export const DateInput = React.forwardRef<HTMLInputElement, Props>(function Date
             {open && (
                 <Portal>
                     <div
-                        ref={popupRef}
+                        ref={this.setPopup}
                         className="cdp-popup"
-                        style={pos ? {top: pos.top, left: pos.left} : {visibility: 'hidden'}}
+                        style={positioned ? {top, left} : {visibility: 'hidden'}}
                     >
                         <CalendarPopup
                             isoValue={currentIsoValue}
                             minIso={typeof min === 'string' ? min : ''}
                             maxIso={typeof max === 'string' ? max : ''}
-                            onPick={pickDate}
-                            onClose={closePopup}
+                            onPick={this.pickDate}
+                            onClose={this.closePopup}
                         />
                     </div>
                 </Portal>
             )}
         </div>
-    );
-});
+        );
+    }
+}
 
 // ── Legacy native input (time / datetime-local / month / week) ───────────────
 
-const LegacyNativeInput = React.forwardRef<HTMLInputElement, Props>(function LegacyNativeInput(
-    {type, onFocus, onClick, className, ...rest},
-    ref,
-) {
-    const tryShow = (el: HTMLInputElement | null): void => {
-        if (!el) return;
-        const w = el as HTMLInputElement & {showPicker?: () => void};
-        if (typeof w.showPicker === 'function') {
-            try { w.showPicker(); } catch { /* user gesture / disabled / not supported */ }
-        }
+function tryShow(input: HTMLInputElement): void {
+    if (typeof input.showPicker === 'function') {
+        try { input.showPicker(); } catch { /* Браузер может отказать. */ }
+    }
+}
+
+type NativeProps = Omit<Props, 'className'> & {extraClass?: string};
+class NativeDateField extends AntiHookComponent<NativeProps & {inputRef: React.ForwardedRef<HTMLInputElement>}> {
+    private readonly focus = (event: React.FocusEvent<HTMLInputElement>) => {
+        tryShow(event.currentTarget);
+        this.props.onFocus?.(event);
     };
-    const handleFocus = (e: React.FocusEvent<HTMLInputElement>): void => { tryShow(e.currentTarget); onFocus?.(e); };
-    const handleClick = (e: React.MouseEvent<HTMLInputElement>): void => { tryShow(e.currentTarget); onClick?.(e); };
-    const cls = ['form-control', 'cursor-pointer', className].filter(Boolean).join(' ');
-    return <input ref={ref} type={type} className={cls} onFocus={handleFocus} onClick={handleClick} {...rest} />;
-});
+    private readonly click = (event: React.MouseEvent<HTMLInputElement>) => {
+        tryShow(event.currentTarget);
+        this.props.onClick?.(event);
+    };
+
+    render() {
+        const {inputRef, type, onFocus: _onFocus, onClick: _onClick, extraClass, ...rest} = this.props;
+        const cls = ['cdp-native-input', extraClass].filter(Boolean).join(' ');
+        // Совместимость с произвольным классом вызывающей стороны.
+        // carburetor-disable-next-line require-function-class
+        return <input ref={inputRef} type={type} className={cls} onFocus={this.focus} onClick={this.click} {...rest} />;
+    }
+}
+
+const LegacyNativeInput = React.forwardRef<HTMLInputElement, NativeProps>((props, inputRef) =>
+    <NativeDateField {...props} inputRef={inputRef} />,
+);
 
 // ── Calendar popup ──────────────────────────────────────────────────────────
 
@@ -199,80 +232,62 @@ interface PopupProps {
     onClose: () => void;
 }
 
-function CalendarPopup({isoValue, minIso, maxIso, onPick}: PopupProps): JSX.Element {
-    const today = React.useMemo(() => new Date(), []);
-    const selected = React.useMemo(() => parseIsoDate(isoValue), [isoValue]);
-    const initialMonth = selected ?? parseIsoDate(minIso) ?? today;
+const upperCase = (value: string) => value.toUpperCase();
+const preventMouseDown = (event: React.MouseEvent) => event.preventDefault();
+const renderWeekday = (day: string) => <span key={day} className="cdp-weekday">{day}</span>;
 
-    const [visibleMonth, setVisibleMonth] = React.useState<Date>(() => new Date(initialMonth.getFullYear(), initialMonth.getMonth(), 1));
+class CalendarPopup extends AntiHookComponent<PopupProps> {
+    private readonly ui = new DateInputState();
+    private readonly view = this.connectSelection(() => this.ui.store, state => state);
+    private readonly today = new Date();
 
-    const lang = uiLang();
-    const locale = lang === 'EN' ? 'en' : 'ru';
+    public constructor(props: PopupProps) {
+        super(props);
+        const initial = parseIsoDate(props.isoValue) ?? parseIsoDate(props.minIso) ?? this.today;
+        this.ui.open(initial.getFullYear(), initial.getMonth());
+    }
 
-    // Month + year header — Intl gives us the right month name in the right
-    // language without dragging in date-fns.
-    const monthLabel = React.useMemo(() => {
-        const fmt = new Intl.DateTimeFormat(locale, {month: 'long', year: 'numeric'});
-        const raw = fmt.format(visibleMonth);
-        // Capitalise — `ru` Intl returns lowercase ("июнь 2026"). Match the
-        // Cyrillic-friendly substring rather than the first char so the year
-        // suffix is left alone if it ever ends up at the front.
-        return raw.replace(/^(\p{Letter})/u, c => c.toUpperCase());
-    }, [locale, visibleMonth]);
+    private readonly monthBack = (): void => this.ui.moveMonth(-1);
+    private readonly monthFwd = (): void => this.ui.moveMonth(1);
 
-    // Weekday header, Monday-first (matches the rest of the app's calendars).
-    const weekdays = React.useMemo(() => buildWeekdayLabels(locale), [locale]);
+    private readonly pick = (event: React.MouseEvent<HTMLButtonElement>) => this.props.onPick(event.currentTarget.dataset.iso ?? '');
+    private readonly clear = () => this.props.onPick('');
 
-    // Day grid — 6 rows × 7 cols starting from the Monday on/before the 1st.
-    const cells = React.useMemo(() => buildMonthCells(visibleMonth, minIso, maxIso), [visibleMonth, minIso, maxIso]);
+    private renderDays(cells: CalendarCell[]) {
+        const {isoValue} = this.props;
+        const selected = parseIsoDate(isoValue);
+        const selectedIso = selected ? formatIsoDate(selected) : '';
+        const todayIso = formatIsoDate(this.today);
+        const days: React.ReactNode[] = [];
+        for (const cell of cells) {
+            days.push(<button key={cell.iso} type="button" className="cdp-day" data-iso={cell.iso}
+                data-outside={cell.outside} data-today={cell.iso === todayIso} data-selected={cell.iso === selectedIso}
+                data-disabled={cell.disabled} disabled={cell.disabled} onClick={this.pick}>{cell.day}</button>);
+        }
+        return <div className="cdp-grid">{days}</div>;
+    }
 
-    const monthBack = (): void => setVisibleMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1));
-    const monthFwd = (): void => setVisibleMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1));
-
-    const todayIso = formatIsoDate(today);
-    const selectedIso = selected ? formatIsoDate(selected) : '';
-
-    return (
-        <div role="dialog" data-test-id="custom-datepicker-popup" onMouseDown={e => e.preventDefault()}>
+    public render() {
+        const {minIso, maxIso} = this.props;
+        const {visibleYear, visibleMonth: month} = this.view();
+        const date = new Date(visibleYear, month, 1);
+        const english = uiLang() === 'EN';
+        const locale = english ? 'en' : 'ru';
+        const label = new Intl.DateTimeFormat(locale, {month: 'long', year: 'numeric'}).format(date).replace(/^\p{Letter}/u, upperCase);
+        return <div role="dialog" data-test-id="custom-datepicker-popup" onMouseDown={preventMouseDown}>
             <div className="cdp-header">
-                <button type="button" className="cdp-nav" aria-label="Prev month" onClick={monthBack}>‹</button>
-                <span className="cdp-title">{monthLabel}</span>
-                <button type="button" className="cdp-nav" aria-label="Next month" onClick={monthFwd}>›</button>
+                <button type="button" className="cdp-nav" aria-label="Prev month" onClick={this.monthBack}>‹</button>
+                <span className="cdp-title">{label}</span>
+                <button type="button" className="cdp-nav" aria-label="Next month" onClick={this.monthFwd}>›</button>
             </div>
-            <div className="cdp-weekdays">
-                {weekdays.map(w => <span key={w} className="cdp-weekday">{w}</span>)}
-            </div>
-            <div className="cdp-grid">
-                {cells.map(cell => {
-                    const cls = ['cdp-day'];
-                    if (cell.outside) cls.push('cdp-day-outside');
-                    if (cell.iso === todayIso) cls.push('cdp-day-today');
-                    if (cell.iso === selectedIso) cls.push('cdp-day-selected');
-                    if (cell.disabled) cls.push('cdp-day-disabled');
-                    return (
-                        <button
-                            key={cell.iso}
-                            type="button"
-                            className={cls.join(' ')}
-                            disabled={cell.disabled}
-                            onClick={() => onPick(cell.iso)}
-                            data-iso={cell.iso}
-                        >
-                            {cell.day}
-                        </button>
-                    );
-                })}
-            </div>
+            <div className="cdp-weekdays">{buildWeekdayLabels(locale).map(renderWeekday)}</div>
+            {this.renderDays(buildMonthCells(date, minIso, maxIso))}
             <div className="cdp-footer">
-                <button type="button" className="cdp-foot-link" onClick={() => onPick(todayIso)}>
-                    {lang === 'EN' ? 'Today' : 'Сегодня'}
-                </button>
-                <button type="button" className="cdp-foot-link" onClick={() => onPick('')}>
-                    {lang === 'EN' ? 'Clear' : 'Очистить'}
-                </button>
+                <button type="button" className="cdp-foot-link" data-iso={formatIsoDate(this.today)} onClick={this.pick}>{english ? 'Today' : 'Сегодня'}</button>
+                <button type="button" className="cdp-foot-link" onClick={this.clear}>{english ? 'Clear' : 'Очистить'}</button>
             </div>
-        </div>
-    );
+        </div>;
+    }
 }
 
 // ── helpers ─────────────────────────────────────────────────────────────────
@@ -307,7 +322,7 @@ function buildWeekdayLabels(locale: string): string[] {
         const d = new Date(ref);
         d.setDate(ref.getDate() + i);
         const raw = fmt.format(d).replace(/\.$/, '');
-        out.push(raw.replace(/^(\p{Letter})/u, c => c.toUpperCase()));
+        out.push(raw.replace(/^\p{Letter}/u, upperCase));
     }
     return out;
 }

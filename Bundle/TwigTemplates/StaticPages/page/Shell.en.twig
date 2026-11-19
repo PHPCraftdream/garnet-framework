@@ -11,7 +11,7 @@
    nav identical across "/", any /page/view~slug, and pages with
    different max_width settings. #}
 {{ header_html | raw }}
-{# w-full: this div is a flex item all the way up to <body> (flex flex-col),
+{# width: 100%: this div is a flex item all the way up to <body> (flex flex-col),
    and a `width:auto` flex item's cross-axis stretch still bottoms out at its
    own content's min-content size — min-w-0 alone does NOT override that for
    stretch sizing (only for flex-shrink on the main axis). A wide child (e.g.
@@ -19,7 +19,7 @@
    then grew this div past the viewport instead of scrolling inside the
    table itself. An explicit width gives the div a definite size, which
    sidesteps the automatic-minimum-size stretch clamp entirely. #}
-<div style="max-width:{{ max_width_px }}" class="mx-auto px-4 py-8 w-full">
+<div style="max-width:{{ max_width_px }}" class="static-page-body">
     {{ body_html | raw }}
 </div>
 {{ footer_html | raw }}

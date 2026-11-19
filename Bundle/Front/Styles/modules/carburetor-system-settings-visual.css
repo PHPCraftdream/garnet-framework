@@ -1,0 +1,172 @@
+/* System settings roles use the existing Garnet theme. */
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-settingsinherit-ink: currentColor;
+  /* carburetor-disable-next-line valid-color-role */
+  --color-settingsmuted-ink: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-settingssecondary-ink: var(--color-text-secondary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-settingsrefresh-ink: currentColor;
+  /* carburetor-disable-next-line valid-color-role */
+  --color-settingsrefresh-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-settingsrefresh-wash-hover: var(--color-strong);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-settingsprimary-ink: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-settingsfield-ink: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-settingsfield-ink-placeholder: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-settingsfield-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-settingsfield-edge-focus: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-settingsfield-wash: var(--color-bg-surface);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-settingspanel-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-settingspanel-wash: var(--color-bg-surface);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-settingssave-ink: var(--color-accent-text);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-settingssave-wash: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-settingssave-wash-hover: var(--color-accent-hover);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-settingssuccess-ink: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-settingssuccess-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-settingssuccess-wash: var(--color-success-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-settingserror-ink: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-settingserror-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-settingserror-wash: var(--color-danger-subtle);
+}
+
+@utility tone-settingsinherit-plain { @apply text-settingsinherit-ink; }
+@utility tone-settingsmuted-plain { @apply text-settingsmuted-ink; }
+@utility tone-settingssecondary-plain { @apply text-settingssecondary-ink; }
+@utility tone-settingsrefresh-outlined { @apply text-settingsrefresh-ink border-settingsrefresh-edge hover:bg-settingsrefresh-wash-hover/30; }
+@utility tone-settingsprimary-plain { @apply text-settingsprimary-ink; }
+@utility tone-settingsfield-outlined { @apply text-settingsfield-ink border-settingsfield-edge bg-settingsfield-wash focus:border-settingsfield-edge-focus focus:ring-settingsfield-edge-focus/15 placeholder:text-settingsfield-ink-placeholder; }
+@utility tone-settingspanel-outlined { @apply border-settingspanel-edge bg-settingspanel-wash; }
+@utility tone-settingssave-soft { @apply text-settingssave-ink bg-settingssave-wash [&:hover]:bg-settingssave-wash-hover; }
+@utility tone-settingssuccess-outlined { @apply text-settingssuccess-ink border-settingssuccess-edge bg-settingssuccess-wash; }
+@utility tone-settingserror-outlined { @apply text-settingserror-ink border-settingserror-edge bg-settingserror-wash; }
+
+@utility shape-settings-page { @apply max-w-4xl space-y-6; }
+@utility shape-settings-page-form { @apply space-y-6; }
+@utility shape-settings-page-section { @apply rounded-2xl p-4; }
+@utility shape-settings-page-message { @apply rounded-lg border px-4 py-3; }
+@utility type-settings-page-message { @apply text-sm; }
+
+@utility layout-settings-fields-grid { @apply grid gap-4 md:grid-cols-2; }
+@utility layout-settings-seo-fields { @apply grid gap-4; }
+@utility shape-settings-seo-hint { @apply mb-1; }
+@utility shape-settings-seo-image-hint { @apply mb-2; }
+@utility type-settings-seo-hint { @apply text-xs; }
+@utility layout-settings-field-wide { @apply md:col-span-2; }
+@utility layout-settings-test-row { @apply flex flex-col gap-3 md:flex-row md:items-end; }
+@utility layout-settings-field-grow { @apply block flex-1; }
+@utility shape-settings-field-type { @apply md:w-64; }
+@utility shape-settings-options { @apply mt-4 space-y-3; }
+@utility type-settings-small { @apply text-sm; }
+@utility layout-settings-choice { @apply flex items-start gap-3; }
+@utility behavior-settings-choice { @apply cursor-pointer; }
+@utility shape-settings-checkbox { @apply mt-1; }
+@utility type-settings-choice { @apply font-medium; }
+@utility layout-settings-block { @apply block; }
+@utility shape-settings-penalty-label { @apply max-w-xs; }
+@utility shape-settings-caption { @apply mb-1; }
+@utility type-settings-caption { @apply text-sm font-medium; }
+@utility shape-settings-tabs-bar { @apply border-b; }
+@utility shape-settings-panel { @apply rounded-lg border p-5; }
+@utility shape-settings-panel-offset { @apply mt-6; }
+@utility shape-settings-host-title { @apply mb-2; }
+@utility shape-settings-host-hint { @apply mb-3; }
+@utility type-settings-host-hint { @apply text-sm; }
+@utility shape-settings-host-button { @apply rounded-md border; padding: 0.4375rem 0.875rem; }
+@utility type-settings-host-button { @apply font-medium leading-normal no-underline whitespace-nowrap; font-size: 0.8125rem; }
+@utility layout-settings-history-header { @apply flex items-center justify-between; }
+@utility shape-settings-history-header { @apply mb-4; }
+@utility shape-settings-history-hint { @apply mt-1; }
+@utility type-settings-history-hint { @apply text-sm; }
+@utility shape-settings-history-refresh { @apply rounded-lg border px-3 py-1.5; }
+@utility type-settings-history-refresh { @apply text-sm; }
+@utility shape-settings-version-title { @apply mb-3; }
+@utility type-settings-version-title { @apply text-lg font-semibold; }
+@utility shape-settings-version-list { @apply space-y-1; }
+@utility type-settings-version-list { @apply text-sm; }
+@utility layout-settings-version-row { @apply flex gap-2; }
+@utility shape-settings-version-label { @apply min-w-[140px]; }
+@utility type-settings-version-value { @apply font-mono; }
+@utility shape-settings-save-wrapper { @apply mt-6; }
+@utility shape-settings-save { @apply rounded-lg px-4 py-2; }
+@utility type-settings-save { @apply font-medium; }
+@utility effect-settings-save { @apply disabled:opacity-60; }
+
+@layer components {
+  .settings-page { @apply tone-settingsinherit-plain shape-settings-page; }
+  .settings-page-form { @apply tone-settingsinherit-plain shape-settings-page-form; }
+  .section-soft { @apply tone-settingsinherit-plain shape-settings-page-section; }
+  .settings-page-success { @apply tone-settingssuccess-outlined shape-settings-page-message type-settings-page-message; }
+  .settings-page-error { @apply tone-settingserror-outlined shape-settings-page-message type-settings-page-message; }
+  .settings-fields-grid { @apply tone-settingsinherit-plain layout-settings-fields-grid; }
+  .settings-seo-fields { @apply tone-settingsinherit-plain layout-settings-seo-fields; }
+  .settings-seo-hint { @apply tone-settingssecondary-plain layout-settings-block shape-settings-seo-hint type-settings-seo-hint; }
+  .settings-seo-image-hint { @apply tone-settingssecondary-plain layout-settings-block shape-settings-seo-image-hint type-settings-seo-hint; }
+  .settings-field-label { @apply tone-settingsinherit-plain layout-settings-block; }
+  .settings-field-label-wide { @apply tone-settingsinherit-plain layout-settings-block layout-settings-field-wide; }
+  .settings-field-caption { @apply tone-settingsprimary-plain layout-settings-block shape-settings-caption type-settings-caption; }
+  .settings-native-field { @apply tone-settingsfield-outlined shape-native-control shape-native-field layout-native-select type-native-select focus-native-select motion-native-select; }
+  .settings-smtp-options { @apply tone-settingsinherit-plain shape-settings-options; }
+  .settings-smtp-option { @apply tone-settingsinherit-plain layout-settings-choice behavior-settings-choice; }
+  .settings-smtp-checkbox { @apply tone-settingsinherit-plain shape-settings-checkbox; }
+  .settings-smtp-option-title { @apply tone-settingsprimary-plain type-settings-choice; }
+  .settings-smtp-enabled-title { @apply tone-settingsprimary-plain layout-settings-block type-settings-choice; }
+  .settings-smtp-enabled-hint { @apply tone-settingssecondary-plain layout-settings-block type-settings-small; }
+  .settings-smtp-test-row { @apply tone-settingsinherit-plain layout-settings-test-row; }
+  .settings-smtp-test-email-label { @apply tone-settingsinherit-plain layout-settings-field-grow; }
+  .settings-smtp-test-type-label { @apply tone-settingsinherit-plain layout-settings-block shape-settings-field-type; }
+  .settings-test-email-button { @apply tone-settingssave-soft shape-settings-save type-settings-save effect-settings-save; }
+  .settings-general-panel { @apply tone-settingspanel-outlined shape-settings-panel; }
+  .settings-general-header { @apply tone-settingsinherit-plain shape-settings-history-header; }
+  .settings-general-title { @apply tone-settingsprimary-plain type-settings-version-title; }
+  .settings-general-hint { @apply tone-settingssecondary-plain shape-settings-history-hint type-settings-history-hint; }
+  .settings-registration-label { @apply tone-settingsinherit-plain layout-settings-choice behavior-settings-choice; }
+  .settings-registration-checkbox { @apply tone-settingsinherit-plain shape-settings-checkbox; }
+  .settings-registration-text { @apply tone-settingsprimary-plain type-settings-choice; }
+  .settings-penalty-label { @apply tone-settingsinherit-plain layout-settings-block shape-settings-penalty-label; }
+  .settings-penalty-caption { @apply tone-settingsprimary-plain layout-settings-block shape-settings-caption type-settings-caption; }
+  .settings-penalty-input { @apply tone-settingsfield-outlined shape-native-control shape-native-field layout-native-select type-native-select focus-native-select motion-native-select; }
+  .settings-tabs-bar { @apply tone-tabbar-outline layout-tab-bar shape-settings-tabs-bar; }
+  .settings-tab-item { @apply tone-tabinherit-plain shape-tab-item; }
+  .settings-tab-link {
+    @apply tone-tabnavinactive-outline layout-tab-link shape-tab-link type-tab-link motion-tab-link;
+    &[data-active="true"] { @apply tone-tabnavactive-outline; }
+  }
+  .settings-version-panel { @apply tone-settingspanel-outlined shape-settings-panel shape-settings-panel-offset; }
+  .settings-host-panel { @apply tone-settingspanel-outlined shape-settings-panel shape-settings-panel-offset; }
+  .settings-host-title { @apply tone-settingsprimary-plain shape-settings-host-title type-settings-version-title; }
+  .settings-host-hint { @apply tone-settingsmuted-plain shape-settings-host-hint type-settings-host-hint; }
+  .settings-host-button { @apply tone-compactaction-outlined layout-compact-action shape-settings-host-button type-settings-host-button behavior-compact-action effect-compact-action motion-compact-action; }
+  .settings-history-panel { @apply tone-settingspanel-outlined shape-settings-panel; }
+  .settings-history-header { @apply tone-settingsinherit-plain layout-settings-history-header shape-settings-history-header; }
+  .settings-history-title { @apply tone-settingsprimary-plain type-settings-version-title; }
+  .settings-history-hint { @apply tone-settingssecondary-plain shape-settings-history-hint type-settings-history-hint; }
+  .settings-history-refresh { @apply tone-settingsrefresh-outlined shape-settings-history-refresh type-settings-history-refresh; }
+  .settings-history-message { @apply tone-settingsmuted-plain; }
+  .settings-version-title { @apply tone-settingsprimary-plain shape-settings-version-title type-settings-version-title; }
+  .settings-version-list { @apply tone-settingsinherit-plain shape-settings-version-list type-settings-version-list; }
+  .settings-version-row { @apply tone-settingsinherit-plain layout-settings-version-row; }
+  .settings-version-label { @apply tone-settingsmuted-plain shape-settings-version-label; }
+  .settings-version-value { @apply tone-settingsinherit-plain type-settings-version-value; }
+  .settings-save-wrapper { @apply tone-settingsinherit-plain shape-settings-save-wrapper; }
+  .settings-save-button { @apply tone-settingssave-soft shape-settings-save type-settings-save effect-settings-save; }
+}

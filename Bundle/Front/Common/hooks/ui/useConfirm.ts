@@ -1,4 +1,5 @@
-import {useState, useCallback, useRef} from 'react';
+import {useState, useCallback, useRef, useSyncExternalStore} from 'react';
+import {Carburetor} from '@react-carburetor/core';
 
 export interface ConfirmState {
     visible: boolean;
@@ -14,8 +15,34 @@ export interface ConfirmOptions {
     variant?: 'success' | 'danger';
 }
 
+class ConfirmStore extends Carburetor<ConfirmState> {
+    constructor() { super({visible: false, message: '', items: []}); }
+    readonly snapshot = () => this.getData();
+    readonly subscribeSnapshot = (listener: () => void) => {
+        const id = this.subscribe(listener);
+        return () => this.unsubscribe(id);
+    };
+    readonly setConfirmState = (value: ConfirmState | ((previous: ConfirmState) => ConfirmState)) => {
+        const previous = this.getData();
+        const next = typeof value === 'function' ? value(previous) : value;
+        if (Object.is(next, previous)) return;
+        const version = this.getVersion();
+        this.setData(next);
+        if (this.getData() !== previous && this.getVersion() === version) {
+            this.markAllChanged();
+            this.emitUpdate();
+        }
+    };
+}
+
+function createConfirmStore(): ConfirmStore { return new ConfirmStore(); }
+
+function closeConfirmation(previous: ConfirmState): ConfirmState { return {...previous, visible: false}; }
+
 export function useConfirm() {
-    const [confirmState, setConfirmState] = useState<ConfirmState>({visible: false, message: '', items: []});
+    const [store] = useState(createConfirmStore);
+    const confirmState = useSyncExternalStore(store.subscribeSnapshot, store.snapshot, store.snapshot);
+    const setConfirmState = store.setConfirmState;
     const resolveRef = useRef<((value: boolean) => void) | null>(null);
 
     const confirm = useCallback((message: string, opts: string[] | ConfirmOptions = []): Promise<boolean> => {
@@ -34,19 +61,19 @@ export function useConfirm() {
                 });
             }
         });
-    }, []);
+    }, [setConfirmState]);
 
     const handleConfirm = useCallback(() => {
-        setConfirmState(prev => ({...prev, visible: false}));
+        setConfirmState(closeConfirmation);
         resolveRef.current?.(true);
         resolveRef.current = null;
-    }, []);
+    }, [setConfirmState]);
 
     const handleCancel = useCallback(() => {
-        setConfirmState(prev => ({...prev, visible: false}));
+        setConfirmState(closeConfirmation);
         resolveRef.current?.(false);
         resolveRef.current = null;
-    }, []);
+    }, [setConfirmState]);
 
     return {confirmState, confirm, handleConfirm, handleCancel};
 }

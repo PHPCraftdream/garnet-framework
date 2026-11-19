@@ -1,0 +1,71 @@
+/* Upload roles follow the existing Garnet theme. */
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetupload-edge: var(--color-border-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetupload-wash: var(--color-bg-surface-alt);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetuploadactive-edge: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetuploadactive-wash: var(--color-accent-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetuploadhint-ink: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetuploadhidden-ink: currentColor;
+}
+
+@utility tone-garnetupload-outlined {
+  @apply border-garnetupload-edge bg-garnetupload-wash;
+}
+
+@utility tone-garnetuploadactive-outlined {
+  @apply border-garnetuploadactive-edge bg-garnetuploadactive-wash;
+}
+
+@utility tone-garnetuploadhint-plain {
+  @apply text-garnetuploadhint-ink;
+}
+
+@utility tone-garnetuploadhidden-plain {
+  @apply text-garnetuploadhidden-ink;
+}
+
+@utility shape-image-upload {
+  @apply border-2 border-dashed rounded-lg p-6;
+}
+
+@utility type-image-upload {
+  @apply text-center;
+}
+
+@utility type-image-upload-hint {
+  @apply text-sm;
+}
+
+@utility behavior-image-upload {
+  @apply cursor-pointer;
+}
+
+@utility motion-image-upload {
+  @apply transition-colors;
+}
+
+@utility layout-image-upload-hidden {
+  @apply hidden;
+}
+
+@layer components {
+  .blk-upload-area {
+    @apply tone-garnetupload-outlined shape-image-upload type-image-upload behavior-image-upload motion-image-upload;
+    &[data-drag-state="active"] { @apply tone-garnetuploadactive-outlined; }
+  }
+
+  .blk-upload-hint {
+    @apply tone-garnetuploadhint-plain type-image-upload-hint;
+  }
+
+  .image-upload-input {
+    @apply tone-garnetuploadhidden-plain layout-image-upload-hidden;
+  }
+}

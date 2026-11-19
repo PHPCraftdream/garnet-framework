@@ -12,12 +12,43 @@ function parseRule(rule: string): ParsedRule | null {
 
 const NUMERIC_VALIDATORS = new Set(['int', 'min', 'max', 'minVal', 'maxVal']);
 
+function isString(value: unknown): value is string {
+    return typeof value === 'string';
+}
+
+function isParsedRule(rule: ParsedRule | null): rule is ParsedRule {
+    return rule !== null;
+}
+
+function isNumericRule(rule: ParsedRule): boolean {
+    return NUMERIC_VALIDATORS.has(rule.name);
+}
+
+function isNumericRuleString(rule: string): boolean {
+    const parsed = parseRule(rule);
+    return !!parsed && isNumericRule(parsed);
+}
+
+function isEmail(value: string): boolean {
+    return !value || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function isTimeZone(value: string): boolean {
+    return Intl.supportedValuesOf('timeZone').includes(value);
+}
+
+function isUrl(value: string): boolean {
+    if (!value) return true;
+    try {
+        return Boolean(new URL(value));
+    } catch {
+        return false;
+    }
+}
+
 export function isNumericFieldInfo(fieldInfo: TGridFieldInfo): boolean {
-    const rules = (fieldInfo.validation ?? []).filter((v): v is string => typeof v === 'string');
-    return rules.some(r => {
-        const parsed = parseRule(r);
-        return parsed && NUMERIC_VALIDATORS.has(parsed.name);
-    });
+    const rules = (fieldInfo.validation ?? []).filter(isString);
+    return rules.some(isNumericRuleString);
 }
 
 export function getFieldRegisterOptions(fieldInfo: TGridFieldInfo): Record<string, unknown> {
@@ -32,10 +63,10 @@ function zodFieldFromInfo(fieldInfo: TGridFieldInfo): z.ZodTypeAny {
         return z.boolean().optional();
     }
 
-    const rawRules = (fieldInfo.validation ?? []).filter((v): v is string => typeof v === 'string');
-    const rules = rawRules.map(parseRule).filter((r): r is ParsedRule => r !== null);
+    const rawRules = (fieldInfo.validation ?? []).filter(isString);
+    const rules = rawRules.map(parseRule).filter(isParsedRule);
 
-    if (rules.some(r => NUMERIC_VALIDATORS.has(r.name))) {
+    if (rules.some(isNumericRule)) {
         let schema = z.number();
         for (const rule of rules) {
             if (rule.name === 'int') schema = schema.int(fw.Common_Int());
@@ -76,19 +107,24 @@ function zodFieldFromInfo(fieldInfo: TGridFieldInfo): z.ZodTypeAny {
         }
         if (rule.name === 'email') {
             schema = schema.refine(
-                v => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+                isEmail,
                 fw.Common_Email(),
             );
         }
         if (rule.name === 'tzExists') {
             schema = schema.refine(
-                v => Intl.supportedValuesOf('timeZone').includes(v),
+                isTimeZone,
                 fw.Common_IncorrectValue(),
             );
         }
         if (rule.name === 'in_array') {
             const allowed = rule.args;
-            schema = schema.refine(v => allowed.includes(v), fw.Common_IncorrectValue());
+            const validator = {
+                includes(value: string): boolean {
+                    return allowed.includes(value);
+                },
+            };
+            schema = schema.refine(validator.includes, fw.Common_IncorrectValue());
         }
         if (rule.name === 'pattern') {
             const pattern = rule.args[0];
@@ -98,10 +134,7 @@ function zodFieldFromInfo(fieldInfo: TGridFieldInfo): z.ZodTypeAny {
             }
         }
         if (rule.name === 'url') {
-            schema = schema.refine(v => {
-                if (!v) return true;
-                try { new URL(v); return true; } catch { return false; }
-            }, fw.Common_Url?.() ?? 'Invalid URL');
+            schema = schema.refine(isUrl, fw.Common_Url?.() ?? 'Invalid URL');
         }
         if (rule.name === 'alphanumeric') {
             schema = schema.regex(/^[a-zA-Z0-9]+$/, fw.Common_Alphanumeric?.() ?? 'Invalid value');

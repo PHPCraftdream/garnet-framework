@@ -1,19 +1,23 @@
-import {ICheckCodeRequest, ICheckCodeRequestResponse, TInputRef, TSetAuthState} from '@framework/auth/Models';
+import {IAuthData, ICheckCodeRequest, ICheckCodeRequestResponse, TInputRef, TSetAuthState} from '@framework/auth/Models';
 import {EPhase} from '@framework/auth/Enums';
 import {sendPost} from '@common/Api/Send/sendPost';
 import {goTo} from '@common/Dom/Nav/GoTo';
 import {isApiSuccess} from '@common/Api/isApiSuccess';
+
+const invalidCode = (state: IAuthData): IAuthData => ({...state, phase: EPhase.INPUT_CODE_WRONG_VALUE});
+const sendingRequest = (state: IAuthData): IAuthData => ({...state, isSendingRequest: true});
+const codeRequestError = (state: IAuthData): IAuthData => ({...state, isSendingRequest: false, phase: EPhase.INPUT_CODE_REQUEST_ERROR});
 
 /**
  * Code verification handler.
  */
 export const handleCheckCode = (setData: TSetAuthState, inputRef: TInputRef) => {
     if (!inputRef.current.validity?.valid) {
-        setData((state) => ({...state, phase: EPhase.INPUT_CODE_WRONG_VALUE}));
+        setData(invalidCode);
         return;
     }
 
-    setData((state) => ({...state, isSendingRequest: true}));
+    setData(sendingRequest);
 
     const code = inputRef.current.value;
     const promise = sendPost<ICheckCodeRequest, ICheckCodeRequestResponse>(
@@ -27,7 +31,7 @@ export const handleCheckCode = (setData: TSetAuthState, inputRef: TInputRef) => 
             // (has `message`, `ok !== true`) — same "form frozen forever"
             // risk as an uncaught rejection if isSendingRequest is left
             // true here.
-            setData((state) => ({...state, isSendingRequest: false, phase: EPhase.INPUT_CODE_REQUEST_ERROR}));
+            setData(codeRequestError);
             return;
         }
 

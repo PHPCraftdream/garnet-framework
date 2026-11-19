@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
 import {PreviewContext} from './PreviewContext';
 import {UserPreviewModal, PreviewLabels} from './UserPreviewModal';
 
@@ -15,29 +16,31 @@ interface Props {
  * Children call `usePreview().openPreview(userId, name?)` to open a modal that
  * fetches public profile data from `previewUrl`.
  */
-export const PreviewProvider: React.FC<Props> = ({labels, previewUrl, extraSection, children}) => {
-    const [target, setTarget] = React.useState<{userId: number; name?: string} | null>(null);
+export class PreviewProvider extends AntiHookComponent<Props> {
+    private readonly store = new Carburetor<{target: {userId: number; name?: string} | null}>({target: null});
+    private readonly openPreview = (userId: number, name?: string): void => {
+        if (userId) this.store.setData({target: {userId, name}});
+    };
+    private readonly close = (): void => this.store.setData({target: null});
+    private readonly context = {openPreview: this.openPreview};
 
-    const openPreview = React.useCallback((userId: number, name?: string) => {
-        if (!userId) return;
-        setTarget({userId, name});
-    }, []);
-
-    const close = React.useCallback(() => setTarget(null), []);
-
-    return (
-        <PreviewContext.Provider value={{openPreview}}>
-            {children}
-            {target && (
-                <UserPreviewModal
-                    userId={target.userId}
-                    initialName={target.name}
-                    previewUrl={previewUrl}
-                    labels={labels}
-                    extraSection={extraSection?.(target.userId)}
-                    onClose={close}
-                />
-            )}
-        </PreviewContext.Provider>
-    );
-};
+    public render() {
+        const {target} = this.useCarburetor(this.store);
+        const {labels, previewUrl, extraSection, children} = this.props;
+        return (
+            <PreviewContext.Provider value={this.context}>
+                {children}
+                {target && (
+                    <UserPreviewModal
+                        userId={target.userId}
+                        initialName={target.name}
+                        previewUrl={previewUrl}
+                        labels={labels}
+                        extraSection={extraSection?.(target.userId)}
+                        onClose={this.close}
+                    />
+                )}
+            </PreviewContext.Provider>
+        );
+    }
+}

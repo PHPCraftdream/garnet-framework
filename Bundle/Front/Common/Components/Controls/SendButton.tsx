@@ -11,14 +11,12 @@ interface Props {
 }
 
 export default function SendButton({onClick, disabled, sending, label, testId, variant = 'primary', size = 'md'}: Props) {
-    const btnClass = variant === 'outline-warning'
-        ? `btn btn-outline-warning${size === 'sm' ? ' btn-sm' : ''}`
-        : `btn btn-primary${size === 'sm' ? ' btn-sm' : ''}`;
-
     return (
         <button
             type="button"
-            className={btnClass}
+            className={variant === 'outline-warning'
+                ? (size === 'sm' ? 'send-button-warning-small' : 'send-button-warning')
+                : (size === 'sm' ? 'send-button-primary-small' : 'send-button-primary')}
             disabled={disabled || sending}
             aria-busy={sending}
             onClick={onClick}

@@ -1,0 +1,133 @@
+/* Development controls retain their original fixed colours. */
+:root {
+  --palette-dev-border: #d1d5db;
+  --palette-dev-muted: #9ca3af;
+  --palette-dev-loading: #374151;
+  --palette-dev-danger-border: #fca5a5;
+  --palette-dev-danger: #f87171;
+}
+
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-authprimary-fill: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-authprimary-fill-hover: var(--color-accent-hover);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-authprimary-on-fill: var(--color-accent-text);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-authsuccess-fill: var(--color-green-600);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-authsuccess-fill-hover: var(--color-green-700);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-authsuccess-on-fill: var(--color-white);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-authspinner-edge: currentColor;
+  --color-devpanel-edge: var(--palette-dev-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-devpanel-wash: var(--color-bg-surface, rgba(255,255,255,0.92));
+  --color-devlabel-ink: var(--palette-dev-muted);
+  --color-devrole-ink: var(--palette-dev-muted);
+  --color-devrole-edge: var(--palette-dev-border);
+  --color-devloading-ink: var(--palette-dev-loading);
+  --color-devloading-edge: var(--palette-dev-border);
+  --color-devreset-ink: var(--palette-dev-danger);
+  --color-devreset-edge: var(--palette-dev-danger-border);
+  --color-devresetloading-ink: var(--palette-dev-loading);
+  --color-devresetloading-edge: var(--palette-dev-danger-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-devinherit-ink: currentColor;
+}
+
+@utility tone-devpanel-outlined { @apply border-devpanel-edge; }
+@utility tone-devpanel-interactive { @apply border-devpanel-edge bg-devpanel-wash; }
+@utility tone-devlabel-plain { @apply text-devlabel-ink; }
+@utility tone-devrole-outline { @apply text-devrole-ink border-devrole-edge bg-transparent; }
+@utility tone-devloading-outline { @apply text-devloading-ink border-devloading-edge bg-transparent; }
+@utility tone-devreset-outline { @apply text-devreset-ink border-devreset-edge bg-transparent; }
+@utility tone-devresetloading-outline { @apply text-devresetloading-ink border-devresetloading-edge bg-transparent; }
+@utility tone-devinherit-plain { @apply text-devinherit-ink; }
+
+@utility layout-dev-floating { @apply fixed bottom-0 left-0 right-0 z-50 flex items-center justify-center flex-wrap; gap: 8px; }
+@utility shape-dev-floating { @apply border-t border-dashed; padding: 6px 16px; }
+@utility effect-dev-floating { backdrop-filter: blur(4px); }
+@utility shape-dev-panel { @apply border-t border-dashed; margin-top: 24px; padding-top: 16px; }
+@utility shape-dev-label { margin-right: 4px; }
+@utility type-dev-label { font-size: 11px; white-space: nowrap; }
+@utility shape-dev-heading { margin-bottom: 8px; }
+@utility type-dev-heading { font-size: 12px; }
+@utility layout-dev-actions { @apply flex flex-wrap items-center; gap: 8px; }
+@utility shape-dev-button { @apply border border-dashed; padding: 2px 10px; border-radius: 4px; }
+@utility shape-dev-reset { margin-left: 8px; }
+@utility type-dev-button { font-size: 12px; }
+@utility behavior-dev-button { @apply cursor-pointer! disabled:cursor-default!; }
+@utility shape-auth-mount { @apply max-w-md mx-auto p-4; }
+@utility layout-auth-mount { @apply flex grow flex-col; }
+@utility layout-auth-timer { @apply flex items-center; }
+
+@utility tone-authprimary-solid { @apply bg-authprimary-fill text-authprimary-on-fill hover:bg-authprimary-fill-hover border-transparent; }
+@utility tone-authsuccess-solid { @apply bg-authsuccess-fill text-authsuccess-on-fill hover:bg-authsuccess-fill-hover border-transparent; }
+@utility tone-authspinner-outlined { @apply border-authspinner-edge; }
+@utility shape-auth-shell { @apply w-full m-auto; max-width: 500px; }
+@utility layout-auth-heading { @apply flex; }
+@utility shape-auth-space-bottom { @apply mb-3; }
+@utility layout-auth-title { @apply grow; }
+@utility type-auth-title { @apply text-lg font-normal; }
+@utility layout-auth-loading { @apply flex items-center gap-2; }
+@utility shape-auth-loading { @apply py-4; }
+@utility shape-auth-spinner { @apply w-4 h-4 border-2 rounded-full; }
+@utility layout-auth-spinner { @apply inline-block; }
+@utility motion-auth-spinner { @apply animate-spin; }
+@utility shape-auth-form { @apply space-y-4; }
+@utility layout-auth-field { display: block; }
+@utility shape-auth-label { @apply mb-1; }
+@utility type-auth-label { @apply font-medium; font-size: 0.8125rem; }
+@utility type-auth-hint { @apply text-sm; }
+@utility shape-auth-submit { @apply rounded-md border w-full py-2; padding-inline: 0.875rem; }
+@utility layout-auth-submit { @apply inline-flex items-center justify-center gap-1.5; }
+@utility type-auth-submit { @apply font-medium leading-normal no-underline whitespace-nowrap; font-size: 0.8125rem; }
+@utility motion-auth-submit { transition: all 0.15s ease; }
+@utility behavior-auth-submit { @apply cursor-pointer disabled:cursor-not-allowed; }
+@utility effect-auth-submit { @apply disabled:opacity-50; }
+@utility effect-auth-primary-shadow { @apply shadow-[0_1px_2px_color-mix(in_srgb,var(--color-accent)_25%,transparent)]; }
+@utility effect-auth-success-shadow { box-shadow: 0 1px 2px rgba(22, 163, 74, 0.2); }
+@utility motion-auth-submit-active { @apply enabled:active:translate-y-px; }
+
+@layer components {
+  .dev-login-floating { @apply tone-devpanel-interactive layout-dev-floating shape-dev-floating effect-dev-floating; }
+  .dev-login-panel { @apply tone-devpanel-outlined shape-dev-panel; }
+  .dev-login-label { @apply tone-devlabel-plain shape-dev-label type-dev-label; }
+  .dev-login-heading { @apply tone-devlabel-plain shape-dev-heading type-dev-heading; }
+  .dev-login-actions { @apply tone-devinherit-plain layout-dev-actions; }
+  .dev-login-role {
+    @apply tone-devrole-outline shape-dev-button type-dev-button behavior-dev-button;
+    &[data-loading="true"] { @apply tone-devloading-outline; }
+  }
+  .dev-login-reset {
+    @apply tone-devreset-outline shape-dev-button shape-dev-reset type-dev-button behavior-dev-button;
+    &[data-loading="true"] { @apply tone-devresetloading-outline; }
+  }
+  /* carburetor-disable-next-line valid-function-class */
+  .auth2-mount { @apply shape-auth-mount layout-auth-mount; }
+  .auth2-timer { @apply tone-devinherit-plain layout-auth-timer; }
+  .auth2-shell { @apply tone-devinherit-plain shape-auth-shell; }
+  .auth2-heading { @apply tone-devinherit-plain layout-auth-heading shape-auth-space-bottom; }
+  .auth2-title { @apply tone-devinherit-plain layout-auth-title type-auth-title; }
+  .auth2-loading { @apply tone-authconsentmuted-plain layout-auth-loading shape-auth-loading; }
+  .auth2-spinner { @apply tone-authspinner-outlined shape-auth-spinner layout-auth-spinner motion-auth-spinner; }
+  .auth2-form { @apply tone-devinherit-plain shape-auth-form; }
+  .auth2-field { @apply tone-devinherit-plain layout-auth-field; }
+  .auth2-label { @apply tone-settingssecondary-plain layout-auth-field type-auth-label shape-auth-label; }
+  .auth2-input { @apply tone-garnetfield-outlined shape-native-control shape-native-field layout-native-select type-native-select focus-native-select motion-native-select; }
+  .auth2-hint {
+    @apply tone-authconsentmuted-plain type-auth-hint shape-auth-space-bottom;
+    &[data-tone="danger"] { @apply tone-garnetdanger-plain; }
+  }
+  .auth2-submit-wrap { @apply tone-devinherit-plain shape-auth-space-bottom; }
+  .auth2-submit-primary {
+    @apply tone-authprimary-solid shape-auth-submit layout-auth-submit type-auth-submit motion-auth-submit behavior-auth-submit effect-auth-submit motion-auth-submit-active effect-auth-primary-shadow;
+  }
+  .auth2-submit-success {
+    @apply tone-authsuccess-solid shape-auth-submit layout-auth-submit type-auth-submit motion-auth-submit behavior-auth-submit effect-auth-submit motion-auth-submit-active effect-auth-success-shadow;
+  }
+}

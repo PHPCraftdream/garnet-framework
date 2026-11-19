@@ -5,6 +5,50 @@ const SAFE_TAGS = ['a', 'blockquote', 'br', 'code', 'em', 'h2', 'h3', 'hr', 'li'
 const SAFE_ATTR = ['class', 'href', 'rel', 'target'];
 const SAFE_URI = /^(?:(?:https?|mailto|tel):|\/|#|\?)/i;
 
+function pageLink(_: string, slug: string): string {
+    return `<a href="${appUrl('/page/view~' + slug)}" class="text-accent">${slug}</a>`;
+}
+
+function blockquoteLine(line: string): string {
+    return line.replace(/^>\s+/, '');
+}
+
+function blockquote(match: string): string {
+    const lines = match.trim().split('\n').map(blockquoteLine);
+    return '<blockquote>' + lines.join('<br/>') + '</blockquote>';
+}
+
+function unorderedItem(line: string): string {
+    const text = line.replace(/^[-*]\s+/, '');
+    return `<li>${text}</li>`;
+}
+
+function unorderedList(match: string): string {
+    const items = match.trim().split('\n').map(unorderedItem).join('');
+    return `<ul>${items}</ul>`;
+}
+
+function orderedItem(line: string): string {
+    const text = line.replace(/^\d+\.\s+/, '');
+    return `<li>${text}</li>`;
+}
+
+function orderedList(match: string): string {
+    const items = match.trim().split('\n').map(orderedItem).join('');
+    return `<ol>${items}</ol>`;
+}
+
+function paragraph(block: string): string {
+    block = block.trim();
+    if (!block) return '';
+    // Don't wrap if already wrapped in a block element
+    if (/^<(?:ul|ol|li|hr|div|p|h[1-6]|blockquote|table|pre)/i.test(block)) {
+        return block;
+    }
+    // Single newlines within a paragraph become <br>
+    return '<p>' + block.replace(/\n/g, '<br/>') + '</p>';
+}
+
 /**
  * Lightweight markdown-to-HTML converter.
  * Supports: **bold**, *italic*, [link](url), - list items, ordered lists, paragraphs, line breaks, hr,
@@ -14,7 +58,7 @@ export function markdownToHtml(md: string): string {
     if (!md) return '';
 
     // Replace {link:slug} with a visual placeholder
-    let html = md.replace(/\{link:([a-z0-9_-]+)\}/gi, (_, slug) => `<a href="${appUrl('/page/view~' + slug)}" class="text-accent">${slug}</a>`);
+    let html = md.replace(/\{link:([a-z0-9_-]+)\}/gi, pageLink);
 
     html = html
         // Headings: ### before ## (more specific first)
@@ -33,42 +77,18 @@ export function markdownToHtml(md: string): string {
     ;
 
     // Blockquotes: > text
-    html = html.replace(/^(?:>\s+.+\n?)+/gm, (match) => {
-        const lines = match.trim().split('\n').map(line => line.replace(/^>\s+/, ''));
-        return '<blockquote>' + lines.join('<br/>') + '</blockquote>';
-    });
+    html = html.replace(/^(?:>\s+.+\n?)+/gm, blockquote);
 
     // Process unordered lists: lines starting with - or *
-    html = html.replace(/^(?:[-*]\s+.+\n?)+/gm, (match) => {
-        const items = match.trim().split('\n').map(line => {
-            const text = line.replace(/^[-*]\s+/, '');
-            return `<li>${text}</li>`;
-        }).join('');
-        return `<ul>${items}</ul>`;
-    });
+    html = html.replace(/^(?:[-*]\s+.+\n?)+/gm, unorderedList);
 
     // Process ordered lists: lines starting with 1. 2. etc
-    html = html.replace(/^(?:\d+\.\s+.+\n?)+/gm, (match) => {
-        const items = match.trim().split('\n').map(line => {
-            const text = line.replace(/^\d+\.\s+/, '');
-            return `<li>${text}</li>`;
-        }).join('');
-        return `<ol>${items}</ol>`;
-    });
+    html = html.replace(/^(?:\d+\.\s+.+\n?)+/gm, orderedList);
 
     // Paragraphs: double newline
     html = html
         .split(/\n{2,}/)
-        .map(block => {
-            block = block.trim();
-            if (!block) return '';
-            // Don't wrap if already wrapped in a block element
-            if (/^<(?:ul|ol|li|hr|div|p|h[1-6]|blockquote|table|pre)/i.test(block)) {
-                return block;
-            }
-            // Single newlines within a paragraph become <br>
-            return '<p>' + block.replace(/\n/g, '<br/>') + '</p>';
-        })
+        .map(paragraph)
         .filter(Boolean)
         .join('\n');
 

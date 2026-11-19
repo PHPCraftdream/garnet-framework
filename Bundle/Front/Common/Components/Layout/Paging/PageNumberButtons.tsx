@@ -1,46 +1,53 @@
 import * as React from 'react';
 
 interface Props {
-    /**
-     * Page numbers and ellipsis markers to render, e.g. `[1, '...', 4, 5, 6, '...', 10]`.
-     * Use the `getPageNumbers` helper from Pagination to compute this list.
-     */
+    /** Page numbers and ellipsis markers to render. */
     pages: (number | '...')[];
     currentPage: number;
     loading?: boolean;
     onPageChange: (page: number) => void;
 }
 
-/**
- * Numbered page-link strip used by Pagination.
- *
- * Split out so callers that want only the number row (without prev/next/info)
- * can compose it themselves — and so the rendering logic isn't buried inside
- * the larger Pagination component.
- */
-export function PageNumberButtons({pages, currentPage, loading, onPageChange}: Props) {
-    const btnActive = 'common-pgn-btn-active';
-    const btnPage = 'common-pgn-btn';
+interface PageButtonProps {
+    page: number;
+    current: boolean;
+    loading?: boolean;
+    onPageChange: (page: number) => void;
+}
 
-    return (
-        <>
-            {pages.map((p, i) =>
-                p === '...' ? (
-                    <span key={`ellipsis-${i}`} className="common-pgn-ellipsis">...</span>
-                ) : (
-                    <button
-                        key={p}
-                        type="button"
-                        className={p === currentPage ? btnActive : btnPage}
-                        disabled={loading}
-                        onClick={() => onPageChange(p)}
-                        aria-current={p === currentPage ? 'page' : undefined}
-                        data-test-id={`pagination-page-${p}`}
-                    >
-                        {p}
-                    </button>
-                )
-            )}
-        </>
-    );
+class PageButton extends React.Component<PageButtonProps> {
+    private readonly handleClick = (): void => {
+        this.props.onPageChange(this.props.page);
+    };
+
+    public render() {
+        const {page, current, loading} = this.props;
+        return (
+            <button
+                type="button"
+                className={current ? 'common-pgn-btn-active' : 'common-pgn-btn'}
+                disabled={loading}
+                onClick={this.handleClick}
+                aria-current={current ? 'page' : undefined}
+                data-test-id={`pagination-page-${page}`}
+            >
+                {page}
+            </button>
+        );
+    }
+}
+
+/** Numbered page-link strip used by Pagination. */
+export class PageNumberButtons extends React.Component<Props> {
+    private readonly renderPage = (page: number | '...', index: number): React.ReactNode => {
+        if (page === '...') {
+            return <span key={`ellipsis-${index}`} className="common-pgn-ellipsis">...</span>;
+        }
+        const {currentPage, loading, onPageChange} = this.props;
+        return <PageButton key={page} page={page} current={page === currentPage} loading={loading} onPageChange={onPageChange} />;
+    };
+
+    public render() {
+        return <>{this.props.pages.map(this.renderPage)}</>;
+    }
 }

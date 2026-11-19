@@ -9,6 +9,10 @@ type LazyImport<P> = () => Promise<{ default: React.ComponentType<P> } | { [key:
 /** Одна повторная попытка импорта: сорванный запрос чанка — обычное дело. */
 const RETRY_DELAY_MS = 500;
 
+const waitForRetry = (resolve: () => void): void => {
+    setTimeout(resolve, RETRY_DELAY_MS);
+};
+
 /**
  * Похоже ли значение на тип, который React согласится отрендерить.
  *
@@ -86,7 +90,7 @@ export function createIsland<P>(config: {
         }
 
         const retryOnce = (first: unknown): Promise<object> => new Promise<void>(
-            (resolve) => setTimeout(resolve, RETRY_DELAY_MS),
+            waitForRetry,
         ).then(() => config.lazy()).catch((second: unknown) => {
             // Наружу уходит ошибка ВТОРОЙ попытки, но первая тоже сказала бы
             // то же самое — сообщение ниже называет островок, а не чанк.

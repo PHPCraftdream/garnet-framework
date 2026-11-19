@@ -14,11 +14,9 @@ const DialogOverlay = React.forwardRef<
 >(({className, ...props}, ref) => (
     <DialogPrimitive.Overlay
         ref={ref}
-        className={cn(
-            'fixed inset-0 z-50 bg-black/50 backdrop-blur-sm',
-            'animate-in fade-in-0',
-            className,
-        )}
+        // Внешний className сохраняется для совместимости.
+        // carburetor-disable-next-line require-function-class
+        className={cn('radix-dialog-overlay', className)}
         {...props}
     />
 ));
@@ -32,20 +30,17 @@ const DialogContent = React.forwardRef<
         <DialogOverlay />
         <DialogPrimitive.Content
             ref={ref}
-            className={cn(
-                'fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg',
-                'border-default bg-surface',
-                'animate-in fade-in-0 zoom-in-95',
-                className,
-            )}
+            // Внешний className сохраняется для совместимости.
+            // carburetor-disable-next-line require-function-class
+            className={cn('radix-dialog-content', className)}
             {...props}
         >
             {children}
-            <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none">
+            <DialogPrimitive.Close className="radix-dialog-close">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M18 6 6 18M6 6l12 12" />
                 </svg>
-                <span className="sr-only">Close</span>
+                <span className="radix-dialog-close-label">Close</span>
             </DialogPrimitive.Close>
         </DialogPrimitive.Content>
     </DialogPortal>
@@ -53,7 +48,9 @@ const DialogContent = React.forwardRef<
 DialogContent.displayName = 'DialogContent';
 
 const DialogHeader: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({className, ...props}) => (
-    <div className={cn('flex flex-col space-y-1.5 text-center sm:text-left', className)} {...props} />
+    // Внешний className сохраняется для совместимости.
+    // carburetor-disable-next-line require-function-class
+    <div className={cn('radix-dialog-header', className)} {...props} />
 );
 
 const DialogTitle = React.forwardRef<
@@ -62,7 +59,9 @@ const DialogTitle = React.forwardRef<
 >(({className, ...props}, ref) => (
     <DialogPrimitive.Title
         ref={ref}
-        className={cn('text-lg font-semibold leading-none tracking-tight text-on-surface', className)}
+        // Внешний className сохраняется для совместимости.
+        // carburetor-disable-next-line require-function-class
+        className={cn('radix-dialog-title', className)}
         {...props}
     />
 ));
@@ -74,7 +73,9 @@ const DialogDescription = React.forwardRef<
 >(({className, ...props}, ref) => (
     <DialogPrimitive.Description
         ref={ref}
-        className={cn('text-sm text-muted', className)}
+        // Внешний className сохраняется для совместимости.
+        // carburetor-disable-next-line require-function-class
+        className={cn('radix-dialog-description', className)}
         {...props}
     />
 ));

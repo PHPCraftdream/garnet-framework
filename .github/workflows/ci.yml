@@ -163,8 +163,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
-          # oxlint's RuleTester (test:lint-plugin, part of `npm run check`) refuses Node < 22.
-          node-version: '22'
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: FrontBuilder/package-lock.json
 
@@ -202,7 +201,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: |
             FrontBuilder/package-lock.json
@@ -240,7 +239,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: FrontBuilder/package-lock.json
 
@@ -387,7 +386,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: FrontBuilder/package-lock.json
 
@@ -449,7 +448,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2

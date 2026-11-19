@@ -1,11 +1,12 @@
 import * as React from 'react';
-import {useState, useEffect, useCallback} from 'react';
+import {useEffect, useCallback} from 'react';
+import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
 import {sendPost} from '@common/Api/Send/sendPost';
 import {DateInput} from '@common/Components/ui/DateInput';
 import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
+import {DEFAULT_PAGE_SIZE} from '@common/Utils/Data/pagination';
 import {LogDetailModal} from '../LogDetailModal';
 import {ErrorLogDetail, ErrorRow} from '../details/ErrorLogDetail';
-import {DEFAULT_PAGE_SIZE} from '@common/Utils/Data/pagination';
 
 interface PageResponse {
     date: string;
@@ -22,208 +23,162 @@ interface Props {
     pageUrl: string;
 }
 
+interface ErrorState {
+    dates: string[];
+    date: string;
+    search: string;
+    appliedSearch: string;
+    perPage: number;
+    rows: ErrorRow[];
+    total: number;
+    page: number;
+    loading: boolean;
+    selected: ErrorRow | null;
+}
+
+type LoadPage = (date: string, page: number, search: string, perPage: number) => Promise<void>;
+interface NetworkProps {
+    pageUrl: string;
+    date: string;
+    appliedSearch: string;
+    perPage: number;
+    update: (patch: Partial<ErrorState>) => void;
+    setLoader: (load: LoadPage | null) => void;
+}
+
 const PER_PAGE_OPTIONS = [DEFAULT_PAGE_SIZE, 50, 100, 200];
+function renderPageOption(n: number) { return <option key={n} value={n}>{n}</option>; }
 
-export const AdminErrorsLogIsland: React.FC<Props> = ({dates: initialDates, pageUrl}) => {
-    const [dates, setDates] = useState<string[]>(initialDates);
-    const [date, setDate] = useState<string>(initialDates[0] ?? '');
-    const [search, setSearch] = useState<string>('');
-    const [appliedSearch, setAppliedSearch] = useState<string>('');
-    const [perPage, setPerPage] = useState<number>(DEFAULT_PAGE_SIZE);
-    const [rows, setRows] = useState<ErrorRow[]>([]);
-    const [total, setTotal] = useState<number>(0);
-    const [page, setPage] = useState<number>(1);
-    const [loading, setLoading] = useState<boolean>(false);
-    const [selected, setSelected] = useState<ErrorRow | null>(null);
-
-    const load = useCallback(
-        async (targetDate: string, targetPage: number, targetSearch: string, targetPerPage: number): Promise<void> => {
-            if (!targetDate) {
-                setRows([]);
-                setTotal(0);
-                return;
-            }
-            setLoading(true);
-            try {
-                const res = await sendPost<
-                    {date: string; page: number; perPage: number; search: string},
-                    PageResponse
-                >(pageUrl, {date: targetDate, page: targetPage, perPage: targetPerPage, search: targetSearch});
-                setRows(res.rows ?? []);
-                setTotal(res.total ?? 0);
-                setPage(res.page ?? targetPage);
-                if (res.dates && res.dates.length) {
-                    setDates(res.dates);
-                    if (!targetDate && res.date) {
-                        setDate(res.date);
-                    }
-                }
-            } finally {
-                setLoading(false);
-            }
-        },
-        [pageUrl],
-    );
-
-    useEffect(() => {
-        if (date) {
-            void load(date, 1, appliedSearch, perPage);
-        }
-    }, [date, appliedSearch, perPage, load]);
-
-    const totalPages = Math.max(1, Math.ceil(total / perPage));
-    const minDate = dates.length ? dates[dates.length - 1] : undefined;
-    const maxDate = dates.length ? dates[0] : undefined;
-
-    const goPrev = (): void => {
-        if (page > 1) void load(date, page - 1, appliedSearch, perPage);
+class ErrorsLog extends AntiHookComponent<Props> {
+    private readonly store = new Carburetor<ErrorState>({
+        dates: [...this.props.dates], date: this.props.dates[0] ?? '', search: '', appliedSearch: '',
+        perPage: DEFAULT_PAGE_SIZE, rows: [], total: 0, page: 1, loading: false, selected: null,
+    });
+    private readonly rows = this.connectSelection(this.store, state => state.rows);
+    private readonly selected = this.connectSelection(this.store, state => state.selected);
+    private loader: LoadPage | null = null;
+    private readonly setLoader = (load: LoadPage | null) => { this.loader = load; };
+    private readonly update = (patch: Partial<ErrorState>) => this.store.setData({...this.store.getData(), ...patch});
+    private readonly changeDate = (event: React.ChangeEvent<HTMLInputElement>) => this.update({date: event.target.value});
+    private readonly changeSearch = (event: React.ChangeEvent<HTMLInputElement>) => this.update({search: event.target.value});
+    private readonly changePerPage = (event: React.ChangeEvent<HTMLSelectElement>) => this.update({perPage: parseInt(event.target.value, 10) || 50});
+    private readonly applySearch = () => this.update({appliedSearch: this.store.getData().search});
+    private readonly onSearchKey = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === 'Enter') this.applySearch();
     };
-    const goNext = (): void => {
-        if (page < totalPages) void load(date, page + 1, appliedSearch, perPage);
+    private readonly goPrev = () => {
+        const {date, page, appliedSearch, perPage} = this.store.getData();
+        if (page > 1) void this.loader?.(date, page - 1, appliedSearch, perPage);
     };
-
-    const applySearch = (): void => setAppliedSearch(search);
-    const onSearchKey = (e: React.KeyboardEvent<HTMLInputElement>): void => {
-        if (e.key === 'Enter') applySearch();
+    private readonly goNext = () => {
+        const {date, page, total, appliedSearch, perPage} = this.store.getData();
+        if (page < Math.max(1, Math.ceil(total / perPage))) void this.loader?.(date, page + 1, appliedSearch, perPage);
     };
+    private readonly selectRow = (event: React.MouseEvent<HTMLTableRowElement>) => {
+        const row = this.store.getData().rows[Number(event.currentTarget.dataset.rowIndex)];
+        if (row) this.update({selected: {...row}});
+    };
+    private readonly closeDetail = () => this.update({selected: null});
 
-    return (
-        <div data-test-id="admin-errors-log">
+    private renderFilters(dates: string[], date: string, search: string, perPage: number, total: number, loading: boolean) {
+        return (
             <div className="admin-log-filters">
                 <div className="filter-cell">
-                    <label htmlFor="errors-date">
-                        {t.Logs_Errors_Date()}
-                    </label>
-                    <DateInput
-                        id="errors-date"
-                        className="text-sm"
-                        value={date}
-                        min={minDate}
-                        max={maxDate}
-                        onChange={e => setDate(e.target.value)}
-                        data-test-id="errors-date-select"
-                    />
+                    <label htmlFor="errors-date">{t.Logs_Errors_Date()}</label>
+                    <DateInput id="errors-date" value={date} min={dates[dates.length - 1]} max={dates[0]}
+                        onChange={this.changeDate} data-test-id="errors-date-select" />
                 </div>
-
                 <div className="filter-cell">
-                    <label htmlFor="errors-search">
-                        {t.Logs_Errors_Search()}
-                    </label>
-                    <input
-                        id="errors-search"
-                        type="text"
-                        className="form-control"
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        onKeyDown={onSearchKey}
-                        data-test-id="errors-search-input"
-                    />
+                    <label htmlFor="errors-search">{t.Logs_Errors_Search()}</label>
+                    <input id="errors-search" type="text" className="admin-filter-field" value={search}
+                        onChange={this.changeSearch} onKeyDown={this.onSearchKey} data-test-id="errors-search-input" />
                 </div>
-
                 <div className="filter-cell">
-                    <label htmlFor="errors-perpage">
-                        {t.Grid_Items()}
-                    </label>
-                    <select
-                        id="errors-perpage"
-                        className="form-select"
-                        value={perPage}
-                        onChange={e => setPerPage(parseInt(e.target.value, 10) || 50)}
-                        data-test-id="errors-perpage-select"
-                    >
-                        {PER_PAGE_OPTIONS.map(n => (
-                            <option key={n} value={n}>
-                                {n}
-                            </option>
-                        ))}
+                    <label htmlFor="errors-perpage">{t.Grid_Items()}</label>
+                    <select id="errors-perpage" className="admin-log-section-select" value={perPage} onChange={this.changePerPage} data-test-id="errors-perpage-select">
+                        {PER_PAGE_OPTIONS.map(renderPageOption)}
                     </select>
                 </div>
-
                 <div className="filter-actions">
-                    <button
-                        type="button"
-                        className="btn btn-sm btn-outline-primary whitespace-nowrap"
-                        onClick={applySearch}
-                        data-test-id="errors-apply"
-                    >
-                        {t.Grid_Search()}
-                    </button>
-                    <span className="filter-counter">
-                        {total}
-                        {loading ? ' …' : ''}
-                    </span>
+                    <button type="button" className="admin-request-apply" onClick={this.applySearch} data-test-id="errors-apply">{t.Grid_Search()}</button>
+                    <span className="admin-request-counter">{total}{loading ? ' …' : ''}</span>
                 </div>
             </div>
+        );
+    }
 
-            {dates.length === 0 || total === 0 ? (
-                <div className="admin-dash-empty" data-test-id="errors-empty">
-                    {t.Logs_Errors_Empty()}
-                </div>
-            ) : (
-                <>
-                    <div className="overflow-x-auto">
-                        <table className="admin-detail-table">
-                            <thead>
-                                <tr>
-                                    <th className="whitespace-nowrap">{t.RequestLog_Time()}</th>
-                                    <th>{t.Logs_Errors_Name()}</th>
-                                    <th>{t.Logs_Errors_Message()}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {rows.map((r, idx) => {
-                                    const firstLine = r.message.split('\n', 1)[0] ?? '';
-                                    return (
-                                        <tr
-                                            key={`${r.file}-${idx}`}
-                                            data-test-id={`errors-row-${idx}`}
-                                            className="cursor-pointer hover:bg-surface-hover transition-colors"
-                                            onClick={() => setSelected(r)}
-                                        >
-                                            <td className="admin-dash-meta whitespace-nowrap align-top">{r.ts}</td>
-                                            <td className="font-mono text-sm align-top break-all">{r.name}</td>
-                                            <td className="align-top">
-                                                <div className="font-mono text-sm whitespace-pre-wrap break-words">
-                                                    {firstLine}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div className="flex items-center gap-3 mt-3">
-                        <button
-                            type="button"
-                            className="admin-filter-btn"
-                            onClick={goPrev}
-                            disabled={page <= 1 || loading}
-                            data-test-id="errors-prev"
-                        >
-                            ‹
-                        </button>
-                        <span className="admin-dash-meta">
-                            {page} / {totalPages}
-                        </span>
-                        <button
-                            type="button"
-                            className="admin-filter-btn"
-                            onClick={goNext}
-                            disabled={page >= totalPages || loading}
-                            data-test-id="errors-next"
-                        >
-                            ›
-                        </button>
-                    </div>
-                </>
-            )}
-
-            {selected && (
-                <LogDetailModal onClose={() => setSelected(null)}>
-                    <ErrorLogDetail row={selected} />
-                </LogDetailModal>
-            )}
-        </div>
+    private renderRow = (row: ErrorRow, index: number) => (
+        <tr key={`${row.file}-${index}`} data-test-id={`errors-row-${index}`} data-row-index={index}
+            className="admin-errors-row" onClick={this.selectRow}>
+            <td className="admin-errors-time">{row.ts}</td>
+            <td className="admin-errors-name">{row.name}</td>
+            <td className="admin-errors-cell"><div className="admin-errors-message">{row.message.split('\n', 1)[0] ?? ''}</div></td>
+        </tr>
     );
+
+    private renderTable(rows: ErrorRow[], page: number, perPage: number, total: number, loading: boolean) {
+        const totalPages = Math.max(1, Math.ceil(total / perPage));
+        return (
+            <>
+                <div className="admin-request-table-scroll">
+                    <table className="admin-request-table">
+                        <thead><tr className="admin-request-heading-row"><th className="admin-errors-heading-time">{t.RequestLog_Time()}</th><th className="admin-request-heading">{t.Logs_Errors_Name()}</th><th className="admin-request-heading">{t.Logs_Errors_Message()}</th></tr></thead>
+                        <tbody>{rows.map(this.renderRow)}</tbody>
+                    </table>
+                </div>
+                <div className="admin-request-pagination">
+                    <button type="button" className="admin-request-page-button" onClick={this.goPrev} disabled={page <= 1 || loading} data-test-id="errors-prev">‹</button>
+                    <span className="admin-request-page-meta">{page} / {totalPages}</span>
+                    <button type="button" className="admin-request-page-button" onClick={this.goNext} disabled={page >= totalPages || loading} data-test-id="errors-next">›</button>
+                </div>
+            </>
+        );
+    }
+
+    render() {
+        const state = this.useCarburetor(this.store);
+        const rows = this.rows();
+        const selected = this.selected();
+        return (
+            <div data-test-id="admin-errors-log">
+                <ErrorsLogNetwork pageUrl={this.props.pageUrl} date={state.date} appliedSearch={state.appliedSearch}
+                    perPage={state.perPage} update={this.update} setLoader={this.setLoader} />
+                {this.renderFilters(state.dates, state.date, state.search, state.perPage, state.total, state.loading)}
+                {state.dates.length === 0 || state.total === 0
+                    ? <div className="admin-request-empty" data-test-id="errors-empty">{t.Logs_Errors_Empty()}</div>
+                    : this.renderTable(rows, state.page, state.perPage, state.total, state.loading)}
+                {selected && <LogDetailModal onClose={this.closeDetail}><ErrorLogDetail row={selected} /></LogDetailModal>}
+            </div>
+        );
+    }
+}
+
+const ErrorsLogNetwork: React.FC<NetworkProps> = ({pageUrl, date, appliedSearch, perPage, update, setLoader}) => {
+    const load = useCallback(async (targetDate: string, targetPage: number, targetSearch: string, targetPerPage: number) => {
+        if (!targetDate) {
+            update({rows: [], total: 0});
+            return;
+        }
+        update({loading: true});
+        try {
+            const res = await sendPost<{date: string; page: number; perPage: number; search: string}, PageResponse>(
+                pageUrl, {date: targetDate, page: targetPage, perPage: targetPerPage, search: targetSearch},
+            );
+            update({rows: res.rows ?? [], total: res.total ?? 0, page: res.page ?? targetPage,
+                ...(res.dates && res.dates.length ? {dates: [...res.dates]} : {})});
+        } finally {
+            update({loading: false});
+        }
+    }, [pageUrl, update]);
+
+    useEffect(() => {
+        setLoader(load);
+        return () => setLoader(null);
+    }, [load, setLoader]);
+    useEffect(() => {
+        if (date) void load(date, 1, appliedSearch, perPage);
+    }, [date, appliedSearch, perPage, load]);
+    return null;
 };
+
+export const AdminErrorsLogIsland = ErrorsLog;

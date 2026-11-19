@@ -1,8 +1,5 @@
-/**
- * Пункт меню используется и в шапке, и в подвале (HeaderEditor/FooterEditor) —
- * общая связка, физически расположена рядом (в этой же папке).
- */
 import * as React from 'react';
+import {AntiHookComponent} from '@react-carburetor/core';
 import {StaticPage, Labels} from '../types';
 import {ITEM_TYPES, ITEM_TYPE_LABELS} from './menuItemTypes';
 
@@ -12,12 +9,10 @@ export interface MenuItemData {
     url?: string;
     slug?: string;
     external?: boolean;
-    // Тот же словарь, что у страниц и блоков: all | guest | auth | moderator.
-    // Пустое значение = виден всем, поэтому старые меню не трогаем.
     visibility?: string;
 }
 
-export const MenuItemEditor: React.FC<{
+interface MenuItemEditorProps {
     item: MenuItemData;
     index: number;
     total: number;
@@ -27,98 +22,63 @@ export const MenuItemEditor: React.FC<{
     pages: StaticPage[];
     labels: Labels;
     testId?: string;
-}> = ({item, index, total, onChange, onDelete, onMove, pages, labels, testId = 'header-menu-item'}) => {
-    const publishedPages = pages.filter(p => p.is_published);
-    return (
-        <div className="sp-menu-item-row" data-test-id={testId}>
-            <select
-                className="form-select form-select-sm w-28"
-                value={item.type}
-                onChange={e => {
-                    const newType = e.target.value;
-                    // Видимость переживает смену типа: она про то, кому пункт
-                    // показывать, и к тому, ссылка это или страница, отношения
-                    // не имеет — терять её при переключении было бы обидно.
-                    const visibility = item.visibility;
-                    if (newType === 'divider') {
-                        onChange({type: 'divider'});
-                    } else if (newType === 'page') {
-                        onChange({type: 'page', slug: '', label: '', visibility});
-                    } else {
-                        onChange({type: 'link', label: item.label ?? '', url: item.url ?? '/', external: false, visibility});
-                    }
-                }}
-            >
-                {ITEM_TYPES.map(t => (
-                    <option key={t} value={t}>{(ITEM_TYPE_LABELS[t] ?? (() => t))(labels)}</option>
-                ))}
-            </select>
+}
 
-            {item.type !== 'divider' && (
-                <input
-                    className="form-control form-control-sm"
-                    style={{flex: '1 1 120px', minWidth: '120px'}}
-                    placeholder={labels.snippetsItemLabel}
-                    value={item.label ?? ''}
-                    onChange={e => onChange({...item, label: e.target.value})}
-                />
-            )}
+const isPublished = (page: StaticPage) => page.is_published;
+const renderPage = (page: StaticPage) => <option key={page.id} value={page.slug}>{page.title_rendered || page.title || page.slug}</option>;
 
-            {item.type === 'link' && (
-                <>
-                    <input
-                        className="form-control form-control-sm"
-                        style={{flex: '1 1 150px', minWidth: '150px'}}
-                        placeholder={labels.snippetsItemUrl}
-                        value={item.url ?? ''}
-                        onChange={e => onChange({...item, url: e.target.value})}
-                    />
-                    <label className="flex items-center gap-1 text-xs text-secondary whitespace-nowrap cursor-pointer">
-                        <input
-                            type="checkbox"
-                            checked={!!item.external}
-                            onChange={e => onChange({...item, external: e.target.checked})}
-                        />
-                        {labels.snippetsItemExternal}
-                    </label>
-                </>
-            )}
+export class MenuItemEditor extends AntiHookComponent<MenuItemEditorProps> {
+    private readonly changeType = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const {item, onChange} = this.props;
+        const type = event.target.value;
+        const visibility = item.visibility;
+        if (type === 'divider') onChange({type: 'divider'});
+        else if (type === 'page') onChange({type: 'page', slug: '', label: '', visibility});
+        else onChange({type: 'link', label: item.label ?? '', url: item.url ?? '/', external: false, visibility});
+    };
+    private readonly changeLabel = (event: React.ChangeEvent<HTMLInputElement>) => this.props.onChange({...this.props.item, label: event.target.value});
+    private readonly changeUrl = (event: React.ChangeEvent<HTMLInputElement>) => this.props.onChange({...this.props.item, url: event.target.value});
+    private readonly changeExternal = (event: React.ChangeEvent<HTMLInputElement>) => this.props.onChange({...this.props.item, external: event.target.checked});
+    private readonly changeSlug = (event: React.ChangeEvent<HTMLSelectElement>) => this.props.onChange({...this.props.item, slug: event.target.value});
+    private readonly changeVisibility = (event: React.ChangeEvent<HTMLSelectElement>) => this.props.onChange({...this.props.item, visibility: event.target.value});
+    private readonly moveUp = () => this.props.onMove(-1);
+    private readonly moveDown = () => this.props.onMove(1);
+    private readonly renderType = (type: string) => <option key={type} value={type}>{(ITEM_TYPE_LABELS[type] ?? (() => type))(this.props.labels)}</option>;
 
-            {item.type === 'page' && (
-                <select
-                    className="form-select form-select-sm"
-                    style={{flex: '1 1 180px', minWidth: '180px'}}
-                    value={item.slug ?? ''}
-                    onChange={e => onChange({...item, slug: e.target.value})}
-                >
-                    <option value="">{labels.snippetsSelectPage}</option>
-                    {publishedPages.map(p => (
-                        <option key={p.id} value={p.slug}>{p.title_rendered || p.title || p.slug}</option>
-                    ))}
-                </select>
-            )}
-
-            {item.type === 'divider' && <div className="flex-1" />}
-
-            {item.type !== 'divider' && (
-                <select
-                    className="form-select form-select-sm text-xs"
-                    style={{width: 'auto', minWidth: '90px'}}
-                    value={item.visibility || 'all'}
-                    onChange={e => onChange({...item, visibility: e.target.value})}
-                    data-test-id="menu-item-visibility"
-                    title={labels.visibility}
-                >
-                    <option value="all">{labels.visibilityAll}</option>
-                    <option value="guest">{labels.visibilityGuest}</option>
-                    <option value="auth">{labels.visibilityAuth}</option>
-                    <option value="moderator">{labels.visibilityModerator}</option>
-                </select>
-            )}
-
-            <button type="button" className="blk-icon-btn" data-test-id="move-up" onClick={() => onMove(-1)} disabled={index === 0} title={labels.moveUp}>&#8593;</button>
-            <button type="button" className="blk-icon-btn" data-test-id="move-down" onClick={() => onMove(1)} disabled={index === total - 1} title={labels.moveDown}>&#8595;</button>
+    public render() {
+        const {item, index, total, labels, testId = 'header-menu-item', onDelete} = this.props;
+        return <div className="sp-menu-item-row" data-test-id={testId}>
+            <select className="snippet-menu-type" value={item.type} onChange={this.changeType}>{ITEM_TYPES.map(this.renderType)}</select>
+            {item.type !== 'divider' && <input className="snippet-menu-label" placeholder={labels.snippetsItemLabel} value={item.label ?? ''} onChange={this.changeLabel} />}
+            {this.renderTarget()}
+            {item.type !== 'divider' && this.renderVisibility()}
+            <button type="button" className="blk-icon-btn" data-test-id="move-up" onClick={this.moveUp} disabled={index === 0} title={labels.moveUp}>&#8593;</button>
+            <button type="button" className="blk-icon-btn" data-test-id="move-down" onClick={this.moveDown} disabled={index === total - 1} title={labels.moveDown}>&#8595;</button>
             <button type="button" className="blk-icon-btn-danger" data-test-id="delete-item" onClick={onDelete} title={labels.actionDelete}>&#215;</button>
-        </div>
-    );
-};
+        </div>;
+    }
+
+    private renderTarget() {
+        const {item, labels, pages} = this.props;
+        if (item.type === 'link') return <>
+            <input className="snippet-menu-url" placeholder={labels.snippetsItemUrl} value={item.url ?? ''} onChange={this.changeUrl} />
+            <label className="snippet-menu-external"><input type="checkbox" checked={!!item.external} onChange={this.changeExternal} />{labels.snippetsItemExternal}</label>
+        </>;
+        if (item.type === 'page') return <select className="snippet-menu-page" value={item.slug ?? ''} onChange={this.changeSlug}>
+            <option value="">{labels.snippetsSelectPage}</option>
+            {pages.filter(isPublished).map(renderPage)}
+        </select>;
+        if (item.type === 'divider') return <div className="snippet-menu-spacer" />;
+        return null;
+    }
+
+    private renderVisibility() {
+        const {item, labels} = this.props;
+        return <select className="snippet-menu-visibility" value={item.visibility || 'all'} onChange={this.changeVisibility} data-test-id="menu-item-visibility" title={labels.visibility}>
+            <option value="all">{labels.visibilityAll}</option>
+            <option value="guest">{labels.visibilityGuest}</option>
+            <option value="auth">{labels.visibilityAuth}</option>
+            <option value="moderator">{labels.visibilityModerator}</option>
+        </select>;
+    }
+}

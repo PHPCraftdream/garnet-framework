@@ -1,0 +1,27 @@
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-shellpage-ink: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-shellpage-wash: var(--color-bg-page);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-shellinherit-ink: currentColor;
+}
+
+@utility tone-shellpage-soft { @apply text-shellpage-ink bg-shellpage-wash; }
+@utility tone-shellinherit-plain { @apply text-shellinherit-ink; }
+@utility layout-shell-page { @apply flex flex-col; }
+@utility shape-shell-page { @apply min-h-screen; }
+@utility type-shell-page { @apply text-sm; }
+@utility layout-shell-flow { @apply flex flex-col lg:flex-row grow; }
+@utility layout-shell-column { @apply grow flex flex-col; }
+@utility shape-shell-column { @apply min-w-0; }
+@utility shape-shell-main-padding { @apply p-4 lg:p-6; }
+
+@layer components {
+  .shell-page { @apply tone-shellpage-soft layout-shell-page shape-shell-page type-shell-page; }
+  .shell-flow { @apply tone-shellinherit-plain layout-shell-flow; }
+  .shell-column { @apply tone-shellinherit-plain layout-shell-column shape-shell-column; }
+  .shell-main { @apply tone-shellinherit-plain layout-shell-column shape-shell-column; }
+  .shell-main-padded { @apply tone-shellinherit-plain layout-shell-column shape-shell-column shape-shell-main-padding; }
+}

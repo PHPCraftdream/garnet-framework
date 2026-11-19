@@ -1,0 +1,84 @@
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-previewsection-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-previewsection-wash: var(--color-bg-surface-alt);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-previewsection-ink: currentColor;
+  /* carburetor-disable-next-line valid-color-role */
+  --color-previewavatar-wash: var(--color-accent-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-previewavatar-ink: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-previewclose-ink: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-previewclose-ink-hover: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-previewimage-edge: var(--color-border);
+}
+
+@utility tone-previewsection-outlined { @apply border-previewsection-edge bg-previewsection-wash text-previewsection-ink; }
+@utility tone-previewavatar-soft { @apply bg-previewavatar-wash text-previewavatar-ink; }
+@utility tone-previewclose-plain { @apply text-previewclose-ink hover:text-previewclose-ink-hover; }
+@utility tone-previewimage-outline { @apply border-previewimage-edge; }
+
+@utility layout-preview-modal-header { @apply flex items-center justify-between shrink-0; }
+@utility shape-preview-modal-header { @apply px-6 py-4 border-b; }
+@utility type-preview-modal-title { @apply text-lg font-semibold; }
+@utility type-preview-modal-close { @apply text-xl leading-none; }
+@utility layout-preview-modal-body { @apply overflow-y-auto flex-1; }
+@utility shape-preview-modal-body { @apply p-6; }
+@utility shape-preview-loading { @apply py-6; }
+@utility type-preview-loading { @apply text-center text-[11px]; }
+@utility effect-preview-loading { @apply opacity-75; }
+@utility type-preview-small { @apply text-sm; }
+@utility layout-preview-header { @apply flex items-center gap-4; }
+@utility shape-preview-header { @apply mb-4; }
+@utility layout-preview-avatar { @apply flex items-center justify-center; }
+@utility shape-preview-avatar { @apply w-20 h-20 rounded-full; }
+@utility shape-preview-avatar-image { @apply w-20 h-20 rounded-full object-cover border; }
+@utility type-preview-avatar { @apply text-2xl font-bold; }
+@utility layout-preview-identity { @apply flex flex-col gap-1; }
+@utility type-preview-name { @apply text-lg font-semibold; }
+@utility layout-preview-role { @apply inline-block self-start; }
+@utility shape-preview-role { @apply px-2.5 py-0.5 rounded-full; }
+@utility type-preview-role { @apply text-xs font-medium; }
+@utility shape-preview-section { @apply mb-4 p-3 rounded-lg border; }
+@utility shape-preview-row { @apply mb-1 last:mb-0; }
+@utility type-preview-bio { @apply text-sm whitespace-pre-line; }
+@utility layout-preview-stats { @apply grid grid-cols-3 gap-2; }
+@utility shape-preview-stats { @apply mb-4; }
+@utility shape-preview-stat { @apply p-4 rounded-lg border; }
+@utility type-preview-stat { @apply text-center; }
+@utility type-preview-stat-value { @apply text-2xl font-bold; }
+@utility shape-preview-stat-label { @apply mt-1; }
+@utility type-preview-stat-label { @apply text-xs; }
+@utility layout-preview-actions { @apply flex gap-2 flex-wrap; }
+@utility type-preview-link { @apply hover:underline; }
+
+@layer components {
+  .common-link { @apply tone-supportlink-plain type-preview-link; }
+  .user-preview-modal-header { @apply tone-gridborder-outline layout-preview-modal-header shape-preview-modal-header; }
+  .user-preview-modal-title { @apply tone-supportprimary-plain type-preview-modal-title; }
+  .user-preview-modal-close { @apply tone-previewclose-plain type-preview-modal-close; }
+  .user-preview-modal-body { @apply tone-supportinherit-plain layout-preview-modal-body shape-preview-modal-body; }
+  .user-preview-loading { @apply tone-supportmuted-plain shape-preview-loading type-preview-loading effect-preview-loading; }
+  .user-preview-error { @apply tone-garnetdanger-plain type-preview-small; }
+  .user-preview-header { @apply tone-supportinherit-plain layout-preview-header shape-preview-header; }
+  .user-preview-avatar { @apply tone-previewavatar-soft layout-preview-avatar shape-preview-avatar type-preview-avatar; }
+  .user-preview-avatar-image { @apply tone-previewimage-outline shape-preview-avatar-image; }
+  .user-preview-identity { @apply tone-supportinherit-plain layout-preview-identity; }
+  .user-preview-name { @apply tone-supportprimary-plain type-preview-name; }
+  .user-preview-role { @apply tone-previewavatar-soft layout-preview-role shape-preview-role type-preview-role; }
+  .user-preview-section { @apply tone-previewsection-outlined shape-preview-section type-preview-small; }
+  .user-preview-row { @apply tone-supportprimary-plain shape-preview-row type-preview-small; }
+  .user-preview-bio { @apply tone-supportprimary-plain shape-preview-row type-preview-bio; }
+  .user-preview-label { @apply tone-supportsecondary-plain; }
+  .user-preview-stats { @apply tone-supportinherit-plain layout-preview-stats shape-preview-stats; }
+  .user-preview-stat { @apply tone-cardsurface-outlined shape-preview-stat type-preview-stat; }
+  .user-preview-stat-value { @apply tone-supportinherit-plain type-preview-stat-value; }
+  .user-preview-stat-label { @apply tone-supportmuted-plain shape-preview-stat-label type-preview-stat-label; }
+  .user-preview-actions { @apply tone-supportinherit-plain layout-preview-actions; }
+  .user-preview-action { @apply tone-compactaction-outlined layout-compact-action shape-compact-action type-compact-action behavior-compact-action effect-compact-action motion-compact-action; }
+}

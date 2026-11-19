@@ -3,40 +3,47 @@
  */
 
 import * as React from 'react';
-import {useState, useRef, useEffect, useMemo, useCallback} from 'react';
-import {IDetailsInfo, TGridFieldInfo, TGridSelectField, TValidationMapped} from '@common/Dom/GridTable/Models';
-import {GridUtils} from '@common/Dom/GridTable/GridUtils';
-import {printUtDateTime} from '@common/Utils/Str/printUtDateTime';
-import {I18nFramework} from '@framework/I18nGen/I18nFramework';
-import {IApiSuccessResponse, ICropData, IDataListItem, TFromMap, TFromNestedMap} from '@common/Support/Models';
-import {sendPostFormData} from '@common/Api/Send/sendPostFormData';
-import {makeFormData} from '@common/Api/Send/makeFormData';
-import {Validators} from '@common/Dom/GridTable/Validators';
-import {PageEvents} from '@common/Utils/Ui/PageEvents';
-import {DomEl} from '@common/Dom/El/DomEl';
-import {componentUploadPhotoHandler} from '@common/Dom/Component/ComponentUploadPhotoHandler';
-import {uploadMaxBytes, megabytes} from '@common/Utils/Upload/uploadLimits';
-import {Loader2} from 'lucide-react';
-import {Upload, XCircle} from 'lucide-react';
-import {UncontrolledForm, type UncontrolledFormHandle} from '../UncontrolledForm';
-import {UncontrolledInput} from '../UncontrolledInput';
-import {UncontrolledTextarea} from '../UncontrolledTextarea';
-import {UncontrolledSelect} from '../UncontrolledSelect';
+import type {IDataListItem} from '@common/Support/Models';
 import {Combobox} from '@common/Components/ui/Combobox';
 
 
-export const DatalistSelect: React.FC<{
+interface DatalistSelectProps {
 	column: string;
 	value: string;
 	items: IDataListItem[];
 	disabled: boolean;
 	onChange: (value: string) => void;
-}> = ({column, value, items, disabled, onChange}) => {
-	// Use searchable Combobox for large option lists (>10 items, e.g. timezones)
+}
+
+const comboboxOption = (item: IDataListItem) => ({value: String(item.value), label: item.text});
+const nativeOption = (item: IDataListItem) => <option key={item.value} value={item.value}>{item.text}</option>;
+
+class NativeDatalistSelect extends React.Component<DatalistSelectProps> {
+	private readonly handleChange = (event: React.ChangeEvent<HTMLSelectElement>): void => {
+		this.props.onChange(event.target.value);
+	};
+
+	public render() {
+		const {column, value, items, disabled} = this.props;
+		return (
+			<select
+				className="form-datalist-select"
+				value={value}
+				disabled={disabled}
+				onChange={this.handleChange}
+				data-test-id={`form-field-${column}`}
+			>
+				{items.map(nativeOption)}
+			</select>
+		);
+	}
+}
+
+export const DatalistSelect: React.FC<DatalistSelectProps> = ({column, value, items, disabled, onChange}) => {
 	if (items.length > 10) {
 		return (
 			<Combobox
-				options={items.map(item => ({value: String(item.value), label: item.text}))}
+				options={items.map(comboboxOption)}
 				value={String(value)}
 				onChange={onChange}
 				placeholder="..."
@@ -46,23 +53,7 @@ export const DatalistSelect: React.FC<{
 			/>
 		);
 	}
-
-	// Native select for small lists
-	return (
-		<select
-			className="form-select"
-			value={value}
-			disabled={disabled}
-			onChange={(e) => onChange(e.target.value)}
-			data-test-id={`form-field-${column}`}
-		>
-			{items.map((item) => (
-				<option key={item.value} value={item.value}>
-					{item.text}
-				</option>
-			))}
-		</select>
-	);
+	return <NativeDatalistSelect column={column} value={value} items={items} disabled={disabled} onChange={onChange} />;
 };
 
 // --- PhotoField ---

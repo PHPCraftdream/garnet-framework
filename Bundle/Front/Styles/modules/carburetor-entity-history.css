@@ -1,0 +1,76 @@
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-historysuccess-ink: var(--color-success);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-historyheading-edge: var(--color-border-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-historyheading-wash: var(--color-bg-surface-alt);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-historyheading-ink: var(--color-text-secondary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-historyborder-edge: var(--color-border-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-historybutton-edge: transparent;
+  /* carburetor-disable-next-line valid-color-role */
+  --color-historybutton-ink: currentColor;
+  /* carburetor-disable-next-line valid-color-role */
+  --color-historylink-ink: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-historylink-ink-hover: var(--color-text-primary);
+}
+
+@utility tone-historysuccess-plain { @apply text-historysuccess-ink; }
+@utility tone-historyheading-outlined { @apply border-historyheading-edge bg-historyheading-wash text-historyheading-ink; }
+@utility tone-historyborder-outline { @apply border-historyborder-edge; }
+@utility tone-historybutton-outline { @apply border-historybutton-edge text-historybutton-ink; }
+@utility tone-historylink-plain { @apply text-historylink-ink hover:text-historylink-ink-hover; }
+@utility layout-history-card { @apply flex flex-col; }
+@utility shape-history-card { @apply rounded-xl border w-full mx-4 max-h-[90vh] max-w-3xl; }
+@utility shape-history-metadata { @apply mb-4; }
+@utility type-history-small { @apply text-sm; }
+@utility shape-history-table { @apply w-full; }
+@utility type-history-table { @apply text-sm; }
+@utility shape-history-table-header { @apply border-b; }
+@utility type-history-table-header { @apply text-left; }
+@utility shape-history-row { @apply border-b last:border-b-0; }
+@utility type-history-align-top { @apply align-top; }
+@utility type-history-field { @apply font-mono text-xs whitespace-nowrap; }
+@utility type-history-value { @apply break-all whitespace-pre-wrap; }
+@utility type-history-time { @apply whitespace-nowrap; }
+@utility type-history-open { @apply text-sm underline text-left; }
+@utility shape-history-cell { @apply px-4 py-3; }
+@utility type-history-heading { @apply font-semibold; }
+@utility layout-history-button { @apply inline-flex items-center justify-center gap-1.5; }
+@utility shape-history-button { @apply px-2 py-1 rounded border; }
+@utility type-history-button { @apply font-medium leading-normal text-xs no-underline whitespace-nowrap; }
+@utility behavior-history-button { @apply cursor-pointer disabled:cursor-not-allowed; }
+@utility effect-history-button { @apply disabled:opacity-50; }
+@utility motion-history-button { @apply transition-all duration-150 active:translate-y-px disabled:active:translate-y-0; }
+
+@layer components {
+  .entity-history-button { @apply tone-historybutton-outline layout-history-button shape-history-button type-history-button behavior-history-button effect-history-button motion-history-button; }
+  .entity-history-overlay { @apply tone-fgbackdrop-soft layout-fg-modal-overlay; }
+  .entity-history-card { @apply tone-cardsurface-outlined layout-history-card shape-history-card effect-fg-modal-card-flush; }
+  .entity-history-header { @apply tone-gridborder-outline layout-preview-modal-header shape-preview-modal-header; }
+  .entity-history-title { @apply tone-supportprimary-plain type-preview-modal-title; }
+  .entity-history-close { @apply tone-previewclose-plain type-preview-modal-close; }
+  .entity-history-body { @apply tone-supportinherit-plain layout-preview-modal-body shape-preview-modal-body; }
+  .entity-history-muted { @apply tone-supportmuted-plain; }
+  .entity-history-error { @apply tone-garnetdanger-plain; }
+  .entity-history-metadata { @apply tone-supportmuted-plain shape-history-metadata type-history-small; }
+  .entity-history-table { @apply tone-gridinherit-plain shape-history-table type-history-table; }
+  .entity-history-table-header { @apply tone-historyheading-outlined shape-history-table-header type-history-table-header; }
+  .entity-history-heading { @apply tone-supportinherit-plain shape-history-cell type-history-heading; }
+  .entity-history-row { @apply tone-historyborder-outline shape-history-row; }
+  .entity-history-detail-row { @apply tone-historyborder-outline shape-history-row type-history-align-top; }
+  .entity-history-cell { @apply tone-supportinherit-plain shape-history-cell type-history-align-top; }
+  .entity-history-field { @apply tone-supportinherit-plain shape-history-cell type-history-align-top type-history-field; }
+  .entity-history-old-value { @apply tone-garnetdanger-plain shape-history-cell type-history-align-top type-history-value; }
+  .entity-history-new-value { @apply tone-historysuccess-plain shape-history-cell type-history-align-top type-history-value; }
+  .entity-history-time { @apply tone-supportinherit-plain shape-history-cell type-history-align-top type-history-time; }
+  .entity-history-open { @apply tone-historylink-plain type-history-open; }
+  .entity-history-diff { @apply tone-supportinherit-plain; }
+  .entity-history-old { @apply tone-supportinherit-plain; }
+  .entity-history-new { @apply tone-supportinherit-plain; }
+}

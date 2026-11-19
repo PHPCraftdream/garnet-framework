@@ -1,0 +1,35 @@
+/* Form control roles reference the existing Garnet and Tailwind colours. */
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-formcontrolinherit-ink: currentColor;
+  /* carburetor-disable-next-line valid-color-role */
+  --color-formtoggle-ink: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-formtoggle-on-fill: var(--color-white);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-formtoggle-wash: var(--color-gray-300);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-formtoggle-wash-checked: var(--color-accent);
+}
+
+@utility tone-formcontrolinherit-plain { @apply text-formcontrolinherit-ink; }
+@utility tone-formtoggle-control { @apply accent-formtoggle-ink bg-formtoggle-wash checked:bg-formtoggle-wash-checked before:bg-formtoggle-on-fill; }
+@utility layout-form-builder-switch { @apply flex items-center gap-2; }
+@utility shape-form-builder-switch { @apply min-h-6; }
+@utility layout-form-builder-toggle { @apply relative before:absolute before:top-0.5 before:left-0.5; }
+@utility shape-form-builder-toggle { @apply w-8 h-4 rounded-full before:w-3 before:h-3 before:rounded-full; }
+@utility behavior-form-builder-toggle { @apply cursor-pointer appearance-none; }
+@utility type-form-builder-toggle { @apply before:content-['']; }
+@utility motion-form-builder-toggle { transition: background-color 0.15s; @apply before:[transition:transform_0.15s] checked:before:translate-x-4; }
+@utility type-form-builder-switch-label { @apply text-sm; }
+@utility behavior-form-builder-switch-label { @apply cursor-pointer; }
+@utility type-form-readonly-value { @apply leading-normal; font-size: inherit; }
+@utility shape-form-readonly-value { padding-top: calc(0.4375rem + 1px); padding-bottom: calc(0.4375rem + 1px); }
+
+@layer components {
+  .form-builder-switch { @apply tone-formcontrolinherit-plain layout-form-builder-switch shape-form-builder-switch; }
+  .form-builder-toggle { @apply tone-formtoggle-control layout-form-builder-toggle shape-form-builder-toggle behavior-form-builder-toggle type-form-builder-toggle motion-form-builder-toggle; }
+  .form-builder-switch-label { @apply tone-formcontrolinherit-plain type-form-builder-switch-label behavior-form-builder-switch-label; }
+  .form-readonly-value { @apply tone-formcontrolinherit-plain type-form-readonly-value shape-form-readonly-value; }
+}

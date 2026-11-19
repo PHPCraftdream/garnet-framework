@@ -240,36 +240,15 @@
 }
 
 .common-spinner {
-  @apply animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full;
+  @apply animate-spin inline-block w-4 h-4 border-2 border-current rounded-full;
+}
+
+:is(.common-spinner, .auth2-spinner) {
+  border-top-color: transparent;
 }
 
 .common-send-spinner-wrap {
   @apply inline-flex items-center gap-1;
-}
-
-.common-theme-toggle {
-  @apply inline-flex items-center gap-1 px-3 py-1.5 text-sm text-muted hover:text-warning hover:bg-warning-subtle rounded transition-colors;
-}
-
-.common-pgn-btn {
-  @apply inline-flex items-center justify-center min-w-[2rem] h-8 px-2 text-sm rounded border transition-colors disabled:opacity-40 disabled:cursor-not-allowed border-default bg-surface text-on-surface hover:bg-surface-hover;
-}
-
-.common-pgn-btn-active {
-  @apply inline-flex items-center justify-center min-w-[2rem] h-8 px-2 text-sm rounded border transition-colors disabled:opacity-40 disabled:cursor-not-allowed border-accent bg-accent text-accent-text font-semibold;
-}
-.common-pgn-btn-active:hover,
-.common-pgn-btn-active:focus,
-.common-pgn-btn-active:active {
-  @apply bg-accent-hover text-accent-text border-accent;
-}
-
-.common-pgn-ellipsis {
-  @apply px-1 text-muted text-sm select-none;
-}
-
-.common-pgn-info {
-  @apply text-sm text-muted;
 }
 
 /* ─── animations ─── */

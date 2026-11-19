@@ -1,0 +1,51 @@
+/* Bridge Garnet's existing button colours without resetting the palette. */
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetattachment-ink: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetattachment-ink-hover: var(--color-text-secondary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetattachment-edge: var(--color-border-strong);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetattachment-edge-hover: var(--color-gray-400);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetattachment-wash-hover: var(--color-bg-surface-hover);
+}
+
+@utility tone-garnetattachment-outlined {
+  @apply border-garnetattachment-edge text-garnetattachment-ink bg-transparent [&:hover]:border-garnetattachment-edge-hover [&:hover]:text-garnetattachment-ink-hover [&:hover]:bg-garnetattachment-wash-hover;
+}
+
+@utility layout-attachment-button {
+  @apply inline-flex items-center justify-center gap-1.5;
+}
+
+@utility shape-attachment-button {
+  @apply rounded-md border;
+  padding: 0.4375rem 0.875rem;
+}
+
+@utility type-attachment-button {
+  @apply font-medium leading-normal no-underline whitespace-nowrap;
+  font-size: 0.8125rem;
+}
+
+@utility behavior-attachment-button {
+  @apply cursor-pointer disabled:cursor-not-allowed;
+}
+
+@utility effect-attachment-button {
+  @apply disabled:opacity-50;
+}
+
+@utility motion-attachment-button {
+  transition: all 0.15s ease;
+  @apply active:translate-y-px disabled:active:transform-none;
+}
+
+@layer components {
+  .attachment-add-button {
+    @apply tone-garnetattachment-outlined layout-attachment-button shape-attachment-button type-attachment-button behavior-attachment-button effect-attachment-button motion-attachment-button;
+  }
+}

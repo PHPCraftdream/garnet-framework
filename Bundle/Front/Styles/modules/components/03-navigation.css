@@ -12,6 +12,8 @@
    Off-canvas drawer pattern toggled via #show--menu checkbox-hack.
    Only visible <lg breakpoint; desktop uses TopMenu + SidebarMenu instead. */
 
+.mobile-topbar .hamburger-btn { margin-left: auto; }
+
 .hamburger-btn {
   @apply relative inline-flex items-center justify-center w-10 h-10 rounded-md text-on-surface hover:bg-surface-hover transition-colors;
 }
@@ -20,11 +22,6 @@
    counts) sits inline in the always-visible top bar; on mobile that same
    cluster only renders once the drawer is open. Without this dot, unread
    messages/support were invisible until you opened the menu "just in case". */
-.hamburger-unread-dot {
-  @apply absolute top-1.5 right-1.5 w-2 h-2 rounded-full;
-  background: var(--color-warning, #d97706);
-}
-
 /* The island mount wrapper carries no box (display:contents) so the sticky
    bar inside it sticks against <body>, not this 1-row-tall wrapper. */
 .mobile-menu-mount {
@@ -122,19 +119,19 @@
 }
 /* Active item: accent text + a translucent accent wash and a left accent bar
    instead of a solid (near-white) pill, so it belongs to the glass. */
-.mobile-drawer a.drawer-nav-link.active {
+.mobile-drawer a.drawer-nav-link:is(.active, [data-active="true"]) {
   color: var(--color-accent);
   font-weight: 600;
   background-color: color-mix(in srgb, var(--color-accent) 16%, transparent);
   box-shadow: inset 3px 0 0 var(--color-accent);
 }
-.mobile-drawer a.drawer-nav-link.active:hover,
-.mobile-drawer a.drawer-nav-link.active:focus {
+.mobile-drawer a.drawer-nav-link:is(.active, [data-active="true"]):hover,
+.mobile-drawer a.drawer-nav-link:is(.active, [data-active="true"]):focus {
   background-color: color-mix(in srgb, var(--color-accent) 22%, transparent);
 }
 /* Dark theme: lift the accent so the active label reads as a paler indigo
    against the dark glass (mirrors the sp-nav link treatment). */
-[data-theme="dark"] .mobile-drawer a.drawer-nav-link.active {
+[data-theme="dark"] .mobile-drawer a.drawer-nav-link:is(.active, [data-active="true"]) {
   color: color-mix(in srgb, var(--color-accent) 60%, var(--color-text-primary) 40%);
 }
 

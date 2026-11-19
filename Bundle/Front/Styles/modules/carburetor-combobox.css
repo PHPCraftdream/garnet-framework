@@ -1,0 +1,85 @@
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-combotrigger-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-combotrigger-wash: var(--color-bg-surface);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-combotrigger-wash-hover: var(--color-bg-surface-hover);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-combotrigger-ink: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-combotrigger-edge-focus: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-comboempty-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-comboempty-wash: var(--color-bg-surface);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-comboempty-wash-hover: var(--color-bg-surface-hover);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-comboempty-ink: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-comboempty-edge-focus: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-combosearch-wash: var(--color-bg-surface-alt);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-combosearch-ink: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-combosearch-ink-placeholder: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-combooption-ink: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-combooption-wash-hover: var(--color-accent-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-comboselected-ink: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-comboselected-wash: var(--color-accent-subtle);
+}
+
+@utility tone-combotrigger-outlined { @apply border-combotrigger-edge bg-combotrigger-wash text-combotrigger-ink hover:bg-combotrigger-wash-hover focus:ring-combotrigger-edge-focus; }
+@utility tone-comboempty-outlined { @apply border-comboempty-edge bg-comboempty-wash text-comboempty-ink hover:bg-comboempty-wash-hover focus:ring-comboempty-edge-focus; }
+@utility tone-combosearch-soft { @apply bg-combosearch-wash text-combosearch-ink placeholder:text-combosearch-ink-placeholder; }
+@utility tone-combooption-soft { @apply text-combooption-ink hover:bg-combooption-wash-hover; }
+@utility tone-comboselected-soft { @apply text-comboselected-ink bg-comboselected-wash; }
+@utility layout-combobox-trigger { @apply flex items-center justify-between; }
+@utility shape-combobox-trigger { @apply h-9 w-full rounded-md border px-3 py-2; }
+@utility type-combobox-trigger { @apply text-sm; }
+@utility focus-combobox-trigger { @apply focus:outline-none focus:ring-2; }
+@utility layout-combobox-label { @apply overflow-hidden; }
+@utility type-combobox-label { @apply text-ellipsis whitespace-nowrap; }
+@utility shape-combobox-chevron { @apply ml-2; }
+@utility effect-combobox-chevron { @apply opacity-50; }
+@utility layout-combobox-content { @apply z-50; }
+@utility shape-combobox-content { @apply w-[var(--radix-popover-trigger-width)] rounded-md border; }
+@utility effect-combobox-content { @apply shadow-lg; }
+@utility layout-combobox-options { @apply overflow-y-auto; }
+@utility shape-combobox-search-wrap { @apply border-b p-2; }
+@utility shape-combobox-search { @apply w-full rounded border-0 px-2 py-1.5; }
+@utility type-combobox-search { @apply text-sm; }
+@utility focus-combobox-search { @apply outline-none; }
+@utility shape-combobox-options { @apply max-h-60 p-1; }
+@utility shape-combobox-empty { @apply py-4; }
+@utility type-combobox-empty { @apply text-center text-sm; }
+@utility layout-combobox-option { @apply flex items-center; }
+@utility shape-combobox-option { @apply w-full rounded-sm px-2 py-1.5; }
+@utility type-combobox-option { @apply text-sm; }
+@utility behavior-combobox-option { @apply cursor-pointer; }
+@utility layout-combobox-option-label { @apply flex-1; }
+@utility type-combobox-option-label { @apply text-left; }
+@utility layout-combobox-check { @apply shrink-0; }
+
+@layer components {
+  .combobox-trigger { @apply layout-combobox-trigger shape-combobox-trigger type-combobox-trigger tone-combotrigger-outlined focus-combobox-trigger; }
+  .combobox-trigger[data-empty="true"] { @apply tone-comboempty-outlined; }
+  .combobox-trigger-label { @apply tone-supportinherit-plain layout-combobox-label type-combobox-label; }
+  .combobox-chevron { @apply tone-supportinherit-plain shape-combobox-chevron layout-combobox-check effect-combobox-chevron; }
+  .combobox-content { @apply layout-combobox-content shape-combobox-content tone-cardsurface-outlined effect-combobox-content; }
+  .combobox-search-wrap { @apply shape-combobox-search-wrap tone-gridborder-outline; }
+  .combobox-search { @apply shape-combobox-search type-combobox-search tone-combosearch-soft focus-combobox-search; }
+  .combobox-options { @apply tone-supportinherit-plain layout-combobox-options shape-combobox-options; }
+  .combobox-empty { @apply shape-combobox-empty type-combobox-empty tone-supportmuted-plain; }
+  .combobox-option { @apply layout-combobox-option shape-combobox-option type-combobox-option behavior-combobox-option tone-combooption-soft; }
+  .combobox-option[data-selected="true"] { @apply tone-comboselected-soft; }
+  .combobox-option-label { @apply tone-supportinherit-plain layout-combobox-option-label layout-combobox-label type-combobox-label type-combobox-option-label; }
+  .combobox-check { @apply tone-supportinherit-plain layout-combobox-check; }
+}

@@ -14,11 +14,9 @@ const TooltipContent = React.forwardRef<
         <TooltipPrimitive.Content
             ref={ref}
             sideOffset={sideOffset}
-            className={cn(
-                'z-50 overflow-hidden rounded-lg border px-3 py-2 text-xs shadow-md animate-in fade-in-0 zoom-in-95',
-                'border-default bg-surface text-on-surface',
-                className,
-            )}
+            // Внешний className сохраняется для совместимости.
+            // carburetor-disable-next-line require-function-class
+            className={cn('radix-tooltip-content', className)}
             {...props}
         />
     </TooltipPrimitive.Portal>

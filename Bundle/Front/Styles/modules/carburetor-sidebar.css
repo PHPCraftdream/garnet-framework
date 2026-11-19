@@ -1,0 +1,20 @@
+@utility shape-sidebar { @apply w-20 py-3; }
+@utility layout-sidebar-list { @apply flex flex-col; }
+@utility shape-sidebar-list { @apply m-0 p-0; }
+@utility type-sidebar-list { @apply list-none; }
+@utility layout-sidebar-link { @apply flex flex-col items-center justify-center gap-0.5; }
+@utility shape-sidebar-link { @apply px-2 py-3; }
+@utility shape-sidebar-link-active { @apply border-r-4; }
+@utility type-sidebar-link { @apply no-underline; }
+@utility type-sidebar-link-active { @apply font-semibold; }
+@utility motion-sidebar-link { @apply transition-colors; }
+@utility type-sidebar-label { @apply text-[0.6rem] leading-tight text-center; word-break: keep-all; white-space: break-spaces; }
+
+@layer components {
+  .nav-sidebar { @apply tone-supportinherit-plain shape-sidebar; }
+  .nav-side-list { @apply tone-supportinherit-plain layout-sidebar-list shape-sidebar-list type-sidebar-list; }
+  .sidebar-menu-item { @apply tone-supportinherit-plain; }
+  .nav-side-link { @apply tone-supportmuted-plain layout-sidebar-link shape-sidebar-link type-sidebar-link motion-sidebar-link; }
+  .nav-side-link-active { @apply tone-supportlink-plain layout-sidebar-link shape-sidebar-link shape-sidebar-link-active type-sidebar-link type-sidebar-link-active motion-sidebar-link; }
+  .nav-side-label { @apply tone-supportinherit-plain type-sidebar-label; }
+}

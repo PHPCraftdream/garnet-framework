@@ -1,4 +1,26 @@
-import {useState, useRef, useCallback, useEffect} from 'react';
+import {useState, useRef, useCallback, useEffect, useSyncExternalStore} from 'react';
+import {Carburetor} from '@react-carburetor/core';
+
+function createShakeStore(): ShakeStore { return new ShakeStore(); }
+
+class ShakeStore extends Carburetor<{shaking: boolean}> {
+    constructor() { super({shaking: false}); }
+    readonly snapshot = () => this.getData();
+    readonly subscribeSnapshot = (listener: () => void) => {
+        const id = this.subscribe(listener);
+        return () => this.unsubscribe(id);
+    };
+    readonly setShaking = (shaking: boolean) => {
+        const previous = this.getData();
+        if (previous.shaking === shaking) return;
+        const version = this.getVersion();
+        this.setData({shaking});
+        if (this.getData() !== previous && this.getVersion() === version) {
+            this.markAllChanged();
+            this.emitUpdate();
+        }
+    };
+}
 
 /**
  * Reusable "shake" trigger — draws attention to an element by briefly shaking
@@ -13,18 +35,19 @@ import {useState, useRef, useCallback, useEffect} from 'react';
  * while already animating restarts the animation.
  */
 export function useShake(durationMs = 500): [boolean, () => void] {
-    const [shaking, setShaking] = useState(false);
+    const [store] = useState(createShakeStore);
+    const {shaking} = useSyncExternalStore(store.subscribeSnapshot, store.snapshot, store.snapshot);
     const timer = useRef<number | undefined>(undefined);
 
     const shake = useCallback(() => {
         window.clearTimeout(timer.current);
         // Drop the class first so a repeat trigger restarts the animation.
-        setShaking(false);
+        store.setShaking(false);
         requestAnimationFrame(() => {
-            setShaking(true);
-            timer.current = window.setTimeout(() => setShaking(false), durationMs);
+            store.setShaking(true);
+            timer.current = window.setTimeout(() => store.setShaking(false), durationMs);
         });
-    }, [durationMs]);
+    }, [durationMs, store]);
 
     useEffect(() => () => window.clearTimeout(timer.current), []);
 

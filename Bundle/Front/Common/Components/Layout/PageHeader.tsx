@@ -22,7 +22,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({title, subtitle, icon, ac
         <div className="page-hero-row">
             <div className="page-hero-main">
                 {icon && <span className="page-hero-icon" aria-hidden="true">{icon}</span>}
-                <div className="min-w-0">
+                <div className="page-hero-text">
                     <h1 className="page-hero-title">{title}</h1>
                     {subtitle && <p className="page-hero-subtitle">{subtitle}</p>}
                 </div>

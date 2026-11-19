@@ -1,0 +1,77 @@
+{
+  "classes": {
+    "families": ["garnet", "garneticon", "garnetdanger", "garnetfield", "garnetmuted", "garnetaccent", "garnetattachment", "garnetupload", "garnetuploadactive", "garnetuploadhint", "garnetuploadhidden", "garnetpreview", "garnetpreviewremove", "paginginherit", "pagingtext", "pagingnormal", "pagingactive", "pagingform", "supportinherit", "supportmuted", "supportaccent", "supportbadge", "supportsoft", "supportrow", "supportprimary", "supportsecondary", "supportlink", "supportconv", "fbinherit", "fbmuted", "fbinfo", "fbwarn", "fbdanger", "fbsuccess", "fbactive", "fbbrowser", "fbcheck", "fbdiff", "devpanel", "devlabel", "devrole", "devloading", "devreset", "devresetloading", "devinherit", "authprimary", "authsuccess", "authspinner", "authconsent", "authconsentmuted", "toastinherit", "toastprimary", "toastdanger", "toastsuccess", "tabcrumb", "tabaction", "tabclose", "tabcurrent", "tabinherit", "tabbar", "tabnavinactive", "tabnavactive", "cardsurface", "formrowinherit", "formrowerror", "formcontrolinherit", "formtoggle", "compactaction", "compactsuccess", "timeslotsurface", "photoinherit", "photohint", "photobutton", "navbadge", "navdot", "navdivider", "utilicon", "utilcurrency", "utilinherit", "settingsinherit", "settingsmuted", "settingssecondary", "settingsrefresh", "settingsfield", "settingsprimary", "settingspanel", "settingssave", "settingssuccess", "settingserror", "fgbackdrop", "fgwarning", "confirmfooter", "confirmsecondary", "confirmdanger", "staticpageinherit", "staticpagetext", "staticpagenotice", "staticpagechrome", "staticpagenav", "staticpagelink", "staticpagecopyright", "shellpage", "shellinherit", "gridinherit", "gridheader", "gridsortactive", "gridsortidle", "gridborder", "gridrow", "gridtext", "logdetailpre", "logdetailerror", "calendarplain", "garnetcalendar", "calnormal", "calrestricted", "calavailable", "calproposed", "calover", "caloverproposed", "previewsection", "previewavatar", "previewclose", "previewimage", "historysuccess", "historyheading", "historyborder", "historybutton", "historylink", "logreset", "logstatussuccess", "logstatusdanger", "logstatuswarning", "logstatusmuted", "logstatusinfo", "logtab", "logtabactive", "requestpager", "staticadminbody", "staticadmindelete", "staticadmincancel", "staticadminopen", "staticadminfilteractive", "snippettool", "snippetdanger", "pageeditordirty", "pageeditoradd", "blockoption", "blockvisible", "blockhidden", "combotrigger", "comboempty", "combosearch", "combooption", "comboselected", "datefield", "datepopup", "dateday", "datemuted", "dateselected", "datelink", "dropzoneidle", "dropzonedrag", "dropzoneremove", "dropzonefile", "formbuilderprogress", "formbuilderfill", "formbuildererror", "radixpanel", "radixoption", "radixshade", "utilbutton", "utilpill", "utilunread", "utilcluster", "finishingrole", "cliaccessinherit", "cliaccesscard", "cliaccessdanger", "cliaccessmessage", "cliaccesscommand", "cliaccesshint", "cliaccessdenied"],
+    "states": ["hover", "active", "focus", "checked", "placeholder"],
+    "deliveries": {"solid": ["fill", "on-fill"], "soft": ["wash", "ink"], "outline": ["edge", "ink"], "plain": ["ink"], "subtle": ["ink-subtle"], "outlined": ["edge", "ink", "wash"], "interactive": ["edge", "ink", "wash"], "control": ["wash", "ink", "on-fill"]},
+    "css": [
+      "Bundle/Front/Styles/modules/carburetor-native-select.css",
+      "Bundle/Front/Styles/modules/carburetor-classes.css",
+      "Bundle/Front/Styles/modules/carburetor-calendar.css",
+      "Bundle/Front/Styles/modules/carburetor-attachment.css",
+      "Bundle/Front/Styles/modules/carburetor-upload.css",
+      "Bundle/Front/Styles/modules/carburetor-upload-field.css",
+      "Bundle/Front/Styles/modules/carburetor-paging.css",
+      "Bundle/Front/Styles/modules/carburetor-support.css",
+      "Bundle/Front/Styles/modules/carburetor-feedback.css",
+      "Bundle/Front/Styles/modules/carburetor-auth.css",
+      "Bundle/Front/Styles/modules/carburetor-auth-consent.css",
+      "Bundle/Front/Styles/modules/carburetor-toast.css",
+      "Bundle/Front/Styles/modules/carburetor-tab-helpers.css",
+      "Bundle/Front/Styles/modules/carburetor-cards.css",
+      "Bundle/Front/Styles/modules/carburetor-form-row.css",
+      "Bundle/Front/Styles/modules/carburetor-form-controls.css",
+      "Bundle/Front/Styles/modules/carburetor-compact-action.css",
+      "Bundle/Front/Styles/modules/carburetor-compact-success.css",
+      "Bundle/Front/Styles/modules/carburetor-native-fields.css",
+      "Bundle/Front/Styles/modules/carburetor-time-slot.css",
+      "Bundle/Front/Styles/modules/carburetor-photo-field.css",
+      "Bundle/Front/Styles/modules/carburetor-navigation-details.css",
+      "Bundle/Front/Styles/modules/carburetor-utility-visual.css",
+      "Bundle/Front/Styles/modules/carburetor-system-settings-visual.css",
+      "Bundle/Front/Styles/modules/carburetor-admin-grid-visual.css",
+      "Bundle/Front/Styles/modules/carburetor-foreground-modal.css",
+      "Bundle/Front/Styles/modules/carburetor-user-preview.css",
+      "Bundle/Front/Styles/modules/carburetor-entity-history.css",
+      "Bundle/Front/Styles/modules/carburetor-warning-button.css",
+      "Bundle/Front/Styles/modules/carburetor-confirm-modal.css",
+      "Bundle/Front/Styles/modules/carburetor-admin-filter.css",
+      "Bundle/Front/Styles/modules/carburetor-static-page.css",
+      "Bundle/Front/Styles/modules/carburetor-static-admin-shell.css",
+      "Bundle/Front/Styles/modules/carburetor-combobox.css",
+      "Bundle/Front/Styles/modules/carburetor-date-input.css",
+      "Bundle/Front/Styles/modules/carburetor-dropzone.css",
+      "Bundle/Front/Styles/modules/carburetor-mobile-menu.css",
+      "Bundle/Front/Styles/modules/carburetor-top-menu.css",
+      "Bundle/Front/Styles/modules/carburetor-sidebar.css",
+      "Bundle/Front/Styles/modules/carburetor-page-header.css",
+      "Bundle/Front/Styles/modules/carburetor-form-builder.css",
+      "Bundle/Front/Styles/modules/carburetor-radix-controls.css",
+      "Bundle/Front/Styles/modules/carburetor-uncontrolled-fields.css",
+      "Bundle/Front/Styles/modules/carburetor-control-finishing.css",
+      "Bundle/Front/Styles/modules/carburetor-layout.css",
+      "Bundle/Front/Styles/modules/carburetor-admin-log-detail.css",
+      "Bundle/Front/Styles/modules/carburetor-admin-log-sections.css",
+      "Bundle/Front/Styles/modules/carburetor-primary-action.css",
+      "Kernel/Io/GarnetCli/Admin/Ui/Front/Styles/admin-access.css"
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["Bundle/Front/Common/Components/Admin/AdminLog/details/ActionLogDetail.tsx", "Bundle/Front/Common/Components/Admin/AdminLog/details/CronLogDetail.tsx", "Bundle/Front/Common/Components/Admin/AdminLog/details/ErrorLogDetail.tsx"],
+      "rules": {"no-react-hooks-in-components": "error"}
+    },
+    {
+      "files": ["Bundle/Front/Common/Components/Controls/ThemeToggle.tsx", "Bundle/Front/Common/Components/Controls/AsyncIcon.tsx", "Bundle/Front/Common/Components/Controls/DurationSelect.tsx", "Bundle/Front/Common/Components/Controls/Calendar.tsx", "Bundle/Front/Common/Components/Controls/AsyncIconButton.tsx", "Bundle/Front/Common/Components/Controls/ImageUploadArea.tsx", "Bundle/Front/Common/Components/Controls/ImageUploadField.tsx", "Bundle/Front/Common/Components/Layout/Paging/*.tsx", "Bundle/Front/Common/Components/Feedback/Banner.tsx", "Bundle/Front/Common/Components/Feedback/TimezoneNotice.tsx", "Bundle/Front/auth/DevLogin.tsx", "Bundle/Front/auth/utils/CodeTimer.tsx", "Bundle/Front/auth/AuthConsentFields.tsx", "Bundle/Front/Common/Components/Feedback/GlobalToastRenderer.tsx", "Bundle/Front/Common/Components/Feedback/Toast.tsx", "Bundle/Front/Common/Components/Feedback/TimezoneNoticeWarnIsland.tsx", "Bundle/Front/Common/Components/Layout/Navigation/TabBreadcrumb.tsx", "Bundle/Front/Common/Components/Layout/Navigation/TabClose.tsx", "Bundle/Front/Common/Components/Layout/Navigation/TabNav.tsx", "Bundle/Front/Common/Components/Form/FormBuilder/FormRow.tsx", "Bundle/Front/Common/Components/Form/FormBuilder/PhotoField.tsx", "Bundle/Front/Common/Components/Form/FormBuilder/DatalistSelect.tsx", "Bundle/Front/Common/Components/Form/FormBuilder/FormBooleanField.tsx", "Bundle/Front/Common/Components/Form/FormBuilder/FormReadonlyValue.tsx", "Bundle/Front/Common/Components/Form/FormBuilder/FormBuilderError.tsx", "Bundle/Front/Common/Components/Layout/Navigation/NavigationCountBadge.tsx", "Bundle/Front/Common/Components/Layout/Navigation/NavigationUnreadDot.tsx", "Bundle/Front/Common/Components/Layout/Navigation/NavigationDivider.tsx", "Bundle/Front/Common/Components/Layout/Navigation/UtilityBalanceParts.tsx", "Bundle/Front/Common/Components/Admin/SystemSettings/SystemSettingsPage/index.tsx", "Bundle/Front/Common/Components/Admin/SystemSettings/SystemSettingsPage/VersionInfoPanel.tsx", "Bundle/Front/Common/Components/Admin/SystemSettings/SystemSettingsPage/Tabs/SaveButton.tsx", "Bundle/Front/Common/Components/Admin/SystemSettings/SystemSettingsPage/SettingsTabStrip.tsx", "Bundle/Front/Common/Components/Admin/SystemSettings/SystemSettingsPage/OpcacheResetView.tsx", "Bundle/Front/Common/Components/Admin/SystemSettings/SystemSettingsPage/Tabs/HistoryTab.tsx", "Bundle/Front/Common/Components/Admin/SystemSettings/SystemSettingsPage/Tabs/RegistrationTab.tsx", "Bundle/Front/Common/Components/Admin/SystemSettings/SystemSettingsPage/Tabs/PenaltyTab.tsx", "Bundle/Front/Common/Components/Admin/SystemSettings/SystemSettingsPage/Tabs/ContactsTab.tsx", "Bundle/Front/Common/Components/Admin/SystemSettings/SystemSettingsPage/Tabs/SmtpTab.tsx", "Bundle/Front/Common/Components/Admin/SystemSettings/SystemSettingsPage/Tabs/SeoTab.tsx", "Bundle/Front/Common/Components/Admin/AdminGrid/AdminGridSearch.tsx", "Bundle/Front/Common/Components/Admin/AdminGrid/AdminGridHeader.tsx", "Bundle/Front/Common/Components/Admin/AdminGrid/AdminGridTableShell.tsx", "Bundle/Front/Common/Components/Admin/AdminGrid/AdminGridEmptyRow.tsx", "Bundle/Front/Common/Components/Admin/AdminGrid/AdminGridRow.tsx", "Bundle/Front/Common/Components/Admin/AdminGrid/AdminGridPagination.tsx", "Bundle/Front/Common/Components/Admin/AdminGrid/AdminGridBody.tsx"],
+      "rules": {
+        "no-react-hooks-in-components": "error"
+      }
+    },
+    {
+      "files": ["Bundle/Front/auth/Auth2.tsx"],
+      "rules": {
+        "no-react-hooks-in-components": "error",
+        "require-function-class": "error"
+      }
+    }
+  ]
+}

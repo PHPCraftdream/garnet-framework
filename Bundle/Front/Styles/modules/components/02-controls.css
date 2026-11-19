@@ -38,8 +38,10 @@
 
 .btn-success {
   @apply bg-green-600 text-white;
-  box-shadow: 0 1px 2px rgba(22, 163, 74, 0.2);
   &:hover { @apply bg-green-700; }
+}
+.btn-success, .compact-success-action {
+  box-shadow: 0 1px 2px rgba(22, 163, 74, 0.2);
 }
 
 .btn-danger {
@@ -222,11 +224,6 @@
 
 /* ---------- Toast (vanilla JS) ---------- */
 
-.toast-container {
-  @apply fixed bottom-6 z-[100] flex flex-col gap-2 items-end;
-  right: 5rem;
-}
-
 .toast {
   @apply rounded-lg overflow-hidden opacity-0 pointer-events-none min-w-64;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
@@ -238,10 +235,6 @@
   @apply opacity-100 pointer-events-auto translate-y-0;
 }
 
-.toast-body {
-  @apply py-3 px-4 text-sm font-medium;
-}
-
 /* ---------- Utility Bridges ---------- */
 
 .text-muted   { color: var(--color-text-muted); }
@@ -250,7 +243,7 @@
 .text-primary { @apply text-accent; }
 
 /* d-none: used by DomEl.ts core visibility toggle — do NOT remove */
-.d-none  { display: none !important; }
+.d-none, [data-photo-hidden="true"] { display: none !important; }
 .d-flex  { @apply flex; }
 
 .border-success { border-color: #86efac !important; }
@@ -337,6 +330,8 @@
 /* Soft section — subtle, frameless container that groups content without a hard border. */
 .section-soft {
   @apply rounded-2xl p-4;
+}
+:is(.section-soft, .page-editor-panel) {
   background-color: color-mix(in srgb, var(--color-bg-surface-alt) 55%, transparent);
   /* A light diagonal wash — faint accent in the top-left fading to a hint of
      violet bottom-right — gives the uniform admin content block subtle depth. */
@@ -346,7 +341,7 @@
     color-mix(in srgb, var(--color-status-purple) 7%, transparent) 100%);
 }
 /* Frost section-soft panels (filters, calendar, …) over the honeycomb backdrop. */
-.glass-skin .section-soft {
+.glass-skin :is(.section-soft, .page-editor-panel) {
   -webkit-backdrop-filter: blur(10px) saturate(110%);
   backdrop-filter: blur(10px) saturate(110%);
   border: 1px solid color-mix(in srgb, var(--color-border-strong) 85%, var(--color-accent));
@@ -354,11 +349,6 @@
 
 /* Slot card — borderless card relying on shadow + lift for depth.
    Used in calendars; can be reused for other time-slot-style cards. */
-.time-slot-card {
-  @apply rounded-xl bg-surface p-3 mb-2 cursor-pointer;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-  transition: box-shadow 200ms ease, transform 200ms ease;
-}
 .time-slot-card:hover {
   box-shadow: 0 12px 28px -10px rgba(15, 23, 42, 0.18),
               0 2px 6px -2px rgba(15, 23, 42, 0.08);
@@ -432,3 +422,11 @@
         white-space: nowrap;
     }
 }
+
+.dropzone-area[data-uploading="true"] { @apply pointer-events-none opacity-60; }
+.dropzone-area[data-disabled="true"] { @apply pointer-events-none opacity-40; }
+.dropzone-spinner { border-top-color: transparent; }
+.dropzone-preview:hover :is(.dropzone-remove, .dropzone-filename) { opacity: 1; }
+
+.radix-select-content[data-popper] { @apply translate-y-1; }
+.radix-select-viewport[data-popper] { @apply h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]; }

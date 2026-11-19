@@ -1,6 +1,7 @@
 {
   "$schema": "./vendor/phpcraftdream/garnet-framework/FrontBuilder/node_modules/oxlint/configuration_schema.json",
-  "jsPlugins": ["./vendor/phpcraftdream/garnet-framework/FrontBuilder/oxlint-plugins/garnet-tsx-rules.js"],
+  "extends": ["./vendor/phpcraftdream/garnet-framework/FrontBuilder/node_modules/@react-carburetor/core/dist/lint/recommended.oxlintrc.json"],
+  "jsPlugins": ["./vendor/phpcraftdream/garnet-framework/FrontBuilder/oxlint-plugins/garnet-tsx-rules.js", "./vendor/phpcraftdream/garnet-framework/FrontBuilder/node_modules/@react-carburetor/core/dist/lint/index.mjs"],
   "plugins": ["react", "typescript", "unicorn", "import"],
   "env": {
     "browser": true,

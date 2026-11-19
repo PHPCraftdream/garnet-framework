@@ -1,0 +1,20 @@
+/* Compact success actions use the existing Tailwind colours. */
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-compactsuccess-fill: var(--color-green-600);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-compactsuccess-fill-hover: var(--color-green-700);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-compactsuccess-on-fill: var(--color-white);
+}
+
+@utility tone-compactsuccess-solid {
+  @apply bg-compactsuccess-fill text-compactsuccess-on-fill border-transparent [&:hover]:bg-compactsuccess-fill-hover;
+}
+
+@layer components {
+  .compact-success-action {
+    @apply tone-compactsuccess-solid layout-compact-action shape-compact-action type-compact-action behavior-compact-action effect-compact-action motion-compact-action;
+  }
+}

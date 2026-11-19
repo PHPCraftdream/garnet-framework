@@ -1,0 +1,115 @@
+/* Support roles reference the existing Garnet theme. */
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-supportinherit-ink: currentColor;
+  /* carburetor-disable-next-line valid-color-role */
+  --color-supportmuted-ink: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-supportaccent-ink: var(--color-accent-text);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-supportaccent-wash: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-supportaccent-wash-hover: var(--color-accent-hover);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-supportbadge-ink: var(--color-status-red);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-supportbadge-wash: var(--color-status-red-bg);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-supportaccent-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-supportsoft-ink: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-supportsoft-wash: var(--color-accent-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-supportsoft-wash-hover: var(--color-bg-surface-hover);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-supportrow-edge: var(--color-border-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-supportrow-wash-hover: var(--color-bg-surface-hover);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-supportprimary-ink: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-supportsecondary-ink: var(--color-text-secondary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-supportlink-ink: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-supportconv-edge: var(--color-border-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-supportconv-wash: var(--color-bg-surface-alt);
+}
+
+@utility tone-supportinherit-plain { @apply text-supportinherit-ink; }
+@utility tone-supportmuted-plain { @apply text-supportmuted-ink; }
+@utility tone-supportaccent-plain { @apply text-supportaccent-ink; }
+@utility tone-supportaccent-outlined { @apply bg-supportaccent-wash border-supportaccent-edge; }
+@utility tone-supportaccent-soft { @apply text-supportaccent-ink bg-supportaccent-wash hover:bg-supportaccent-wash-hover; }
+@utility tone-supportbadge-soft { @apply text-supportbadge-ink bg-supportbadge-wash; }
+@utility tone-supportsoft-soft { @apply bg-supportsoft-wash text-supportsoft-ink hover:bg-supportsoft-wash-hover; }
+@utility tone-supportrow-outlined { @apply border-supportrow-edge hover:bg-supportrow-wash-hover; }
+@utility tone-supportprimary-plain { @apply text-supportprimary-ink; }
+@utility tone-supportsecondary-plain { @apply text-supportsecondary-ink; }
+@utility tone-supportlink-plain { @apply text-supportlink-ink; }
+@utility tone-supportconv-outlined { @apply border-supportconv-edge bg-supportconv-wash; }
+@utility tone-supportconv-outline { @apply border-supportconv-edge; }
+
+@utility layout-support-widget-header { @apply flex items-center justify-between; }
+@utility layout-support-list { @apply flex-1 overflow-y-auto; }
+@utility shape-support-widget-header { @apply px-4 py-3 border-b rounded-t-lg; }
+@utility shape-support-widget-row { @apply px-4 py-3 border-b; }
+@utility shape-support-new-button { @apply w-full py-2 px-3 rounded; }
+@utility shape-support-empty { @apply p-4; }
+@utility type-support-title { @apply font-medium text-sm; }
+@utility type-support-link { @apply text-xs underline; }
+@utility type-support-close { @apply text-lg leading-none; }
+@utility type-support-new-button { @apply text-sm font-medium; }
+@utility type-support-empty { @apply text-center text-sm; }
+@utility effect-support-control { @apply opacity-80 hover:opacity-100; }
+@utility behavior-support-row { @apply cursor-pointer; }
+@utility motion-support-control { @apply transition-colors; }
+@utility layout-support-widget-fab { @apply fixed bottom-4 right-4 z-[100] flex items-center justify-center; }
+@utility shape-support-widget-fab { @apply w-14 h-14 rounded-full; }
+@utility effect-support-widget-fab { @apply shadow-lg; }
+@utility layout-support-fab-badge { @apply absolute -top-1 -right-1 flex items-center justify-center; }
+@utility shape-support-fab-badge { @apply rounded-full w-5 h-5; }
+@utility type-support-fab-badge { @apply text-xs font-bold; }
+@utility layout-support-form-label { @apply block; }
+@utility shape-support-form-label { @apply mb-1; }
+@utility type-support-form-label { @apply text-sm; }
+@utility layout-support-new-form { @apply flex flex-col gap-3; }
+@utility shape-support-new-form { @apply p-4; }
+@utility layout-support-conv-input-field { @apply flex-1; }
+@utility shape-support-conv-input { @apply px-3 py-2 border-t; }
+@utility shape-support-conv-header { @apply px-4 py-2 border-b; }
+@utility layout-support-conv-body { @apply flex-1 overflow-y-auto; }
+@utility shape-support-conv-body { @apply px-3 py-2; max-height: 300px; }
+@utility shape-support-back-button { @apply mb-1; }
+@utility layout-support-back-button-self { @apply self-start; }
+@utility type-support-back-button { @apply text-xs hover:underline; }
+@utility layout-support-ticket-title { @apply flex-1 overflow-hidden; }
+@utility type-support-ticket-title { @apply text-sm font-medium text-ellipsis whitespace-nowrap; }
+@utility shape-support-empty-line { @apply py-4; }
+
+@layer components {
+  .support-form-label { @apply tone-supportsecondary-plain layout-support-form-label shape-support-form-label type-support-form-label; }
+  .support-widget-new-form { @apply tone-supportinherit-plain layout-support-new-form shape-support-new-form; }
+  .support-widget-back-btn { @apply tone-supportlink-plain shape-support-back-button type-support-back-button; }
+  .support-widget-back-btn-self { @apply tone-supportlink-plain layout-support-back-button-self type-support-back-button; }
+  .support-widget-conv-input { @apply tone-supportconv-outline shape-support-conv-input; }
+  .support-widget-conv-header { @apply tone-supportconv-outlined shape-support-conv-header; }
+  .support-widget-conv-body { @apply tone-supportinherit-plain layout-support-conv-body shape-support-conv-body; }
+  .support-ticket-title { @apply tone-supportprimary-plain layout-support-ticket-title type-support-ticket-title; }
+  .support-empty-line { @apply tone-supportmuted-plain shape-support-empty-line type-support-empty; }
+  .support-form-control { @apply tone-garnetfield-outlined shape-native-control shape-native-field layout-native-select type-native-select focus-native-select motion-native-select; }
+  .support-conv-control { @apply tone-garnetfield-outlined shape-native-control shape-native-field layout-native-select layout-support-conv-input-field type-native-select focus-native-select motion-native-select; }
+  .support-widget-fab { @apply tone-supportaccent-soft layout-support-widget-fab shape-support-widget-fab effect-support-widget-fab motion-support-control; }
+  .support-fab-badge { @apply tone-supportbadge-soft layout-support-fab-badge shape-support-fab-badge type-support-fab-badge; }
+  .support-widget-header { @apply tone-supportaccent-outlined layout-support-widget-header shape-support-widget-header; }
+  .support-widget-title { @apply tone-supportaccent-plain type-support-title; }
+  .support-widget-link { @apply tone-supportaccent-plain type-support-link effect-support-control; }
+  .support-widget-close { @apply tone-supportaccent-plain type-support-close effect-support-control; }
+  .support-widget-ticket-row { @apply tone-supportrow-outlined shape-support-widget-row behavior-support-row motion-support-control; }
+  .support-new-btn-soft { @apply tone-supportsoft-soft shape-support-new-button type-support-new-button motion-support-control; }
+  .support-list-scroll { @apply tone-supportinherit-plain layout-support-list; }
+  .support-empty { @apply tone-supportmuted-plain shape-support-empty type-support-empty; }
+}

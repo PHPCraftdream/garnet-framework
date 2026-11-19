@@ -1,10 +1,4 @@
-/**
- * Вкладка SMTP: параметры отправки и тестовое письмо.
- *
- * Тестовое письмо живёт рядом с параметрами намеренно: его смысл — «то,
- * что я только что ввёл, работает», и проверять его по другому экрану
- * означало бы сначала сохранить непроверенное.
- */
+/** SMTP settings and the adjacent test-email controls. */
 import * as React from 'react';
 import {SettingsData, SystemSettingsLabels, MailTypeOption} from '../types';
 import {SaveButton} from './SaveButton';
@@ -23,128 +17,124 @@ interface SmtpTabProps {
     mailTypes: MailTypeOption[];
 }
 
-export const SmtpTab: React.FC<SmtpTabProps> = ({
-    settings, updateSmtp, labels, sending,
-    testEmail, setTestEmail, testMailType, setTestMailType,
-    sendingTestEmail, onSendTestEmail, mailTypes,
-}) => (
-    <>
-<>
-    <section className="rounded-lg border border-default bg-surface p-5">
-        <div className="mb-4">
-            <h2 className="text-lg font-semibold text-on-surface">{labels.smtpTitle}</h2>
-            <p className="mt-1 text-sm text-secondary">{labels.smtpHint}</p>
-        </div>
+const renderMailOption = (option: MailTypeOption) => <option key={option.id} value={option.id}>{option.label}</option>;
 
-        <div className="grid gap-4 md:grid-cols-2">
-            <label className="block">
-                <span className="mb-1 block text-sm font-medium text-on-surface">{labels.smtpScheme}</span>
-                <select
-                    className="form-control w-full border-default"
-                    value={settings.smtp.scheme}
-                    onChange={(e) => updateSmtp('scheme', e.target.value)}
-                >
-                    <option value="smtp">smtp</option>
-                    <option value="smtps">smtps</option>
-                </select>
-            </label>
-            <label className="block">
-                <span className="mb-1 block text-sm font-medium text-on-surface">{labels.smtpHost}</span>
-                <input className="form-control w-full border-default" value={settings.smtp.host} onChange={(e) => updateSmtp('host', e.target.value)} />
-            </label>
-            <label className="block">
-                <span className="mb-1 block text-sm font-medium text-on-surface">{labels.smtpPort}</span>
-                <input className="form-control w-full border-default" inputMode="numeric" value={settings.smtp.port} onChange={(e) => updateSmtp('port', e.target.value)} />
-            </label>
-            <label className="block">
-                <span className="mb-1 block text-sm font-medium text-on-surface">{labels.smtpUser}</span>
-                <input className="form-control w-full border-default" value={settings.smtp.user} onChange={(e) => updateSmtp('user', e.target.value)} />
-            </label>
-            <label className="block md:col-span-2">
-                <span className="mb-1 block text-sm font-medium text-on-surface">{labels.smtpPassword}</span>
-                <input type="password" className="form-control w-full border-default" value={settings.smtp.password} onChange={(e) => updateSmtp('password', e.target.value)} />
-            </label>
-            <label className="block md:col-span-2">
-                <span className="mb-1 block text-sm font-medium text-on-surface">{labels.smtpFrom}</span>
-                <input className="form-control w-full border-default" value={settings.smtp.from} onChange={(e) => updateSmtp('from', e.target.value)} />
-            </label>
-        </div>
+export class SmtpTab extends React.Component<SmtpTabProps> {
+    private readonly changeScheme = (e: React.ChangeEvent<HTMLSelectElement>): void => { this.props.updateSmtp('scheme', e.target.value); };
+    private readonly changeHost = (e: React.ChangeEvent<HTMLInputElement>): void => { this.props.updateSmtp('host', e.target.value); };
+    private readonly changePort = (e: React.ChangeEvent<HTMLInputElement>): void => { this.props.updateSmtp('port', e.target.value); };
+    private readonly changeUser = (e: React.ChangeEvent<HTMLInputElement>): void => { this.props.updateSmtp('user', e.target.value); };
+    private readonly changePassword = (e: React.ChangeEvent<HTMLInputElement>): void => { this.props.updateSmtp('password', e.target.value); };
+    private readonly changeFrom = (e: React.ChangeEvent<HTMLInputElement>): void => { this.props.updateSmtp('from', e.target.value); };
+    private readonly changeEnabled = (e: React.ChangeEvent<HTMLInputElement>): void => { this.props.updateSmtp('enabled', e.target.checked); };
+    private readonly changeVerifyPeer = (e: React.ChangeEvent<HTMLInputElement>): void => { this.props.updateSmtp('verify_peer', e.target.checked); };
+    private readonly changeTestEmail = (e: React.ChangeEvent<HTMLInputElement>): void => { this.props.setTestEmail(e.target.value); };
+    private readonly changeMailType = (e: React.ChangeEvent<HTMLSelectElement>): void => { this.props.setTestMailType(e.target.value); };
 
-        <div className="mt-4 space-y-3">
-            <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                    type="checkbox"
-                    className="mt-1"
-                    checked={settings.smtp.enabled}
-                    onChange={(e) => updateSmtp('enabled', e.target.checked)}
-                />
-                <span>
-                    <span className="block font-medium text-on-surface">{labels.smtpEnabled}</span>
-                    <span className="block text-sm text-secondary">{labels.smtpEnabledHint}</span>
-                </span>
-            </label>
-
-            <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                    type="checkbox"
-                    className="mt-1"
-                    checked={settings.smtp.verify_peer}
-                    onChange={(e) => updateSmtp('verify_peer', e.target.checked)}
-                />
-                <span className="font-medium text-on-surface">{labels.smtpVerifyPeer}</span>
-            </label>
-        </div>
-
-        <SaveButton labels={labels} sending={sending} />
-    </section>
-
-    <section className="rounded-lg border border-default bg-surface p-5">
-        <div className="mb-4">
-            <h2 className="text-lg font-semibold text-on-surface">{labels.testEmailTitle}</h2>
-            <p className="mt-1 text-sm text-secondary">{labels.testEmailHint}</p>
-        </div>
-
-        <div className="flex flex-col gap-3 md:flex-row md:items-end">
-            <label className="block flex-1">
-                <span className="mb-1 block text-sm font-medium text-on-surface">{labels.testEmailLabel}</span>
-                <input
-                    type="email"
-                    className="form-control w-full border-default"
-                    placeholder={labels.testEmailPlaceholder}
-                    value={testEmail}
-                    onChange={(e) => setTestEmail(e.target.value)}
-                    data-test-id="admin-system-test-email-input"
-                />
-            </label>
-
-            {mailTypes.length > 0 && (
-                <label className="block md:w-64">
-                    <span className="mb-1 block text-sm font-medium text-on-surface">{labels.testEmailType ?? ''}</span>
-                    <select
-                        className="form-control w-full border-default"
-                        value={testMailType}
-                        onChange={(e) => setTestMailType(e.target.value)}
-                        data-test-id="admin-system-test-email-type"
-                    >
-                        <option value="">{labels.testEmailTypeGeneric ?? ''}</option>
-                        {mailTypes.map((opt) => (
-                            <option key={opt.id} value={opt.id}>{opt.label}</option>
-                        ))}
+    private renderSmtpFields() {
+        const {settings, labels} = this.props;
+        return (
+            <div className="settings-fields-grid">
+                <label className="settings-field-label">
+                    <span className="settings-field-caption">{labels.smtpScheme}</span>
+                    <select className="settings-native-field" value={settings.smtp.scheme} onChange={this.changeScheme}>
+                        <option value="smtp">smtp</option>
+                        <option value="smtps">smtps</option>
                     </select>
                 </label>
-            )}
+                <label className="settings-field-label">
+                    <span className="settings-field-caption">{labels.smtpHost}</span>
+                    <input className="settings-native-field" value={settings.smtp.host} onChange={this.changeHost} />
+                </label>
+                <label className="settings-field-label">
+                    <span className="settings-field-caption">{labels.smtpPort}</span>
+                    <input className="settings-native-field" inputMode="numeric" value={settings.smtp.port} onChange={this.changePort} />
+                </label>
+                <label className="settings-field-label">
+                    <span className="settings-field-caption">{labels.smtpUser}</span>
+                    <input className="settings-native-field" value={settings.smtp.user} onChange={this.changeUser} />
+                </label>
+                <label className="settings-field-label-wide">
+                    <span className="settings-field-caption">{labels.smtpPassword}</span>
+                    <input type="password" className="settings-native-field" value={settings.smtp.password} onChange={this.changePassword} />
+                </label>
+                <label className="settings-field-label-wide">
+                    <span className="settings-field-caption">{labels.smtpFrom}</span>
+                    <input className="settings-native-field" value={settings.smtp.from} onChange={this.changeFrom} />
+                </label>
+            </div>
+        );
+    }
 
-            <button
-                type="button"
-                className="rounded-lg bg-accent px-4 py-2 font-medium text-accent-text hover:bg-accent-hover disabled:opacity-60"
-                disabled={sendingTestEmail}
-                onClick={onSendTestEmail}
-                data-test-id="admin-system-test-email-send"
-            >
-                {sendingTestEmail ? labels.testEmailSending : labels.testEmailSend}
-            </button>
-        </div>
-    </section>
-</>
-    </>
-);
+    private renderSmtpOptions() {
+        const {settings, labels} = this.props;
+        return (
+            <div className="settings-smtp-options">
+                <label className="settings-smtp-option">
+                    <input type="checkbox" className="settings-smtp-checkbox" checked={settings.smtp.enabled} onChange={this.changeEnabled} />
+                    <span>
+                        <span className="settings-smtp-enabled-title">{labels.smtpEnabled}</span>
+                        <span className="settings-smtp-enabled-hint">{labels.smtpEnabledHint}</span>
+                    </span>
+                </label>
+                <label className="settings-smtp-option">
+                    <input type="checkbox" className="settings-smtp-checkbox" checked={settings.smtp.verify_peer} onChange={this.changeVerifyPeer} />
+                    <span className="settings-smtp-option-title">{labels.smtpVerifyPeer}</span>
+                </label>
+            </div>
+        );
+    }
+
+    private renderTestEmail() {
+        const {labels, testEmail, testMailType, mailTypes, sendingTestEmail, onSendTestEmail} = this.props;
+        return (
+            <section className="settings-general-panel">
+                <div className="settings-general-header">
+                    <h2 className="settings-general-title">{labels.testEmailTitle}</h2>
+                    <p className="settings-general-hint">{labels.testEmailHint}</p>
+                </div>
+                <div className="settings-smtp-test-row">
+                    <label className="settings-smtp-test-email-label">
+                        <span className="settings-field-caption">{labels.testEmailLabel}</span>
+                        <input type="email" className="settings-native-field" placeholder={labels.testEmailPlaceholder} value={testEmail}
+                            onChange={this.changeTestEmail} data-test-id="admin-system-test-email-input" />
+                    </label>
+                    {mailTypes.length > 0 && (
+                        <label className="settings-smtp-test-type-label">
+                            <span className="settings-field-caption">{labels.testEmailType ?? ''}</span>
+                            <select className="settings-native-field" value={testMailType} onChange={this.changeMailType}
+                                data-test-id="admin-system-test-email-type">
+                                <option value="">{labels.testEmailTypeGeneric ?? ''}</option>
+                                {mailTypes.map(renderMailOption)}
+                            </select>
+                        </label>
+                    )}
+                    <button type="button" className="settings-test-email-button" disabled={sendingTestEmail} onClick={onSendTestEmail}
+                        data-test-id="admin-system-test-email-send">
+                        {sendingTestEmail ? labels.testEmailSending : labels.testEmailSend}
+                    </button>
+                </div>
+            </section>
+        );
+    }
+
+    public render() {
+        const {labels, sending} = this.props;
+        return (
+            <>
+                <>
+                    <section className="settings-general-panel">
+                        <div className="settings-general-header">
+                            <h2 className="settings-general-title">{labels.smtpTitle}</h2>
+                            <p className="settings-general-hint">{labels.smtpHint}</p>
+                        </div>
+                        {this.renderSmtpFields()}
+                        {this.renderSmtpOptions()}
+                        <SaveButton labels={labels} sending={sending} />
+                    </section>
+                    {this.renderTestEmail()}
+                </>
+            </>
+        );
+    }
+}

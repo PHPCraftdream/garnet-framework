@@ -1,0 +1,21 @@
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-fgwarning-edge: var(--color-warning);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-fgwarning-ink: var(--color-warning);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-fgwarning-ink-hover: #fff;
+  /* carburetor-disable-next-line valid-color-role */
+  --color-fgwarning-wash-hover: var(--color-warning);
+}
+
+@utility tone-fgwarning-outlined {
+  @apply border-fgwarning-edge text-fgwarning-ink bg-transparent [&:hover:not(:disabled)]:bg-fgwarning-wash-hover [&:hover:not(:disabled)]:text-fgwarning-ink-hover;
+}
+@utility shape-warning-button-full { @apply rounded-md border w-full; padding: 0.4375rem 0.875rem; }
+@utility type-warning-button { @apply font-medium leading-normal no-underline whitespace-nowrap; font-size: 0.8125rem; }
+
+@layer components {
+  .btn-outline-warning-full { @apply tone-fgwarning-outlined layout-compact-action shape-warning-button-full type-warning-button behavior-compact-action effect-compact-action motion-compact-action; }
+}

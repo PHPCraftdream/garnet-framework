@@ -20,12 +20,12 @@ export const AsyncIcon: React.FC<{
     errorIcon?: React.ReactNode;
 }> = ({state, icon, size = 18, errorIcon}) => {
     if (state === 'loading') {
-        return <Loader2 size={size} className="animate-spin" aria-hidden="true" />;
+        return <Loader2 size={size} className="async-loading-icon" aria-hidden="true" />;
     }
     if (state === 'error') {
         return errorIcon !== undefined
             ? <>{errorIcon}</>
-            : <AlertTriangle size={size} className="text-danger" aria-hidden="true" />;
+            : <AlertTriangle size={size} className="async-error-icon" aria-hidden="true" />;
     }
     return <>{icon}</>;
 };

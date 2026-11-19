@@ -1,0 +1,87 @@
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-datefield-edge: var(--color-border-strong);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-datefield-edge-focus: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-datefield-wash: var(--color-bg-surface);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-datefield-ink: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-datefield-ink-placeholder: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-datepopup-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-datepopup-wash: var(--color-bg-surface);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-datepopup-ink: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-dateday-ink: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-dateday-wash-hover: var(--color-bg-surface-alt);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-datemuted-ink: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-dateselected-fill: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-dateselected-on-fill: var(--color-white);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-datelink-ink: var(--color-accent);
+}
+
+@utility tone-datefield-outlined { @apply border-datefield-edge bg-datefield-wash text-datefield-ink placeholder:text-datefield-ink-placeholder focus:border-datefield-edge-focus focus:ring-datefield-edge-focus/15; }
+@utility tone-datepopup-outlined { @apply border-datepopup-edge bg-datepopup-wash text-datepopup-ink; }
+@utility tone-dateday-soft { @apply text-dateday-ink hover:bg-dateday-wash-hover; }
+@utility tone-datemuted-plain { @apply text-datemuted-ink; }
+@utility tone-dateselected-solid { @apply bg-dateselected-fill text-dateselected-on-fill hover:bg-dateselected-fill; }
+@utility tone-datelink-plain { @apply text-datelink-ink; }
+@utility layout-date-wrapper { @apply relative inline-block; }
+@utility shape-date-wrapper { @apply w-full; }
+@utility layout-date-field { @apply block; }
+@utility shape-date-field { @apply w-full rounded-md border px-3 py-[0.4375rem]; }
+@utility type-date-field { @apply text-sm leading-normal; }
+@utility behavior-date-field { @apply cursor-pointer; }
+@utility focus-date-field { @apply focus:outline-none focus:ring-3; }
+@utility motion-date-field { transition: border-color 0.15s, box-shadow 0.15s; }
+@utility layout-date-popup { @apply fixed z-50; }
+@utility shape-date-popup { @apply min-w-72 rounded-md border p-2; }
+@utility type-date-popup { @apply text-sm; }
+@utility effect-date-popup { @apply shadow-lg; }
+@utility layout-date-header { @apply flex items-center justify-between; }
+@utility shape-date-header { @apply mb-2; }
+@utility type-date-title { @apply font-semibold; }
+@utility layout-date-nav { @apply inline-flex items-center justify-center; }
+@utility shape-date-nav { @apply h-7 w-7 rounded; }
+@utility layout-date-grid { @apply grid grid-cols-7 gap-1; }
+@utility shape-date-weekdays { @apply mb-1; }
+@utility type-date-weekdays { @apply text-center text-xs; }
+@utility type-date-weekday { @apply font-medium; }
+@utility layout-date-day { @apply inline-flex items-center justify-center; }
+@utility shape-date-day { @apply h-8 rounded; }
+@utility shape-date-today { @apply border; }
+@utility behavior-date-disabled { @apply cursor-not-allowed; }
+@utility effect-date-disabled { @apply opacity-40; }
+@utility layout-date-footer { @apply flex justify-between; }
+@utility shape-date-footer { @apply mt-2 border-t pt-2; }
+@utility type-date-link { @apply text-sm hover:underline; }
+@utility behavior-date-link { @apply cursor-pointer; }
+
+@layer components {
+  .cdp-wrapper { @apply tone-supportinherit-plain layout-date-wrapper shape-date-wrapper; }
+  .custom-date-input { @apply layout-date-field shape-date-field type-date-field behavior-date-field tone-datefield-outlined focus-date-field motion-date-field; }
+  .cdp-native-input { @apply layout-date-field shape-date-field type-date-field behavior-date-field tone-datefield-outlined focus-date-field motion-date-field; }
+  .cdp-popup { @apply layout-date-popup shape-date-popup type-date-popup tone-datepopup-outlined effect-date-popup; }
+  .cdp-header { @apply tone-supportinherit-plain layout-date-header shape-date-header; }
+  .cdp-title { @apply tone-supportinherit-plain type-date-title; }
+  .cdp-nav { @apply layout-date-nav shape-date-nav tone-dateday-soft; }
+  .cdp-weekdays { @apply layout-date-grid shape-date-weekdays type-date-weekdays tone-datemuted-plain; }
+  .cdp-weekday { @apply tone-supportinherit-plain type-date-weekday; }
+  .cdp-grid { @apply tone-supportinherit-plain layout-date-grid; }
+  .cdp-day { @apply layout-date-day shape-date-day tone-dateday-soft; }
+  .cdp-day[data-outside="true"] { @apply tone-datemuted-plain; }
+  .cdp-day[data-selected="true"] { @apply tone-dateselected-solid; }
+  .cdp-day[data-disabled="true"] { @apply tone-datemuted-plain; }
+  .cdp-footer { @apply layout-date-footer shape-date-footer tone-gridborder-outline; }
+  .cdp-foot-link { @apply type-date-link behavior-date-link tone-datelink-plain; }
+}

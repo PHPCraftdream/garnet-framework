@@ -1,4 +1,5 @@
-import {useState, useCallback, useRef, useEffect, Dispatch, SetStateAction} from 'react';
+import {useState, useCallback, useRef, useEffect, useSyncExternalStore, Dispatch, SetStateAction} from 'react';
+import {Carburetor} from '@react-carburetor/core';
 import {sendPost} from '@common/Api/Send/sendPost';
 import {usePageSize} from '@common/hooks/data/usePageSize';
 
@@ -47,16 +48,58 @@ export interface UsePaginationResult<T> {
     refresh: () => void;
 }
 
+interface PaginationState<T> {
+    items: T[];
+    page: number;
+    totalPages: number;
+    total: number;
+    loading: boolean;
+}
+
+class PaginationStore<T> extends Carburetor<PaginationState<T>> {
+    constructor(initialData?: PageResponse<T>) {
+        super({
+            items: initialData?.items ?? [],
+            page: initialData?.page ?? 1,
+            totalPages: initialData?.totalPages ?? 1,
+            total: initialData?.total ?? 0,
+            loading: false,
+        });
+    }
+
+    readonly snapshot = () => this.getData();
+    readonly subscribeSnapshot = (listener: () => void) => {
+        const id = this.subscribe(listener);
+        return () => this.unsubscribe(id);
+    };
+
+    readonly update = (changes: Partial<PaginationState<T>>) => {
+        const previous = this.getData();
+        const version = this.getVersion();
+        this.setData({...previous, ...changes});
+        if (this.getData() !== previous && this.getVersion() === version) {
+            this.markAllChanged();
+            this.emitUpdate();
+        }
+    };
+
+    readonly setItems: Dispatch<SetStateAction<T[]>> = (value) => {
+        const previous = this.snapshot().items;
+        const items = typeof value === 'function' ? value(previous) : value;
+        if (!Object.is(items, previous)) this.update({items});
+    };
+}
+
 export function usePagination<T = Record<string, unknown>>(options: UsePaginationOptions<T>): UsePaginationResult<T> {
     const {url, params, perPage: pinnedPerPage, initialData, debounceMs = 300} = options;
     const [storedPageSize, setStoredPageSize] = usePageSize();
     const perPage = pinnedPerPage ?? storedPageSize;
 
-    const [items, setItems] = useState<T[]>(initialData?.items ?? []);
-    const [page, setPage] = useState(initialData?.page ?? 1);
-    const [totalPages, setTotalPages] = useState(initialData?.totalPages ?? 1);
-    const [total, setTotal] = useState(initialData?.total ?? 0);
-    const [loading, setLoading] = useState(false);
+    const [store] = useState(() => new PaginationStore<T>(initialData));
+    const {items, page, totalPages, total, loading} = useSyncExternalStore(
+        store.subscribeSnapshot, store.snapshot, store.snapshot,
+    );
+    const setItems = store.setItems;
 
     const hasInitialData = useRef(!!initialData);
     const mountedRef = useRef(true);
@@ -71,7 +114,7 @@ export function usePagination<T = Record<string, unknown>>(options: UsePaginatio
     paramsRef.current = params;
 
     const fetchPage = useCallback(async (targetPage: number, targetPerPage: number = perPage) => {
-        setLoading(true);
+        store.update({loading: true});
         try {
             const resp = await sendPost<{page: number; perPage: number} & Record<string, unknown>, PageResponse<T>>(
                 url,
@@ -79,18 +122,15 @@ export function usePagination<T = Record<string, unknown>>(options: UsePaginatio
             );
             if (!mountedRef.current) return;
             const data = ('data' in resp && resp.data) ? resp.data : resp as unknown as PageResponse<T>;
-            setItems(data.items);
-            setPage(data.page);
-            setTotalPages(data.totalPages);
-            setTotal(data.total);
+            store.update({items: data.items, page: data.page, totalPages: data.totalPages, total: data.total});
         } catch {
             // Error is handled by caller if needed; keep existing state
         } finally {
             if (mountedRef.current) {
-                setLoading(false);
+                store.update({loading: false});
             }
         }
-    }, [url, perPage]);
+    }, [url, perPage, store]);
 
     // Fetch on mount if no initialData
     useEffect(() => {

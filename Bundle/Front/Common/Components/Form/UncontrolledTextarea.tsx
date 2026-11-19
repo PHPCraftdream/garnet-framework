@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {AntiHookComponent} from '@react-carburetor/core';
 import {useFormErrors} from './useFormErrors';
 
 interface Props {
@@ -19,10 +20,21 @@ interface Props {
 export const UncontrolledTextarea = React.forwardRef<HTMLTextAreaElement, Props>(
     function UncontrolledTextarea(p, ref) {
         const error = useFormErrors(p.name) as string;
+        return <TextareaView {...p} inputRef={ref} error={error} />;
+    },
+);
+
+class TextareaView extends AntiHookComponent<Props & {inputRef: React.ForwardedRef<HTMLTextAreaElement>; error: string}> {
+    private readonly blur = (event: React.FocusEvent<HTMLTextAreaElement>) => {
+        this.props.onBlur?.(event.currentTarget.value, event.currentTarget);
+    };
+
+    public render() {
+        const {inputRef, error, ...p} = this.props;
         return (
             <>
                 <textarea
-                    ref={ref}
+                    ref={inputRef}
                     name={p.name}
                     defaultValue={p.defaultValue ?? ''}
                     rows={p.rows ?? 7}
@@ -31,17 +43,19 @@ export const UncontrolledTextarea = React.forwardRef<HTMLTextAreaElement, Props>
                     disabled={p.disabled}
                     required={p.required}
                     autoFocus={p.autoFocus}
-                    className={p.className ?? 'form-control'}
+                    // carburetor-disable-next-line require-function-class
+                    className={p.className ?? 'uncontrolled-field'}
                     data-test-id={p.testId}
-                    onBlur={p.onBlur ? (e) => p.onBlur!(e.currentTarget.value, e.currentTarget) : undefined}
+                    onBlur={p.onBlur ? this.blur : undefined}
                     aria-invalid={error ? 'true' : undefined}
                 />
                 {error && (
-                    <div className={p.errorClassName ?? 'garnet-form-error small fs-7 text-danger'} data-test-id={p.testId ? `${p.testId}-error` : undefined}>
+                    // carburetor-disable-next-line require-function-class
+                    <div className={p.errorClassName ?? 'garnet-form-error'} data-uncontrolled-error={p.errorClassName == null ? true : undefined} data-test-id={p.testId ? `${p.testId}-error` : undefined}>
                         {error}
                     </div>
                 )}
             </>
         );
-    },
-);
+    }
+}

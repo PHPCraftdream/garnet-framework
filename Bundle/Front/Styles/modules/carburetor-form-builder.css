@@ -1,0 +1,36 @@
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-formbuildererror-ink: var(--color-danger);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-formbuildererror-edge: var(--color-danger);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-formbuildererror-wash: var(--color-danger-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-formbuilderprogress-wash: var(--color-border-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-formbuilderfill-wash: var(--color-accent);
+}
+
+@utility tone-formbuilderprogress-outlined { @apply bg-formbuilderprogress-wash; }
+@utility tone-formbuilderfill-outlined { @apply bg-formbuilderfill-wash; }
+@utility shape-form-builder-progress { @apply h-2 rounded-full mb-2; }
+@utility shape-form-builder-progress-bar { @apply h-full rounded-full; }
+@utility motion-form-builder-progress-bar { transition: width 0.3s; }
+@utility layout-form-builder-progress { @apply overflow-hidden; }
+@utility motion-form-builder-spinner { @apply animate-spin; }
+@utility shape-form-builder-submit { @apply mx-2; }
+@utility shape-form-builder-common-error { @apply mb-2; }
+
+@utility tone-formbuildererror-outlined { @apply bg-formbuildererror-wash border-formbuildererror-edge text-formbuildererror-ink; }
+@utility shape-form-builder-alert { @apply px-4 py-3 rounded-lg border; }
+
+@layer components {
+  .common-errors { @apply tone-supportinherit-plain; }
+  .reg-progress { @apply tone-formbuilderprogress-outlined layout-form-builder-progress shape-form-builder-progress; }
+  .progress-bar { @apply tone-formbuilderfill-outlined shape-form-builder-progress-bar motion-form-builder-progress-bar; }
+  .save-btn-submit { @apply tone-authprimary-solid layout-history-button shape-static-admin-submit shape-form-builder-submit type-static-admin-submit behavior-history-button effect-history-button effect-auth-primary-shadow motion-history-button; }
+  .save-btn-cancel { @apply tone-logreset-outlined layout-history-button shape-static-admin-submit type-static-admin-submit behavior-history-button effect-history-button motion-history-button; }
+  .form-builder-common-error { @apply tone-formbuildererror-outlined shape-form-builder-common-error shape-form-builder-alert; }
+  .form-builder-spinner { @apply tone-supportinherit-plain motion-form-builder-spinner; }
+}

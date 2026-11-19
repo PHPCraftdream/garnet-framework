@@ -3,16 +3,19 @@ import {EPhase} from '@framework/auth/Enums';
 import {sendPost} from '@common/Api/Send/sendPost';
 import {goTo} from '@common/Dom/Nav/GoTo';
 
+const invalidEmail = (state: IAuthData): IAuthData => ({...state, phase: EPhase.INPUT_EMAIL_WRONG_VALUE});
+const sendingRequest = (state: IAuthData): IAuthData => ({...state, isSendingRequest: true});
+
 /**
  * Request-code handler.
  */
 export const handleRequestCode = (setData: TSetAuthState, inputRef: TInputRef) => {
     if (!inputRef.current.validity?.valid) {
-        setData((state) => ({...state, phase: EPhase.INPUT_EMAIL_WRONG_VALUE}));
+        setData(invalidEmail);
         return;
     }
 
-    setData((state) => ({...state, isSendingRequest: true}));
+    setData(sendingRequest);
 
     const auth_email = inputRef.current.value;
     const promise = sendPost<ICodeRequest, ICodeRequestResponse>(

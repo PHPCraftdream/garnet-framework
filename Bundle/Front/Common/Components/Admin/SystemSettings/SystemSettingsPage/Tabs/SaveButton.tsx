@@ -10,10 +10,10 @@ import * as React from 'react';
 import {SystemSettingsLabels} from '../types';
 
 export const SaveButton: React.FC<{labels: SystemSettingsLabels; sending: boolean}> = ({labels, sending}) => (
-    <div className="mt-6">
+    <div className="settings-save-wrapper">
         <button
             type="submit"
-            className="rounded-lg bg-accent px-4 py-2 font-medium text-accent-text hover:bg-accent-hover disabled:opacity-60"
+            className="settings-save-button"
             disabled={sending}
         >
             {sending ? labels.saving : labels.save}

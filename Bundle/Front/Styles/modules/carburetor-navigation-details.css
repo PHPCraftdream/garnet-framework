@@ -1,0 +1,32 @@
+/* Navigation details follow the existing Garnet theme. */
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-navbadge-ink: var(--color-warning);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-navbadge-wash: var(--color-warning-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-navdot-wash: var(--color-warning, #d97706);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-navdivider-wash: color-mix(in srgb, var(--color-border) 60%, transparent);
+}
+
+@utility tone-navbadge-soft { @apply text-navbadge-ink bg-navbadge-wash; }
+@utility tone-navdot-soft { @apply bg-navdot-wash; }
+@utility tone-navdivider-soft { @apply bg-navdivider-wash; }
+@utility layout-navigation-badge { @apply inline-block; }
+@utility shape-navigation-badge { @apply px-2 py-0.5 rounded-full; }
+@utility type-navigation-badge { @apply text-xs font-medium; }
+@utility layout-navigation-dot { @apply absolute top-1.5 right-1.5; }
+@utility shape-navigation-dot { @apply w-2 h-2 rounded-full; }
+@utility shape-navigation-divider { width: 1px; height: 1.25rem; margin: 0 0.375rem; }
+
+@layer components {
+  .count-badge-warning { @apply tone-navbadge-soft layout-navigation-badge shape-navigation-badge type-navigation-badge; }
+  .hamburger-unread-dot { @apply tone-navdot-soft layout-navigation-dot shape-navigation-dot; }
+  .util-divider { @apply tone-navdivider-soft shape-navigation-divider; }
+}
+
+@layer utilities {
+  [data-navigation-badge="true"] { @apply ms-1; }
+}

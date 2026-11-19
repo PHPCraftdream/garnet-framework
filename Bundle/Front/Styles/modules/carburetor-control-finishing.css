@@ -1,0 +1,27 @@
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-finishingrole-ink: var(--color-status-gray);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-finishingrole-wash: var(--color-status-gray-bg);
+}
+
+@utility tone-finishingrole-soft { @apply text-finishingrole-ink bg-finishingrole-wash; }
+@utility layout-finishing-entity { @apply inline-flex items-center gap-1.5; }
+@utility shape-finishing-role { @apply px-1.5 py-0.5 rounded; }
+@utility type-finishing-role { @apply text-[10px]; }
+@utility layout-finishing-spinner-wrap { @apply inline-flex items-center gap-1; }
+@utility shape-finishing-button-small { @apply px-2 py-1 rounded border; }
+@utility type-finishing-button-small { @apply text-xs; }
+
+@layer components {
+  .common-entity-link { @apply tone-supportinherit-plain layout-finishing-entity; }
+  .common-role-tag { @apply tone-finishingrole-soft shape-finishing-role type-finishing-role; }
+  .common-send-spinner-wrap { @apply tone-supportinherit-plain layout-finishing-spinner-wrap; }
+  .common-spinner { @apply tone-authspinner-outlined shape-auth-spinner layout-auth-spinner motion-auth-spinner; }
+  .send-button-primary { @apply tone-authprimary-solid layout-compact-action shape-confirm-button type-confirm-button behavior-compact-action effect-compact-action effect-auth-primary-shadow motion-compact-action; }
+  .send-button-primary-small { @apply tone-authprimary-solid layout-compact-action shape-finishing-button-small type-compact-action behavior-compact-action effect-compact-action effect-auth-primary-shadow motion-compact-action; }
+  .send-button-warning { @apply tone-fgwarning-outlined layout-compact-action shape-confirm-button type-confirm-button behavior-compact-action effect-compact-action motion-compact-action; }
+  .send-button-warning-small { @apply tone-fgwarning-outlined layout-compact-action shape-finishing-button-small type-compact-action behavior-compact-action effect-compact-action motion-compact-action; }
+  .error-boundary-message { @apply tone-supportsecondary-plain; }
+}

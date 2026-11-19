@@ -1,0 +1,19 @@
+/* Card roles use the existing Garnet theme. */
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-cardsurface-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-cardsurface-wash: var(--color-bg-surface);
+}
+
+@utility tone-cardsurface-outlined { @apply border-cardsurface-edge bg-cardsurface-wash; }
+@utility shape-booking-card { @apply rounded-lg border; }
+@utility layout-booking-card { @apply overflow-hidden; }
+@utility effect-booking-card { @apply shadow; }
+@utility shape-welcome-card { @apply p-5 rounded-lg border; }
+
+@layer components {
+  .booking-card-shell { @apply tone-cardsurface-outlined shape-booking-card layout-booking-card effect-booking-card; }
+  .dashboard-welcome-card { @apply tone-cardsurface-outlined shape-welcome-card; }
+}

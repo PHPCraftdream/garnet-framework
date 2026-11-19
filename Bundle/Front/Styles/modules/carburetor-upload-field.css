@@ -1,0 +1,35 @@
+/* Preview roles follow the existing Garnet theme. */
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetpreview-ink: currentColor;
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetpreviewremove-ink: var(--color-danger);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetpreviewremove-wash: var(--color-bg-surface-hover);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetpreviewremove-wash-hover: var(--color-danger-subtle);
+}
+
+@utility tone-garnetpreview-plain { @apply text-garnetpreview-ink; }
+@utility tone-garnetpreviewremove-soft {
+  @apply text-garnetpreviewremove-ink bg-garnetpreviewremove-wash hover:bg-garnetpreviewremove-wash-hover;
+}
+@utility layout-image-preview { @apply relative inline-block; }
+@utility shape-image-preview { @apply max-h-48 rounded-lg; }
+@utility layout-image-remove { @apply absolute top-1 right-1 inline-flex items-center justify-center; }
+@utility shape-image-remove { @apply w-7 h-7 rounded-md; }
+@utility type-image-remove { @apply text-xs; }
+@utility motion-image-remove { @apply transition-colors; }
+
+@layer components {
+  .blk-img-preview {
+    @apply tone-garnetpreview-plain layout-image-preview;
+  }
+  .blk-img-preview-img {
+    @apply tone-garnetpreview-plain shape-image-preview;
+  }
+  .blk-img-preview-remove {
+    @apply tone-garnetpreviewremove-soft layout-image-remove shape-image-remove type-image-remove motion-image-remove;
+  }
+}

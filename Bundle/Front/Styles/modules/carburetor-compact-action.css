@@ -1,0 +1,26 @@
+/* Compact actions use the existing Garnet accent roles. */
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-compactaction-ink: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-compactaction-ink-hover: var(--color-accent-text);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-compactaction-edge: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-compactaction-wash-hover: var(--color-accent);
+}
+
+@utility tone-compactaction-outlined {
+  @apply border-compactaction-edge text-compactaction-ink bg-transparent [&:hover]:bg-compactaction-wash-hover [&:hover]:text-compactaction-ink-hover;
+}
+@utility layout-compact-action { @apply inline-flex items-center justify-center gap-1.5; }
+@utility shape-compact-action { @apply px-2 py-1 rounded border; }
+@utility type-compact-action { @apply text-xs font-medium leading-normal no-underline whitespace-nowrap; }
+@utility behavior-compact-action { @apply cursor-pointer disabled:cursor-not-allowed!; }
+@utility effect-compact-action { @apply disabled:opacity-50; }
+@utility motion-compact-action { transition: all 0.15s ease; @apply active:translate-y-px disabled:active:transform-none; }
+
+@layer components {
+  .compact-outline-action { @apply tone-compactaction-outlined layout-compact-action shape-compact-action type-compact-action behavior-compact-action effect-compact-action motion-compact-action; }
+}

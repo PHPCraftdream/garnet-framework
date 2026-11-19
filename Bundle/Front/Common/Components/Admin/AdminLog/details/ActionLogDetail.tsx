@@ -13,7 +13,7 @@ export const ActionLogDetail: React.FC<Props> = ({row}) => (
     <div data-test-id="log-detail-actions">
         <div className="log-detail-grid">
             <div className="log-detail-label">{t.LogDetail_Id()}</div>
-            <div className="log-detail-value font-mono">{row.id}</div>
+            <div className="log-detail-value-mono">{row.id}</div>
 
             <div className="log-detail-label">{t.Admin_Log_CreatedAt()}</div>
             <div className="log-detail-value">{formatTs(row.created_at)}</div>
@@ -26,7 +26,7 @@ export const ActionLogDetail: React.FC<Props> = ({row}) => (
                     role={row.actor_type}
                 />
                 {row.actor_login && (
-                    <span className="text-muted ml-2 text-xs font-mono">{row.actor_login}</span>
+                    <span className="log-detail-login">{row.actor_login}</span>
                 )}
             </div>
 
@@ -38,7 +38,7 @@ export const ActionLogDetail: React.FC<Props> = ({row}) => (
                     role={row.target_type}
                 />
                 {row.target_login && (
-                    <span className="text-muted ml-2 text-xs font-mono">{row.target_login}</span>
+                    <span className="log-detail-login">{row.target_login}</span>
                 )}
             </div>
 

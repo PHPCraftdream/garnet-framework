@@ -1,0 +1,18 @@
+/* Time-slot surface follows the existing Garnet theme. */
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-timeslotsurface-wash: var(--color-bg-surface);
+}
+
+@utility tone-timeslotsurface-soft { @apply bg-timeslotsurface-wash; }
+@utility shape-time-slot-card { @apply rounded-xl p-3 mb-2; }
+@utility behavior-time-slot-card { @apply cursor-pointer; }
+@utility effect-time-slot-card { box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04); }
+@utility motion-time-slot-card { transition: box-shadow 200ms ease, transform 200ms ease; }
+
+@layer components {
+  .time-slot-card {
+    @apply tone-timeslotsurface-soft shape-time-slot-card behavior-time-slot-card effect-time-slot-card motion-time-slot-card;
+  }
+}

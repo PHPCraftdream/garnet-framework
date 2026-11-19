@@ -1,0 +1,70 @@
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-dropzoneidle-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-dropzoneidle-ink: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-dropzonedrag-edge: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-dropzonedrag-wash: var(--color-accent-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-dropzonedrag-ink: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-dropzoneremove-wash: var(--color-danger-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-dropzoneremove-ink: var(--color-danger);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-dropzonefile-wash: rgb(0 0 0 / 50%);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-dropzonefile-ink: var(--color-white);
+}
+
+@utility shape-dropzone { @apply space-y-2; }
+@utility shape-dropzone-area { @apply rounded-lg border-2 border-dashed p-4; }
+@utility type-dropzone-area { @apply text-center; }
+@utility tone-dropzoneidle-outline { @apply border-dropzoneidle-edge text-dropzoneidle-ink; }
+@utility behavior-dropzone-area { @apply cursor-pointer; }
+@utility motion-dropzone-area { @apply transition-colors; }
+@utility tone-dropzonedrag-outlined { @apply border-dropzonedrag-edge bg-dropzonedrag-wash text-dropzonedrag-ink; }
+@utility layout-dropzone-input { @apply hidden; }
+@utility layout-dropzone-uploading { @apply flex items-center justify-center gap-2; }
+@utility shape-dropzone-prompt { @apply py-2; }
+@utility layout-dropzone-spinner { @apply inline-block; }
+@utility shape-dropzone-spinner { @apply h-5 w-5 rounded-full border-2; }
+@utility motion-dropzone-spinner { @apply animate-spin; }
+@utility shape-dropzone-icon { @apply mx-auto mb-1 h-8 w-8; }
+@utility effect-dropzone-icon { @apply opacity-40; }
+@utility type-dropzone-label { @apply text-sm; }
+@utility layout-dropzone-previews { @apply flex flex-wrap gap-2; }
+@utility layout-dropzone-preview { @apply relative overflow-hidden; }
+@utility shape-dropzone-preview { @apply h-20 w-20 rounded border; }
+@utility shape-dropzone-image { @apply h-full w-full object-cover; }
+@utility layout-dropzone-remove { @apply absolute right-0 top-0; }
+@utility shape-dropzone-remove { @apply rounded-bl px-1.5 py-0.5; }
+@utility type-dropzone-small { @apply text-xs; }
+@utility tone-dropzoneremove-soft { @apply bg-dropzoneremove-wash text-dropzoneremove-ink; }
+@utility effect-dropzone-overlay { @apply opacity-0; }
+@utility motion-dropzone-overlay { @apply transition-opacity; }
+@utility layout-dropzone-filename { @apply absolute bottom-0 left-0 right-0 overflow-hidden; }
+@utility shape-dropzone-filename { @apply px-1 py-0.5; }
+@utility type-dropzone-filename { @apply text-ellipsis whitespace-nowrap; }
+@utility tone-dropzonefile-soft { @apply bg-dropzonefile-wash text-dropzonefile-ink; }
+
+@layer components {
+  .dropzone-shell { @apply tone-supportinherit-plain shape-dropzone; }
+  .dropzone-area { @apply shape-dropzone-area type-dropzone-area tone-dropzoneidle-outline behavior-dropzone-area motion-dropzone-area; }
+  .dropzone-area[data-dragging="true"] { @apply tone-dropzonedrag-outlined; }
+  .dropzone-input { @apply tone-supportinherit-plain layout-dropzone-input; }
+  .dropzone-uploading { @apply tone-supportinherit-plain layout-dropzone-uploading shape-dropzone-prompt; }
+  .dropzone-spinner { @apply layout-dropzone-spinner shape-dropzone-spinner tone-authspinner-outlined motion-dropzone-spinner; }
+  .dropzone-prompt { @apply tone-supportinherit-plain shape-dropzone-prompt; }
+  .dropzone-icon { @apply tone-supportinherit-plain shape-dropzone-icon effect-dropzone-icon; }
+  .dropzone-label { @apply tone-supportinherit-plain type-dropzone-label; }
+  .dropzone-error { @apply type-dropzone-label tone-garnetdanger-plain; }
+  .dropzone-previews { @apply tone-supportinherit-plain layout-dropzone-previews; }
+  .dropzone-preview { @apply layout-dropzone-preview shape-dropzone-preview tone-gridborder-outline; }
+  .dropzone-image { @apply tone-supportinherit-plain shape-dropzone-image; }
+  .dropzone-remove { @apply layout-dropzone-remove shape-dropzone-remove type-dropzone-small tone-dropzoneremove-soft effect-dropzone-overlay motion-dropzone-overlay; }
+  .dropzone-filename { @apply layout-dropzone-filename shape-dropzone-filename type-dropzone-small type-dropzone-filename tone-dropzonefile-soft effect-dropzone-overlay motion-dropzone-overlay; }
+}

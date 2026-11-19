@@ -9,13 +9,7 @@ interface Props {
 }
 
 const statusBadge = (status: string): React.ReactNode => {
-    const cls: Record<string, string> = {
-        sent: 'status-success',
-        failed: 'status-danger',
-        skipped_dev: 'status-muted',
-        pending: 'status-warning',
-    };
-    return <span className={`badge ${cls[status] ?? 'status-info'}`}>{status}</span>;
+    return <span className={status === 'sent' ? 'admin-log-section-status-success' : status === 'failed' ? 'admin-log-section-status-danger' : status === 'skipped_dev' ? 'admin-log-section-status-muted' : status === 'pending' ? 'admin-log-section-status-warning' : 'admin-log-section-status-info'}>{status}</span>;
 };
 
 export const MailLogDetail: React.FC<Props> = ({row}) => {
@@ -28,16 +22,16 @@ export const MailLogDetail: React.FC<Props> = ({row}) => {
         <div data-test-id="log-detail-mails">
             <div className="log-detail-grid">
                 <div className="log-detail-label">{t.LogDetail_Id()}</div>
-                <div className="log-detail-value font-mono">{row.id}</div>
+                <div className="log-detail-value-mono">{row.id}</div>
 
                 <div className="log-detail-label">{t.Admin_MailLog_Date()}</div>
                 <div className="log-detail-value">{formatTs(row.created_at)}</div>
 
                 <div className="log-detail-label">{t.Admin_MailLog_Recipient()}</div>
                 <div className="log-detail-value">
-                    <span className="font-mono">{row.recipient_email}</span>
+                    <span className="log-detail-recipient">{row.recipient_email}</span>
                     {row.account_id != null && row.account_id > 0 && (
-                        <span className="ml-2">
+                        <span className="log-detail-account">
                             <AdminUserLink
                                 id={row.account_id}
                                 name={row.account_name || row.account_login || `#${row.account_id}`}
@@ -47,7 +41,7 @@ export const MailLogDetail: React.FC<Props> = ({row}) => {
                 </div>
 
                 <div className="log-detail-label">{t.Admin_MailLog_Type()}</div>
-                <div className="log-detail-value font-mono">{row.mail_type}</div>
+                <div className="log-detail-value-mono">{row.mail_type}</div>
 
                 <div className="log-detail-label">{t.Admin_MailLog_Subject()}</div>
                 <div className="log-detail-value">{row.subject || '—'}</div>
@@ -58,7 +52,7 @@ export const MailLogDetail: React.FC<Props> = ({row}) => {
                 {row.error_log && (
                     <>
                         <div className="log-detail-label">{t.Admin_MailLog_Error()}</div>
-                        <div className="log-detail-value text-danger whitespace-pre-wrap">{row.error_log}</div>
+                        <div className="log-detail-value-error">{row.error_log}</div>
                     </>
                 )}
             </div>

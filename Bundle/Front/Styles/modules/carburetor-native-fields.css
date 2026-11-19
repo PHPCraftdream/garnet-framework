@@ -1,0 +1,5 @@
+@layer components {
+  .form-builder-control {
+    @apply tone-garnetfield-outlined shape-native-control shape-native-field layout-native-select type-native-select focus-native-select motion-native-select;
+  }
+}

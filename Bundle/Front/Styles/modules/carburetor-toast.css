@@ -1,0 +1,61 @@
+/* Toast roles preserve the existing Garnet and Tailwind colours. */
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-toastinherit-ink: currentColor;
+  /* carburetor-disable-next-line valid-color-role */
+  --color-toastprimary-ink: var(--color-accent-text);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-toastprimary-wash: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-toastdanger-ink: var(--color-white);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-toastdanger-wash: var(--color-red-600);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-toastsuccess-ink: var(--color-white);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-toastsuccess-wash: var(--color-green-600);
+}
+
+@utility tone-toastinherit-plain { @apply text-toastinherit-ink; }
+@utility tone-toastprimary-soft { @apply text-toastprimary-ink bg-toastprimary-wash; }
+@utility tone-toastdanger-soft { @apply text-toastdanger-ink bg-toastdanger-wash; }
+@utility tone-toastsuccess-soft { @apply text-toastsuccess-ink bg-toastsuccess-wash; }
+@utility layout-toast-container { @apply fixed bottom-6 z-[100] flex flex-col gap-2 items-end; right: 5rem; }
+@utility shape-toast-message { @apply rounded-lg min-w-64; }
+@utility layout-toast-message { @apply overflow-hidden; }
+@utility effect-toast-message { @apply opacity-100; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
+@utility behavior-toast-message { @apply pointer-events-auto; }
+@utility effect-toast-hidden { @apply opacity-0; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
+@utility behavior-toast-hidden { @apply pointer-events-none; }
+@utility motion-toast-message { @apply translate-y-0; transform: translateY(0.5rem); transition: opacity 0.3s, transform 0.3s; }
+@utility motion-toast-hidden { transform: translateY(0.5rem); transition: opacity 0.3s, transform 0.3s; }
+@utility layout-toast-row { @apply flex items-center; }
+@utility shape-toast-body { @apply py-3 px-4; }
+@utility type-toast-body { @apply text-sm font-medium; }
+@utility layout-toast-close { @apply inline-flex items-center justify-center; }
+@utility shape-toast-close { @apply w-6 h-6 p-0 border-0 mr-2 ml-auto; }
+@utility type-toast-close { @apply text-xl leading-none before:content-['×']; }
+@utility behavior-toast-close { @apply cursor-pointer; }
+@utility effect-toast-close { @apply opacity-50 [&:hover]:opacity-100 invert; }
+
+@layer components {
+  .toast-container { @apply tone-toastinherit-plain layout-toast-container; }
+  .global-toast-message {
+    @apply tone-toastinherit-plain shape-toast-message layout-toast-message effect-toast-message behavior-toast-message motion-toast-message;
+    &[data-toast-type="primary"] { @apply tone-toastprimary-soft; }
+    &[data-toast-type="danger"] { @apply tone-toastdanger-soft; }
+    &[data-toast-type="success"] { @apply tone-toastsuccess-soft; }
+    &[data-toast-type="warning"] { @apply tone-toastinherit-plain; }
+  }
+  .local-toast-hidden {
+    @apply tone-toastinherit-plain shape-toast-message layout-toast-message effect-toast-hidden behavior-toast-hidden motion-toast-hidden;
+    &[data-toast-type="primary"] { @apply tone-toastprimary-soft; }
+    &[data-toast-type="danger"] { @apply tone-toastdanger-soft; }
+    &[data-toast-type="success"] { @apply tone-toastsuccess-soft; }
+    &[data-toast-type="warning"] { @apply tone-toastinherit-plain; }
+  }
+  .global-toast-row { @apply tone-toastinherit-plain layout-toast-row; }
+  .toast-body { @apply tone-toastinherit-plain shape-toast-body type-toast-body; }
+  .global-toast-close { @apply tone-toastinherit-plain layout-toast-close shape-toast-close type-toast-close behavior-toast-close effect-toast-close; }
+}

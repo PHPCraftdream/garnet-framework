@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {useState, useMemo} from 'react';
+import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
 import {MailLogEntry, MailsFilterOptions, GridConfig} from '../types';
 import {AdminLogGrid} from '../AdminLogGrid';
 import {PageResponse} from '@common/hooks/data/usePagination';
@@ -19,114 +19,115 @@ interface Props {
 
 const STATUSES = ['sent', 'failed', 'skipped_dev', 'pending'] as const;
 type MailStatus = typeof STATUSES[number];
-
 const NO_ACCOUNT = '__no_account__';
 
-const statusBadge = (status: string): React.ReactNode => {
-    const cls: Record<string, string> = {
-        sent: 'status-success',
-        failed: 'status-danger',
-        skipped_dev: 'status-muted',
-        pending: 'status-warning',
-    };
-    return <span className={`badge ${cls[status] ?? 'status-info'}`}>{status}</span>;
+interface Filters {
+    statusFilter: MailStatus | 'all';
+    userFilter: string;
+    typeFilter: string;
+}
+
+const emptyFilters = (): Filters => ({statusFilter: 'all', userFilter: '', typeFilter: ''});
+const rowKey = (row: MailLogEntry) => row.id;
+const rowTestId = (row: MailLogEntry) => `mails-row-${row.id}`;
+
+function option(value: string) {
+    return <option key={value} value={value}>{value}</option>;
+}
+
+function accountOption(account: MailsFilterOptions['accounts'][number]) {
+    return {value: String(account.id), label: account.name};
+}
+
+function statusBadge(status: string): React.ReactNode {
+    if (status === 'sent') return <span className="admin-log-section-status-success">{status}</span>;
+    if (status === 'failed') return <span className="admin-log-section-status-danger">{status}</span>;
+    if (status === 'skipped_dev') return <span className="admin-log-section-status-muted">{status}</span>;
+    if (status === 'pending') return <span className="admin-log-section-status-warning">{status}</span>;
+    return <span className="admin-log-section-status-info">{status}</span>;
+}
+
+const renders = {
+    created_at: (row: MailLogEntry) => <span className="admin-log-section-time">{formatTs(row.created_at)}</span>,
+    recipient_email: (row: MailLogEntry) => <span className="admin-log-section-recipient">
+        {row.recipient_email}
+        {row.account_id ? <span className="admin-log-section-recipient-account">
+            (<AdminUserLink id={row.account_id} name={row.account_name || row.account_login || `#${row.account_id}`} />)
+        </span> : null}
+    </span>,
+    mail_type: (row: MailLogEntry) => <span className="admin-log-section-mono">{row.mail_type}</span>,
+    status: (row: MailLogEntry) => statusBadge(row.status),
+    error_log: (row: MailLogEntry) => row.error_log ? <span className="admin-log-section-error">{row.error_log}</span> : null,
 };
 
-export const MailLogSection: React.FC<Props> = ({pageUrl, initialData, config, filterOptions}) => {
-    const [statusFilter, setStatusFilter] = useState<MailStatus | 'all'>('all');
-    const [userFilter, setUserFilter] = useState<string>('');
-    const [typeFilter, setTypeFilter] = useState<string>('');
-    const [selected, setSelected] = useState<MailLogEntry | null>(null);
+export class MailLogSection extends AntiHookComponent<Props> {
+    private readonly filters = new Carburetor<Filters>(emptyFilters());
+    private readonly selection = new Carburetor<{selected: MailLogEntry | null}>({selected: null});
+    private readonly selected = this.connectSelection(this.selection, state => state.selected);
+    private lastFilters: Filters | null = null;
+    private extraParams: Record<string, unknown> = {};
 
-    const userOptions = useMemo(() => {
-        const out: {value: string; label: string}[] = [{value: '', label: t.Admin_MailLog_Filter_All()}];
-        if (filterOptions.hasNoAccount) out.push({value: NO_ACCOUNT, label: t.Admin_MailLog_Filter_NoAccount()});
-        out.push(...filterOptions.accounts.map(a => ({value: String(a.id), label: a.name})));
-        return out;
-    }, [filterOptions]);
+    private patch(patch: Partial<Filters>): void {
+        this.filters.setData({...this.filters.getData(), ...patch});
+    }
 
-    const extraParams = useMemo(() => ({
-        status: statusFilter === 'all' ? '' : statusFilter,
-        accountId: userFilter,
-        mailType: typeFilter,
-    }), [statusFilter, userFilter, typeFilter]);
+    private readonly changeUser = (value: string) => this.patch({userFilter: value});
+    private readonly changeType = (event: React.ChangeEvent<HTMLSelectElement>) => this.patch({typeFilter: event.target.value});
+    private readonly changeStatus = (event: React.ChangeEvent<HTMLSelectElement>) => this.patch({statusFilter: event.target.value as MailStatus | 'all'});
+    private readonly selectRow = (selected: MailLogEntry) => this.selection.setData({selected});
+    private readonly closeDetail = () => this.selection.setData({selected: null});
 
-    return (
-        <div>
-            <div className="admin-log-filters">
-                <div className="filter-cell filter-cell-user">
-                    <label>{t.Admin_MailLog_Filter_Recipient()}</label>
-                    <Combobox
-                        options={userOptions}
-                        value={userFilter}
-                        onChange={setUserFilter}
-                        placeholder={t.Admin_MailLog_Filter_All()}
-                        searchPlaceholder={t.Admin_MailLog_Filter_SearchUser()}
-                        emptyText={t.Admin_MailLog_Filter_NoMatches()}
-                        testId="mails-recipient-filter"
-                    />
-                </div>
-                <div className="filter-cell">
-                    <label htmlFor="mails-type">{t.Admin_MailLog_Filter_Type()}</label>
-                    <select
-                        id="mails-type"
-                        className="form-select text-sm"
-                        value={typeFilter}
-                        onChange={e => setTypeFilter(e.target.value)}
-                        data-test-id="mails-type-filter"
-                    >
-                        <option value="">{t.Admin_MailLog_Filter_All()}</option>
-                        {filterOptions.types.map(tp => <option key={tp} value={tp}>{tp}</option>)}
-                    </select>
-                </div>
-                <div className="filter-cell">
-                    <label htmlFor="mails-status">{t.Admin_MailLog_Filter_Status()}</label>
-                    <select
-                        id="mails-status"
-                        className="form-select text-sm"
-                        value={statusFilter}
-                        onChange={e => setStatusFilter(e.target.value as MailStatus | 'all')}
-                        data-test-id="mails-status-filter"
-                    >
-                        <option value="all">{t.Admin_MailLog_Filter_All()}</option>
-                        {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                </div>
-                {/* Subject text search folded into the grid's own generic
-                    search box — config.searchFields already includes 'subject',
-                    a second dedicated field here would just duplicate it. */}
+    private params(filters: Filters): Record<string, unknown> {
+        const last = this.lastFilters;
+        if (!last || last.statusFilter !== filters.statusFilter || last.userFilter !== filters.userFilter || last.typeFilter !== filters.typeFilter) {
+            this.lastFilters = {...filters};
+            this.extraParams = {
+                status: filters.statusFilter === 'all' ? '' : filters.statusFilter,
+                accountId: filters.userFilter,
+                mailType: filters.typeFilter,
+            };
+        }
+        return this.extraParams;
+    }
+
+    private renderFilters(filters: Filters): React.ReactNode {
+        const {filterOptions} = this.props;
+        const userOptions = [{value: '', label: t.Admin_MailLog_Filter_All()}];
+        if (filterOptions.hasNoAccount) userOptions.push({value: NO_ACCOUNT, label: t.Admin_MailLog_Filter_NoAccount()});
+        userOptions.push(...filterOptions.accounts.map(accountOption));
+        return <div className="admin-log-filters">
+            <div className="admin-log-person-filter">
+                <label>{t.Admin_MailLog_Filter_Recipient()}</label>
+                <Combobox options={userOptions} value={filters.userFilter} onChange={this.changeUser}
+                    placeholder={t.Admin_MailLog_Filter_All()} searchPlaceholder={t.Admin_MailLog_Filter_SearchUser()}
+                    emptyText={t.Admin_MailLog_Filter_NoMatches()} testId="mails-recipient-filter" />
             </div>
-            <AdminLogGrid
-                pageUrl={pageUrl}
-                initialData={initialData}
-                config={config}
-                extraParams={extraParams}
-                rowKey={r => r.id}
-                rowTestId={r => `mails-row-${r.id}`}
-                emptyMessage={t.Admin_MailLog_Empty()}
-                onRowClick={row => setSelected(row)}
-                renders={{
-                    created_at: r => <span className="text-muted text-xs whitespace-nowrap">{formatTs(r.created_at)}</span>,
-                    recipient_email: r => (
-                        <span className="text-sm">
-                            {r.recipient_email}
-                            {r.account_id ? (
-                                <span className="text-muted ml-1">
-                                    (<AdminUserLink id={r.account_id} name={r.account_name || r.account_login || `#${r.account_id}`} />)
-                                </span>
-                            ) : null}
-                        </span>
-                    ),
-                    mail_type: r => <span className="font-mono text-sm">{r.mail_type}</span>,
-                    status: r => statusBadge(r.status),
-                    error_log: r => r.error_log ? <span className="text-danger text-sm truncate max-w-[200px] inline-block">{r.error_log}</span> : null,
-                }}
-            />
-            {selected && (
-                <LogDetailModal onClose={() => setSelected(null)}>
-                    <MailLogDetail row={selected} />
-                </LogDetailModal>
-            )}
-        </div>
-    );
-};
+            <div className="filter-cell">
+                <label htmlFor="mails-type">{t.Admin_MailLog_Filter_Type()}</label>
+                <select id="mails-type" className="admin-log-section-select" value={filters.typeFilter} onChange={this.changeType} data-test-id="mails-type-filter">
+                    <option value="">{t.Admin_MailLog_Filter_All()}</option>
+                    {filterOptions.types.map(option)}
+                </select>
+            </div>
+            <div className="filter-cell">
+                <label htmlFor="mails-status">{t.Admin_MailLog_Filter_Status()}</label>
+                <select id="mails-status" className="admin-log-section-select" value={filters.statusFilter} onChange={this.changeStatus} data-test-id="mails-status-filter">
+                    <option value="all">{t.Admin_MailLog_Filter_All()}</option>
+                    {STATUSES.map(option)}
+                </select>
+            </div>
+        </div>;
+    }
+
+    public render() {
+        const filters = this.useCarburetor(this.filters);
+        const selected = this.selected();
+        const {pageUrl, initialData, config} = this.props;
+        return <div>
+            {this.renderFilters(filters)}
+            <AdminLogGrid pageUrl={pageUrl} initialData={initialData} config={config} extraParams={this.params(filters)}
+                rowKey={rowKey} rowTestId={rowTestId} emptyMessage={t.Admin_MailLog_Empty()} onRowClick={this.selectRow} renders={renders} />
+            {selected && <LogDetailModal onClose={this.closeDetail}><MailLogDetail row={selected} /></LogDetailModal>}
+        </div>;
+    }
+}

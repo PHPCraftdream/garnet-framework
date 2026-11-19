@@ -1,0 +1,20 @@
+/* Consent controls retain the existing inherited and muted colours. */
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-authconsent-ink: currentColor;
+  /* carburetor-disable-next-line valid-color-role */
+  --color-authconsentmuted-ink: var(--color-text-muted);
+}
+
+@utility tone-authconsent-plain { @apply text-authconsent-ink; }
+@utility tone-authconsentmuted-plain { @apply text-authconsentmuted-ink; }
+@utility layout-auth-consent-row { @apply flex items-start gap-2; }
+@utility shape-auth-consent-checkbox { @apply mt-1; }
+@utility type-auth-consent-required { @apply text-sm; }
+
+@layer components {
+  .auth-consent-row { @apply tone-authconsent-plain layout-auth-consent-row; }
+  .auth-consent-checkbox { @apply tone-authconsent-plain shape-auth-consent-checkbox; }
+  .auth-consent-required { @apply tone-authconsentmuted-plain type-auth-consent-required; }
+}

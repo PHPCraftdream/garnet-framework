@@ -1,0 +1,362 @@
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-staticadminopen-wash: var(--color-bg-surface-hover);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-staticadminfilteractive-wash: var(--color-status-cyan-bg);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-staticadminfilteractive-ink: var(--color-status-cyan);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-staticadminbody-wash: var(--color-bg-surface);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-staticadminbody-edge: var(--color-border-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-staticadmindelete-ink: var(--color-danger);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-staticadmindelete-ink-hover: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-staticadmincancel-fill: var(--color-gray-500);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-staticadmincancel-fill-hover: var(--color-gray-600);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-staticadmincancel-on-fill: var(--color-white);
+}
+
+@utility tone-staticadminbody-outlined { @apply bg-staticadminbody-wash divide-staticadminbody-edge; }
+@utility tone-staticadmindelete-plain { @apply text-staticadmindelete-ink hover:text-staticadmindelete-ink-hover; }
+@utility tone-staticadmincancel-solid { @apply bg-staticadmincancel-fill text-staticadmincancel-on-fill hover:bg-staticadmincancel-fill-hover border-transparent; }
+
+@utility layout-static-admin-toolbar { @apply flex items-center justify-between gap-3; }
+@utility layout-static-admin-tabs { @apply flex-1; }
+@utility shape-static-admin-tabs { @apply min-w-0; }
+@utility shape-static-admin-pages { @apply space-y-6; }
+
+@layer components {
+  .static-admin-toolbar { @apply tone-supportinherit-plain layout-static-admin-toolbar; }
+  .static-admin-tabs { @apply tone-supportinherit-plain layout-static-admin-tabs shape-static-admin-tabs; }
+  .static-admin-pages { @apply tone-supportinherit-plain shape-static-admin-pages; }
+}
+
+@utility layout-static-admin-create-open { @apply relative shrink-0; top: -0.625rem; }
+@utility shape-static-admin-submit { @apply rounded-md border; padding: 0.4375rem 0.875rem; }
+@utility type-static-admin-submit { @apply font-medium leading-normal no-underline whitespace-nowrap; font-size: 0.8125rem; }
+@utility shape-static-admin-table { @apply w-full; }
+@utility effect-static-admin-create { @apply disabled:opacity-60; }
+@utility shape-static-admin-panel { @apply rounded-lg border p-5; }
+@utility shape-static-admin-title { @apply mb-3; }
+@utility type-static-admin-title { @apply text-lg font-semibold; }
+@utility layout-static-admin-fields { @apply grid gap-4 md:grid-cols-2; }
+@utility layout-static-admin-block { @apply block; }
+@utility shape-static-admin-caption { @apply mb-1; }
+@utility type-static-admin-caption { @apply text-sm font-medium; }
+@utility shape-static-admin-input { @apply w-full; }
+@utility shape-static-admin-hint { @apply mt-1; }
+@utility type-static-admin-small { @apply text-xs; }
+@utility layout-static-admin-actions { @apply flex items-center gap-2; }
+@utility layout-static-admin-create-actions { @apply flex gap-2; }
+@utility shape-static-admin-create-actions { @apply mt-4; }
+@utility shape-static-admin-empty { @apply py-8; }
+@utility type-static-admin-empty { @apply text-center; }
+@utility layout-static-admin-scroll { @apply overflow-x-auto; }
+@utility shape-static-admin-scroll { @apply rounded-lg border; }
+@utility shape-static-admin-heading { @apply border-b; }
+@utility type-static-admin-heading { @apply text-left; }
+@utility shape-static-admin-cell { @apply px-4 py-3; }
+@utility type-static-admin-slug { @apply font-mono text-xs; }
+@utility type-static-admin-link { @apply text-xs underline; }
+@utility layout-static-admin-status { @apply inline-block; }
+@utility shape-static-admin-status { @apply rounded px-2 py-0.5; }
+@utility type-static-admin-status { @apply text-xs font-medium; }
+@utility tone-staticadminopen-outlined { @apply bg-staticadminopen-wash; }
+@utility layout-static-admin-snippets-header { @apply flex items-center justify-between; }
+@utility type-static-admin-snippets-title { @apply text-2xl font-semibold; }
+@utility layout-static-admin-snippets-fields { @apply grid gap-4 md:grid-cols-3; }
+@utility layout-static-admin-filters { @apply flex items-center gap-2; }
+@utility type-static-admin-filters { @apply text-sm; }
+@utility shape-static-admin-filter { @apply rounded px-2 py-1; }
+@utility type-static-admin-filter { @apply text-xs font-medium; }
+@utility tone-staticadminfilteractive-soft { @apply bg-staticadminfilteractive-wash text-staticadminfilteractive-ink; }
+
+@layer components {
+  .static-admin-create-open { @apply tone-authprimary-solid layout-static-admin-create-open layout-history-button shape-history-button type-history-button behavior-history-button motion-history-button effect-static-admin-create effect-auth-primary-shadow; }
+  .static-admin-create-panel { @apply tone-settingspanel-outlined shape-static-admin-panel; }
+  .static-admin-create-title { @apply tone-supportprimary-plain shape-static-admin-title type-static-admin-title; }
+  .static-admin-fields { @apply tone-supportinherit-plain layout-static-admin-fields; }
+  .static-admin-label { @apply tone-supportinherit-plain layout-static-admin-block; }
+  .static-admin-caption { @apply tone-supportprimary-plain layout-static-admin-block shape-static-admin-caption type-static-admin-caption; }
+  .static-admin-input { @apply tone-garnetfield-outlined shape-native-control shape-native-field layout-native-select type-native-select focus-native-select motion-native-select; }
+  .static-admin-hint { @apply tone-supportmuted-plain layout-static-admin-block shape-static-admin-hint type-static-admin-small; }
+  .static-admin-create-actions { @apply tone-supportinherit-plain layout-static-admin-create-actions shape-static-admin-create-actions; }
+  .static-admin-create-submit { @apply tone-authprimary-solid layout-history-button shape-static-admin-submit type-static-admin-submit behavior-history-button motion-history-button effect-static-admin-create effect-auth-primary-shadow; }
+  .static-admin-cancel { @apply tone-staticadmincancel-solid layout-history-button shape-static-admin-submit type-static-admin-submit behavior-history-button motion-history-button effect-history-button; }
+  .static-admin-table { @apply tone-gridinherit-plain shape-static-admin-table type-history-table; }
+  .static-admin-empty { @apply tone-supportmuted-plain shape-static-admin-empty type-static-admin-empty; }
+  .static-admin-table-scroll { @apply tone-gridborder-outline layout-static-admin-scroll shape-static-admin-scroll; }
+  .static-admin-heading-row { @apply tone-supportconv-outline shape-static-admin-heading type-static-admin-heading; }
+  .static-admin-cell { @apply tone-supportinherit-plain shape-static-admin-cell; }
+  .static-admin-table-body { @apply tone-staticadminbody-outlined; }
+  .static-admin-row-open { @apply tone-staticadminopen-outlined; }
+  .static-admin-slug-cell { @apply tone-supportinherit-plain shape-static-admin-cell type-static-admin-slug; }
+  .static-admin-time-cell { @apply tone-supportmuted-plain shape-static-admin-cell type-static-admin-small; }
+  .static-admin-row-actions { @apply tone-supportinherit-plain layout-static-admin-actions; }
+  .static-admin-link { @apply tone-historylink-plain type-static-admin-link; }
+  .static-admin-delete { @apply tone-staticadmindelete-plain type-static-admin-link; }
+  .static-admin-status { @apply tone-logstatusmuted-soft layout-static-admin-status shape-static-admin-status type-static-admin-status; }
+  .static-admin-status[data-published="true"] { @apply tone-logstatussuccess-soft; }
+  .static-admin-snippets-header { @apply tone-supportinherit-plain layout-static-admin-snippets-header; }
+  .static-admin-snippets-title { @apply tone-supportprimary-plain type-static-admin-snippets-title; }
+  .static-admin-snippets-create { @apply tone-authprimary-solid layout-history-button shape-static-admin-submit type-static-admin-submit behavior-history-button motion-history-button effect-static-admin-create effect-auth-primary-shadow; }
+  .static-admin-snippets-fields { @apply tone-supportinherit-plain layout-static-admin-snippets-fields; }
+  .static-admin-filters { @apply tone-supportinherit-plain layout-static-admin-filters type-static-admin-filters; }
+  .static-admin-filter { @apply tone-logstatusmuted-soft shape-static-admin-filter type-static-admin-filter; }
+  .static-admin-filter[data-active="true"] { @apply tone-staticadminfilteractive-soft; }
+  .static-admin-type-cell { @apply tone-supportinherit-plain shape-static-admin-cell type-static-admin-small; }
+  .static-admin-usage { @apply tone-supportmuted-plain type-static-admin-small; }
+}
+
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-snippettool-wash: var(--color-bg-surface-alt);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-snippettool-wash-hover: var(--color-bg-surface-hover);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-snippettool-ink: var(--color-text-secondary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-snippettool-ink-hover: var(--color-text-primary);
+}
+@utility tone-snippettool-soft { @apply bg-snippettool-wash text-snippettool-ink hover:bg-snippettool-wash-hover hover:text-snippettool-ink-hover; }
+@utility layout-snippet-format-bar { @apply flex items-center flex-wrap gap-0.5; }
+@utility layout-snippet-format-button { @apply inline-flex items-center justify-center; }
+@utility shape-snippet-format-button { @apply w-8 h-8 rounded-md; }
+@utility type-snippet-bold { @apply text-sm font-bold; }
+@utility type-snippet-italic { @apply text-sm italic; }
+@utility shape-snippet-divider { @apply mx-0.5 h-5 border-l; }
+@utility layout-snippet-mode { @apply inline-flex overflow-hidden; }
+@utility shape-snippet-mode { @apply rounded-md border; }
+@utility shape-snippet-mode-button { @apply px-3 py-1; }
+@utility type-snippet-mode-button { @apply text-xs font-medium; }
+@utility type-snippet-content { @apply font-mono text-sm leading-normal; }
+@utility layout-block-page-picker { @apply relative inline-block; }
+@utility layout-block-page-popup { @apply absolute left-0 top-full z-10 overflow-y-auto; }
+@utility shape-block-page-popup { @apply mt-1 rounded-lg border py-1 min-w-48 max-h-48; }
+@utility effect-block-page-popup { @apply shadow-lg; }
+@utility layout-block-page-option { @apply block; }
+@utility shape-block-page-option { @apply w-full px-3 py-1.5; }
+@utility type-block-page-option { @apply text-sm text-left; }
+@utility layout-block-visibility { @apply inline-flex items-center gap-1; }
+@utility shape-block-visibility { @apply px-2.5 py-1 rounded-full; }
+@utility type-block-visibility { @apply text-[11px] font-medium; }
+@utility shape-snippet-editor { @apply rounded-lg border p-5 space-y-5; }
+@utility layout-snippet-save-row { @apply flex items-center gap-4; }
+@utility shape-snippet-save { @apply px-6 py-2.5 rounded-md border; }
+@utility type-snippet-save { @apply font-medium leading-normal no-underline whitespace-nowrap; font-size: 0.9375rem; }
+@utility behavior-snippet-label { @apply cursor-pointer; }
+@utility shape-snippet-header-editor { @apply space-y-4; }
+@utility shape-snippet-header-logo-fields { @apply space-y-2; }
+@utility shape-snippet-menu-type { @apply w-28; }
+@utility layout-snippet-menu-label { flex: 1 1 120px; }
+@utility shape-snippet-menu-label { min-width: 120px; }
+@utility layout-snippet-menu-url { flex: 1 1 150px; }
+@utility shape-snippet-menu-url { min-width: 150px; }
+@utility layout-snippet-menu-page { flex: 1 1 180px; }
+@utility shape-snippet-menu-page { min-width: 180px; }
+@utility layout-snippet-menu-external { @apply flex items-center gap-1; }
+@utility type-snippet-menu-external { @apply text-xs whitespace-nowrap; }
+@utility layout-snippet-menu-spacer { @apply flex-1; }
+@utility shape-snippet-menu-visibility { @apply w-auto; min-width: 90px; }
+@utility layout-snippet-footer-column-heading { @apply flex items-center gap-2; }
+@utility layout-snippet-footer-column-title { @apply flex-1; }
+@utility shape-snippet-footer-layout { @apply w-48; }
+@layer components {
+  .snippet-menu-type { @apply tone-garnetfield-outlined shape-snippet-menu-control shape-snippet-menu-type layout-native-select type-static-admin-small focus-native-select motion-native-select; }
+  .snippet-menu-label { @apply tone-garnetfield-outlined shape-snippet-menu-control layout-snippet-menu-label shape-snippet-menu-label layout-native-select type-native-select focus-native-select motion-native-select; }
+  .snippet-menu-url { @apply tone-garnetfield-outlined shape-snippet-menu-control layout-snippet-menu-url shape-snippet-menu-url layout-native-select type-native-select focus-native-select motion-native-select; }
+  .snippet-menu-page { @apply tone-garnetfield-outlined shape-snippet-menu-control layout-snippet-menu-page shape-snippet-menu-page layout-native-select type-static-admin-small focus-native-select motion-native-select; }
+  .snippet-menu-external { @apply tone-supportprimary-plain layout-snippet-menu-external type-snippet-menu-external behavior-snippet-label; }
+  .snippet-menu-spacer { @apply tone-supportinherit-plain layout-snippet-menu-spacer; }
+  .snippet-menu-visibility { @apply tone-garnetfield-outlined shape-snippet-menu-control shape-snippet-menu-visibility layout-native-select type-static-admin-small focus-native-select motion-native-select; }
+  .snippet-footer-column-heading { @apply tone-supportinherit-plain layout-snippet-footer-column-heading; }
+  .snippet-footer-column-title { @apply tone-garnetfield-outlined shape-snippet-menu-control layout-snippet-footer-column-title layout-native-select type-native-select focus-native-select motion-native-select; }
+  .snippet-footer-layout { @apply tone-garnetfield-outlined shape-snippet-menu-control shape-snippet-footer-layout layout-native-select type-static-admin-small focus-native-select motion-native-select; }
+  .snippet-header-editor { @apply tone-supportinherit-plain shape-snippet-header-editor; }
+  .snippet-header-logo-fields { @apply tone-supportinherit-plain shape-snippet-header-logo-fields; }
+  .blk-page-picker { @apply tone-supportinherit-plain layout-block-page-picker; }
+  .blk-page-popup { @apply tone-cardsurface-outlined layout-block-page-popup shape-block-page-popup effect-block-page-popup; }
+  .blk-page-option { @apply tone-blockoption-soft layout-block-page-option shape-block-page-option type-block-page-option motion-admin-log-tab-button; }
+  .blk-page-empty { @apply tone-supportmuted-plain shape-block-page-option type-block-page-option; }
+  .blk-vis-chip { @apply tone-supportinherit-plain layout-block-visibility shape-block-visibility type-block-visibility motion-admin-log-tab-button behavior-snippet-label; }
+  .blk-vis-chip[data-hidden="false"] { @apply tone-blockvisible-soft; }
+  .blk-vis-chip[data-hidden="true"] { @apply tone-blockhidden-soft; }
+  .snippet-format-bar { @apply tone-supportinherit-plain layout-snippet-format-bar shape-static-admin-caption; }
+  .snippet-format-button { @apply tone-snippettool-soft layout-snippet-format-button shape-snippet-format-button type-static-admin-small motion-admin-log-tab-button; }
+  .snippet-format-bold { @apply tone-snippettool-soft layout-snippet-format-button shape-snippet-format-button type-snippet-bold motion-admin-log-tab-button; }
+  .snippet-format-italic { @apply tone-snippettool-soft layout-snippet-format-button shape-snippet-format-button type-snippet-italic motion-admin-log-tab-button; }
+  .snippet-format-divider { @apply tone-historyborder-outline shape-snippet-divider; }
+  .snippet-mode { @apply tone-gridborder-outline layout-snippet-mode shape-snippet-mode; }
+  .snippet-mode-button { @apply tone-snippettool-soft shape-snippet-mode-button type-snippet-mode-button motion-admin-log-tab-button behavior-snippet-label; }
+  .snippet-mode-button[aria-pressed="true"] { @apply tone-authprimary-solid; }
+  .md-preview { @apply tone-supportinherit-plain; }
+  .snippet-content { @apply tone-garnetfield-outlined shape-native-control shape-native-field layout-native-select type-snippet-content focus-native-select motion-native-select; }
+  .snippet-editor { @apply tone-settingspanel-outlined shape-snippet-editor; }
+  .snippet-delete { @apply tone-confirmdanger-solid layout-history-button shape-history-button type-history-button behavior-history-button effect-history-button effect-confirm-danger motion-history-button; }
+  .snippet-save-row { @apply tone-supportinherit-plain layout-snippet-save-row; }
+  .snippet-save { @apply tone-authprimary-solid layout-history-button shape-snippet-save type-snippet-save behavior-history-button effect-static-admin-create effect-auth-primary-shadow motion-history-button; }
+  .snippet-active-label { @apply tone-supportinherit-plain layout-static-admin-actions behavior-snippet-label; }
+  .snippet-active-caption { @apply tone-supportprimary-plain type-static-admin-caption; }
+}
+
+@utility shape-snippet-menu-control { @apply rounded-md border px-3 py-1; }
+@utility shape-snippet-section { @apply rounded-lg border p-4 space-y-3; }
+@utility type-snippet-section-title { @apply text-sm font-semibold; }
+@utility layout-snippet-menu-row { @apply flex flex-wrap items-center gap-2; }
+@utility shape-snippet-menu-row { @apply py-2 border-b last:border-b-0; }
+@utility shape-snippet-menu-icon { @apply w-7 h-7 rounded-md; }
+@utility effect-snippet-menu-icon { @apply disabled:opacity-40; }
+@layer components {
+  .sp-editor-section { @apply tone-cardsurface-outlined shape-snippet-section; }
+  .sp-editor-section-title { @apply tone-supportprimary-plain type-snippet-section-title; }
+  .sp-menu-item-row { @apply tone-historyborder-outline layout-snippet-menu-row shape-snippet-menu-row; }
+  .sp-col-card { @apply tone-previewsection-outlined shape-snippet-section; }
+  .blk-icon-btn { @apply tone-snippettool-soft layout-snippet-format-button shape-snippet-menu-icon type-static-admin-small motion-admin-log-tab-button effect-snippet-menu-icon; }
+  .blk-icon-btn-danger { @apply tone-snippetdanger-soft layout-snippet-format-button shape-snippet-menu-icon type-static-admin-small motion-admin-log-tab-button effect-snippet-menu-icon; }
+}
+
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-snippetdanger-wash: var(--color-bg-surface-hover);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-snippetdanger-wash-hover: var(--color-danger-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-snippetdanger-ink: var(--color-danger);
+}
+@utility tone-snippetdanger-soft { @apply bg-snippetdanger-wash text-snippetdanger-ink hover:bg-snippetdanger-wash-hover; }
+
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-pageeditordirty-ink: var(--color-warning);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-pageeditoradd-wash: var(--color-bg-surface);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-pageeditoradd-ink: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-pageeditoradd-edge: var(--color-border-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-pageeditoradd-ink-hover: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-pageeditoradd-edge-hover: var(--color-accent);
+}
+@utility tone-pageeditoradd-outlined { @apply bg-pageeditoradd-wash text-pageeditoradd-ink border-pageeditoradd-edge hover:border-pageeditoradd-edge-hover hover:text-pageeditoradd-ink-hover; }
+@utility tone-pageeditordirty-plain { @apply text-pageeditordirty-ink; }
+@utility layout-page-editor-add-button { @apply relative z-10 inline-flex items-center justify-center; }
+@utility shape-page-editor-add-button { @apply w-7 h-7 rounded-full border border-dashed; }
+@utility layout-page-editor-picker { @apply flex justify-center gap-2; }
+@utility shape-page-editor-picker { @apply my-2; }
+@utility shape-page-editor-picker-button { @apply px-2 py-1 rounded border; }
+@utility type-page-editor-picker-button { @apply text-xs font-medium leading-normal no-underline whitespace-nowrap; }
+@utility layout-page-editor-add-separator { @apply relative flex items-center justify-center; }
+@utility shape-page-editor-add-separator { @apply my-1 py-2; }
+@utility layout-page-editor-add-line { @apply absolute inset-x-0 top-1/2; }
+@utility shape-page-editor-add-line { @apply border-t border-dashed; }
+@utility layout-page-editor-heading { @apply flex items-center gap-3; }
+@utility type-page-editor-title { @apply text-lg font-semibold; }
+@utility type-page-editor-link { @apply text-sm hover:underline; }
+@utility shape-page-editor-delete { @apply px-2 py-1 rounded border; }
+@utility shape-page-editor-image-hint { @apply mb-2; }
+@utility shape-page-editor-panel { @apply rounded-lg border p-5 space-y-5; }
+@utility shape-page-editor-block-title { @apply mb-3; }
+@utility type-page-editor-block-title { @apply text-base font-semibold; }
+@utility shape-page-editor-block-empty { @apply py-4; }
+@utility type-page-editor-block-empty { @apply text-center text-sm; }
+@utility layout-page-editor-actions { @apply flex items-center gap-4; }
+@utility shape-page-editor-actions { @apply pt-4 border-t; }
+@utility type-page-editor-dirty { @apply text-sm; }
+
+@layer components {
+  .blk-add-btn { @apply tone-pageeditoradd-outlined layout-page-editor-add-button shape-page-editor-add-button type-page-editor-dirty motion-admin-log-tab-button effect-snippet-menu-icon; }
+  .page-editor-panel { @apply tone-gridborder-outline shape-page-editor-panel; }
+  .page-editor-picker { @apply tone-supportinherit-plain layout-page-editor-picker shape-page-editor-picker; }
+  .page-editor-picker-button { @apply tone-staticadmincancel-solid layout-history-button shape-page-editor-picker-button type-page-editor-picker-button behavior-history-button motion-history-button effect-history-button; }
+  .page-editor-add-separator { @apply tone-supportinherit-plain layout-page-editor-add-separator shape-page-editor-add-separator; }
+  .page-editor-add-line { @apply tone-historyborder-outline layout-page-editor-add-line shape-page-editor-add-line; }
+  .page-editor-heading { @apply tone-supportinherit-plain layout-page-editor-heading; }
+  .page-editor-title { @apply tone-supportprimary-plain type-page-editor-title; }
+  .page-editor-link { @apply tone-supportlink-plain type-page-editor-link; }
+  .page-editor-delete { @apply tone-confirmdanger-solid layout-history-button shape-page-editor-delete type-page-editor-picker-button behavior-history-button effect-history-button effect-confirm-danger motion-history-button; }
+  .page-editor-image-hint { @apply tone-supportsecondary-plain layout-static-admin-block shape-page-editor-image-hint type-static-admin-small; }
+  .page-editor-block-title { @apply tone-supportprimary-plain shape-page-editor-block-title type-page-editor-block-title; }
+  .page-editor-block-empty { @apply tone-supportmuted-plain shape-page-editor-block-empty type-page-editor-block-empty; }
+  .page-editor-variables { @apply tone-supportmuted-plain type-static-admin-small; }
+  .page-editor-actions { @apply tone-historyborder-outline layout-page-editor-actions shape-page-editor-actions; }
+  .page-editor-dirty { @apply tone-pageeditordirty-plain type-page-editor-dirty; }
+
+}
+
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-blockoption-ink: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-blockoption-wash-hover: var(--color-bg-surface-hover);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-blockvisible-ink: var(--color-success);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-blockvisible-wash: var(--color-success-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-blockhidden-ink: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-blockhidden-wash: var(--color-bg-surface-hover);
+}
+@utility tone-blockoption-soft { @apply text-blockoption-ink hover:bg-blockoption-wash-hover; }
+@utility tone-blockvisible-soft { @apply text-blockvisible-ink bg-blockvisible-wash; }
+@utility tone-blockhidden-soft { @apply text-blockhidden-ink bg-blockhidden-wash; }
+@utility shape-block-card { @apply rounded-lg border p-3; }
+@utility motion-block-card { @apply transition-opacity; }
+@utility layout-block-header { @apply flex items-center gap-1; }
+@utility shape-block-header { @apply mb-2; }
+@utility shape-block-type-label { @apply px-2 py-1; }
+@utility type-block-type-label { @apply text-xs font-medium; }
+@utility shape-block-header-actions { @apply ml-auto; }
+@utility shape-block-gallery { @apply space-y-3; }
+@utility layout-block-gallery { @apply grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3; }
+@utility layout-block-thumb { @apply relative overflow-hidden; }
+@utility shape-block-thumb { @apply rounded-lg border; }
+@utility shape-block-thumb-image { @apply w-full h-24 object-cover; }
+@utility layout-block-thumb-remove { @apply absolute top-1 right-1 inline-flex items-center justify-center; }
+@utility shape-block-thumb-remove { @apply w-6 h-6 rounded-md; }
+@utility effect-block-thumb-remove { @apply opacity-0; }
+@utility shape-block-gallery-alt { @apply w-full rounded-md border p-1; }
+@utility shape-block-gallery-rows { @apply w-16 rounded-md border px-2 py-1; }
+@utility layout-block-delete-overlay { @apply fixed inset-0 z-50 flex items-center justify-center; }
+@utility shape-block-delete-overlay { @apply p-4; }
+@utility effect-block-delete-overlay { @apply backdrop-blur-sm; }
+@utility shape-block-delete-card { @apply rounded-lg border p-5 max-w-sm w-full; }
+@utility effect-block-delete-card { @apply shadow-xl; }
+@utility layout-block-delete-image-wrap { @apply flex justify-center; }
+@utility shape-block-delete-space { @apply mb-4; }
+@utility shape-block-delete-image { @apply max-h-40 rounded-lg; }
+@utility type-block-delete-caption { @apply text-sm text-center; }
+@utility layout-block-delete-actions { @apply flex justify-center gap-2; }
+@layer components {
+  .blk-card { @apply tone-gridborder-outline shape-block-card motion-block-card; }
+  .blk-header { @apply tone-supportinherit-plain layout-block-header shape-block-header; }
+  .block-type-label { @apply tone-supportsecondary-plain shape-block-type-label type-block-type-label; }
+  .block-header-actions { @apply tone-supportinherit-plain layout-block-header shape-block-header-actions; }
+  .block-gallery { @apply tone-supportinherit-plain shape-block-gallery; }
+  .blk-gal-grid { @apply tone-supportinherit-plain layout-block-gallery; }
+  .blk-gal-thumb { @apply tone-previewsection-outlined layout-block-thumb shape-block-thumb; }
+  .blk-gal-thumb-img { @apply tone-supportinherit-plain shape-block-thumb-image; }
+  .blk-gal-thumb-remove { @apply tone-snippetdanger-soft layout-block-thumb-remove shape-block-thumb-remove type-static-admin-small effect-block-thumb-remove motion-admin-log-tab-button; }
+  .block-image-label { @apply tone-supportsecondary-plain layout-static-admin-actions type-page-editor-dirty; }
+  .block-image-check { @apply tone-supportsecondary-plain layout-static-admin-actions type-page-editor-dirty behavior-snippet-label; }
+  .block-gallery-alt { @apply tone-garnetfield-outlined layout-native-select shape-block-gallery-alt type-static-admin-small focus-native-select motion-native-select; }
+  .block-gallery-rows { @apply tone-garnetfield-outlined layout-native-select shape-block-gallery-rows type-static-admin-small focus-native-select motion-native-select; }
+  .block-delete-overlay { @apply tone-fgbackdrop-soft layout-block-delete-overlay shape-block-delete-overlay effect-block-delete-overlay; }
+  .block-delete-card { @apply tone-cardsurface-outlined shape-block-delete-card effect-block-delete-card; }
+  .block-delete-image-wrap { @apply tone-supportinherit-plain layout-block-delete-image-wrap shape-block-delete-space; }
+  .block-delete-image { @apply tone-supportinherit-plain shape-block-delete-image; }
+  .block-delete-caption { @apply tone-supportprimary-plain shape-block-delete-space type-block-delete-caption; }
+  .block-delete-actions { @apply tone-supportinherit-plain layout-block-delete-actions; }
+}

@@ -7,85 +7,201 @@
  */
 
 import * as React from 'react';
-import {useState, useRef, useEffect, useMemo, useCallback} from 'react';
-import {IDetailsInfo, TGridFieldInfo, TGridSelectField, TValidationMapped} from '@common/Dom/GridTable/Models';
+import {useState} from 'react';
+import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
+import {TGridSelectField} from '@common/Dom/GridTable/Models';
 import {GridUtils} from '@common/Dom/GridTable/GridUtils';
 import {printUtDateTime} from '@common/Utils/Str/printUtDateTime';
 import {I18nFramework} from '@framework/I18nGen/I18nFramework';
-import {IApiSuccessResponse, ICropData, IDataListItem, TFromMap, TFromNestedMap} from '@common/Support/Models';
+import {ICropData, TFromMap, TFromNestedMap} from '@common/Support/Models';
 import {sendPostFormData} from '@common/Api/Send/sendPostFormData';
 import {makeFormData} from '@common/Api/Send/makeFormData';
-import {Validators} from '@common/Dom/GridTable/Validators';
-import {PageEvents} from '@common/Utils/Ui/PageEvents';
-import {DomEl} from '@common/Dom/El/DomEl';
-import {componentUploadPhotoHandler} from '@common/Dom/Component/ComponentUploadPhotoHandler';
-import {uploadMaxBytes, megabytes} from '@common/Utils/Upload/uploadLimits';
 import {Loader2} from 'lucide-react';
-import {Upload, XCircle} from 'lucide-react';
 import {UncontrolledForm, type UncontrolledFormHandle} from '../UncontrolledForm';
-import {UncontrolledInput} from '../UncontrolledInput';
-import {UncontrolledTextarea} from '../UncontrolledTextarea';
-import {UncontrolledSelect} from '../UncontrolledSelect';
-
 import {FormBuilderProps} from './types';
-import {parseValidation, runFieldValidation} from './validation';
-import {DatalistSelect} from './DatalistSelect';
-import {PhotoField} from './PhotoField';
+import {runFieldValidation} from './validation';
 import {FormRow} from './FormRow';
+import {FormBuilderFieldRow} from './FormBuilderFieldRow';
 
 export type {FormBuilderProps};
 
-export const FormBuilder: React.FC<FormBuilderProps> = ({
-	detailsInfo,
-	data,
-	isNew = false,
-	defaultValues = {},
-	onSuccess,
-	onCancel,
-	onFail,
-	footer,
-	beforeSubmit,
-}) => {
-	const [values, setValues] = useState<Record<string, any>>(() => {
-		const initial: Record<string, any> = {};
-		for (const column of detailsInfo.detailsFields) {
-			const fieldInfo = detailsInfo.fields[column];
-			if (!fieldInfo || fieldInfo.hidden) continue;
-			if (isNew && fieldInfo.readOnly && column !== detailsInfo.idColumn) continue;
-			const type = fieldInfo.type;
-			let val = type === 'unix_time' ? printUtDateTime(data[column] + '') : data[column];
+const EMPTY_DEFAULT_VALUES: Record<string, string | number> = {};
 
-			// For select fields with no initial value, default to first option (matches browser behavior)
-			if (!val && (GridUtils.isTimeZone(type) || GridUtils.isSelect(type) || GridUtils.isMap(type))) {
-				const selectArr = GridUtils.getSelectArr(type as TGridSelectField);
-				if (selectArr?.length > 0) {
-					val = selectArr[0].value;
-				}
-			}
+type TrackedFieldValue = string | number | boolean | bigint | symbol | null | undefined;
 
-			initial[column] = val ?? '';
+interface FormBuilderStatus {
+	values: Record<string, TrackedFieldValue>;
+	valuesRevision: number;
+	fieldErrors: Record<string, string>;
+	commonErrors: string[];
+	submitting: boolean;
+	progress: number | null;
+}
+
+class FormBuilderStatusState {
+	private opaqueValues = new Map<string, unknown>();
+	private cachedValues: Record<string, any> | undefined;
+	private cachedRevision = -1;
+	public readonly store: Carburetor<FormBuilderStatus>;
+
+	public constructor(initial: Record<string, any>) {
+		const {tracked, opaque} = this.splitValues(initial);
+		this.opaqueValues = opaque;
+		this.store = new Carburetor<FormBuilderStatus>({
+			values: tracked, valuesRevision: 0,
+			fieldErrors: {}, commonErrors: [], submitting: false, progress: null,
+		});
+	}
+
+	private splitValues(values: Record<string, any>): {
+		tracked: Record<string, TrackedFieldValue>;
+		opaque: Map<string, unknown>;
+	} {
+		const tracked: Record<string, TrackedFieldValue> = {};
+		const opaque = new Map<string, unknown>();
+		for (const [key, value] of Object.entries(values)) {
+			const isOpaque = value !== null && (typeof value === 'object' || typeof value === 'function');
+			if (isOpaque) opaque.set(key, value);
+			Object.defineProperty(tracked, key, {value: isOpaque ? null : value, enumerable: true, writable: true, configurable: true});
 		}
-		return initial;
-	});
+		return {tracked, opaque};
+	}
 
-	const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-	const [commonErrors, setCommonErrors] = useState<string[]>([]);
-	const [submitting, setSubmitting] = useState(false);
-	const [progress, setProgress] = useState<number | null>(null);
-
-	const photoDataRef = useRef<Record<string, Blob | null>>({});
-	const cropInfoRef = useRef<Record<string, ICropData | null>>({});
-	const inputRefs = useRef<Record<string, HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>>({});
-	const formRef = useRef<UncontrolledFormHandle>(null);
-
-	const saveUrl = useMemo(() => {
-		if (isNew) {
-			return detailsInfo.saveUrl?.replace('~save_', '~create_') ?? detailsInfo.saveUrl ?? '';
+	public readonly getValues = (): Record<string, any> => {
+		const state = this.store.getData();
+		if (this.cachedValues && this.cachedRevision === state.valuesRevision) return this.cachedValues;
+		const values: Record<string, any> = {};
+		for (const key of Object.keys(state.values)) {
+			const value = this.opaqueValues.has(key) ? this.opaqueValues.get(key) : state.values[key];
+			Object.defineProperty(values, key, {value, enumerable: true, writable: true, configurable: true});
 		}
-		return detailsInfo.saveUrl ?? '';
-	}, [detailsInfo.saveUrl, isNew]);
+		this.cachedRevision = state.valuesRevision;
+		this.cachedValues = values;
+		return values;
+	};
 
-	const handleFieldChange = useCallback((column: string, value: any) => {
+	public readonly setValues: React.Dispatch<React.SetStateAction<Record<string, any>>> = update => {
+		const previous = this.getValues();
+		const values = typeof update === 'function' ? update(previous) : update;
+		if (Object.is(values, previous)) return;
+		const {tracked, opaque} = this.splitValues(values);
+		const state = this.store.getData();
+		this.opaqueValues = opaque;
+		this.cachedValues = undefined;
+		this.store.setData({...state, values: tracked, valuesRevision: state.valuesRevision + 1});
+	};
+
+	public readonly setFieldErrors: React.Dispatch<React.SetStateAction<Record<string, string>>> = update => {
+		const state = this.store.getData();
+		const fieldErrors = typeof update === 'function' ? update(state.fieldErrors) : update;
+		if (fieldErrors !== state.fieldErrors) this.store.setData({...state, fieldErrors});
+	};
+
+	public readonly setCommonErrors = (commonErrors: string[]): void => {
+		this.store.setData({...this.store.getData(), commonErrors});
+	};
+
+	public readonly setSubmitting = (submitting: boolean): void => {
+		this.store.setData({...this.store.getData(), submitting});
+	};
+
+	public readonly setProgress = (progress: number | null): void => {
+		this.store.setData({...this.store.getData(), progress});
+	};
+}
+
+type FormBuilderViewProps = FormBuilderProps & {status: FormBuilderStatusState};
+type FormBuilderBodyProps = FormBuilderViewProps & {snapshot: FormBuilderStatus};
+
+class FormBuilderView extends AntiHookComponent<FormBuilderViewProps> {
+	private readonly snapshot = this.connectSelection(() => this.props.status.store, state => state);
+
+	public render() {
+		return <FormBuilderBody {...this.props} snapshot={this.snapshot()} />;
+	}
+}
+
+function initialFormValues({detailsInfo, data, isNew = false}: FormBuilderProps): Record<string, any> {
+	const initial: Record<string, any> = {};
+	for (const column of detailsInfo.detailsFields) {
+		const fieldInfo = detailsInfo.fields[column];
+		if (!fieldInfo || fieldInfo.hidden) continue;
+		if (isNew && fieldInfo.readOnly && column !== detailsInfo.idColumn) continue;
+		const type = fieldInfo.type;
+		let val = type === 'unix_time' ? printUtDateTime(data[column] + '') : data[column];
+
+		if (!val && (GridUtils.isTimeZone(type) || GridUtils.isSelect(type) || GridUtils.isMap(type))) {
+			const selectArr = GridUtils.getSelectArr(type as TGridSelectField);
+			if (selectArr?.length > 0) val = selectArr[0].value;
+		}
+		initial[column] = val ?? '';
+	}
+	return initial;
+}
+
+export const FormBuilder: React.FC<FormBuilderProps> = props => {
+	const [status] = useState(() => new FormBuilderStatusState(initialFormValues(props)));
+	return <FormBuilderView {...props} status={status} />;
+};
+
+interface FormBuilderStatusPanelProps {
+	commonErrors: string[];
+	progress: number | null;
+	submitting: boolean;
+	onCancel?: () => void;
+	buttonText: string;
+}
+
+function renderCommonErrors(errors: string[]): React.ReactNode[] {
+	const counts = new Map<string, number>();
+	const nodes: React.ReactNode[] = [];
+	for (const error of errors) {
+		const occurrence = counts.get(error) ?? 0;
+		counts.set(error, occurrence + 1);
+		nodes.push(<div key={JSON.stringify([error, occurrence])} className="form-builder-common-error" role="alert">{error}</div>);
+	}
+	return nodes;
+}
+
+function FormBuilderStatusPanel({commonErrors, progress, submitting, onCancel, buttonText}: FormBuilderStatusPanelProps) {
+	return (
+		<FormRow label={' '}>
+			{commonErrors.length > 0 && (
+				<div className="common-errors">
+					{renderCommonErrors(commonErrors)}
+				</div>
+			)}
+			{progress !== null && (
+				<div className="reg-progress">
+					<div className="progress-bar" style={{width: `${progress}%`}} />
+				</div>
+			)}
+			{onCancel && (
+				<button type="button" className="save-btn-cancel" onClick={onCancel} disabled={submitting}>
+					{I18nFramework.Common_Cancel()}
+				</button>
+			)}
+			<button
+				type="submit"
+				className="save-btn-submit"
+				disabled={submitting}
+				data-test-id="form-save-btn"
+			>
+				{submitting && <Loader2 size={16} className="form-builder-spinner" aria-hidden="true" />}
+				{buttonText}
+			</button>
+		</FormRow>
+	);
+}
+
+class FormBuilderBody extends AntiHookComponent<FormBuilderBodyProps> {
+	private readonly photoDataRef = {current: {} as Record<string, Blob | null>};
+	private readonly cropInfoRef = {current: {} as Record<string, ICropData | null>};
+	private readonly inputRefs = {current: {} as Record<string, HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>};
+	private readonly formRef = React.createRef<UncontrolledFormHandle>();
+
+	private readonly handleFieldChange = (column: string, value: any) => {
+		const {setValues, setFieldErrors} = this.props.status;
 		setValues(prev => ({...prev, [column]: value}));
 		setFieldErrors(prev => {
 			if (!prev[column]) return prev;
@@ -93,14 +209,21 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({
 			delete next[column];
 			return next;
 		});
-	}, []);
+	};
 
-	const handlePhotoChange = useCallback((column: string, file: Blob | null, cropInfo: ICropData | null) => {
+	private readonly handlePhotoChange = (column: string, file: Blob | null, cropInfo: ICropData | null) => {
+		const {photoDataRef, cropInfoRef} = this;
 		photoDataRef.current[column] = file;
 		cropInfoRef.current[column] = cropInfo;
-	}, []);
+	};
 
-	const handleSubmit = useCallback((formEl: HTMLFormElement | undefined) => {
+	private readonly handleSubmit = (formEl: HTMLFormElement | undefined) => {
+		const {status, detailsInfo, data, isNew = false, defaultValues = EMPTY_DEFAULT_VALUES, beforeSubmit, onSuccess, onFail} = this.props;
+		const {setFieldErrors, setCommonErrors, setSubmitting, setProgress} = status;
+		const values = status.getValues();
+		const {formRef, photoDataRef, cropInfoRef, inputRefs} = this;
+		const configuredUrl = detailsInfo.saveUrl ?? '';
+		const saveUrl = isNew ? configuredUrl.replace('~save_', '~create_') : configuredUrl;
 		if (beforeSubmit && !beforeSubmit()) {
 			return;
 		}
@@ -240,161 +363,28 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({
 				onFail?.();
 				throw e;
 			});
-	}, [values, detailsInfo, data, isNew, defaultValues, saveUrl, onSuccess, onFail, beforeSubmit]);
+	};
 
-	const buttonText = isNew ? (I18nFramework.Common_Create?.() || 'Create') : I18nFramework.Common_Save();
+	private readonly handleFormSubmit = (_values: Record<string, string>, form: HTMLFormElement) => this.handleSubmit(form);
 
-	return (
-		<UncontrolledForm ref={formRef} onSubmit={(_values, form) => handleSubmit(form)}>
-		{detailsInfo.detailsFields.map((column) => {
-			const fieldInfo = detailsInfo.fields[column];
-			if (!fieldInfo) return null;
-			if (fieldInfo.hidden) return null;
-			if (isNew && fieldInfo.readOnly && column !== detailsInfo.idColumn) return null;
+	private readonly renderField = (column: string) => {
+		const {detailsInfo, data, isNew = false, status, snapshot} = this.props;
+		return <FormBuilderFieldRow key={column} column={column} detailsInfo={detailsInfo} data={data}
+			isNew={isNew} value={status.getValues()[column]} error={snapshot.fieldErrors[column]} submitting={snapshot.submitting}
+			inputRefs={this.inputRefs} onFieldChange={this.handleFieldChange} onPhotoChange={this.handlePhotoChange} />;
+	};
 
-			const type = fieldInfo.type;
-			const label = fieldInfo.name || '';
-			const value = values[column];
-			const error = fieldErrors[column];
-
-			if (type === 'photo') {
-				if (!value && fieldInfo.readOnly) return null;
-				return (
-					<FormRow key={column} label={label} error={error} align="center">
-						<PhotoField
-							column={column}
-							value={value}
-							fieldInfo={fieldInfo}
-							data={data}
-							disabled={submitting}
-							onFileChange={handlePhotoChange}
-						/>
-					</FormRow>
-				);
-			}
-
-			if (type === 'bool' || GridUtils.isBoolStr(type)) {
-				return (
-					<FormRow key={column} label={'\u00A0'} error={error}>
-						<div className="form-check form-switch">
-							<input
-								type="checkbox"
-								className="form-check-input"
-								checked={!!value || value === '1'}
-								disabled={fieldInfo.readOnly || submitting}
-								onChange={(e) => handleFieldChange(column, e.target.checked)}
-								ref={(el) => { if (el) inputRefs.current[column] = el; }}
-								data-test-id={`form-field-${column}`}
-							/>
-							<label className="form-check-label">{label}</label>
-						</div>
-					</FormRow>
-				);
-			}
-
-			if (GridUtils.isTimeZone(type) || GridUtils.isSelect(type) || GridUtils.isMap(type)) {
-				const selectArr = GridUtils.getSelectArr(type as TGridSelectField);
-				if (selectArr?.length <= 10) {
-					return (
-						<FormRow key={column} label={label}>
-							<UncontrolledSelect
-								name={column}
-								defaultValue={value?.toString() || ''}
-								options={selectArr}
-								disabled={fieldInfo.readOnly || submitting}
-								testId={`form-field-${column}`}
-								ref={(el) => { if (el) inputRefs.current[column] = el; }}
-							/>
-						</FormRow>
-					);
-				}
-
-				return (
-					<FormRow key={column} label={label} error={error}>
-						<DatalistSelect
-							column={column}
-							value={value?.toString() || ''}
-							items={selectArr}
-							disabled={fieldInfo.readOnly || submitting}
-							onChange={(val) => handleFieldChange(column, val)}
-						/>
-					</FormRow>
-				);
-			}
-
-			if (type === 'textarea') {
-				return (
-					<FormRow key={column} label={label}>
-						<UncontrolledTextarea
-							name={column}
-							defaultValue={value?.toString() || ''}
-							disabled={fieldInfo.readOnly || submitting}
-							rows={7}
-							testId={`form-field-${column}`}
-							ref={(el) => { if (el) inputRefs.current[column] = el; }}
-						/>
-					</FormRow>
-				);
-			}
-
-			if (fieldInfo.readOnly && column !== detailsInfo.idColumn) {
-				return (
-					<FormRow key={column} label={label}>
-						<div className="col-form-label">{value?.toString() || ''}</div>
-					</FormRow>
-				);
-			}
-
-			return (
-				<FormRow key={column} label={label}>
-					<UncontrolledInput
-						name={column}
-						defaultValue={value?.toString() || ''}
-						disabled={fieldInfo.readOnly || submitting}
-						testId={`form-field-${column}`}
-						ref={(el) => { if (el) inputRefs.current[column] = el; }}
-					/>
-				</FormRow>
-			);
-		})}
-
-			{footer}
-
-			<FormRow label={'\u00A0'}>
-				{commonErrors.length > 0 && (
-					<div className="common-errors">
-						{commonErrors.map((err, i) => (
-							<div key={i} className="alert alert-danger mb-2" role="alert">
-								{err}
-							</div>
-						))}
-					</div>
-				)}
-				{progress !== null && (
-					<div className="reg-progress progress mb-2">
-						<div className="progress-bar" style={{width: `${progress}%`}} />
-					</div>
-				)}
-				{onCancel && (
-					<button
-						type="button"
-						className="btn btn-outline-secondary save-btn-cancel"
-						onClick={onCancel}
-						disabled={submitting}
-					>
-						{I18nFramework.Common_Cancel()}
-					</button>
-				)}
-				<button
-					type="submit"
-					className="btn btn-primary save-btn-submit mx-2 inline-flex items-center gap-1.5"
-					disabled={submitting}
-					data-test-id="form-save-btn"
-				>
-					{submitting && <Loader2 size={16} className="animate-spin" aria-hidden="true" />}
-					{buttonText}
-				</button>
-			</FormRow>
-		</UncontrolledForm>
-	);
-};
+	render() {
+		const {detailsInfo, snapshot, isNew = false, onCancel, footer} = this.props;
+		const {commonErrors, progress, submitting} = snapshot;
+		const buttonText = isNew ? (I18nFramework.Common_Create?.() || 'Create') : I18nFramework.Common_Save();
+		return (
+			<UncontrolledForm ref={this.formRef} onSubmit={this.handleFormSubmit}>
+				{detailsInfo.detailsFields.map(this.renderField)}
+				{footer}
+				<FormBuilderStatusPanel commonErrors={commonErrors} progress={progress} submitting={submitting}
+					onCancel={onCancel} buttonText={buttonText} />
+			</UncontrolledForm>
+		);
+	}
+}

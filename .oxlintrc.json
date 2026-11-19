@@ -1,6 +1,7 @@
 {
   "$schema": "./FrontBuilder/node_modules/oxlint/configuration_schema.json",
-  "jsPlugins": ["./FrontBuilder/oxlint-plugins/garnet-tsx-rules.js"],
+  "extends": ["./FrontBuilder/node_modules/@react-carburetor/core/dist/lint/recommended.oxlintrc.json"],
+  "jsPlugins": ["./FrontBuilder/oxlint-plugins/garnet-tsx-rules.js", "./FrontBuilder/node_modules/@react-carburetor/core/dist/lint/index.mjs"],
   "plugins": ["react", "typescript", "unicorn", "import"],
   "env": {
     "browser": true,
@@ -43,6 +44,29 @@
     "garnet-tsx/max-component-nesting": "warn"
   },
   "overrides": [
+    {
+      "files": ["**/Common/Components/Admin/AdminLog/details/ActionLogDetail.tsx", "**/Common/Components/Admin/AdminLog/details/CronLogDetail.tsx", "**/Common/Components/Admin/AdminLog/details/ErrorLogDetail.tsx"],
+      "rules": {"carburetor/require-function-class": "error", "carburetor/no-react-hooks-in-components": "error"}
+    },
+    {
+      "files": ["**/Common/Components/Feedback/ConfirmModal.tsx", "**/Common/Components/Form/FormBuilder/PhotoField.tsx", "**/Common/Components/Form/FormBuilder/FormBuilderInput.tsx", "**/Common/Components/Form/FormBuilder/FormBuilderTextarea.tsx", "**/Common/Components/Form/FormBuilder/FormBuilderSelect.tsx"],
+      "rules": {"carburetor/require-function-class": "error"}
+    },
+    {
+      "files": ["**/Common/Components/Admin/SystemSettings/SystemSettingsPage/index.tsx"],
+      "rules": {"carburetor/require-function-class": "error", "carburetor/no-react-hooks-in-components": "error"}
+    },
+    {
+      "files": ["**/auth/Auth2.tsx"],
+      "rules": {"carburetor/require-function-class": "error", "carburetor/no-react-hooks-in-components": "error"}
+    },
+    {
+      "files": ["**/Common/Components/Controls/ThemeToggle.tsx", "**/Common/Components/Controls/AsyncIcon.tsx", "**/Common/Components/Controls/DurationSelect.tsx", "**/Common/Components/Controls/Calendar.tsx", "**/Common/Components/Controls/AsyncIconButton.tsx", "**/Common/Components/Controls/ImageUploadArea.tsx", "**/Common/Components/Controls/ImageUploadField.tsx", "**/Common/Components/Layout/Paging/*.tsx", "**/Common/Components/Feedback/Banner.tsx", "**/Common/Components/Feedback/TimezoneNotice.tsx", "**/auth/DevLogin.tsx", "**/auth/utils/CodeTimer.tsx", "**/auth/AuthConsentFields.tsx", "**/Common/Components/Feedback/GlobalToastRenderer.tsx", "**/Common/Components/Feedback/Toast.tsx", "**/Common/Components/Feedback/TimezoneNoticeWarnIsland.tsx", "**/Common/Components/Layout/Navigation/TabBreadcrumb.tsx", "**/Common/Components/Layout/Navigation/TabClose.tsx", "**/Common/Components/Layout/Navigation/TabNav.tsx", "**/Common/Components/Form/FormBuilder/FormRow.tsx", "**/Common/Components/Form/FormBuilder/PhotoField.tsx", "**/Common/Components/Form/FormBuilder/DatalistSelect.tsx", "**/Common/Components/Form/FormBuilder/FormBooleanField.tsx", "**/Common/Components/Form/FormBuilder/FormReadonlyValue.tsx", "**/Common/Components/Form/FormBuilder/FormBuilderError.tsx", "**/Common/Components/Layout/Navigation/NavigationCountBadge.tsx", "**/Common/Components/Layout/Navigation/NavigationUnreadDot.tsx", "**/Common/Components/Layout/Navigation/NavigationDivider.tsx", "**/Common/Components/Layout/Navigation/UtilityBalanceParts.tsx", "**/Common/Components/Admin/SystemSettings/SystemSettingsPage/VersionInfoPanel.tsx", "**/Common/Components/Admin/SystemSettings/SystemSettingsPage/Tabs/SaveButton.tsx", "**/Common/Components/Admin/SystemSettings/SystemSettingsPage/SettingsTabStrip.tsx", "**/Common/Components/Admin/SystemSettings/SystemSettingsPage/OpcacheResetView.tsx", "**/Common/Components/Admin/SystemSettings/SystemSettingsPage/Tabs/HistoryTab.tsx", "**/Common/Components/Admin/SystemSettings/SystemSettingsPage/Tabs/RegistrationTab.tsx", "**/Common/Components/Admin/SystemSettings/SystemSettingsPage/Tabs/PenaltyTab.tsx", "**/Common/Components/Admin/SystemSettings/SystemSettingsPage/Tabs/ContactsTab.tsx", "**/Common/Components/Admin/SystemSettings/SystemSettingsPage/Tabs/SmtpTab.tsx", "**/Common/Components/Admin/AdminGrid/AdminGridSearch.tsx", "**/Common/Components/Admin/AdminGrid/AdminGridHeader.tsx", "**/Common/Components/Admin/AdminGrid/AdminGridTableShell.tsx", "**/Common/Components/Admin/AdminGrid/AdminGridEmptyRow.tsx", "**/Common/Components/Admin/AdminGrid/AdminGridRow.tsx"],
+      "rules": {
+        "carburetor/require-function-class": "error",
+        "carburetor/no-react-hooks-in-components": "error"
+      }
+    },
     {
       "files": [
         "**/Common/Components/ui/Dialog.tsx",

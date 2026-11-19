@@ -12,14 +12,9 @@ const SelectTrigger = React.forwardRef<
 >(({className, children, ...props}, ref) => (
     <SelectPrimitive.Trigger
         ref={ref}
-        className={cn(
-            'flex h-9 w-full items-center justify-between rounded-md border px-3 py-2 text-sm',
-            'border-default bg-surface text-on-surface',
-            'placeholder:text-muted',
-            'focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1',
-            'disabled:cursor-not-allowed disabled:opacity-50',
-            className,
-        )}
+        // Внешний className сохраняется для совместимости.
+        // carburetor-disable-next-line require-function-class
+        className={cn('radix-select-trigger', className)}
         {...props}
     >
         {children}
@@ -39,21 +34,16 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Portal>
         <SelectPrimitive.Content
             ref={ref}
-            className={cn(
-                'relative z-50 max-h-72 min-w-[8rem] overflow-hidden rounded-md border shadow-lg',
-                'border-default bg-surface text-on-surface',
-                'animate-in fade-in-0 zoom-in-95',
-                position === 'popper' && 'translate-y-1',
-                className,
-            )}
+            // Внешний className сохраняется для совместимости.
+            // carburetor-disable-next-line require-function-class
+            className={cn('radix-select-content', className)}
+            data-popper={position === 'popper' ? '' : undefined}
             position={position}
             {...props}
         >
             <SelectPrimitive.Viewport
-                className={cn(
-                    'p-1',
-                    position === 'popper' && 'h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]',
-                )}
+                className="radix-select-viewport"
+                data-popper={position === 'popper' ? '' : undefined}
             >
                 {children}
             </SelectPrimitive.Viewport>
@@ -68,16 +58,13 @@ const SelectItem = React.forwardRef<
 >(({className, children, ...props}, ref) => (
     <SelectPrimitive.Item
         ref={ref}
-        className={cn(
-            'relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-none',
-            'focus:bg-accent-subtle focus:text-accent',
-            'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
-            className,
-        )}
+        // Внешний className сохраняется для совместимости.
+        // carburetor-disable-next-line require-function-class
+        className={cn('radix-select-item', className)}
         {...props}
     >
         <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
-        <span className="absolute right-2 flex h-3.5 w-3.5 items-center justify-center">
+        <span className="radix-select-indicator">
             <SelectPrimitive.ItemIndicator>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                     <polyline points="20 6 9 17 4 12" />
@@ -94,7 +81,9 @@ const SelectLabel = React.forwardRef<
 >(({className, ...props}, ref) => (
     <SelectPrimitive.Label
         ref={ref}
-        className={cn('px-2 py-1.5 text-sm font-semibold text-muted', className)}
+        // Внешний className сохраняется для совместимости.
+        // carburetor-disable-next-line require-function-class
+        className={cn('radix-select-label', className)}
         {...props}
     />
 ));

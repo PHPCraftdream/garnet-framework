@@ -1,0 +1,125 @@
+/* Bridge existing theme variables while legacy pages still use them. */
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnet-ink: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnet-ink-hover: var(--color-warning);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnet-wash-hover: var(--color-warning-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garneticon-ink: currentColor;
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetdanger-ink: var(--color-danger);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetmuted-ink: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetmuted-ink-hover: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetmuted-wash-hover: var(--color-bg-surface-hover);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetmuted-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetaccent-ink: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetaccent-ink-hover: var(--color-accent-text);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetaccent-wash-hover: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-garnetaccent-edge: var(--color-accent);
+}
+
+@utility tone-garnet-soft {
+  @apply text-garnet-ink hover:text-garnet-ink-hover hover:bg-garnet-wash-hover;
+}
+
+@utility tone-garneticon-plain {
+  @apply text-garneticon-ink;
+}
+
+@utility tone-garnetdanger-plain {
+  @apply text-garnetdanger-ink;
+}
+
+@utility tone-garnetmuted-outlined {
+  @apply border-garnetmuted-edge text-garnetmuted-ink hover:text-garnetmuted-ink-hover hover:bg-garnetmuted-wash-hover;
+}
+
+@utility tone-garnetaccent-outlined {
+  @apply border-garnetaccent-edge text-garnetaccent-ink hover:text-garnetaccent-ink-hover hover:bg-garnetaccent-wash-hover;
+}
+
+@utility layout-async-action {
+  @apply inline-flex items-center gap-1.5;
+}
+
+@utility shape-async-action {
+  @apply px-2 py-1 rounded border;
+}
+
+@utility type-async-action {
+  @apply text-sm;
+}
+
+@utility shape-duration-compact {
+  @apply w-full pl-2 pr-8 py-1 rounded-md border;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+}
+
+@utility type-duration-compact {
+  @apply leading-normal;
+  font-size: 0.8rem;
+}
+
+@utility motion-async-loading {
+  @apply animate-spin;
+}
+
+@utility layout-theme-toggle {
+  @apply inline-flex items-center gap-1;
+}
+
+@utility shape-theme-toggle {
+  @apply px-3 py-1.5 rounded;
+}
+
+@utility type-theme-toggle {
+  @apply text-sm;
+}
+
+@utility motion-theme-toggle {
+  @apply transition-colors;
+}
+
+@layer components {
+  .duration-select {
+    @apply tone-garnetfield-outlined shape-native-control shape-native-select behavior-native-select layout-native-select type-native-select focus-native-select motion-native-select;
+  }
+
+  .duration-select-compact {
+    @apply tone-garnetfield-outlined shape-duration-compact behavior-native-select layout-native-select type-duration-compact focus-native-select motion-native-select;
+  }
+
+  .async-accent-action {
+    @apply tone-garnetaccent-outlined layout-async-action shape-async-action type-async-action motion-theme-toggle;
+  }
+
+  .async-muted-action {
+    @apply tone-garnetmuted-outlined layout-async-action shape-async-action type-async-action motion-theme-toggle;
+  }
+
+  .async-loading-icon {
+    @apply tone-garneticon-plain motion-async-loading;
+  }
+
+  .async-error-icon {
+    @apply tone-garnetdanger-plain;
+  }
+
+  .common-theme-toggle {
+    @apply tone-garnet-soft layout-theme-toggle shape-theme-toggle type-theme-toggle motion-theme-toggle;
+  }
+}

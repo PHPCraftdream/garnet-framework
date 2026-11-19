@@ -13,7 +13,7 @@
 import * as React from 'react';
 import {sendPost} from '@common/Api/Send/sendPost';
 import {showToast} from '@common/Components/Feedback/GlobalToast';
-import {useSending} from '@common/hooks/data/useSending';
+import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
 import {EntityHistoryRow} from '@common/Components/Admin/EntityHistory/EntityHistoryTable';
 import {EntityHistoryDetailModal} from '@common/Components/Admin/EntityHistory/EntityHistoryDetailModal';
 import {PageHeader} from '@common/Components/Layout/PageHeader';
@@ -21,55 +21,129 @@ import {Settings} from 'lucide-react';
 import {SettingsData, SystemSettingsPageProps, TabKey} from './types';
 import {OpcacheResetPanel} from './OpcacheResetPanel';
 import {VersionInfoPanel} from './VersionInfoPanel';
+import {SettingsTabStrip} from './SettingsTabStrip';
 import {SmtpTab} from './Tabs/SmtpTab';
 import {RegistrationTab, PenaltyTab, ContactsTab} from './Tabs/GeneralTabs';
 import {SeoTab} from './Tabs/SeoTab';
 import {HistoryTab} from './Tabs/HistoryTab';
 
-export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({settings: initialSettings, saveUrl, testEmailUrl, historyListUrl, uploadImageUrl, deleteImageUrl, opcacheResetUrl, labels, mailTypes = [], versionInfo}) => {
-    const [settings, setSettings] = React.useState<SettingsData>(initialSettings);
-    const [activeTab, setActiveTab] = React.useState<TabKey>('smtp');
-    const [testEmail, setTestEmail] = React.useState('');
-    const [testMailType, setTestMailType] = React.useState<string>('');
-    const [message, setMessage] = React.useState<{type: 'success' | 'error'; text: string} | null>(null);
-    const [historyRows, setHistoryRows] = React.useState<EntityHistoryRow[]>([]);
-    const [historyLoading, setHistoryLoading] = React.useState<boolean>(false);
-    const [historyDetail, setHistoryDetail] = React.useState<EntityHistoryRow | null>(null);
-    const {sending, withSending} = useSending();
-    const {sending: sendingTestEmail, withSending: withSendingTestEmail} = useSending();
+type PageState = {
+    settings: SettingsData;
+    activeTab: TabKey;
+    testEmail: string;
+    testMailType: string;
+    message: {type: 'success' | 'error'; text: string} | null;
+    historyRows: EntityHistoryRow[];
+    historyLoading: boolean;
+    historyDetail: EntityHistoryRow | null;
+    sending: boolean;
+    sendingTestEmail: boolean;
+};
 
-    const loadHistory = React.useCallback(async (): Promise<void> => {
-        if (!historyListUrl) return;
-        setHistoryLoading(true);
-        try {
-            const resp = await sendPost<{limit: number}, {success: boolean; rows: EntityHistoryRow[]}>(
-                historyListUrl,
-                {limit: 200},
-            );
-            setHistoryRows(resp.rows ?? []);
-        } finally {
-            setHistoryLoading(false);
-        }
-    }, [historyListUrl]);
+export class SystemSettingsPage extends AntiHookComponent<SystemSettingsPageProps> {
+    private readonly page = new Carburetor<PageState>({
+        settings: this.props.settings,
+        activeTab: 'smtp',
+        testEmail: '',
+        testMailType: '',
+        message: null,
+        historyRows: [],
+        historyLoading: false,
+        historyDetail: null,
+        sending: false,
+        sendingTestEmail: false,
+    });
+    private readonly view = this.connectSelection(() => this.page, data => ({
+        settings: data.settings,
+        activeTab: data.activeTab,
+        testEmail: data.testEmail,
+        testMailType: data.testMailType,
+        message: data.message,
+        historyRows: data.historyRows,
+        historyLoading: data.historyLoading,
+        historyDetail: data.historyDetail,
+        sending: data.sending,
+        sendingTestEmail: data.sendingTestEmail,
+    }));
+    private sendingGuard = false;
+    private testEmailGuard = false;
+    private historyDependencies: {activeTab: TabKey; historyListUrl: string | undefined} | null = null;
 
-    React.useEffect(() => {
-        if (activeTab === 'history') void loadHistory();
-    }, [activeTab, loadHistory]);
+    public componentDidMount(): void {
+        super.componentDidMount();
+        this.syncHistory();
+    }
 
-    const updateSmtp = (field: keyof SettingsData['smtp'], value: string | boolean) => {
-        setSettings((prev) => ({
-            ...prev,
-            smtp: {
-                ...prev.smtp,
-                [field]: value,
-            },
-        }));
+    public componentDidUpdate(previousProps: Readonly<SystemSettingsPageProps>): void {
+        super.componentDidUpdate(previousProps);
+        this.syncHistory();
+    }
+
+    public componentWillUnmount(): void {
+        this.historyDependencies = null;
+        super.componentWillUnmount();
+    }
+
+    private syncHistory(): void {
+        const activeTab = this.page.getData().activeTab;
+        const {historyListUrl} = this.props;
+        const previous = this.historyDependencies;
+        if (previous && previous.activeTab === activeTab && previous.historyListUrl === historyListUrl) return;
+        this.historyDependencies = {activeTab, historyListUrl};
+        if (activeTab === 'history') void this.loadHistory();
+    }
+
+    private readonly setSettings: React.Dispatch<React.SetStateAction<SettingsData>> = (value) => {
+        const state = this.page.getData();
+        const settings = typeof value === 'function' ? value(this.page.snapshot().settings) : value;
+        this.page.setData({...state, settings});
     };
 
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
+    private readonly setActiveTab = (activeTab: TabKey): void => {
+        this.page.setData({...this.page.getData(), activeTab});
+    };
 
-        void withSending(async () => {
+    private readonly setTestEmail: React.Dispatch<React.SetStateAction<string>> = (value) => {
+        const state = this.page.getData();
+        this.page.setData({...state, testEmail: typeof value === 'function' ? value(state.testEmail) : value});
+    };
+
+    private readonly setTestMailType: React.Dispatch<React.SetStateAction<string>> = (value) => {
+        const state = this.page.getData();
+        this.page.setData({...state, testMailType: typeof value === 'function' ? value(state.testMailType) : value});
+    };
+
+    private readonly setHistoryDetail = (historyDetail: EntityHistoryRow | null): void => {
+        this.page.setData({...this.page.getData(), historyDetail});
+    };
+
+    private readonly closeHistoryDetail = (): void => { this.setHistoryDetail(null); };
+    private readonly refreshHistory = (): void => { void this.loadHistory(); };
+
+    private readonly loadHistory = async (): Promise<void> => {
+        const {historyListUrl} = this.props;
+        if (!historyListUrl) return;
+        this.page.setData({...this.page.getData(), historyLoading: true});
+        try {
+            const resp = await sendPost<{limit: number}, {success: boolean; rows: EntityHistoryRow[]}>(historyListUrl, {limit: 200});
+            this.page.setData({...this.page.getData(), historyRows: resp.rows ?? []});
+        } finally {
+            this.page.setData({...this.page.getData(), historyLoading: false});
+        }
+    };
+
+    private readonly updateSmtp = (field: keyof SettingsData['smtp'], value: string | boolean): void => {
+        this.setSettings(prev => ({...prev, smtp: {...prev.smtp, [field]: value}}));
+    };
+
+    private readonly handleSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
+        event.preventDefault();
+        if (this.sendingGuard) return;
+        this.sendingGuard = true;
+        const {settings} = this.page.getData();
+        const {saveUrl, labels} = this.props;
+        this.page.setData({...this.page.getData(), sending: true});
+        void (async () => {
             try {
                 const response = await sendPost<any, {success: boolean; settings: SettingsData}>(saveUrl, {
                     registrations_enabled: settings.registrationsEnabled ? 1 : 0,
@@ -89,31 +163,34 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({settings:
                     seo_og_image: settings.seo?.ogImage ?? '',
                     seo_twitter_site: settings.seo?.twitterSite ?? '',
                 });
-
                 if ((response as any)?.error) {
                     const errorText = (response as any).error || labels.error;
-                    setMessage({type: 'error', text: errorText});
+                    this.page.setData({...this.page.getData(), message: {type: 'error', text: errorText}});
                     showToast(errorText, 'danger');
                     return;
                 }
-
                 const nextSettings = (response as any)?.settings as SettingsData | undefined;
-                if (nextSettings) {
-                    setSettings(nextSettings);
-                }
-
-                setMessage({type: 'success', text: labels.saved});
+                if (nextSettings) this.setSettings(nextSettings);
+                this.page.setData({...this.page.getData(), message: {type: 'success', text: labels.saved}});
                 showToast(labels.saved, 'success');
             } catch (err: any) {
                 const errorText = err?.message || labels.error;
-                setMessage({type: 'error', text: errorText});
+                this.page.setData({...this.page.getData(), message: {type: 'error', text: errorText}});
                 showToast(errorText, 'danger');
+            } finally {
+                this.sendingGuard = false;
+                this.page.setData({...this.page.getData(), sending: false});
             }
-        });
+        })();
     };
 
-    const handleSendTestEmail = () => {
-        void withSendingTestEmail(async () => {
+    private readonly handleSendTestEmail = (): void => {
+        if (this.testEmailGuard) return;
+        this.testEmailGuard = true;
+        const {settings, testEmail, testMailType} = this.page.getData();
+        const {testEmailUrl, labels} = this.props;
+        this.page.setData({...this.page.getData(), sendingTestEmail: true});
+        void (async () => {
             try {
                 const response = await sendPost<any, {success: boolean; message?: string}>(testEmailUrl, {
                     test_email: testEmail,
@@ -127,88 +204,56 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({settings:
                     smtp_from: settings.smtp.from,
                     smtp_verify_peer: settings.smtp.verify_peer ? 1 : 0,
                 });
-
                 if ((response as any)?.error) {
                     const errorText = (response as any).error || labels.error;
                     showToast(errorText, 'danger');
                     return;
                 }
-
                 const successText = (response as any)?.message || labels.testEmailSuccess;
                 showToast(successText, 'success');
             } catch (err: any) {
                 const errorText = err?.response?.error || err?.message || labels.error;
                 showToast(errorText, 'danger');
+            } finally {
+                this.testEmailGuard = false;
+                this.page.setData({...this.page.getData(), sendingTestEmail: false});
             }
-        });
+        })();
     };
 
-    const tab = (key: TabKey, label: string, testId?: string) => (
-        <li className="mr-1">
-            <button
-                type="button"
-                {...(testId ? {'data-test-id': testId} : {})}
-                className={`tab-link ${activeTab === key ? 'tab-link-active' : ''}`}
-                onClick={() => setActiveTab(key)}
-            >
-                {label}
-            </button>
-        </li>
-    );
-
-    return (
-        <div className="max-w-4xl space-y-6" data-test-id="admin-system-settings">
-            <PageHeader title={labels.title} subtitle={labels.subtitle} icon={<Settings size={22} aria-hidden="true" />} />
-
-            <div className="section-soft">
-            {message && (
-                <div className={`rounded-lg border border-default px-4 py-3 text-sm ${message.type === 'success' ? 'bg-success-subtle text-on-surface' : 'bg-danger-subtle text-on-surface'}`}>
-                    {message.text}
-                </div>
-            )}
-
-            <ul className="tab-bar">
-                {tab('smtp', labels.smtpTab)}
-                {tab('registration', labels.registrationTab)}
-                {labels.cancellationPenaltyTab && tab('penalty', labels.cancellationPenaltyTab)}
-                {labels.supportContactsTab && tab('contacts', labels.supportContactsTab)}
-                {labels.seoTab && tab('seo', labels.seoTab)}
-                {historyListUrl && tab('history', labels.historyTab, 'system-settings-tab-history')}
-            </ul>
-
-            <form className="space-y-6" onSubmit={handleSubmit}>
+    private renderForm(state: PageState) {
+        const {settings, activeTab, testEmail, testMailType, sending, sendingTestEmail} = state;
+        const {labels, uploadImageUrl, deleteImageUrl, mailTypes = []} = this.props;
+        return (
+            <form className="settings-page-form" onSubmit={this.handleSubmit}>
                 {activeTab === 'smtp' && (
                     <SmtpTab
                         settings={settings}
-                        updateSmtp={updateSmtp}
+                        updateSmtp={this.updateSmtp}
                         labels={labels}
                         sending={sending}
                         testEmail={testEmail}
-                        setTestEmail={setTestEmail}
+                        setTestEmail={this.setTestEmail}
                         testMailType={testMailType}
-                        setTestMailType={setTestMailType}
+                        setTestMailType={this.setTestMailType}
                         sendingTestEmail={sendingTestEmail}
-                        onSendTestEmail={handleSendTestEmail}
+                        onSendTestEmail={this.handleSendTestEmail}
                         mailTypes={mailTypes}
                     />
                 )}
-
                 {activeTab === 'registration' && (
-                    <RegistrationTab settings={settings} setSettings={setSettings} labels={labels} sending={sending} />
+                    <RegistrationTab settings={settings} setSettings={this.setSettings} labels={labels} sending={sending} />
                 )}
-
                 {activeTab === 'penalty' && labels.cancellationPenaltyTab && (
-                    <PenaltyTab settings={settings} setSettings={setSettings} labels={labels} sending={sending} />
+                    <PenaltyTab settings={settings} setSettings={this.setSettings} labels={labels} sending={sending} />
                 )}
-
                 {activeTab === 'contacts' && labels.supportContactsTab && (
-                    <ContactsTab settings={settings} setSettings={setSettings} labels={labels} sending={sending} />
+                    <ContactsTab settings={settings} setSettings={this.setSettings} labels={labels} sending={sending} />
                 )}
-
                 {activeTab === 'seo' && labels.seoTab && (
                     <SeoTab
                         settings={settings}
-                        setSettings={setSettings}
+                        setSettings={this.setSettings}
                         labels={labels}
                         sending={sending}
                         uploadImageUrl={uploadImageUrl}
@@ -216,32 +261,57 @@ export const SystemSettingsPage: React.FC<SystemSettingsPageProps> = ({settings:
                     />
                 )}
             </form>
+        );
+    }
 
-            {opcacheResetUrl && (
-                <OpcacheResetPanel url={opcacheResetUrl} labels={labels} />
-            )}
+    private renderPanels(state: PageState) {
+        const {activeTab, historyRows, historyLoading} = state;
+        const {opcacheResetUrl, versionInfo, historyListUrl, labels} = this.props;
+        return (
+            <>
+                {opcacheResetUrl && <OpcacheResetPanel url={opcacheResetUrl} labels={labels} />}
+                {versionInfo && <VersionInfoPanel info={versionInfo} labels={labels} />}
+                {activeTab === 'history' && historyListUrl && (
+                    <HistoryTab
+                        labels={labels}
+                        historyRows={historyRows}
+                        historyLoading={historyLoading}
+                        onRefresh={this.refreshHistory}
+                        onRowClick={this.setHistoryDetail}
+                    />
+                )}
+            </>
+        );
+    }
 
-            {versionInfo && (
-                <VersionInfoPanel info={versionInfo} labels={labels} />
-            )}
-
-            {activeTab === 'history' && historyListUrl && (
-                <HistoryTab
-                    labels={labels}
-                    historyRows={historyRows}
-                    historyLoading={historyLoading}
-                    onRefresh={() => void loadHistory()}
-                    onRowClick={setHistoryDetail}
-                />
-            )}
+    private renderSection(state: PageState) {
+        const {message, activeTab} = state;
+        const {labels, historyListUrl} = this.props;
+        return (
+            <div className="section-soft">
+                {message && (
+                    <div className={message.type === 'success' ? 'settings-page-success' : 'settings-page-error'}>
+                        {message.text}
+                    </div>
+                )}
+                <SettingsTabStrip activeTab={activeTab} labels={labels} historyListUrl={historyListUrl} onSelect={this.setActiveTab} />
+                {this.renderForm(state)}
+                {this.renderPanels(state)}
             </div>
+        );
+    }
 
-            {historyDetail && (
-                <EntityHistoryDetailModal
-                    row={historyDetail}
-                    onClose={() => setHistoryDetail(null)}
-                />
-            )}
-        </div>
-    );
-};
+    public render() {
+        const state = this.view() as PageState;
+        const {labels} = this.props;
+        return (
+            <div className="settings-page" data-test-id="admin-system-settings">
+                <PageHeader title={labels.title} subtitle={labels.subtitle} icon={<Settings size={22} aria-hidden="true" />} />
+                {this.renderSection(state)}
+                {state.historyDetail && (
+                    <EntityHistoryDetailModal row={state.historyDetail} onClose={this.closeHistoryDetail} />
+                )}
+            </div>
+        );
+    }
+}

@@ -28,13 +28,12 @@ const DEFAULT_ICONS: Record<BannerVariant, React.ReactNode> = {
  * padding/radius/layout — only the colour changes.
  */
 export const Banner: React.FC<Props> = ({variant = 'info', icon, title, children, dataTestId}) => {
-    const variantClass = `banner-${variant}`;
     const role = variant === 'warn' || variant === 'danger' ? 'alert' : undefined;
     return (
-        <div className={`banner ${variantClass}`} role={role} data-test-id={dataTestId ?? `banner-${variant}`}>
-            <span aria-hidden="true" className="banner-icon">{icon ?? DEFAULT_ICONS[variant]}</span>
-            <div className="min-w-0 flex-1">
-                {title && <strong className="banner-title block">{title}</strong>}
+        <div className={variant === 'warn' ? 'feedback-banner-warn' : variant === 'danger' ? 'feedback-banner-danger' : variant === 'success' ? 'feedback-banner-success' : 'feedback-banner-info'} role={role} data-test-id={dataTestId ?? `banner-${variant}`}>
+            <span aria-hidden="true" className="feedback-banner-icon">{icon ?? DEFAULT_ICONS[variant]}</span>
+            <div className="feedback-banner-content">
+                {title && <strong className="feedback-banner-title">{title}</strong>}
                 <span>{children}</span>
             </div>
         </div>

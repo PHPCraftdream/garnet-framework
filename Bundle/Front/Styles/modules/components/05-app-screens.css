@@ -47,25 +47,6 @@
 
 /* ─── log detail modal ─── */
 
-.log-detail-grid {
-  @apply grid gap-x-4 gap-y-2 text-sm;
-  grid-template-columns: max-content 1fr;
-}
-.log-detail-label {
-  @apply text-muted text-xs uppercase tracking-wide font-semibold whitespace-nowrap pt-0.5;
-}
-.log-detail-value {
-  @apply text-on-surface break-words min-w-0;
-}
-.log-detail-section {
-  @apply mt-4 pt-4 border-t border-subtle;
-}
-.log-detail-section-title {
-  @apply text-muted text-xs uppercase tracking-wide font-semibold mb-2;
-}
-.log-detail-pre {
-  @apply bg-surface-alt border border-default rounded p-3 text-xs font-mono whitespace-pre-wrap break-words overflow-x-auto;
-}
 .log-detail-iframe {
   @apply w-full border border-default rounded bg-surface;
   height: 360px;
@@ -294,16 +275,8 @@
   @apply p-2 border-t border-default;
 }
 
-.support-list-scroll {
-  @apply flex-1 overflow-y-auto;
-}
-
 .support-new-btn {
   @apply w-full py-2 px-3 bg-accent text-accent-text rounded text-sm font-medium hover:bg-accent-hover transition-colors;
-}
-
-.support-new-btn-soft {
-  @apply w-full py-2 px-3 bg-accent-subtle text-accent rounded text-sm font-medium hover:bg-surface-hover transition-colors;
 }
 
 .support-ticket-row {
@@ -332,24 +305,12 @@
   @apply flex items-center gap-2 mt-1;
 }
 
-.support-ticket-title {
-  @apply text-sm font-medium text-on-surface flex-1 truncate;
-}
-
 .support-unread-badge {
   @apply status-danger text-xs rounded-full w-5 h-5 flex items-center justify-center shrink-0;
 }
 
-.support-empty {
-  @apply p-4 text-center text-muted text-sm;
-}
-
 .support-empty-flex {
   @apply flex-1 flex items-center justify-center text-muted text-sm;
-}
-
-.support-empty-line {
-  @apply text-center text-muted text-sm py-4;
 }
 
 .support-conv-header {
@@ -396,42 +357,14 @@
   @apply text-lg font-semibold text-on-surface;
 }
 
-.support-form-label {
-  @apply text-sm text-secondary mb-1 block;
-}
-
-.support-widget-fab {
-  @apply fixed bottom-4 right-4 z-[100] w-14 h-14 rounded-full bg-accent text-accent-text shadow-lg hover:bg-accent-hover transition-colors flex items-center justify-center;
-}
-
 .support-im-fab {
   @apply fixed bottom-4 right-20 z-[100] w-12 h-12 rounded-full bg-surface-alt text-on-surface shadow-lg hover:bg-surface-hover transition-colors flex items-center justify-center no-underline;
-}
-
-.support-fab-badge {
-  @apply absolute -top-1 -right-1 status-danger text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center;
 }
 
 .support-widget-panel {
   @apply fixed bottom-20 right-4 z-[100] bg-surface rounded-lg shadow-xl border border-default flex flex-col;
   width: 380px;
   max-height: 500px;
-}
-
-.support-widget-header {
-  @apply flex items-center justify-between px-4 py-3 border-b border-default bg-accent rounded-t-lg;
-}
-
-.support-widget-title {
-  @apply text-accent-text font-medium text-sm;
-}
-
-.support-widget-link {
-  @apply text-accent-text opacity-80 hover:opacity-100 text-xs underline;
-}
-
-.support-widget-close {
-  @apply text-accent-text opacity-80 hover:opacity-100 text-lg leading-none;
 }
 
 .support-widget-im-link {
@@ -441,33 +374,4 @@
 .support-widget-body {
   @apply flex-1 overflow-y-auto;
   min-height: 200px;
-}
-
-.support-widget-ticket-row {
-  @apply px-4 py-3 border-b border-subtle cursor-pointer hover:bg-surface-hover transition-colors;
-}
-
-.support-widget-conv-header {
-  @apply px-4 py-2 border-b border-subtle bg-surface-alt;
-}
-
-.support-widget-conv-body {
-  @apply flex-1 overflow-y-auto px-3 py-2;
-  max-height: 300px;
-}
-
-.support-widget-conv-input {
-  @apply px-3 py-2 border-t border-subtle;
-}
-
-.support-widget-back-btn {
-  @apply text-xs text-accent hover:underline mb-1;
-}
-
-.support-widget-back-btn-self {
-  @apply text-xs text-accent hover:underline self-start;
-}
-
-.support-widget-new-form {
-  @apply p-4 flex flex-col gap-3;
 }

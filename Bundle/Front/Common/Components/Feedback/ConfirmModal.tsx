@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {AntiHookComponent} from '@react-carburetor/core';
 import {useBodyScrollLock} from '@common/hooks/ui/useBodyScrollLock';
 import {ConfirmState} from '@common/hooks/ui/useConfirm';
 import {I18nFramework} from '@framework/I18nGen/I18nFramework';
@@ -12,42 +13,47 @@ interface Props {
     cancelLabel?: string;
 }
 
-const variantClass: Record<string, string> = {
-    success: 'btn btn-success',
-    danger: 'btn btn-danger',
-};
+function renderItems(items: string[]): React.ReactNode[] {
+    const counts = new Map<string, number>();
+    const result: React.ReactNode[] = [];
+    for (const item of items) {
+        const count = counts.get(item) ?? 0;
+        counts.set(item, count + 1);
+        result.push(<li key={JSON.stringify([item, count])} className="confirm-modal-item">{item}</li>);
+    }
+    return result;
+}
 
-export const ConfirmModal: React.FC<Props> = ({state, onConfirm, onCancel, confirmLabel, cancelLabel}) => {
-    useBodyScrollLock(state.visible);
-    if (!state.visible) return null;
-
-    const handleBackdrop = (e: React.MouseEvent) => {
-        if (e.target === e.currentTarget) onCancel();
+class ConfirmModalView extends AntiHookComponent<Props> {
+    private readonly handleBackdrop = (e: React.MouseEvent): void => {
+        if (e.target === e.currentTarget) this.props.onCancel();
     };
 
-    // Per-invocation values from state take priority over static props
-    const label = state.confirmLabel || confirmLabel || I18nFramework.Common_OK();
-    const btnClass = variantClass[state.variant ?? ''] || 'btn btn-success';
+    public render() {
+        return this.props.state.visible ? this.renderDialog() : null;
+    }
 
-    return (
+    private renderDialog() {
+        const {state, onConfirm, onCancel, confirmLabel, cancelLabel} = this.props;
+        const label = state.confirmLabel || confirmLabel || I18nFramework.Common_OK();
+
+        return (
         <Portal>
-            <div className="modal show" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmModalBody" onClick={handleBackdrop}>
-                <div className="modal-dialog modal-dialog-centered">
-                    <div className="modal-content">
-                        <div className="modal-body fs-5" id="confirmModalBody">
+            <div className="confirm-modal-overlay" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmModalBody" onClick={this.handleBackdrop}>
+                <div className="confirm-modal-dialog">
+                    <div className="confirm-modal-content">
+                        <div className="confirm-modal-body" id="confirmModalBody">
                             <p>{state.message}</p>
                             {state.items.length > 0 && (
-                                <ul className="list-group list-group-flush mb-2">
-                                    {state.items.map((item, i) => (
-                                        <li key={i} className="list-group-item py-1 px-0">{item}</li>
-                                    ))}
+                                <ul className="confirm-modal-list">
+                                    {renderItems(state.items)}
                                 </ul>
                             )}
                         </div>
-                        <div className="modal-footer">
+                        <div className="confirm-modal-footer">
                             <button
                                 type="button"
-                                className="btn btn-secondary"
+                                className="confirm-modal-cancel"
                                 onClick={onCancel}
                                 data-test-id="modal-cancel-btn"
                             >
@@ -55,7 +61,7 @@ export const ConfirmModal: React.FC<Props> = ({state, onConfirm, onCancel, confi
                             </button>
                             <button
                                 type="button"
-                                className={btnClass}
+                                className={state.variant === 'danger' ? 'confirm-modal-danger' : 'confirm-modal-success'}
                                 id="confirmModalOk"
                                 onClick={onConfirm}
                                 data-test-id="modal-confirm-btn"
@@ -67,5 +73,11 @@ export const ConfirmModal: React.FC<Props> = ({state, onConfirm, onCancel, confi
                 </div>
             </div>
         </Portal>
-    );
-};
+        );
+    }
+}
+
+export function ConfirmModal(props: Props) {
+    useBodyScrollLock(props.state.visible);
+    return <ConfirmModalView {...props} />;
+}

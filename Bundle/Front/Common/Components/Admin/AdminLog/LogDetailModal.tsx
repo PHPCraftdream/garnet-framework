@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {useEffect, useRef} from 'react';
+import {AntiHookComponent} from '@react-carburetor/core';
 import {useBodyScrollLock} from '@common/hooks/ui/useBodyScrollLock';
 import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
 import {Portal} from '@common/Components/Layout/Portal';
@@ -10,68 +10,74 @@ interface Props {
     children: React.ReactNode;
 }
 
-/**
- * Generic modal shell for showing the full detail of a single log entry.
- * Reuses the `fg-modal-*` overlay/card classes used elsewhere in the app
- * (see Apps/MyApp/Front/Islands/SlotsCalendar/BookingModal.tsx).
- *
- * Behavior:
- *  - ESC closes
- *  - click on overlay closes (clicks inside the card don't bubble)
- *  - body scroll is locked while the modal is mounted
- *  - body has its own overflow-y-auto so large records remain scrollable
- */
-export const LogDetailModal: React.FC<Props> = ({title, onClose, children}) => {
+export const LogDetailModal: React.FC<Props> = (props) => {
     useBodyScrollLock(true);
-    const overlayRef = useRef<HTMLDivElement>(null);
+    return <LogDetailModalView {...props} />;
+};
 
-    useEffect(() => {
-        const onKey = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onClose();
-        };
-        document.addEventListener('keydown', onKey);
-        return () => document.removeEventListener('keydown', onKey);
-    }, [onClose]);
+function stopPropagation(event: React.MouseEvent): void { event.stopPropagation(); }
 
-    const handleOverlayClick = (e: React.MouseEvent) => {
-        if (e.target === overlayRef.current) onClose();
+function renderHeading(heading: string, onClose: Props['onClose']) {
+    return (
+        <div className="entity-history-header">
+            <h3 className="entity-history-title">{heading}</h3>
+            <button
+                type="button"
+                className="entity-history-close"
+                title={t.LogDetail_Close()}
+                aria-label={t.LogDetail_Close()}
+                onClick={onClose}
+                data-test-id="log-detail-modal-close"
+            >
+                &times;
+            </button>
+        </div>
+    );
+}
+
+class LogDetailModalView extends AntiHookComponent<Props> {
+    public componentDidMount(): void {
+        super.componentDidMount();
+        document.addEventListener('keydown', this.onKey);
+    }
+
+    public componentWillUnmount(): void {
+        document.removeEventListener('keydown', this.onKey);
+        super.componentWillUnmount();
+    }
+
+    private readonly onKey = (event: KeyboardEvent): void => {
+        if (event.key === 'Escape') this.props.onClose();
     };
 
-    const heading = title ?? t.LogDetail_Title();
+    private readonly handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>): void => {
+        if (event.target === event.currentTarget) this.props.onClose();
+    };
 
-    return (
-        <Portal>
-            <div
-                ref={overlayRef}
-                className="fg-modal-overlay-high"
-                onClick={handleOverlayClick}
-                data-test-id="log-detail-modal"
-            >
+    public render() {
+        const {title, onClose, children} = this.props;
+        const heading = title ?? t.LogDetail_Title();
+        return (
+            <Portal>
                 <div
-                    role="dialog"
-                    aria-modal="true"
-                    aria-label={heading}
-                    className="fg-modal-card-flush fg-modal-card-3xl"
-                    onClick={e => e.stopPropagation()}
+                    className="fg-modal-overlay-high"
+                    onClick={this.handleOverlayClick}
+                    data-test-id="log-detail-modal"
                 >
-                    <div className="fg-modal-flush-header">
-                        <h3 className="fg-modal-title">{heading}</h3>
-                        <button
-                            type="button"
-                            className="fg-modal-close-x"
-                            title={t.LogDetail_Close()}
-                            aria-label={t.LogDetail_Close()}
-                            onClick={onClose}
-                            data-test-id="log-detail-modal-close"
-                        >
-                            &times;
-                        </button>
-                    </div>
-                    <div className="fg-modal-flush-body">
-                        {children}
+                    <div
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label={heading}
+                        className="entity-history-card"
+                        onClick={stopPropagation}
+                    >
+                        {renderHeading(heading, onClose)}
+                        <div className="entity-history-body">
+                            {children}
+                        </div>
                     </div>
                 </div>
-            </div>
-        </Portal>
-    );
-};
+            </Portal>
+        );
+    }
+}

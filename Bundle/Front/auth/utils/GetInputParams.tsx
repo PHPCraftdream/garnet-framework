@@ -2,8 +2,6 @@ import {IAuthData} from '@framework/auth/Models';
 import {EPhase} from '@framework/auth/Enums';
 
 export const getInputParams = (state?: IAuthData): { type: string; name: string; autoComplete: string } => {
-    const cls = 'small fs-7 mb-3';
-
     switch (state?.phase) {
         case EPhase.INPUT_EMAIL:
         case EPhase.INPUT_EMAIL_AFTER_TIMEOUT:

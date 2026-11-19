@@ -1,12 +1,13 @@
 import * as React from 'react';
-import {useCallback, useRef, useState} from 'react';
+import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
 import {EPhase} from '@framework/auth/Enums';
 import {I18nFramework as I18n} from '@framework/I18nGen/I18nFramework';
-import {IAuthData, TInputRef} from '@framework/auth/Models';
+import {IAuthData, TInputRef, TSetAuthState} from '@framework/auth/Models';
 import {getInputPlaceholder} from '@framework/auth/utils/GetInputPlaceholder';
 import {getHintParams} from '@framework/auth/utils/GetHintParams';
 import {getButtonParams} from '@framework/auth/utils/GetButtonParams';
 import {CodeTimer} from '@framework/auth/utils/CodeTimer';
+import {AuthConsentFields} from '@framework/auth/AuthConsentFields';
 import {renderMarkdownLinks} from '@common/Utils/Url/staticPageUrl';
 import {getInputParams} from './utils/GetInputParams';
 import {handleRequestCode} from '@framework/auth/utils/HandleRequestCode';
@@ -16,178 +17,181 @@ import {IGarnetWindow} from '@common/Support/Models';
 
 const w: IGarnetWindow = window as IGarnetWindow;
 
-export const Auth2Island: React.FC<Partial<IAuthData>> = (props) => {
-    const [state, setData] = useState<IAuthData>({phase: EPhase.INPUT_EMAIL, ...props});
-    const inputRef: TInputRef = useRef<HTMLInputElement>(null);
+type AuthRuntime = {auth: IAuthData; pdConsent: boolean; mkConsent: boolean; csrfReady: boolean};
 
-    const [pdConsent, setPdConsent] = useState(false);
-    const [mkConsent, setMkConsent] = useState(false);
-    const [csrfReady, setCsrfReady] = useState<boolean>(!!(w as any).__GARNET_CSRF__);
+const isEmailPhase = (phase: EPhase): boolean => [
+    EPhase.INPUT_EMAIL,
+    EPhase.INPUT_EMAIL_AFTER_TIMEOUT,
+    EPhase.INPUT_EMAIL_AFTER_FAIL_TRIES,
+    EPhase.INPUT_EMAIL_WRONG_VALUE,
+    EPhase.INPUT_EMAIL_REQUEST_ERROR,
+].includes(phase);
 
-    const renderConsentPd = (): string => renderMarkdownLinks(I18n.Consent_PD());
+export class Auth2Island extends AntiHookComponent<Partial<IAuthData>> {
+    private readonly inputRef = React.createRef<HTMLInputElement>() as TInputRef;
+    private readonly store = new Carburetor<AuthRuntime>({
+        auth: {phase: EPhase.INPUT_EMAIL, ...this.props},
+        pdConsent: false,
+        mkConsent: false,
+        csrfReady: !!w.__GARNET_CSRF__,
+    });
+    private mounted = true;
+    private timeoutPhase = this.store.getData().auth.phase;
+    private timeoutHandler = this.makeTimeoutHandler(this.store.getData().auth);
 
-    /**
-     * Button click handler.
-     */
-    const buttonClick = useCallback(() => {
-        switch (state?.phase) {
+    public componentDidMount(): void {
+        super.componentDidMount();
+        this.mounted = true;
+    }
+
+    public componentWillUnmount(): void {
+        this.mounted = false;
+        super.componentWillUnmount();
+    }
+
+    private readonly setData: TSetAuthState = update => {
+        if (!this.mounted) return;
+        const current = this.store.getData();
+        const auth = typeof update === 'function' ? update(current.auth) : update;
+        if (auth.phase !== this.timeoutPhase) {
+            this.timeoutPhase = auth.phase;
+            this.timeoutHandler = this.makeTimeoutHandler(auth);
+        }
+        this.store.setData({...current, auth});
+    };
+
+    private makeTimeoutHandler(snapshot: IAuthData): () => void {
+        return () => this.setData({...snapshot, phase: EPhase.INPUT_EMAIL_AFTER_TIMEOUT});
+    }
+
+    private setConsent(patch: Partial<Pick<AuthRuntime, 'pdConsent' | 'mkConsent' | 'csrfReady'>>): void {
+        if (this.mounted) this.store.setData({...this.store.getData(), ...patch});
+    }
+
+    private buttonClick(phase: EPhase): void {
+        switch (phase) {
             case EPhase.INPUT_EMAIL:
             case EPhase.INPUT_EMAIL_AFTER_TIMEOUT:
             case EPhase.INPUT_EMAIL_AFTER_FAIL_TRIES:
             case EPhase.INPUT_EMAIL_WRONG_VALUE:
-            case EPhase.INPUT_EMAIL_REQUEST_ERROR: {
-                handleRequestCode(setData, inputRef);
-
+            case EPhase.INPUT_EMAIL_REQUEST_ERROR:
+                handleRequestCode(this.setData, this.inputRef);
                 return;
-            }
             case EPhase.INPUT_CODE:
             case EPhase.INPUT_CODE_FAIL:
             case EPhase.INPUT_CODE_WRONG_VALUE:
-            case EPhase.INPUT_CODE_REQUEST_ERROR: {
-                handleCheckCode(setData, inputRef);
+            case EPhase.INPUT_CODE_REQUEST_ERROR:
+                handleCheckCode(this.setData, this.inputRef);
                 return;
-            }
             default:
                 const _: never = null as never;
         }
-    }, [state?.phase]);
+    }
 
-    const onTimeout = useCallback(() => {
-        setData({...state, phase: EPhase.INPUT_EMAIL_AFTER_TIMEOUT});
-    }, [state?.phase]);
+    private readonly changePersonal = async (event: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
+        const checked = event.currentTarget.checked;
+        const {csrfReady, mkConsent} = this.store.getData();
+        this.setConsent({pdConsent: checked});
+        if (checked && !csrfReady) {
+            try {
+                await startSession(mkConsent);
+                this.setConsent({csrfReady: true});
+            } catch {
+                this.setConsent({pdConsent: false, csrfReady: false});
+            }
+        }
+    };
 
-    if (!state?.phase) {
-        return (
-            <div className="w-full m-auto" style={{maxWidth: '500px'}}>
-                <div className="flex mb-3">
-                    <h1 className="text-lg font-normal grow auth-title">{I18n.Common_UnknownRequestError()}</h1>
+    private readonly changeMarketing = (event: React.ChangeEvent<HTMLInputElement>): void => {
+        this.setConsent({mkConsent: event.currentTarget.checked});
+    };
+
+    private readonly onSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
+        event.preventDefault();
+        const {auth, pdConsent, csrfReady} = this.store.getData();
+        if (!auth.isSendingRequest && !(isEmailPhase(auth.phase) && (!pdConsent || !csrfReady))) {
+            this.buttonClick(auth.phase);
+        }
+    };
+
+    public render() {
+        const {auth, pdConsent, mkConsent, csrfReady} = this.useCarburetor(this.store);
+        return this.renderForm({...auth}, pdConsent, mkConsent, csrfReady);
+    }
+
+    private renderForm(state: IAuthData, pdConsent: boolean, mkConsent: boolean, csrfReady: boolean) {
+        if (!state?.phase) {
+            return (
+                <div className="auth2-shell">
+                    <div className="auth2-heading">
+                        <h1 className="auth2-title">{I18n.Common_UnknownRequestError()}</h1>
+                    </div>
                 </div>
+            );
+        }
+
+        const phase = state.phase;
+        const placeholder = getInputPlaceholder(phase);
+        const inputParams = getInputParams(state);
+        const hint = getHintParams(state);
+        const button = getButtonParams(state);
+        const emailPhase = isEmailPhase(phase);
+        const disabled = !!state.isSendingRequest || (emailPhase && (!pdConsent || !csrfReady));
+
+        return (
+            <div className="auth2-shell">
+                <div className="auth2-heading">
+                    <h1 className="auth2-title" data-test-id="auth-title">{state.title || I18n.Auth()}</h1>
+                    <CodeTimer value={state.codeLifeTime} onTimeout={this.timeoutHandler} />
+                </div>
+                {state.isSendingRequest && (
+                    <div className="auth2-loading" data-test-id="auth-loading">
+                        <span className="auth2-spinner" aria-hidden="true" />
+                        <span>{emailPhase ? I18n.Auth_SendingCode() : I18n.Auth_Verifying()}</span>
+                    </div>
+                )}
+                <form
+                    className="auth2-form" hidden={!!state.isSendingRequest}
+                    autoComplete="on"
+                    onSubmit={this.onSubmit}
+                >
+                    <div className="auth2-field">
+                        <label className="auth2-label">{placeholder}</label>
+                        <input
+                            type={inputParams.type}
+                            name={inputParams.name}
+                            placeholder={placeholder}
+                            className="auth2-input"
+                            autoComplete={inputParams.autoComplete}
+                            required
+                            ref={this.inputRef}
+                            data-test-id={emailPhase ? 'auth-login-input' : 'auth-code-input'}
+                        />
+                    </div>
+                    <div className="auth2-hint" data-tone={phase === EPhase.INPUT_EMAIL || phase === EPhase.INPUT_CODE ? undefined : 'danger'}>{hint?.hint}</div>
+                    {emailPhase && (
+                        <AuthConsentFields
+                            personalChecked={pdConsent}
+                            marketingChecked={mkConsent}
+                            onPersonalChange={this.changePersonal}
+                            onMarketingChange={this.changeMarketing}
+                            personalHtml={renderMarkdownLinks(I18n.Consent_PD())}
+                            marketingLabel={I18n.Consent_Marketing()}
+                            requiredLabel={!pdConsent ? I18n.Consent_PD_Required() : undefined}
+                        />
+                    )}
+                    <div className="auth2-submit-wrap">
+                        <button
+                            type="submit"
+                            className={emailPhase ? 'auth2-submit-primary' : 'auth2-submit-success'}
+                            disabled={disabled}
+                            data-test-id="auth-submit-btn"
+                        >
+                            {button?.title}
+                        </button>
+                    </div>
+                </form>
             </div>
         );
     }
-
-    const placeholder = getInputPlaceholder(state.phase);
-    const inputParams = getInputParams(state);
-    const hint = getHintParams(state);
-    const button = getButtonParams(state);
-    const isEmailPhase = [
-        EPhase.INPUT_EMAIL,
-        EPhase.INPUT_EMAIL_AFTER_TIMEOUT,
-        EPhase.INPUT_EMAIL_AFTER_FAIL_TRIES,
-        EPhase.INPUT_EMAIL_WRONG_VALUE,
-        EPhase.INPUT_EMAIL_REQUEST_ERROR,
-    ].includes(state?.phase);
-    // pdConsent/csrfReady only gate the email phase, where the consent
-    // checkboxes actually render — they're component-local state that
-    // resets on every fresh page load, so requiring them in the code
-    // phase too would permanently disable the submit button for anyone
-    // who lands directly on the code-entry screen (a fresh tab/device
-    // opening a magic link, or reloading after a failed auto-verify)
-    // without ever having ticked a checkbox they can't even see.
-    const disabled = !!state?.isSendingRequest || (isEmailPhase && (!pdConsent || !csrfReady));
-
-    return (
-        <div className="w-full m-auto" style={{maxWidth: '500px'}}>
-            <div className="flex mb-3">
-                <h1 className="text-lg font-normal grow" data-test-id="auth-title">{state.title || I18n.Auth()}</h1>
-                <CodeTimer value={state?.codeLifeTime} onTimeout={onTimeout} />
-            </div>
-            {state?.isSendingRequest && (
-                // Processing a manual submit: show a loader instead of
-                // leaving the page looking frozen while the request is in
-                // flight. The form below is hidden via CSS (not unmounted)
-                // rather than conditionally rendered —
-                // conditional rendering would tear down and later remount
-                // the <input>, wiping out any value handleRequestCode /
-                // handleCheckCode set on it imperatively via inputRef
-                // (e.g. preserving the typed email across a failed request).
-                <div className="flex items-center gap-2 py-4 text-muted" data-test-id="auth-loading">
-                    <span className="common-spinner" aria-hidden="true" />
-                    {/*
-                      * One label used to serve both steps, and on the first
-                      * one it was simply wrong: asking for a code verifies
-                      * nothing — there is nothing to verify yet — so
-                      * "Checking…" left people wondering what was being
-                      * checked and whether they had missed a step.
-                      */}
-                    <span>{isEmailPhase ? I18n.Auth_SendingCode() : I18n.Auth_Verifying()}</span>
-                </div>
-            )}
-            <form
-                className={`input-form space-y-4${state?.isSendingRequest ? ' hidden' : ''}`}
-                autoComplete="on"
-                onSubmit={(e) => { e.preventDefault(); if (!disabled) buttonClick(); }}
-            >
-                <div>
-                    <label className="form-label">{placeholder}</label>
-                    <input
-                        type={inputParams.type}
-                        name={inputParams.name}
-                        placeholder={placeholder}
-                        className="form-control auth2-input"
-                        autoComplete={inputParams.autoComplete}
-                        required
-                        ref={inputRef}
-                        // Одно поле служит двум разным шагам, и раньше оба
-                        // несли один идентификатор — тест или аналитика не
-                        // могли отличить ввод почты от ввода кода. Имя
-                        // почтовой фазы оставлено прежним: на него завязаны
-                        // существующие тесты, проверяющие форму входа.
-                        data-test-id={isEmailPhase ? 'auth-login-input' : 'auth-code-input'}
-                    />
-                </div>
-                <div className={hint?.classes}>{hint?.hint}</div>
-                {isEmailPhase && (
-                    <>
-                        <label className="auth-consent-row flex items-start gap-2">
-                            <input
-                                type="checkbox"
-                                checked={pdConsent}
-                                onChange={async (e) => {
-                                    const checked = e.currentTarget.checked;
-                                    setPdConsent(checked);
-                                    if (checked && !csrfReady) {
-                                        try {
-                                            await startSession(mkConsent);
-                                            setCsrfReady(true);
-                                        } catch {
-                                            setPdConsent(false);
-                                            setCsrfReady(false);
-                                        }
-                                    }
-                                }}
-                                data-test-id="auth-consent-pd"
-                                className="mt-1"
-                            />
-                            <span dangerouslySetInnerHTML={{__html: renderConsentPd()}} />
-                        </label>
-                        <label className="auth-consent-row flex items-start gap-2">
-                            <input
-                                type="checkbox"
-                                checked={mkConsent}
-                                onChange={(e) => setMkConsent(e.currentTarget.checked)}
-                                data-test-id="auth-consent-marketing"
-                                className="mt-1"
-                            />
-                            <span>{I18n.Consent_Marketing()}</span>
-                        </label>
-                        {!pdConsent && (
-                            <div className="text-sm text-muted">{I18n.Consent_PD_Required()}</div>
-                        )}
-                    </>
-                )}
-                <div className="mb-3">
-                    <button
-                        type="submit"
-                        className={button.classes}
-                        disabled={disabled}
-                        data-test-id="auth-submit-btn"
-                    >
-                        {button?.title}
-                    </button>
-                </div>
-            </form>
-        </div>
-    );
-};
-
+}

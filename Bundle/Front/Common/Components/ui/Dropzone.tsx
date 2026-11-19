@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {useRef, useState, useCallback} from 'react';
+import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
 import {cn} from '@common/Utils/Ui/cn';
 import {sendPostFormData} from '@common/Api/Send/sendPostFormData';
 
@@ -12,232 +12,146 @@ export interface UploadedFile {
 }
 
 interface Props {
-    /** Called when a new file is uploaded. */
     onUpload: (file: UploadedFile) => void;
-    /** Called when a file is removed. */
     onRemove: (pendingId: number) => void;
-    /** Currently uploaded files (controlled from parent). */
     files: UploadedFile[];
-    /** Max number of files allowed. */
     maxFiles?: number;
-    /** MIME type filter for the file input. Default: images. */
     accept?: string;
-    /** URL for the upload endpoint. */
     uploadUrl: string;
-    /** URL for removing a pending upload (required). */
     removeUrl: string;
-    /** Label text shown in the drop area. */
     label?: string;
-    /** Label shown while uploading (default: "Uploading..."). */
     uploadingLabel?: string;
-    /** Title for the remove button (default: "Remove"). */
     removeLabel?: string;
-    /** Additional CSS class for the container. */
     className?: string;
 }
 
-export default function Dropzone({
-    onUpload,
-    onRemove,
-    files,
-    maxFiles = 10,
-    accept = 'image/jpeg,image/png,image/gif,image/webp',
-    uploadUrl,
-    removeUrl,
-    label,
-    uploadingLabel = 'Uploading...',
-    removeLabel = 'Remove',
-    className,
-}: Props) {
-    const inputRef = useRef<HTMLInputElement>(null);
-    const [isDragging, setIsDragging] = useState(false);
-    const [uploading, setUploading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+interface DropzoneState {
+    isDragging: boolean;
+    uploading: boolean;
+    error: string | null;
+}
 
-    const canAdd = files.length < maxFiles;
+export default class Dropzone extends AntiHookComponent<Props> {
+    private readonly inputRef = React.createRef<HTMLInputElement>();
+    private readonly store = new Carburetor<DropzoneState>({isDragging: false, uploading: false, error: null});
 
-    const uploadFile = useCallback(async (file: File) => {
-        if (!canAdd) return;
-        setError(null);
-        setUploading(true);
+    private setStateData(update: Partial<DropzoneState>): void {
+        this.store.setData({...this.store.getData(), ...update});
+    }
 
+    private canAdd(): boolean {
+        return this.props.files.length < (this.props.maxFiles ?? 10);
+    }
+
+    private readonly uploadFile = async (file: File): Promise<void> => {
+        if (!this.canAdd()) return;
+        const {uploadUrl, onUpload} = this.props;
+        this.setStateData({error: null, uploading: true});
         try {
             const fd = new FormData();
             fd.append('file', file);
-
-            const result = await sendPostFormData<FormData, {
-                pendingId: number;
-                previewUrl: string;
-                name: string;
-                size: number;
-                error?: string;
-            }>(uploadUrl, fd);
-
+            const result = await sendPostFormData<FormData, UploadedFile & {error?: string}>(uploadUrl, fd);
             if (result.error) {
-                setError(result.error);
+                this.setStateData({error: result.error});
             } else {
-                onUpload({
-                    pendingId: result.pendingId,
-                    previewUrl: result.previewUrl,
-                    name: result.name,
-                    size: result.size,
-                });
+                onUpload({pendingId: result.pendingId, previewUrl: result.previewUrl, name: result.name, size: result.size});
             }
         } catch (err: any) {
-            setError(err.message || 'Upload failed');
+            this.setStateData({error: err.message || 'Upload failed'});
         } finally {
-            setUploading(false);
+            this.setStateData({uploading: false});
         }
-    }, [canAdd, uploadUrl, onUpload]);
+    };
 
-    const handleFiles = useCallback((fileList: FileList | File[]) => {
-        const arr = Array.from(fileList);
-        const remaining = maxFiles - files.length;
-        const toUpload = arr.slice(0, remaining);
-
-        for (const file of toUpload) {
-            uploadFile(file);
+    private readonly handleFiles = (fileList: FileList | File[]): void => {
+        const remaining = (this.props.maxFiles ?? 10) - this.props.files.length;
+        for (const file of Array.from(fileList).slice(0, remaining)) {
+            this.uploadFile(file);
         }
-    }, [maxFiles, files.length, uploadFile]);
+    };
 
-    const handleRemove = useCallback(async (pendingId: number) => {
+    private readonly handleRemove = async (event: React.MouseEvent<HTMLButtonElement>): Promise<void> => {
+        event.stopPropagation();
+        const pendingId = Number(event.currentTarget.value);
+        const {removeUrl, onRemove} = this.props;
         try {
             const fd = new FormData();
             fd.append('pending_id', String(pendingId));
             await sendPostFormData(removeUrl, fd);
         } catch {
-            // Best effort — file will be cleaned up by expiry
+            // Pending files expire automatically.
         }
         onRemove(pendingId);
-    }, [removeUrl, onRemove]);
-
-    const handleDragOver = useCallback((e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (canAdd) setIsDragging(true);
-    }, [canAdd]);
-
-    const handleDragLeave = useCallback((e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(false);
-    }, []);
-
-    const handleDrop = useCallback((e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(false);
-        if (canAdd && e.dataTransfer.files.length > 0) {
-            handleFiles(e.dataTransfer.files);
-        }
-    }, [canAdd, handleFiles]);
-
-    const handleClick = useCallback(() => {
-        if (canAdd) inputRef.current?.click();
-    }, [canAdd]);
-
-    const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files.length > 0) {
-            handleFiles(e.target.files);
-            e.target.value = '';
-        }
-    }, [handleFiles]);
-
-    const formatSize = (bytes: number): string => {
-        if (bytes < 1024) return bytes + 'B';
-        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + 'KB';
-        return (bytes / (1024 * 1024)).toFixed(1) + 'MB';
     };
 
-    return (
-        <div className={cn('space-y-2', className)} data-test-id="dropzone">
-            {/* Drop area */}
-            <div
-                className={cn(
-                    'border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors',
-                    'border-default text-muted',
-                    isDragging && 'border-accent bg-accent-subtle',
-                    uploading && 'opacity-60 pointer-events-none',
-                    !canAdd && 'opacity-40 pointer-events-none',
-                )}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onClick={handleClick}
-                data-test-id="dropzone-area"
-            >
-                <input
-                    ref={inputRef}
-                    type="file"
-                    multiple={maxFiles > 1}
-                    accept={accept}
-                    className="hidden"
-                    onChange={handleInputChange}
-                    data-test-id="dropzone-input"
-                />
+    private readonly handleDragOver = (event: React.DragEvent): void => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (this.canAdd()) this.setStateData({isDragging: true});
+    };
 
-                {uploading ? (
-                    <div className="flex items-center justify-center gap-2 py-2">
-                        <span className="animate-spin inline-block w-5 h-5 border-2 border-current border-t-transparent rounded-full" />
-                        <span className="text-sm">{uploadingLabel}</span>
-                    </div>
-                ) : (
-                    <div className="py-2">
-                        <svg className="mx-auto mb-1 w-8 h-8 opacity-40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                            <path d="M12 16V4m0 0L8 8m4-4l4 4" strokeLinecap="round" strokeLinejoin="round" />
-                            <path d="M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        <p className="text-sm">
-                            {label || (canAdd
-                                ? `Drop files here or click to browse (${files.length}/${maxFiles})`
-                                : `Maximum files reached (${maxFiles})`
-                            )}
-                        </p>
-                    </div>
-                )}
+    private readonly handleDragLeave = (event: React.DragEvent): void => {
+        event.preventDefault();
+        event.stopPropagation();
+        this.setStateData({isDragging: false});
+    };
+
+    private readonly handleDrop = (event: React.DragEvent): void => {
+        event.preventDefault();
+        event.stopPropagation();
+        this.setStateData({isDragging: false});
+        if (this.canAdd() && event.dataTransfer.files.length > 0) this.handleFiles(event.dataTransfer.files);
+    };
+
+    private readonly handleClick = (): void => {
+        if (this.canAdd()) this.inputRef.current?.click();
+    };
+
+    private readonly handleInputChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+        if (event.target.files && event.target.files.length > 0) {
+            this.handleFiles(event.target.files);
+            event.target.value = '';
+        }
+    };
+
+    private readonly renderFile = (file: UploadedFile) => {
+        const {removeLabel = 'Remove'} = this.props;
+        const size = file.size < 1024 ? file.size + 'B' : file.size < 1024 * 1024
+            ? (file.size / 1024).toFixed(1) + 'KB' : (file.size / (1024 * 1024)).toFixed(1) + 'MB';
+        return <div key={file.pendingId} className="dropzone-preview" data-test-id={`dropzone-preview-${file.pendingId}`}>
+            <img src={file.previewUrl} alt={file.name} className="dropzone-image" />
+            <button type="button" className="dropzone-remove" title={removeLabel} value={file.pendingId}
+                onClick={this.handleRemove} data-test-id={`dropzone-remove-${file.pendingId}`}>×</button>
+            <div className="dropzone-filename">{file.name} ({size})</div>
+        </div>;
+    };
+
+    public render() {
+        const {isDragging, uploading, error} = this.useCarburetor(this.store);
+        const {files, maxFiles = 10, accept = 'image/jpeg,image/png,image/gif,image/webp', label,
+            uploadingLabel = 'Uploading...', className} = this.props;
+        const canAdd = this.canAdd();
+        // carburetor-disable-next-line require-function-class
+        return <div className={className ? cn('dropzone-shell', className) : 'dropzone-shell'} data-test-id="dropzone">
+            <div className="dropzone-area" data-dragging={isDragging} data-uploading={uploading} data-disabled={!canAdd}
+                onDragOver={this.handleDragOver} onDragLeave={this.handleDragLeave} onDrop={this.handleDrop}
+                onClick={this.handleClick} data-test-id="dropzone-area">
+                <input ref={this.inputRef} type="file" multiple={maxFiles > 1} accept={accept}
+                    className="dropzone-input" onChange={this.handleInputChange} data-test-id="dropzone-input" />
+                {uploading ? <div className="dropzone-uploading">
+                    <span className="dropzone-spinner" /><span className="dropzone-label">{uploadingLabel}</span>
+                </div> : <div className="dropzone-prompt">
+                    <svg className="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path d="M12 16V4m0 0L8 8m4-4l4 4" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <p className="dropzone-label">{label || (canAdd
+                        ? `Drop files here or click to browse (${files.length}/${maxFiles})`
+                        : `Maximum files reached (${maxFiles})`)}</p>
+                </div>}
             </div>
-
-            {/* Error message */}
-            {error && (
-                <div className="text-sm text-danger" data-test-id="dropzone-error">
-                    {error}
-                </div>
-            )}
-
-            {/* Thumbnails grid */}
-            {files.length > 0 && (
-                <div className="flex flex-wrap gap-2" data-test-id="dropzone-previews">
-                    {files.map((f) => (
-                        <div
-                            key={f.pendingId}
-                            className="relative group border border-default rounded overflow-hidden"
-                            style={{width: 80, height: 80}}
-                            data-test-id={`dropzone-preview-${f.pendingId}`}
-                        >
-                            <img
-                                src={f.previewUrl}
-                                alt={f.name}
-                                className="w-full h-full object-cover"
-                            />
-                            <button
-                                type="button"
-                                className="absolute top-0 right-0 bg-danger-subtle text-danger rounded-bl text-xs px-1.5 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                                title={removeLabel}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleRemove(f.pendingId);
-                                }}
-                                data-test-id={`dropzone-remove-${f.pendingId}`}
-                            >
-                                ×
-                            </button>
-                            <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs px-1 py-0.5 truncate opacity-0 group-hover:opacity-100 transition-opacity">
-                                {f.name} ({formatSize(f.size)})
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
-        </div>
-    );
+            {error && <div className="dropzone-error" data-test-id="dropzone-error">{error}</div>}
+            {files.length > 0 && <div className="dropzone-previews" data-test-id="dropzone-previews">{files.map(this.renderFile)}</div>}
+        </div>;
+    }
 }

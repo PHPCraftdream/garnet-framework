@@ -1,0 +1,69 @@
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-utilbutton-ink: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-utilpill-wash: var(--color-bg-surface-alt);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-utilpill-ink: var(--color-text-primary);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-utilpill-edge: color-mix(in srgb, var(--color-border) 70%, transparent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-utilunread-fill: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-utilunread-on-fill: var(--color-accent-text);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-utilcluster-edge: color-mix(in srgb, var(--color-border) 60%, transparent);
+}
+
+/* Utility link details use the current Garnet theme. */
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-utilicon-ink: var(--color-success);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-utilcurrency-ink: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-utilinherit-ink: currentColor;
+}
+
+@utility tone-utilicon-plain { @apply text-utilicon-ink; }
+@utility tone-utilcurrency-plain { @apply text-utilcurrency-ink; }
+@utility tone-utilinherit-plain { @apply text-utilinherit-ink; }
+@utility layout-utility-balance-icon { flex-shrink: 0; }
+@utility effect-utility-balance-icon { opacity: 0.85; }
+@utility type-utility-balance-amount { font-variant-numeric: tabular-nums; letter-spacing: 0.01em; }
+@utility type-utility-balance-currency { font-size: 0.75rem; font-weight: 400; }
+@utility shape-utility-balance-currency { margin-left: 0.05rem; }
+
+@utility layout-utility-cluster { display: flex; align-items: center; gap: 0.25rem; }
+@utility shape-utility-cluster { border-left-width: 1px; padding-left: 0.75rem; margin-left: 0.5rem; }
+@utility layout-utility-button { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+@utility shape-utility-button { width: 2.25rem; height: 2.25rem; border-width: 0; border-radius: 0.5rem; }
+@utility tone-utilbutton-plain { @apply text-utilbutton-ink bg-transparent; }
+@utility type-utility-button { text-decoration-line: none; }
+@utility motion-utility-button { transition: color 150ms ease, background-color 150ms ease, transform 150ms ease; }
+@utility layout-utility-pill { display: inline-flex; align-items: center; gap: 0.4rem; }
+@utility shape-utility-pill { height: 2.25rem; padding: 0 0.75rem; border-radius: 0.5rem; border-width: 1px; }
+@utility tone-utilpill-outlined { @apply bg-utilpill-wash text-utilpill-ink border-utilpill-edge; }
+@utility type-utility-pill { font-size: 0.875rem; font-weight: 500; text-decoration-line: none; font-variant-numeric: tabular-nums; white-space: nowrap; }
+@utility motion-utility-pill { transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease; }
+@utility layout-utility-unread { position: absolute; top: -2px; right: -2px; }
+@utility shape-utility-unread { min-width: 1.05rem; height: 1.05rem; padding: 0 0.25rem; border-radius: 9999px; }
+@utility tone-utilunread-solid { @apply bg-utilunread-fill text-utilunread-on-fill; }
+@utility behavior-utility-button { @apply cursor-pointer; }
+@utility behavior-utility-unread { @apply pointer-events-none; }
+@utility tone-utilcluster-outlined { @apply border-utilcluster-edge; }
+@utility type-utility-unread { font-size: 0.625rem; font-weight: 600; line-height: 1.05rem; text-align: center; font-variant-numeric: tabular-nums; }
+@utility motion-utility-unread { animation: util-badge-pulse 2.4s ease-in-out infinite; }
+
+@layer components {
+  .utility-cluster { @apply tone-utilcluster-outlined layout-utility-cluster shape-utility-cluster; }
+  .utility-balance { @apply tone-utilpill-outlined layout-utility-pill shape-utility-pill type-utility-pill motion-utility-pill; }
+  .utility-icon-button { @apply tone-utilbutton-plain layout-utility-button shape-utility-button type-utility-button motion-utility-button behavior-utility-button; }
+  .utility-unread-badge { @apply tone-utilunread-solid layout-utility-unread shape-utility-unread type-utility-unread motion-utility-unread behavior-utility-unread; }
+
+    .util-balance-icon { @apply tone-utilicon-plain layout-utility-balance-icon effect-utility-balance-icon; }
+  .util-balance-amount { @apply tone-utilinherit-plain type-utility-balance-amount; }
+  .util-balance-currency { @apply tone-utilcurrency-plain type-utility-balance-currency shape-utility-balance-currency; }
+}

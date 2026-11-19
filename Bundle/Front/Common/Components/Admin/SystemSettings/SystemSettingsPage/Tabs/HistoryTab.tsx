@@ -15,21 +15,21 @@ interface HistoryTabProps {
 
 export const HistoryTab: React.FC<HistoryTabProps> = ({labels, historyRows, historyLoading, onRefresh, onRowClick}) => (
 <section
-    className="rounded-lg border border-default bg-surface p-5"
+    className="settings-history-panel"
     data-test-id="system-settings-history-section"
 >
-    <div className="mb-4 flex items-center justify-between">
+    <div className="settings-history-header">
         <div>
-            <h2 className="text-lg font-semibold text-on-surface">
+            <h2 className="settings-history-title">
                 {labels.historyTitle}
             </h2>
-            <p className="mt-1 text-sm text-secondary">
+            <p className="settings-history-hint">
                 {labels.historyHint}
             </p>
         </div>
         <button
             type="button"
-            className="rounded-lg border border-default px-3 py-1.5 text-sm hover:bg-strong/30"
+            className="settings-history-refresh"
             disabled={historyLoading}
             onClick={onRefresh}
         >
@@ -38,10 +38,10 @@ export const HistoryTab: React.FC<HistoryTabProps> = ({labels, historyRows, hist
     </div>
 
     {historyLoading && historyRows.length === 0 && (
-        <div className="text-muted">{labels.historyLoading}</div>
+        <div className="settings-history-message">{labels.historyLoading}</div>
     )}
     {!historyLoading && historyRows.length === 0 && (
-        <div className="text-muted" data-test-id="system-settings-history-empty">
+        <div className="settings-history-message" data-test-id="system-settings-history-empty">
             {labels.historyEmpty}
         </div>
     )}

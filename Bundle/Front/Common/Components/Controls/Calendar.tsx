@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {useState, useCallback} from 'react';
+import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
 import {appLocale, resolvedUserTz} from '@common/Utils/Time/DateUtils';
 
 interface Props {
@@ -18,6 +18,14 @@ interface Props {
     onDrop?: (dateFrom: string, dateTo: string) => void;
 }
 
+type CalendarDayType = '' | 'proposed' | 'restricted' | 'available';
+type DragState = {dragOverDate: string | null; dragSourceDate: string | null};
+type CalendarRow = {cells: React.ReactNode[]; hasProposed: boolean};
+
+const hasProposedDates = (row: CalendarRow) => row.hasProposed;
+const renderWeekday = (day: string) => <th key={day} className="calendar-weekday">{day}</th>;
+const renderWeek = (row: CalendarRow, index: number) => <tr key={index}>{row.cells}</tr>;
+
 function pad(n: number): string {
     return String(n).padStart(2, '0');
 }
@@ -28,204 +36,195 @@ function parseYMD(s: string): [number, number, number] {
     return [parseInt(parts[0], 10), parseInt(parts[1], 10), parseInt(parts[2], 10)];
 }
 
-export const Calendar: React.FC<Props> = ({
-    startDate,
-    endDate,
-    dayNames,
-    isProposed,
-    restrictedDates,
-    availableDates,
-    onDateClick,
-    idPrefix = 'calendar',
-    hideEmptyWeeks = false,
-    extraWeeks = 0,
-    draggable = false,
-    onDrop,
-}) => {
-    const [dragOverDate, setDragOverDate] = useState<string | null>(null);
-    const [dragSourceDate, setDragSourceDate] = useState<string | null>(null);
+function visibleWeeks(rows: CalendarRow[], hideEmptyWeeks: boolean, extraWeeks: number): CalendarRow[] {
+    if (!hideEmptyWeeks) return rows;
 
-    const handleDragStart = useCallback((e: React.DragEvent<HTMLTableCellElement>, dateStr: string) => {
-        e.dataTransfer.setData('text/plain', dateStr);
+    let lastProposedIdx = -1;
+    for (let ri = rows.length - 1; ri >= 0; ri--) {
+        if (rows[ri].hasProposed) {
+            lastProposedIdx = ri;
+            break;
+        }
+    }
+    const firstProposedIdx = rows.findIndex(hasProposedDates);
+    const visibleRows: CalendarRow[] = [];
+    let extraAfter = 0;
+    for (let ri = 0; ri < rows.length; ri++) {
+        if (rows[ri].hasProposed) {
+            visibleRows.push(rows[ri]);
+            extraAfter = 0;
+        } else if (firstProposedIdx >= 0 && ri < firstProposedIdx && extraWeeks > 0 && ri >= firstProposedIdx - extraWeeks) {
+            visibleRows.push(rows[ri]);
+        } else if (lastProposedIdx >= 0 && ri > lastProposedIdx && extraWeeks > 0 && extraAfter < extraWeeks) {
+            visibleRows.push(rows[ri]);
+            extraAfter++;
+        }
+    }
+    return visibleRows;
+}
+
+export class Calendar extends AntiHookComponent<Props> {
+    private readonly dragState = new Carburetor<DragState>({dragOverDate: null, dragSourceDate: null});
+
+    // Date maps may change in place between parent renders.
+    private readonly updateOnParentRender = true;
+
+    public shouldComponentUpdate(nextProps: Readonly<Props>, nextState: Readonly<{}>): boolean {
+        return super.shouldComponentUpdate(nextProps, nextState) || this.updateOnParentRender;
+    }
+
+    private readonly handleClick = (e: React.MouseEvent<HTMLTableCellElement>) => {
+        const date = e.currentTarget.dataset.calendarDate;
+        if (date) this.props.onDateClick?.(date);
+    };
+
+    private readonly handleDragStart = (e: React.DragEvent<HTMLTableCellElement>) => {
+        const date = e.currentTarget.dataset.calendarDate!;
+        e.dataTransfer.setData('text/plain', date);
         e.dataTransfer.effectAllowed = 'move';
-        setDragSourceDate(dateStr);
-    }, []);
+        this.dragState.setData({...this.dragState.getData(), dragSourceDate: date});
+    };
 
-    const handleDragOver = useCallback((e: React.DragEvent<HTMLTableCellElement>, dateStr: string) => {
+    private readonly handleDragOver = (e: React.DragEvent<HTMLTableCellElement>) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
-        if (dragOverDate !== dateStr) {
-            setDragOverDate(dateStr);
+        const date = e.currentTarget.dataset.calendarDate!;
+        if (this.dragState.getData().dragOverDate !== date) {
+            this.dragState.setData({...this.dragState.getData(), dragOverDate: date});
         }
-    }, [dragOverDate]);
+    };
 
-    const handleDragLeave = useCallback(() => {
-        setDragOverDate(null);
-    }, []);
+    private readonly handleDragLeave = () => {
+        this.dragState.setData({...this.dragState.getData(), dragOverDate: null});
+    };
 
-    const handleDrop = useCallback((e: React.DragEvent<HTMLTableCellElement>, dateTo: string) => {
+    private readonly handleDrop = (e: React.DragEvent<HTMLTableCellElement>) => {
         e.preventDefault();
         const dateFrom = e.dataTransfer.getData('text/plain');
-        setDragOverDate(null);
-        setDragSourceDate(null);
-        if (dateFrom && dateFrom !== dateTo && onDrop) {
-            onDrop(dateFrom, dateTo);
+        const dateTo = e.currentTarget.dataset.calendarDate!;
+        this.dragState.setData({dragOverDate: null, dragSourceDate: null});
+        if (dateFrom && dateFrom !== dateTo && this.props.onDrop) {
+            this.props.onDrop(dateFrom, dateTo);
         }
-    }, [onDrop]);
+    };
 
-    const handleDragEnd = useCallback(() => {
-        setDragOverDate(null);
-        setDragSourceDate(null);
-    }, []);
+    private readonly handleDragEnd = () => {
+        this.dragState.setData({dragOverDate: null, dragSourceDate: null});
+    };
 
-    if (!startDate || !endDate) return <div id={idPrefix} />;
+    private renderDay(year: number, month: number, day: number, drag: Readonly<DragState>): {cell: React.ReactNode; proposed: boolean} {
+        const {startDate, endDate, isProposed, restrictedDates, availableDates, onDateClick, draggable = false} = this.props;
+        const dateStr = `${year}-${pad(month)}-${pad(day)}`;
+        let titleAttr = '';
+        let clickable = false;
+        let proposed = false;
+        let dayType: CalendarDayType = '';
+        if (dateStr >= startDate && dateStr <= endDate) {
+            if (isProposed(dateStr)) {
+                clickable = !!onDateClick;
+                proposed = true;
+                dayType = 'proposed';
+            } else if (restrictedDates[dateStr]) {
+                titleAttr = restrictedDates[dateStr];
+                dayType = 'restricted';
+            } else if (availableDates[dateStr] !== undefined) {
+                clickable = !!onDateClick;
+                dayType = 'available';
+            }
+        }
+        const isDraggable = draggable && proposed;
+        const isDropTarget = draggable && dateStr >= startDate && dateStr <= endDate && !restrictedDates[dateStr];
+        const isOver = drag.dragOverDate === dateStr && dateStr !== drag.dragSourceDate;
+        const cell = (
+            <td
+                key={dateStr}
+                className={dayType === 'proposed'
+                    ? (clickable ? (isDraggable ? 'calendar-proposed-drag-action' : 'calendar-proposed-action') : isDraggable ? 'calendar-proposed-drag' : 'calendar-proposed-day')
+                    : dayType === 'restricted' ? 'calendar-restricted-day'
+                    : dayType === 'available' ? (clickable ? 'calendar-available-action' : 'calendar-available-day')
+                    : 'calendar-normal-day'}
+                data-over={isOver ? 'true' : undefined}
+                data-calendar-date={dateStr}
+                title={titleAttr || undefined}
+                data-day-type={dayType || undefined}
+                data-click-date={clickable ? dateStr : undefined}
+                onClick={clickable ? this.handleClick : undefined}
+                draggable={isDraggable || undefined}
+                onDragStart={isDraggable ? this.handleDragStart : undefined}
+                onDragEnd={isDraggable ? this.handleDragEnd : undefined}
+                onDragOver={isDropTarget ? this.handleDragOver : undefined}
+                onDragLeave={isDropTarget ? this.handleDragLeave : undefined}
+                onDrop={isDropTarget ? this.handleDrop : undefined}
+            >
+                {day}
+            </td>
+        );
+        return {cell, proposed};
+    }
 
-    const [startY, startM] = parseYMD(startDate);
-    const [endY, endM] = parseYMD(endDate);
-    const months: React.ReactNode[] = [];
-
-    let curY = startY;
-    let curM = startM;
-
-    while (curY < endY || (curY === endY && curM <= endM)) {
-        const month0 = curM - 1; // 0-indexed for Date constructor
-        const firstDay = new Date(curY, month0, 1).getDay();
-        const daysInMonth = new Date(curY, month0 + 1, 0).getDate();
-        // D-255: `undefined` locale falls back to the BROWSER's own language,
-        // not the site's UI language — an expert whose OS is set to English
-        // saw "September 2026" headers on an otherwise all-Russian page.
-        const title = new Intl.DateTimeFormat(appLocale(), {timeZone: resolvedUserTz(), month: 'long', year: 'numeric'}).format(new Date(curY, month0, 1));
-
-        const rows: { cells: React.ReactNode[]; hasProposed: boolean }[] = [];
+    private monthWeeks(year: number, month: number, drag: Readonly<DragState>): CalendarRow[] {
+        const month0 = month - 1;
+        const firstDay = new Date(year, month0, 1).getDay();
+        const daysInMonth = new Date(year, month0 + 1, 0).getDate();
+        const rows: CalendarRow[] = [];
         let row: React.ReactNode[] = [];
         let rowHasProposed = false;
-
         for (let j = 0; j < firstDay; j++) {
-            row.push(<td key={`e-${j}`} className="bg-surface-alt text-center text-sm py-1 px-1.5 border border-default" />);
+            row.push(<td key={`e-${j}`} className="calendar-empty-cell" />);
         }
-
         for (let day = 1; day <= daysInMonth; day++) {
-            const dateStr = `${curY}-${pad(curM)}-${pad(day)}`;
-            let cls = 'bg-surface-alt';
-            let titleAttr = '';
-            let clickable = false;
-            let proposed = false;
-
-            let dayType = '';
-            if (dateStr >= startDate && dateStr <= endDate) {
-                if (isProposed(dateStr)) {
-                    cls = 'bg-accent text-accent-text font-bold';
-                    clickable = !!onDateClick;
-                    proposed = true;
-                    dayType = 'proposed';
-                } else if (restrictedDates[dateStr]) {
-                    cls = 'bg-danger-subtle cursor-help';
-                    titleAttr = restrictedDates[dateStr];
-                    dayType = 'restricted';
-                } else if (availableDates[dateStr] !== undefined) {
-                    cls = 'bg-success-subtle';
-                    clickable = !!onDateClick;
-                    dayType = 'available';
-                }
-            }
-
-            if (proposed) rowHasProposed = true;
-
-            const hoverCls = clickable ? (proposed ? 'cursor-pointer hover:bg-accent-hover' : 'cursor-pointer hover:bg-accent-subtle') : '';
-            const isDraggable = draggable && proposed;
-            const isDropTarget = draggable && dateStr >= startDate && dateStr <= endDate && !restrictedDates[dateStr];
-            const isOver = dragOverDate === dateStr && dateStr !== dragSourceDate;
-
-            row.push(
-                <td
-                    key={dateStr}
-                    className={`text-center text-sm py-1 px-1.5 border border-default ${proposed ? '' : 'text-on-surface'} ${cls} ${hoverCls}${isDraggable ? ' cursor-grab' : ''}${isOver ? ' bg-accent-subtle' : ''}`}
-                    title={titleAttr || undefined}
-                    data-day-type={dayType || undefined}
-                    data-click-date={clickable ? dateStr : undefined}
-                    onClick={clickable ? () => onDateClick?.(dateStr) : undefined}
-                    draggable={isDraggable || undefined}
-                    onDragStart={isDraggable ? (e) => handleDragStart(e, dateStr) : undefined}
-                    onDragEnd={isDraggable ? handleDragEnd : undefined}
-                    onDragOver={isDropTarget ? (e) => handleDragOver(e, dateStr) : undefined}
-                    onDragLeave={isDropTarget ? handleDragLeave : undefined}
-                    onDrop={isDropTarget ? (e) => handleDrop(e, dateStr) : undefined}
-                >
-                    {day}
-                </td>
-            );
-
+            const result = this.renderDay(year, month, day, drag);
+            if (result.proposed) rowHasProposed = true;
+            row.push(result.cell);
             if (row.length === 7) {
-                rows.push({ cells: row, hasProposed: rowHasProposed });
+                rows.push({cells: row, hasProposed: rowHasProposed});
                 row = [];
                 rowHasProposed = false;
             }
         }
-
-        if (row.length > 0) rows.push({ cells: row, hasProposed: rowHasProposed });
-
-        let visibleRows: typeof rows;
-        if (hideEmptyWeeks) {
-            // Find the last row index that has proposed dates
-            let lastProposedIdx = -1;
-            for (let ri = rows.length - 1; ri >= 0; ri--) {
-                if (rows[ri].hasProposed) {
-                    lastProposedIdx = ri;
-                    break;
-                }
-            }
-            // Keep proposed rows + up to extraWeeks empty rows before first and after last proposed row
-            const firstProposedIdx = rows.findIndex(r => r.hasProposed);
-            visibleRows = [];
-            let extraBefore = 0;
-            let extraAfter = 0;
-            for (let ri = 0; ri < rows.length; ri++) {
-                if (rows[ri].hasProposed) {
-                    visibleRows.push(rows[ri]);
-                    extraAfter = 0;
-                } else if (firstProposedIdx >= 0 && ri < firstProposedIdx && extraWeeks > 0 && ri >= firstProposedIdx - extraWeeks) {
-                    // Extra empty weeks BEFORE first proposed
-                    visibleRows.push(rows[ri]);
-                    extraBefore++;
-                } else if (lastProposedIdx >= 0 && ri > lastProposedIdx && extraWeeks > 0 && extraAfter < extraWeeks) {
-                    // Extra empty weeks AFTER last proposed
-                    visibleRows.push(rows[ri]);
-                    extraAfter++;
-                }
-            }
-        } else {
-            visibleRows = rows;
-        }
-
-        if (!hideEmptyWeeks || visibleRows.length > 0) {
-            months.push(
-                <div key={`${curY}-${curM}`} className="mb-3">
-                    <h6>{title}</h6>
-                    <table className="w-full border-collapse">
-                        <thead>
-                            <tr>
-                                {dayNames.map(d => <th key={d} className="text-center text-xs text-muted py-1 px-1.5 border border-default bg-surface-alt">{d}</th>)}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {visibleRows.map((r, i) => <tr key={i}>{r.cells}</tr>)}
-                        </tbody>
-                    </table>
-                </div>
-            );
-        }
-
-        // Advance to next month
-        curM++;
-        if (curM > 12) {
-            curM = 1;
-            curY++;
-        }
+        if (row.length > 0) rows.push({cells: row, hasProposed: rowHasProposed});
+        return rows;
     }
 
-    return (
-        <div id={idPrefix}>
-            {months}
-        </div>
-    );
-};
+    private renderMonth(year: number, month: number, drag: Readonly<DragState>): React.ReactElement | null {
+        const {dayNames, hideEmptyWeeks = false, extraWeeks = 0} = this.props;
+        // Use the UI locale, not the browser locale, for month headings.
+        const title = new Intl.DateTimeFormat(appLocale(), {timeZone: resolvedUserTz(), month: 'long', year: 'numeric'}).format(new Date(year, month - 1, 1));
+        const rows = visibleWeeks(this.monthWeeks(year, month, drag), hideEmptyWeeks, extraWeeks);
+        if (hideEmptyWeeks && rows.length === 0) return null;
+        return (
+            <div key={`${year}-${month}`} className="calendar-month">
+                <h6>{title}</h6>
+                <table className="calendar-month-table">
+                    <thead>
+                        <tr>{dayNames.map(renderWeekday)}</tr>
+                    </thead>
+                    <tbody>{rows.map(renderWeek)}</tbody>
+                </table>
+            </div>
+        );
+    }
+
+    public render() {
+        const {startDate, endDate, idPrefix = 'calendar'} = this.props;
+        const {dragOverDate, dragSourceDate} = this.useCarburetor(this.dragState);
+        if (!startDate || !endDate) return <div id={idPrefix} />;
+
+        const [startY, startM] = parseYMD(startDate);
+        const [endY, endM] = parseYMD(endDate);
+        const months: React.ReactNode[] = [];
+        const drag = {dragOverDate, dragSourceDate};
+        let curY = startY;
+        let curM = startM;
+        while (curY < endY || (curY === endY && curM <= endM)) {
+            const month = this.renderMonth(curY, curM, drag);
+            if (month !== null) months.push(month);
+            curM++;
+            if (curM > 12) {
+                curM = 1;
+                curY++;
+            }
+        }
+        return <div id={idPrefix}>{months}</div>;
+    }
+}

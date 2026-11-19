@@ -17,13 +17,13 @@ export const ErrorLogDetail: React.FC<Props> = ({row}) => (
     <div data-test-id="log-detail-errors">
         <div className="log-detail-grid">
             <div className="log-detail-label">{t.RequestLog_Time()}</div>
-            <div className="log-detail-value font-mono">{row.ts}</div>
+            <div className="log-detail-value-mono">{row.ts}</div>
 
             <div className="log-detail-label">{t.Logs_Errors_File()}</div>
-            <div className="log-detail-value font-mono break-all">{row.file || '—'}</div>
+            <div className="log-detail-value-mono-break-all">{row.file || '—'}</div>
 
             <div className="log-detail-label">{t.Logs_Errors_Name()}</div>
-            <div className="log-detail-value font-mono break-all">{row.name}</div>
+            <div className="log-detail-value-mono-break-all">{row.name}</div>
         </div>
 
         <div className="log-detail-section">

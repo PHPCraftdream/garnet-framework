@@ -7,25 +7,8 @@
  */
 
 import * as React from 'react';
-import {useState, useRef, useEffect, useMemo, useCallback} from 'react';
-import {IDetailsInfo, TGridFieldInfo, TGridSelectField, TValidationMapped} from '@common/Dom/GridTable/Models';
-import {GridUtils} from '@common/Dom/GridTable/GridUtils';
-import {printUtDateTime} from '@common/Utils/Str/printUtDateTime';
-import {I18nFramework} from '@framework/I18nGen/I18nFramework';
-import {IApiSuccessResponse, ICropData, IDataListItem, TFromMap, TFromNestedMap} from '@common/Support/Models';
-import {sendPostFormData} from '@common/Api/Send/sendPostFormData';
-import {makeFormData} from '@common/Api/Send/makeFormData';
-import {Validators} from '@common/Dom/GridTable/Validators';
-import {PageEvents} from '@common/Utils/Ui/PageEvents';
-import {DomEl} from '@common/Dom/El/DomEl';
-import {componentUploadPhotoHandler} from '@common/Dom/Component/ComponentUploadPhotoHandler';
-import {uploadMaxBytes, megabytes} from '@common/Utils/Upload/uploadLimits';
-import {Loader2} from 'lucide-react';
-import {Upload, XCircle} from 'lucide-react';
-import {UncontrolledForm, type UncontrolledFormHandle} from '../UncontrolledForm';
-import {UncontrolledInput} from '../UncontrolledInput';
-import {UncontrolledTextarea} from '../UncontrolledTextarea';
-import {UncontrolledSelect} from '../UncontrolledSelect';
+import {IDetailsInfo} from '@common/Dom/GridTable/Models';
+import {IApiSuccessResponse} from '@common/Support/Models';
 
 
 export interface FormBuilderProps {

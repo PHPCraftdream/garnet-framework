@@ -7,27 +7,27 @@ interface Props {
     onChange: (n: number) => void;
 }
 
-/**
- * Tiny dropdown for choosing how many rows a grid shows per page.
- *
- * Pure presentational — the value/onChange pair is owned by usePageSize() at
- * the grid level, which mirrors it into localStorage. Used by Pagination and
- * AdminGrid; works the same in both because both call usePageSize().
- */
-export function PageSizeSelector({value, onChange}: Props) {
-    return (
-        <label className="inline-flex items-center gap-2 text-sm text-muted whitespace-nowrap" data-test-id="page-size-selector">
-            <span>{t.Grid_PerPage()}</span>
-            <select
-                className="form-control form-control-sm w-auto"
-                value={value}
-                onChange={e => onChange(parseInt(e.target.value, 10))}
-                data-test-id="page-size-select"
-            >
-                {PAGE_SIZE_OPTIONS.map(n => (
-                    <option key={n} value={n}>{n}</option>
-                ))}
-            </select>
-        </label>
-    );
+const renderOption = (n: number) => <option key={n} value={n}>{n}</option>;
+
+/** Controlled page-size selector; persistence belongs to the caller. */
+export class PageSizeSelector extends React.Component<Props> {
+    private readonly handleChange = (event: React.ChangeEvent<HTMLSelectElement>): void => {
+        this.props.onChange(parseInt(event.target.value, 10));
+    };
+
+    public render() {
+        return (
+            <label className="paging-size-label" data-test-id="page-size-selector">
+                <span>{t.Grid_PerPage()}</span>
+                <select
+                    className="paging-size-select"
+                    value={this.props.value}
+                    onChange={this.handleChange}
+                    data-test-id="page-size-select"
+                >
+                    {PAGE_SIZE_OPTIONS.map(renderOption)}
+                </select>
+            </label>
+        );
+    }
 }

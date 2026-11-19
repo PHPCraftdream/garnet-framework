@@ -9,9 +9,9 @@
    that a regular visitor never would (D-119) — the page itself never said
    so, and staff read that silence as "everyone sees this". #}
 {% if is_moderator_view ?? false %}
-<div class="text-sm p-2 mb-4 rounded-lg bg-surface-alt border border-default" data-test-id="static-page-moderator-banner">
+<div class="static-page-moderator-banner" data-test-id="static-page-moderator-banner">
     You are viewing this page as a moderator — part of the content is hidden from regular visitors.
 </div>
 {% endif %}
-<h1 class="text-2xl font-semibold text-on-surface mb-6">{{ title }}</h1>
-<div class="text-on-surface">{{ blocks_html | raw }}</div>
+<h1 class="static-page-title">{{ title }}</h1>
+<div class="static-page-content">{{ blocks_html | raw }}</div>

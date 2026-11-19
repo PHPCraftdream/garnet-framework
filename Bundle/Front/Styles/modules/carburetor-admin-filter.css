@@ -1,0 +1,16 @@
+@utility layout-admin-bookings-filters {
+  @apply grid items-end gap-2;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+@utility shape-admin-bookings-filters { @apply mb-4; }
+@utility layout-admin-filter-cell { @apply [.admin-bookings-filters_&]:flex [.admin-bookings-filters_&]:flex-col; }
+@utility shape-admin-filter-cell { @apply [.admin-bookings-filters_&]:min-w-0; }
+@utility layout-admin-filter-actions { @apply [.admin-bookings-filters_&]:flex [.admin-bookings-filters_&]:items-end [.admin-bookings-filters_&]:justify-end; }
+
+@layer components {
+  .admin-bookings-filters { @apply tone-supportinherit-plain layout-admin-bookings-filters shape-admin-bookings-filters; }
+  .filter-cell { @apply tone-supportinherit-plain layout-admin-filter-cell shape-admin-filter-cell; }
+  .filter-actions { @apply tone-supportinherit-plain layout-admin-filter-actions; }
+  .admin-filter-field { @apply tone-garnetfield-outlined shape-native-control shape-native-field layout-native-select type-native-select focus-native-select motion-native-select; }
+  .admin-filter-reset { @apply tone-confirmsecondary-solid layout-compact-action shape-confirm-button type-confirm-button behavior-compact-action effect-compact-action motion-compact-action; }
+}

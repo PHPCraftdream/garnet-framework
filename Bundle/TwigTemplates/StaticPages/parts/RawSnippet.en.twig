@@ -6,4 +6,4 @@
 
    inner_html: already-converted markdown HTML (markdownToHtml output)
    kind: 'header' | 'footer' #}
-<div class="{% if kind == 'footer' %}sp-snippet-footer mt-4{% else %}sp-snippet-header mb-4{% endif %}">{{ inner_html | raw }}</div>
+<div class="{% if kind == 'footer' %}sp-snippet-footer{% else %}sp-snippet-header{% endif %}">{{ inner_html | raw }}</div>

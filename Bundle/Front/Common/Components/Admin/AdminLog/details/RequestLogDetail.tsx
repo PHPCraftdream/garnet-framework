@@ -19,29 +19,22 @@ interface Props {
     accounts: Record<string, string>;
 }
 
-const statusBadgeClass = (status: number): string => {
-    if (status >= 500) return 'status-danger';
-    if (status >= 400) return 'status-warning';
-    if (status >= 300) return 'status-info';
-    return 'status-success';
-};
-
 export const RequestLogDetail: React.FC<Props> = ({row, accounts}) => (
     <div data-test-id="log-detail-requests">
         <div className="log-detail-grid">
             <div className="log-detail-label">{t.RequestLog_Time()}</div>
-            <div className="log-detail-value font-mono">{row.ts}</div>
+            <div className="log-detail-value-mono">{row.ts}</div>
 
             <div className="log-detail-label">{t.RequestLog_Method()}</div>
-            <div className="log-detail-value font-mono">{row.method}</div>
+            <div className="log-detail-value-mono">{row.method}</div>
 
             <div className="log-detail-label">{t.RequestLog_Status()}</div>
             <div className="log-detail-value">
-                <span className={`badge ${statusBadgeClass(row.status)}`}>{row.status}</span>
+                <span className={row.status >= 500 ? 'admin-log-section-status-danger' : row.status >= 400 ? 'admin-log-section-status-warning' : row.status >= 300 ? 'admin-log-section-status-info' : 'admin-log-section-status-success'}>{row.status}</span>
             </div>
 
             <div className="log-detail-label">{t.RequestLog_Uri()}</div>
-            <div className="log-detail-value font-mono break-all">{row.uri}</div>
+            <div className="log-detail-value-mono-break-all">{row.uri}</div>
 
             <div className="log-detail-label">{t.RequestLog_Duration()}</div>
             <div className="log-detail-value">{row.duration_ms}</div>
@@ -54,15 +47,15 @@ export const RequestLogDetail: React.FC<Props> = ({row, accounts}) => (
                         name={accounts[String(row.account_id)] ?? `#${row.account_id}`}
                     />
                 ) : (
-                    <span className="text-muted">{t.Logs_Requests_Guest()}</span>
+                    <span className="admin-log-section-muted">{t.Logs_Requests_Guest()}</span>
                 )}
             </div>
 
             <div className="log-detail-label">{t.RequestLog_Ip()}</div>
-            <div className="log-detail-value font-mono">{row.ip}</div>
+            <div className="log-detail-value-mono">{row.ip}</div>
 
             <div className="log-detail-label">{t.RequestLog_Ua()}</div>
-            <div className="log-detail-value whitespace-pre-wrap break-all">{row.ua}</div>
+            <div className="log-detail-value-pre-break-all">{row.ua}</div>
         </div>
 
         <div className="log-detail-section">

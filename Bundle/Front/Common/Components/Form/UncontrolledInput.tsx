@@ -1,5 +1,6 @@
 import * as React from 'react';
 import {useFormErrors} from './useFormErrors';
+import {AntiHookComponent} from '@react-carburetor/core';
 
 interface Props {
     name: string;
@@ -22,6 +23,17 @@ interface Props {
 export const UncontrolledInput = React.forwardRef<HTMLInputElement, Props>(
     function UncontrolledInput(p, ref) {
         const error = useFormErrors(p.name) as string;
+        return <InputView {...p} inputRef={ref} error={error} />;
+    },
+);
+
+class InputView extends AntiHookComponent<Props & {inputRef: React.ForwardedRef<HTMLInputElement>; error: string}> {
+    private readonly blur = (event: React.FocusEvent<HTMLInputElement>) => {
+        this.props.onBlur?.(event.currentTarget.value, event.currentTarget);
+    };
+
+    public render() {
+        const {inputRef: ref, error, ...p} = this.props;
         return (
             <>
                 <input
@@ -37,17 +49,19 @@ export const UncontrolledInput = React.forwardRef<HTMLInputElement, Props>(
                     step={p.step}
                     autoFocus={p.autoFocus}
                     autoComplete={p.autoComplete}
-                    className={p.className ?? 'form-control'}
+                    // carburetor-disable-next-line require-function-class
+                    className={p.className ?? 'uncontrolled-field'}
                     data-test-id={p.testId}
-                    onBlur={p.onBlur ? (e) => p.onBlur!(e.currentTarget.value, e.currentTarget) : undefined}
+                    onBlur={p.onBlur ? this.blur : undefined}
                     aria-invalid={error ? 'true' : undefined}
                 />
                 {error && (
-                    <div className={p.errorClassName ?? 'garnet-form-error small fs-7 text-danger'} data-test-id={p.testId ? `${p.testId}-error` : undefined}>
+                    // carburetor-disable-next-line require-function-class
+                    <div className={p.errorClassName ?? 'garnet-form-error'} data-uncontrolled-error={p.errorClassName == null ? true : undefined} data-test-id={p.testId ? `${p.testId}-error` : undefined}>
                         {error}
                     </div>
                 )}
             </>
         );
-    },
-);
+    }
+}

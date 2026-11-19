@@ -1,8 +1,9 @@
 import * as React from 'react';
+import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
 import {sendPost} from '@common/Api/Send/sendPost';
 import {sendPostFormData, ApiError} from '@common/Api/Send/sendPostFormData';
 import {showToast} from '@common/Components/Feedback/GlobalToast';
-import {useConfirm} from '@common/hooks/ui/useConfirm';
+import type {ConfirmState} from '@common/hooks/ui/useConfirm';
 import {ConfirmModal} from '@common/Components/Feedback/ConfirmModal';
 import {ImageUploadArea} from './ImageUploadArea';
 
@@ -18,8 +19,6 @@ function serverReason(err: unknown): string | null {
 
     return typeof reason === 'string' && reason !== '' ? reason : null;
 }
-
-// ── Single-image field: preview + remove, or an upload zone when empty ──
 
 export interface ImageUploadFieldProps {
     /** Current image URL ('' when none). */
@@ -43,69 +42,96 @@ export interface ImageUploadFieldProps {
     notAnImageLabel?: string;
 }
 
-export const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
-    value, onChange, uploadUrl, deleteUrl,
-    uploadLabel, removeLabel, removeConfirm, errorLabel, previewAlt, disabled,
-    hint, notAnImageLabel,
-}) => {
-    const [uploading, setUploading] = React.useState(false);
-    const {confirmState, confirm, handleConfirm, handleCancel} = useConfirm();
+type FieldState = {uploading: boolean; confirmState: ConfirmState};
 
-    const handleUpload = async (files: File[]) => {
+export class ImageUploadField extends AntiHookComponent<ImageUploadFieldProps> {
+    private readonly fieldStore = new Carburetor<FieldState>({
+        uploading: false,
+        confirmState: {visible: false, message: '', items: []},
+    });
+    private confirmResolver: ((value: boolean) => void) | null = null;
+    private readonly updateOnParentRender = true;
+
+    public shouldComponentUpdate(nextProps: Readonly<ImageUploadFieldProps>, nextState: Readonly<{}>): boolean {
+        return super.shouldComponentUpdate(nextProps, nextState) || this.updateOnParentRender;
+    }
+
+    private readonly handleUpload = (files: File[]): void => {
+        void this.upload(files);
+    };
+
+    private async upload(files: File[]): Promise<void> {
+        const {uploadUrl, onChange, errorLabel} = this.props;
         const file = files[0];
         if (!file) return;
-        setUploading(true);
+        this.fieldStore.setData({...this.fieldStore.getData(), uploading: true});
         const fd = new FormData();
         fd.append('file', file);
         try {
             const res = await sendPostFormData<FormData, {success: boolean; url: string}>(uploadUrl, fd);
             if (res?.url) onChange(res.url);
         } catch (err: unknown) {
-            // The server says why — too large, not an image — and this used to
-            // replace that with a bare "Error". The reason existed; the display
-            // threw it away.
             showToast(serverReason(err) ?? errorLabel ?? 'Error', 'danger');
+        } finally {
+            this.fieldStore.setData({...this.fieldStore.getData(), uploading: false});
         }
-        finally { setUploading(false); }
-    };
+    }
 
-    const handleRemove = async () => {
+    private confirm(message: string, confirmLabel?: string): Promise<boolean> {
+        return new Promise(resolve => {
+            this.confirmResolver = resolve;
+            this.fieldStore.setData({
+                ...this.fieldStore.getData(),
+                confirmState: {visible: true, message, items: [], confirmLabel, variant: 'danger'},
+            });
+        });
+    }
+
+    private settleConfirm(confirmed: boolean): void {
+        const data = this.fieldStore.getData();
+        this.fieldStore.setData({...data, confirmState: {...data.confirmState, visible: false}});
+        this.confirmResolver?.(confirmed);
+        this.confirmResolver = null;
+    }
+
+    private readonly handleConfirm = (): void => { this.settleConfirm(true); };
+    private readonly handleCancel = (): void => { this.settleConfirm(false); };
+    private readonly handleRemove = (): void => { void this.remove(); };
+
+    private async remove(): Promise<void> {
+        const {removeConfirm, removeLabel, value, deleteUrl, onChange} = this.props;
         if (removeConfirm) {
-            const ok = await confirm(removeConfirm, {variant: 'danger', confirmLabel: removeLabel});
+            const ok = await this.confirm(removeConfirm, removeLabel);
             if (!ok) return;
         }
-        const url = value;
-        // Only our own uploads live under the upload path; external URLs are
-        // rejected server-side — clear them client-side regardless.
-        if (url) { try { await sendPost(deleteUrl, {url}); } catch { /* silent */ } }
+        if (value) { try { await sendPost(deleteUrl, {url: value}); } catch { /* silent */ } }
         onChange('');
-    };
+    }
 
-    return (
-        <div>
-            {value ? (
-                <div className="blk-img-preview">
-                    <img src={value} alt={previewAlt || ''} className="blk-img-preview-img" />
-                    <button
-                        type="button"
-                        className="blk-img-preview-remove"
-                        onClick={() => void handleRemove()}
-                        disabled={disabled}
-                        title={removeLabel}
-                    >
-                        &#215;
-                    </button>
-                </div>
-            ) : (
-                    <ImageUploadArea
-                    onUpload={files => void handleUpload(files)}
-                    uploading={uploading}
-                    label={uploadLabel}
-                    hint={hint}
-                    notAnImageLabel={notAnImageLabel}
-                />
-            )}
-            <ConfirmModal state={confirmState} onConfirm={handleConfirm} onCancel={handleCancel} />
-        </div>
-    );
-};
+    public render() {
+        const {value, uploadLabel, removeLabel, previewAlt, disabled, hint, notAnImageLabel} = this.props;
+        const {uploading, confirmState} = this.useCarburetor(this.fieldStore);
+        const modalState: ConfirmState = {
+            visible: confirmState.visible,
+            message: confirmState.message,
+            items: [...confirmState.items],
+            confirmLabel: confirmState.confirmLabel,
+            variant: confirmState.variant,
+        };
+        return (
+            <div>
+                {value ? (
+                    <div className="blk-img-preview">
+                        <img src={value} alt={previewAlt || ''} className="blk-img-preview-img" />
+                        <button type="button" className="blk-img-preview-remove" onClick={this.handleRemove} disabled={disabled} title={removeLabel}>
+                            &#215;
+                        </button>
+                    </div>
+                ) : (
+                    <ImageUploadArea onUpload={this.handleUpload} uploading={uploading} label={uploadLabel} hint={hint} notAnImageLabel={notAnImageLabel} />
+                )}
+                <ConfirmModal state={modalState} onConfirm={this.handleConfirm} onCancel={this.handleCancel} />
+            </div>
+        );
+    }
+}

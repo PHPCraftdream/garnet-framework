@@ -89,6 +89,39 @@ const writeShared = (counts: LiveCounts): void => {
     }
 };
 
+function responseJson(res: Response): Promise<unknown> | null {
+    return res.ok ? res.json() : null;
+}
+
+function receiveCounts(json: unknown): void {
+    const counts = toCounts(json);
+    if (!counts) return;
+    writeShared(counts); // share with other tabs (fires their `storage` event)
+    emit(counts);
+}
+
+function ignorePollError(): void {
+    // Network blip — keep the last known values and try again next tick.
+}
+
+function clearInFlight(): void {
+    inFlight = null;
+}
+
+function pollNormally(): void {
+    poll();
+}
+
+function onVisibilityChange(): void {
+    if (document.visibilityState === 'visible') poll();
+}
+
+function onStorage(e: StorageEvent): void {
+    if (e.key !== LS_KEY || !e.newValue) return;
+    const shared = readShared();
+    if (shared) emit(shared.counts);
+}
+
 const poll = (force = false): void => {
     // Hidden/background tabs don't poll at all — they refresh on becoming visible.
     if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
@@ -111,17 +144,10 @@ const poll = (force = false): void => {
     const url = countsUrl();
     if (!url) return;
     inFlight = fetch(url, {headers: {Accept: 'application/json'}, credentials: 'same-origin'})
-        .then(res => (res.ok ? res.json() : null))
-        .then(json => {
-            const counts = toCounts(json);
-            if (!counts) return;
-            writeShared(counts); // share with other tabs (fires their `storage` event)
-            emit(counts);
-        })
-        .catch(() => {
-            // Network blip — keep the last known values and try again next tick.
-        })
-        .finally(() => { inFlight = null; });
+        .then(responseJson)
+        .then(receiveCounts)
+        .catch(ignorePollError)
+        .finally(clearInFlight);
 };
 
 /**
@@ -133,20 +159,14 @@ export const startLiveCounts = (): void => {
     if (started) return;
     started = true;
 
-    window.setInterval(() => poll(), INTERVAL_MS);
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') poll();
-    });
+    window.setInterval(pollNormally, INTERVAL_MS);
+    document.addEventListener('visibilitychange', onVisibilityChange);
     // Another tab refreshed the shared counts — update our badges without a
     // request of our own.
-    window.addEventListener('storage', (e) => {
-        if (e.key !== LS_KEY || !e.newValue) return;
-        const shared = readShared();
-        if (shared) emit(shared.counts);
-    });
+    window.addEventListener('storage', onStorage);
     // Slight delay so the first poll doesn't compete with the initial paint /
     // island hydration.
-    window.setTimeout(() => poll(), 2000);
+    window.setTimeout(pollNormally, 2000);
 };
 
 /**
@@ -155,10 +175,17 @@ export const startLiveCounts = (): void => {
  * Returns an unsubscribe function.
  */
 export const subscribeLiveCounts = (cb: (counts: LiveCounts) => void): (() => void) => {
-    const handler = (e: Event): void => cb((e as CustomEvent<LiveCounts>).detail);
-    window.addEventListener(EVENT, handler as EventListener);
+    const handler = {
+        handleEvent(e: Event): void {
+            cb((e as CustomEvent<LiveCounts>).detail);
+        },
+        unsubscribe(): void {
+            window.removeEventListener(EVENT, handler);
+        },
+    };
+    window.addEventListener(EVENT, handler);
     if (latest) cb(latest);
-    return () => window.removeEventListener(EVENT, handler as EventListener);
+    return handler.unsubscribe;
 };
 
 /**

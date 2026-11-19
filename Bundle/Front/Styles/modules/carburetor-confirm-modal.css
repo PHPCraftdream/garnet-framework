@@ -1,0 +1,54 @@
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-confirmfooter-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-confirmfooter-wash: var(--color-bg-surface-alt);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-confirmsecondary-fill: var(--color-gray-500);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-confirmsecondary-fill-hover: var(--color-gray-600);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-confirmsecondary-on-fill: var(--color-white);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-confirmdanger-fill: var(--color-red-600);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-confirmdanger-fill-hover: var(--color-red-700);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-confirmdanger-on-fill: var(--color-white);
+}
+
+@utility tone-confirmfooter-outlined { @apply border-confirmfooter-edge bg-confirmfooter-wash; }
+@utility tone-confirmsecondary-solid { @apply border-transparent bg-confirmsecondary-fill text-confirmsecondary-on-fill [&:hover]:bg-confirmsecondary-fill-hover; }
+@utility tone-confirmdanger-solid { @apply border-transparent bg-confirmdanger-fill text-confirmdanger-on-fill [&:hover]:bg-confirmdanger-fill-hover; }
+@utility layout-confirm-overlay { @apply fixed inset-0 z-50 flex items-center justify-center; }
+@utility effect-confirm-overlay { @apply backdrop-blur-[2px]; }
+@utility layout-confirm-dialog { @apply self-center; }
+@utility shape-confirm-dialog { @apply rounded-xl max-w-lg m-4; width: calc(100% - 2rem); }
+@utility effect-confirm-dialog { @apply shadow-2xl; }
+@utility layout-confirm-content { @apply overflow-hidden; }
+@utility shape-confirm-body { @apply p-6; }
+@utility type-confirm-body { @apply text-xl; }
+@utility layout-confirm-list { @apply flex flex-col; }
+@utility shape-confirm-list { @apply rounded-none border border-x-0 mb-2; }
+@utility shape-confirm-item { @apply py-2 px-4 border-b last:border-b-0; }
+@utility type-confirm-item { @apply text-sm; }
+@utility layout-confirm-footer { @apply flex justify-end gap-2; }
+@utility shape-confirm-footer { @apply px-6 py-3 border-t; }
+@utility shape-confirm-button { @apply rounded-md border; padding: 0.4375rem 0.875rem; }
+@utility type-confirm-button { @apply font-medium leading-normal no-underline whitespace-nowrap; font-size: 0.8125rem; }
+@utility effect-confirm-success { box-shadow: 0 1px 2px rgba(22, 163, 74, 0.2); }
+@utility effect-confirm-danger { box-shadow: 0 1px 2px rgba(220, 38, 38, 0.2); }
+
+@layer components {
+  .confirm-modal-overlay { @apply tone-fgbackdrop-soft layout-confirm-overlay effect-confirm-overlay; }
+  .confirm-modal-dialog { @apply tone-cardsurface-outlined layout-confirm-dialog shape-confirm-dialog effect-confirm-dialog; }
+  .confirm-modal-content { @apply tone-fbinherit-plain layout-confirm-content; }
+  .confirm-modal-body { @apply tone-fbinherit-plain shape-confirm-body type-confirm-body; }
+  .confirm-modal-list { @apply tone-gridborder-outline layout-confirm-list shape-confirm-list; }
+  .confirm-modal-item { @apply tone-gridborder-outline shape-confirm-item type-confirm-item; }
+  .confirm-modal-footer { @apply tone-confirmfooter-outlined layout-confirm-footer shape-confirm-footer; }
+  .confirm-modal-cancel { @apply tone-confirmsecondary-solid layout-compact-action shape-confirm-button type-confirm-button behavior-compact-action effect-compact-action motion-compact-action; }
+  .confirm-modal-success { @apply tone-compactsuccess-solid layout-compact-action shape-confirm-button type-confirm-button behavior-compact-action effect-compact-action effect-confirm-success motion-compact-action; }
+  .confirm-modal-danger { @apply tone-confirmdanger-solid layout-compact-action shape-confirm-button type-confirm-button behavior-compact-action effect-compact-action effect-confirm-danger motion-compact-action; }
+}

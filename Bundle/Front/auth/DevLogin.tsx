@@ -1,6 +1,7 @@
 import * as React from 'react';
+import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
 import {sendPost} from '@common/Api/Send/sendPost';
-import {useConfirm} from '@common/hooks/ui/useConfirm';
+import type {ConfirmState} from '@common/hooks/ui/useConfirm';
 import {ConfirmModal} from '@common/Components/Feedback/ConfirmModal';
 import {I18nFramework as I18n} from '@framework/I18nGen/I18nFramework';
 
@@ -16,133 +17,148 @@ interface DevLoginResponse {
     redirect?: string;
 }
 
-export const DevLoginButtons: React.FC<Props> = ({floating = false, roles = DEFAULT_ROLES}) => {
-    const [loading, setLoading] = React.useState<string | null>(null);
-    const [resetting, setResetting] = React.useState(false);
-    const {confirmState, confirm, handleConfirm, handleCancel} = useConfirm();
+type DevLoginState = {loading: string | null; resetting: boolean; confirmState: ConfirmState};
 
-    const busy = loading !== null || resetting;
+interface DevRoleProps {
+    role: string;
+    loading: boolean;
+    busy: boolean;
+    onLogin: (role: string) => void;
+}
 
-    const handleDevLogin = async (role: string): Promise<void> => {
-        setLoading(role);
+class DevRoleButton extends React.Component<DevRoleProps> {
+    private readonly handleClick = (): void => { this.props.onLogin(this.props.role); };
+
+    public render() {
+        const {role, loading, busy} = this.props;
+        return (
+            <button type="button" className="dev-login-role" data-loading={loading ? 'true' : undefined}
+                disabled={busy} onClick={this.handleClick} data-test-id={`dev-login-${role}`}>
+                {loading ? '...' : role}
+            </button>
+        );
+    }
+}
+
+export class DevLoginButtons extends AntiHookComponent<Props> {
+    private readonly store = new Carburetor<DevLoginState>({
+        loading: null,
+        resetting: false,
+        confirmState: {visible: false, message: '', items: []},
+    });
+    private confirmResolver: ((confirmed: boolean) => void) | null = null;
+    private readonly updateOnParentRender = true;
+
+    public shouldComponentUpdate(nextProps: Readonly<Props>, nextState: Readonly<{}>): boolean {
+        return super.shouldComponentUpdate(nextProps, nextState) || this.updateOnParentRender;
+    }
+
+    private readonly handleRole = (role: string): void => {
+        void this.login(role);
+    };
+
+    private async login(role: string): Promise<void> {
+        this.store.setData({...this.store.getData(), loading: role});
         try {
             const data = await sendPost<{role: string}, DevLoginResponse>('/dev-login', {role});
             if (data.success) {
                 window.location.href = data.redirect || '/';
             } else {
-                setLoading(null);
+                this.store.setData({...this.store.getData(), loading: null});
             }
         } catch {
-            setLoading(null);
+            this.store.setData({...this.store.getData(), loading: null});
         }
-    };
+    }
 
-    const handleReset = async (): Promise<void> => {
-        const ok = await confirm('Reset the database? All data and dev accounts will be deleted.', {
-            variant: 'danger',
-            confirmLabel: I18n.Common_Delete?.() || 'Reset',
+    private confirmReset(): Promise<boolean> {
+        const confirmLabel = I18n.Common_Delete?.() || 'Reset';
+        return new Promise(resolve => {
+            this.confirmResolver = resolve;
+            this.store.setData({
+                ...this.store.getData(),
+                confirmState: {
+                    visible: true,
+                    message: 'Reset the database? All data and dev accounts will be deleted.',
+                    items: [],
+                    variant: 'danger',
+                    confirmLabel,
+                },
+            });
         });
+    }
+
+    private settleConfirm(confirmed: boolean): void {
+        const data = this.store.getData();
+        this.store.setData({...data, confirmState: {...data.confirmState, visible: false}});
+        this.confirmResolver?.(confirmed);
+        this.confirmResolver = null;
+    }
+
+    private readonly handleConfirm = (): void => { this.settleConfirm(true); };
+    private readonly handleCancel = (): void => { this.settleConfirm(false); };
+    private readonly handleReset = (): void => { void this.reset(); };
+
+    private async reset(): Promise<void> {
+        const ok = await this.confirmReset();
         if (!ok) return;
-        setResetting(true);
+        this.store.setData({...this.store.getData(), resetting: true});
         try {
             await sendPost<{}, {}>('/dev-login/reset-db', {});
-            // TODO: tech debt — full page reload after dev DB reset. Architecturally we'd need
-            // to re-fetch every island's state + invalidate session/CSRF/lang caches, which is
-            // out of scope for a dev-only helper. Reload is the pragmatic path until DevLogin
-            // is rewritten to drive a global app-state refresh.
             window.location.reload();
         } catch {
-            setResetting(false);
+            this.store.setData({...this.store.getData(), resetting: false});
         }
-    };
+    }
 
-    const wrapStyle: React.CSSProperties = floating
-        ? {
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            zIndex: 50,
-            background: 'var(--color-bg-surface, rgba(255,255,255,0.92))',
-            borderTop: '1px dashed #d1d5db',
-            padding: '6px 16px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            flexWrap: 'wrap',
-            backdropFilter: 'blur(4px)',
+    private renderButtons(roles: readonly string[], loading: string | null, resetting: boolean) {
+        const busy = loading !== null || resetting;
+        const buttons: React.ReactNode[] = [];
+        for (const role of roles) {
+            buttons.push(<DevRoleButton key={role} role={role} loading={loading === role} busy={busy} onLogin={this.handleRole} />);
         }
-        : {
-            marginTop: '24px',
-            borderTop: '1px dashed #d1d5db',
-            paddingTop: '16px',
-        };
-
-    const label = (
-        <span style={{fontSize: '11px', color: '#9ca3af', marginRight: '4px', whiteSpace: 'nowrap'}}>
-            Dev:
-        </span>
-    );
-
-    const buttons = (
-        <>
-            {roles.map(role => (
+        return (
+            <>
+                {buttons}
                 <button
-                    key={role}
                     type="button"
+                    className="dev-login-reset"
+                    data-loading={resetting ? 'true' : undefined}
                     disabled={busy}
-                    onClick={() => handleDevLogin(role)}
-                    data-test-id={`dev-login-${role}`}
-                    style={{
-                        padding: '2px 10px',
-                        fontSize: '12px',
-                        border: '1px dashed #d1d5db',
-                        color: loading === role ? '#374151' : '#9ca3af',
-                        borderRadius: '4px',
-                        background: 'transparent',
-                        cursor: busy ? 'default' : 'pointer',
-                    }}
+                    onClick={this.handleReset}
+                    data-test-id="dev-reset-db"
                 >
-                    {loading === role ? '...' : role}
+                    {resetting ? '...' : 'reset db'}
                 </button>
-            ))}
-            <button
-                type="button"
-                disabled={busy}
-                onClick={handleReset}
-                data-test-id="dev-reset-db"
-                style={{
-                    padding: '2px 10px',
-                    fontSize: '12px',
-                    border: '1px dashed #fca5a5',
-                    color: resetting ? '#374151' : '#f87171',
-                    borderRadius: '4px',
-                    background: 'transparent',
-                    cursor: busy ? 'default' : 'pointer',
-                    marginLeft: '8px',
-                }}
-            >
-                {resetting ? '...' : 'reset db'}
-            </button>
-        </>
-    );
-
-    const content = floating
-        ? <div style={wrapStyle}>{label}{buttons}</div>
-        : (
-            <div style={wrapStyle}>
-                <p style={{fontSize: '12px', color: '#9ca3af', marginBottom: '8px'}}>Dev quick login:</p>
-                <div style={{display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center'}}>
-                    {buttons}
-                </div>
-            </div>
+            </>
         );
+    }
 
-    return (
-        <>
-            {content}
-            <ConfirmModal state={confirmState} onConfirm={handleConfirm} onCancel={handleCancel} />
-        </>
-    );
-};
+    public render() {
+        const {floating = false, roles = DEFAULT_ROLES} = this.props;
+        const {loading, resetting, confirmState} = this.useCarburetor(this.store);
+        const modalState: ConfirmState = {
+            visible: confirmState.visible,
+            message: confirmState.message,
+            items: [...confirmState.items],
+            confirmLabel: confirmState.confirmLabel,
+            variant: confirmState.variant,
+        };
+        const buttons = this.renderButtons(roles, loading, resetting);
+        return (
+            <>
+                {floating ? (
+                    <div className="dev-login-floating">
+                        <span className="dev-login-label">Dev:</span>{buttons}
+                    </div>
+                ) : (
+                    <div className="dev-login-panel">
+                        <p className="dev-login-heading">Dev quick login:</p>
+                        <div className="dev-login-actions">{buttons}</div>
+                    </div>
+                )}
+                <ConfirmModal state={modalState} onConfirm={this.handleConfirm} onCancel={this.handleCancel} />
+            </>
+        );
+    }
+}

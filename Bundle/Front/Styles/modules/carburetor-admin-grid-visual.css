@@ -1,0 +1,81 @@
+/* Admin grid presentation uses the existing Garnet theme. */
+/* carburetor-disable-next-line valid-color-role */
+@theme inline {
+  /* carburetor-disable-next-line valid-color-role */
+  --color-gridinherit-ink: currentColor;
+  /* carburetor-disable-next-line valid-color-role */
+  --color-gridheader-ink: currentColor;
+  /* carburetor-disable-next-line valid-color-role */
+  --color-gridheader-wash-hover: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-gridsortactive-ink: var(--color-accent);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-gridsortidle-ink: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-gridborder-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-gridrow-wash: var(--color-bg-surface);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-gridrow-wash-hover: var(--color-bg-surface-hover);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-gridtext-ink: var(--color-text-primary);
+}
+
+@utility tone-gridinherit-plain { @apply text-gridinherit-ink; }
+@utility tone-gridheader-soft { @apply text-gridheader-ink hover:bg-gridheader-wash-hover; }
+@utility tone-gridsortactive-plain { @apply text-gridsortactive-ink; }
+@utility tone-gridsortidle-plain { @apply text-gridsortidle-ink; }
+@utility tone-gridborder-outline { @apply border-gridborder-edge; }
+@utility tone-gridrow-soft { @apply bg-gridrow-wash [&:hover]:bg-gridrow-wash-hover; }
+@utility tone-gridtext-plain { @apply text-gridtext-ink; }
+@utility layout-admin-grid-shell { @apply overflow-x-auto; }
+@utility shape-admin-grid-shell { @apply rounded-lg border; }
+@utility effect-admin-grid-shell { @apply shadow-sm; }
+@utility shape-admin-grid-table { @apply w-full; }
+@utility type-admin-grid-table { @apply text-sm; }
+@utility behavior-admin-grid-row { @apply cursor-pointer; }
+@utility motion-admin-grid-row { @apply transition-colors; }
+@utility shape-admin-grid-cell { @apply px-4 py-3; }
+@utility shape-admin-grid-cell-narrow { @apply px-4 py-3 w-px; }
+@utility type-admin-grid-cell-narrow { @apply whitespace-nowrap; }
+@utility shape-admin-grid-expand-cell { @apply px-3 py-3 w-px; }
+@utility type-admin-grid-expand-cell { @apply text-center; }
+@utility layout-admin-grid-expander-icon { @apply inline-block; }
+@utility type-admin-grid-expander-icon { @apply align-middle; }
+@utility shape-admin-grid-expanded-cell { @apply p-0; }
+@utility shape-admin-grid-empty-cell { @apply px-4 py-8; }
+@utility type-admin-grid-empty-cell { @apply text-center text-base; }
+@utility shape-admin-grid-search-wrap { @apply mb-4; }
+@utility shape-admin-grid-pagination-top { @apply mb-3; }
+@utility shape-admin-grid-pagination-bottom { @apply mt-4; }
+@utility shape-admin-grid-search-input { max-width: 360px; }
+@utility shape-admin-grid-heading-narrow { @apply w-px; }
+@utility type-admin-grid-heading { @apply whitespace-nowrap; }
+@utility behavior-admin-grid-sort { @apply cursor-pointer select-none; }
+@utility motion-admin-grid-sort { @apply transition-colors; }
+@utility shape-admin-grid-sort-mark { @apply ml-1; }
+
+@layer components {
+  .admin-grid-shell { @apply tone-gridborder-outline layout-admin-grid-shell shape-admin-grid-shell effect-admin-grid-shell; }
+  .admin-table { @apply tone-gridinherit-plain shape-admin-grid-table type-admin-grid-table; }
+  .admin-grid-row { @apply tone-gridrow-soft motion-admin-grid-row; }
+  .admin-grid-row-action { @apply tone-gridrow-soft behavior-admin-grid-row motion-admin-grid-row; }
+  .admin-grid-cell { @apply tone-gridtext-plain shape-admin-grid-cell; }
+  .admin-grid-cell-narrow { @apply tone-gridtext-plain shape-admin-grid-cell-narrow type-admin-grid-cell-narrow; }
+  .admin-grid-expand-cell { @apply tone-gridinherit-plain shape-admin-grid-expand-cell type-admin-grid-expand-cell; }
+  .admin-grid-expander-active { @apply tone-gridsortactive-plain layout-admin-grid-expander-icon type-admin-grid-expander-icon; }
+  .admin-grid-expander-idle { @apply tone-gridsortidle-plain layout-admin-grid-expander-icon type-admin-grid-expander-icon; }
+  .admin-grid-expanded-cell { @apply tone-gridinherit-plain shape-admin-grid-expanded-cell; }
+  .admin-grid-empty-cell { @apply tone-gridsortidle-plain shape-admin-grid-empty-cell type-admin-grid-empty-cell; }
+  .admin-grid-search-wrap { @apply tone-gridinherit-plain shape-admin-grid-search-wrap; }
+  .admin-grid-pagination-top { @apply tone-gridinherit-plain shape-admin-grid-pagination-top; }
+  .admin-grid-pagination-bottom { @apply tone-gridinherit-plain shape-admin-grid-pagination-bottom; }
+  .admin-grid-search-input { @apply tone-garnetfield-outlined shape-native-control shape-native-field shape-admin-grid-search-input layout-native-select type-native-select focus-native-select motion-native-select; }
+  .admin-grid-expander-heading { @apply tone-gridinherit-plain shape-admin-grid-heading-narrow; }
+  .admin-grid-heading { @apply tone-gridinherit-plain type-admin-grid-heading; }
+  .admin-grid-heading-narrow { @apply tone-gridinherit-plain type-admin-grid-heading shape-admin-grid-heading-narrow; }
+  .admin-grid-heading-sortable { @apply tone-gridheader-soft type-admin-grid-heading behavior-admin-grid-sort motion-admin-grid-sort; }
+  .admin-grid-heading-sortable-narrow { @apply tone-gridheader-soft type-admin-grid-heading shape-admin-grid-heading-narrow behavior-admin-grid-sort motion-admin-grid-sort; }
+  .admin-grid-sort-active { @apply tone-gridsortactive-plain shape-admin-grid-sort-mark; }
+  .admin-grid-sort-idle { @apply tone-gridsortidle-plain shape-admin-grid-sort-mark; }
+}

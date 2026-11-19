@@ -25,7 +25,7 @@ export class ErrorBoundary extends React.Component<React.PropsWithChildren, Erro
 			return (
 				<div
 					data-test-id="error-boundary"
-					className="text-secondary"
+					className="error-boundary-message"
 					style={{
 						padding: '24px',
 						textAlign: 'center',
@@ -36,7 +36,7 @@ export class ErrorBoundary extends React.Component<React.PropsWithChildren, Erro
 					</p>
 					<button
 						type="button"
-						className="btn btn-primary"
+						className="send-button-primary"
 						onClick={this.handleReload}
 						data-test-id="error-boundary-reload"
 					>

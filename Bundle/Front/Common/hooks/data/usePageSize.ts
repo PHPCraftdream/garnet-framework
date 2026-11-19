@@ -1,5 +1,27 @@
-import {useState, useEffect, useCallback} from 'react';
+import {useState, useEffect, useCallback, useSyncExternalStore} from 'react';
+import {Carburetor} from '@react-carburetor/core';
 import {readPageSize, writePageSize} from '@common/Utils/Data/pagination';
+
+function createPageSizeStore(): PageSizeStore { return new PageSizeStore(); }
+
+class PageSizeStore extends Carburetor<{size: number}> {
+    constructor() { super({size: readPageSize()}); }
+    readonly snapshot = () => this.getData();
+    readonly subscribeSnapshot = (listener: () => void) => {
+        const id = this.subscribe(listener);
+        return () => this.unsubscribe(id);
+    };
+    readonly setSize = (size: number) => {
+        const previous = this.getData();
+        if (Object.is(previous.size, size)) return;
+        const version = this.getVersion();
+        this.setData({size});
+        if (this.getData() !== previous && this.getVersion() === version) {
+            this.markAllChanged();
+            this.emitUpdate();
+        }
+    };
+}
 
 /**
  * Cross-grid page-size state synced via localStorage.
@@ -11,16 +33,17 @@ import {readPageSize, writePageSize} from '@common/Utils/Data/pagination';
  * Returns a tuple-style API like useState to keep call sites compact.
  */
 export function usePageSize(): [number, (n: number) => void] {
-    const [size, setSize] = useState<number>(() => readPageSize());
+    const [store] = useState(createPageSizeStore);
+    const {size} = useSyncExternalStore(store.subscribeSnapshot, store.snapshot, store.snapshot);
 
     useEffect(() => {
         const onLocalChange = (e: Event) => {
             const detail = (e as CustomEvent<number>).detail;
-            if (typeof detail === 'number') setSize(detail);
+            if (typeof detail === 'number') store.setSize(detail);
         };
         const onStorageChange = (e: StorageEvent) => {
             if (e.key === null || e.key === 'garnet.pageSize') {
-                setSize(readPageSize());
+                store.setSize(readPageSize());
             }
         };
         window.addEventListener('garnet:pageSizeChange', onLocalChange);
@@ -29,12 +52,12 @@ export function usePageSize(): [number, (n: number) => void] {
             window.removeEventListener('garnet:pageSizeChange', onLocalChange);
             window.removeEventListener('storage', onStorageChange);
         };
-    }, []);
+    }, [store]);
 
     const update = useCallback((n: number) => {
         writePageSize(n);
-        setSize(n);
-    }, []);
+        store.setSize(n);
+    }, [store]);
 
     return [size, update];
 }

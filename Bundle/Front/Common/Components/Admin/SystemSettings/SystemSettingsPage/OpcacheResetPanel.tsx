@@ -6,45 +6,41 @@
  */
 
 import * as React from 'react';
+import {AntiHookComponent} from '@react-carburetor/core';
 import {sendPost} from '@common/Api/Send/sendPost';
 import {showToast} from '@common/Components/Feedback/GlobalToast';
 import {useSending} from '@common/hooks/data/useSending';
 import {SystemSettingsLabels} from './types';
+import {OpcacheResetView} from './OpcacheResetView';
 
-export const OpcacheResetPanel: React.FC<{url: string; labels: SystemSettingsLabels}> = ({url, labels}) => {
-    const {sending, withSending} = useSending();
-    const handleClick = (): void => {
-        void withSending(async () => {
-            try {
-                const r = await sendPost<Record<string, never>, {success?: boolean; opcache_reset?: boolean; error?: string; sapi?: string}>(url, {});
-                if (r?.success) {
-                    showToast(labels.opcacheResetSuccess ?? 'OPcache reset OK', 'success');
-                } else {
-                    showToast(r?.error ?? labels.opcacheResetUnavailable ?? 'OPcache not available', 'danger');
-                }
-            } catch (err) {
-                showToast(err instanceof Error ? err.message : labels.error, 'danger');
+type Props = {url: string; labels: SystemSettingsLabels};
+
+class OpcacheResetController extends AntiHookComponent<Props & ReturnType<typeof useSending>> {
+    private readonly reset = async (): Promise<void> => {
+        const {url, labels} = this.props;
+        try {
+            const r = await sendPost<Record<string, never>, {success?: boolean; opcache_reset?: boolean; error?: string; sapi?: string}>(url, {});
+            if (r?.success) {
+                showToast(labels.opcacheResetSuccess ?? 'OPcache reset OK', 'success');
+            } else {
+                showToast(r?.error ?? labels.opcacheResetUnavailable ?? 'OPcache not available', 'danger');
             }
-        });
+        } catch (err) {
+            showToast(err instanceof Error ? err.message : labels.error, 'danger');
+        }
     };
-    return (
-        <section className="rounded-lg border border-default bg-surface p-5 mt-6" data-test-id="opcache-reset-section">
-            <h2 className="text-lg font-semibold text-on-surface mb-2">
-                {labels.opcacheResetTitle ?? 'OPcache'}
-            </h2>
-            <p className="text-sm text-muted mb-3">
-                {labels.opcacheResetHint ?? 'Reset the FPM PHP OPcache after a deploy.'}
-            </p>
-            <button
-                type="button"
-                data-test-id="opcache-reset-btn"
-                className="btn btn-outline-primary"
-                onClick={handleClick}
-                disabled={sending}
-            >
-                {sending ? labels.saving : (labels.opcacheResetBtn ?? 'Reset OPcache')}
-            </button>
-        </section>
-    );
-};
+
+    private readonly handleClick = (): void => {
+        void this.props.withSending(this.reset);
+    };
+
+    public render() {
+        return <OpcacheResetView labels={this.props.labels} sending={this.props.sending} onReset={this.handleClick} />;
+    }
+}
+
+export function OpcacheResetPanel(props: Props) {
+    const sending = useSending();
+    return <OpcacheResetController {...props} {...sending} />;
+}
 

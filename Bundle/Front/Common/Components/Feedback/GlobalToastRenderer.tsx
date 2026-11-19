@@ -1,42 +1,65 @@
 import * as React from 'react';
+import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
 import {ToastEntry, ToastManager} from './toastManager';
 
-const typeClasses: Record<string, string> = {
-    primary: 'text-bg-primary',
-    success: 'text-bg-success',
-    danger: 'text-bg-danger',
-    warning: 'text-bg-warning',
-};
+interface ToastItemProps {
+    id: number;
+    message: string;
+    type: ToastEntry['type'];
+}
 
-/** Render ONCE in the layout — subscribes to ToastManager */
-export const GlobalToastRenderer: React.FC = () => {
-    const [entries, setEntries] = React.useState<ToastEntry[]>([]);
+class GlobalToastItem extends React.Component<ToastItemProps> {
+    private readonly pause = (): void => { ToastManager.pause(this.props.id); };
+    private readonly resume = (): void => { ToastManager.resume(this.props.id); };
+    private readonly close = (): void => { ToastManager.hide(this.props.id); };
 
-    React.useEffect(() => ToastManager.subscribe(setEntries), []);
-
-    return (
-        <div className="toast-container" data-test-id="toast-container">
-            {entries.map(entry => (
-                <div
-                    key={entry.id}
-                    role="alert"
-                    aria-live="assertive"
-                    aria-atomic="true"
-                    className={`toast show ${typeClasses[entry.type] || 'text-bg-primary'}`}
-                    onMouseEnter={() => ToastManager.pause(entry.id)}
-                    onMouseLeave={() => ToastManager.resume(entry.id)}
-                >
-                    <div className="flex items-center">
-                        <div className="toast-body">{entry.message}</div>
-                        <button
-                            type="button"
-                            className="btn-close btn-close-white mr-2 ml-auto"
-                            aria-label="Close"
-                            onClick={() => ToastManager.hide(entry.id)}
-                        />
-                    </div>
+    public render() {
+        const {type, message} = this.props;
+        return (
+            <div
+                role="alert"
+                aria-live="assertive"
+                aria-atomic="true"
+                className="global-toast-message"
+                data-toast-type={type === 'danger' ? 'danger' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'primary'}
+                onMouseEnter={this.pause}
+                onMouseLeave={this.resume}
+            >
+                <div className="global-toast-row">
+                    <div className="toast-body">{message}</div>
+                    <button type="button" className="global-toast-close" aria-label="Close" onClick={this.close} />
                 </div>
-            ))}
-        </div>
-    );
-};
+            </div>
+        );
+    }
+}
+
+/** Render once in the layout; ToastManager owns the queue and timers. */
+export class GlobalToastRenderer extends AntiHookComponent {
+    private readonly store = new Carburetor<{entries: ToastEntry[]}>({entries: []});
+    private unsubscribe: (() => void) | null = null;
+
+    private readonly handleEntries = (entries: ToastEntry[]): void => {
+        this.store.setData({entries});
+    };
+
+    public componentDidMount(): void {
+        super.componentDidMount();
+        this.unsubscribe = ToastManager.subscribe(this.handleEntries);
+    }
+
+    public componentWillUnmount(): void {
+        this.unsubscribe?.();
+        this.unsubscribe = null;
+        super.componentWillUnmount();
+    }
+
+    public render() {
+        const {entries} = this.useCarburetor(this.store);
+        const items: React.ReactNode[] = [];
+        for (const entry of entries) {
+            items.push(<GlobalToastItem key={entry.id} id={entry.id} message={entry.message} type={entry.type} />);
+        }
+        return <div className="toast-container" data-test-id="toast-container">{items}</div>;
+    }
+}

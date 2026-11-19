@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {AntiHookComponent} from '@react-carburetor/core';
 import {usePreview} from './PreviewContext';
 import {appUrl} from '@common/Utils/Url/appUrl';
 
@@ -20,12 +21,14 @@ interface UserLinkProps {
  *
  * @deprecated The `isExpert` prop is legacy. Use `profileUrl` for domain-agnostic routing.
  */
-export const UserLink: React.FC<UserLinkProps> = ({id, name, isExpert, profileUrl, className, children, onClick}) => {
+export const UserLink: React.FC<UserLinkProps> = (props) => {
     const preview = usePreview();
-    if (!id) return <>{children ?? name}</>;
-    const href = appUrl(profileUrl ?? (isExpert ? `/expert/id~${id}` : `/user/id~${id}`));
+    return <UserLinkView {...props} preview={preview} />;
+};
 
-    const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+class UserLinkView extends AntiHookComponent<UserLinkProps & {preview: ReturnType<typeof usePreview>}> {
+    private readonly handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+        const {onClick, preview, id, name} = this.props;
         onClick?.(e);
         if (e.defaultPrevented) return;
         if (preview && !e.metaKey && !e.ctrlKey && !e.shiftKey && e.button === 0) {
@@ -35,9 +38,15 @@ export const UserLink: React.FC<UserLinkProps> = ({id, name, isExpert, profileUr
         }
     };
 
-    return (
-        <a href={href} className={className ?? 'common-link'} onClick={handleClick}>
-            {children ?? name}
-        </a>
-    );
-};
+    render() {
+        const {id, name, isExpert, profileUrl, className, children} = this.props;
+        if (!id) return <>{children ?? name}</>;
+        const href = appUrl(profileUrl ?? (isExpert ? `/expert/id~${id}` : `/user/id~${id}`));
+        if (className != null) {
+            // Сохраняем публичный параметр className.
+            // carburetor-disable-next-line require-function-class
+            return <a href={href} className={className} onClick={this.handleClick}>{children ?? name}</a>;
+        }
+        return <a href={href} className="common-link" onClick={this.handleClick}>{children ?? name}</a>;
+    }
+}

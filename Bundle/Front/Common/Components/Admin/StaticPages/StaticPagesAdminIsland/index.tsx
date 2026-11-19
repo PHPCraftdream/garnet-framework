@@ -7,58 +7,115 @@
  * файла в папку не должно этого касаться.
  */
 import * as React from 'react';
+import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
 import {sendPost} from '@common/Api/Send/sendPost';
-import {sendPostFormData} from '@common/Api/Send/sendPostFormData';
 import {showToast} from '@common/Components/Feedback/GlobalToast';
 import {ConfirmModal} from '@common/Components/Feedback/ConfirmModal';
-import {EntityHistoryButton} from '@common/Components/Admin/EntityHistory/EntityHistoryButton';
 import {TabNav, TabDef} from '@common/Components/Layout/Navigation/TabNav';
 import {useSending} from '@common/hooks/data/useSending';
 import {useConfirm} from '@common/hooks/ui/useConfirm';
-import {formatTs} from '@common/Utils/Time/DateUtils';
-import {markdownToHtml} from '@common/Utils/Ui/markdownToHtml';
 import {PageHeader} from '@common/Components/Layout/PageHeader';
-import {ImageUploadArea} from '@common/Components/Controls/ImageUploadArea';
-import {ImageUploadField} from '@common/Components/Controls/ImageUploadField';
 import {FileText} from 'lucide-react';
-import {StaticPage, Snippet, PageBlock, Labels, Props, PageTabInfo, SnippetTabInfo, STATIC_TABS, StaticTabId, SNIPPET_TYPES} from './types';
+import {StaticPage, Snippet, Props, PageTabInfo, SnippetTabInfo} from './types';
+import {StaticPagesList} from './StaticPagesList';
 import {PageEditorTab} from './Pages/PageEditorTab';
 import {SnippetsListPanel} from './Snippets/SnippetsListPanel';
 import {SnippetEditorTab} from './Snippets/SnippetEditorTab';
 
-export const StaticPagesAdminIsland: React.FC<Props> = (props) => {
-    const {
-        listUrl, createUrl, updateUrl, deleteUrl,
-        blocksUrl, saveBlocksUrl, variablesUrl, uploadImageUrl, deleteImageUrl,
-        snippetsListUrl, snippetCreateUrl, snippetUpdateUrl, snippetDeleteUrl,
-        headerFooterSnippetsUrl,
-        publicBaseUrl, labels,
-    } = props;
+function toTabDef(tab: PageTabInfo | SnippetTabInfo): TabDef {
+    return {id: tab.id, label: tab.title, closeable: true};
+}
 
-    const [pages, setPages] = React.useState<StaticPage[]>([]);
-    const [snippets, setSnippets] = React.useState<Snippet[]>([]);
-    const [templateVariables, setTemplateVariables] = React.useState<string[]>([]);
-    const [showCreateForm, setShowCreateForm] = React.useState(false);
-    const [newSlug, setNewSlug] = React.useState('');
-    const [newTitle, setNewTitle] = React.useState('');
-    const [loaded, setLoaded] = React.useState(false);
-    const [snippetsLoaded, setSnippetsLoaded] = React.useState(false);
+type ShellProps = Props & ReturnType<typeof useSending> & ReturnType<typeof useConfirm>;
 
-    const {sending, withSending} = useSending();
-    const {confirmState, confirm, handleConfirm, handleCancel} = useConfirm();
+type ShellState = {
+    pages: StaticPage[];
+    snippets: Snippet[];
+    templateVariables: string[];
+    showCreateForm: boolean;
+    newSlug: string;
+    newTitle: string;
+    loaded: boolean;
+    snippetsLoaded: boolean;
+    pageTabs: PageTabInfo[];
+    snippetTabs: SnippetTabInfo[];
+    activeTabId: string | null;
+};
 
-    // ── Tab state ──
-    const [pageTabs, setPageTabs] = React.useState<PageTabInfo[]>([]);
-    const [snippetTabs, setSnippetTabs] = React.useState<SnippetTabInfo[]>([]);
-    const [activeTabId, setActiveTabId] = React.useState<string | null>(null);
+class StaticPagesAdmin extends AntiHookComponent<ShellProps> {
+    private readonly ui = new Carburetor<ShellState>({
+        pages: [], snippets: [], templateVariables: [], showCreateForm: false,
+        newSlug: '', newTitle: '', loaded: false, snippetsLoaded: false,
+        pageTabs: [], snippetTabs: [], activeTabId: null,
+    });
 
-    React.useEffect(() => {
-        void loadPages();
-        void loadVariables();
-        void loadSnippets();
-    }, []);
+    private readonly view = this.connectSelection(() => this.ui, state => state);
 
-    const loadPages = async () => {
+    public componentDidMount(): void {
+        super.componentDidMount();
+        void this.loadPages();
+        void this.loadVariables();
+        void this.loadSnippets();
+    }
+
+    private readonly setPages: React.Dispatch<React.SetStateAction<StaticPage[]>> = value => {
+        const current = this.ui.getData();
+        this.ui.setData({...current, pages: typeof value === 'function' ? value(current.pages) : value});
+    };
+
+    private readonly setSnippets: React.Dispatch<React.SetStateAction<Snippet[]>> = value => {
+        const current = this.ui.getData();
+        this.ui.setData({...current, snippets: typeof value === 'function' ? value(current.snippets) : value});
+    };
+
+    private readonly setTemplateVariables: React.Dispatch<React.SetStateAction<string[]>> = value => {
+        const current = this.ui.getData();
+        this.ui.setData({...current, templateVariables: typeof value === 'function' ? value(current.templateVariables) : value});
+    };
+
+    private readonly setShowCreateForm: React.Dispatch<React.SetStateAction<boolean>> = value => {
+        const current = this.ui.getData();
+        this.ui.setData({...current, showCreateForm: typeof value === 'function' ? value(current.showCreateForm) : value});
+    };
+
+    private readonly setNewSlug: React.Dispatch<React.SetStateAction<string>> = value => {
+        const current = this.ui.getData();
+        this.ui.setData({...current, newSlug: typeof value === 'function' ? value(current.newSlug) : value});
+    };
+
+    private readonly setNewTitle: React.Dispatch<React.SetStateAction<string>> = value => {
+        const current = this.ui.getData();
+        this.ui.setData({...current, newTitle: typeof value === 'function' ? value(current.newTitle) : value});
+    };
+
+    private readonly setLoaded: React.Dispatch<React.SetStateAction<boolean>> = value => {
+        const current = this.ui.getData();
+        this.ui.setData({...current, loaded: typeof value === 'function' ? value(current.loaded) : value});
+    };
+
+    private readonly setSnippetsLoaded: React.Dispatch<React.SetStateAction<boolean>> = value => {
+        const current = this.ui.getData();
+        this.ui.setData({...current, snippetsLoaded: typeof value === 'function' ? value(current.snippetsLoaded) : value});
+    };
+
+    private readonly setPageTabs: React.Dispatch<React.SetStateAction<PageTabInfo[]>> = value => {
+        const current = this.ui.getData();
+        this.ui.setData({...current, pageTabs: typeof value === 'function' ? value(current.pageTabs) : value});
+    };
+
+    private readonly setSnippetTabs: React.Dispatch<React.SetStateAction<SnippetTabInfo[]>> = value => {
+        const current = this.ui.getData();
+        this.ui.setData({...current, snippetTabs: typeof value === 'function' ? value(current.snippetTabs) : value});
+    };
+
+    private readonly setActiveTabId: React.Dispatch<React.SetStateAction<string | null>> = value => {
+        const current = this.ui.getData();
+        this.ui.setData({...current, activeTabId: typeof value === 'function' ? value(current.activeTabId) : value});
+    };
+
+    private readonly loadPages = async () => {
+        const {listUrl} = this.props;
+        const {setPages, setLoaded} = this;
         try {
             const res = await sendPost<{}, {pages: StaticPage[]}>(listUrl, {});
             if ((res as any)?.error) return;
@@ -69,7 +126,9 @@ export const StaticPagesAdminIsland: React.FC<Props> = (props) => {
         }
     };
 
-    const loadVariables = async () => {
+    private readonly loadVariables = async () => {
+        const {variablesUrl} = this.props;
+        const {setTemplateVariables} = this;
         try {
             const res = await sendPost<{}, {variables: string[]}>(variablesUrl, {});
             if ((res as any)?.error) return;
@@ -79,7 +138,9 @@ export const StaticPagesAdminIsland: React.FC<Props> = (props) => {
         }
     };
 
-    const loadSnippets = async () => {
+    private readonly loadSnippets = async () => {
+        const {snippetsListUrl} = this.props;
+        const {setSnippets, setSnippetsLoaded} = this;
         try {
             const res = await sendPost<{}, {snippets: Snippet[]}>(snippetsListUrl, {});
             if ((res as any)?.error) return;
@@ -90,9 +151,9 @@ export const StaticPagesAdminIsland: React.FC<Props> = (props) => {
         }
     };
 
-    // ── Tab operations ──
-
-    const openPageTab = (page: StaticPage) => {
+    private readonly openPageTab = (page: StaticPage) => {
+        const {pageTabs} = this.ui.getData();
+        const {setPageTabs, setActiveTabId} = this;
         const tabId = `page-${page.id}`;
         if (!pageTabs.find(t => t.id === tabId)) {
             setPageTabs(prev => [...prev, {id: tabId, pageId: page.id, title: page.title || page.slug}]);
@@ -100,20 +161,23 @@ export const StaticPagesAdminIsland: React.FC<Props> = (props) => {
         setActiveTabId(tabId);
     };
 
-    const closePageTab = (tabId: string) => {
+    private readonly closePageTab = (tabId: string) => {
+        const {activeTabId} = this.ui.getData();
+        const {setPageTabs, setActiveTabId} = this;
         setPageTabs(prev => prev.filter(t => t.id !== tabId));
         if (activeTabId === tabId) {
             setActiveTabId(null);
         }
     };
 
-    const updatePageTabLabel = (pageId: number, title: string) => {
+    private readonly updatePageTabLabel = (pageId: number, title: string) => {
+        const {setPageTabs} = this;
         setPageTabs(prev => prev.map(t => t.pageId === pageId ? {...t, title} : t));
     };
 
-    // ── Snippet tab operations ──
-
-    const openSnippetTab = (snippet: Snippet) => {
+    private readonly openSnippetTab = (snippet: Snippet) => {
+        const {snippetTabs} = this.ui.getData();
+        const {setSnippetTabs, setActiveTabId} = this;
         const tabId = `snippet-${snippet.id}`;
         if (!snippetTabs.find(t => t.id === tabId)) {
             setSnippetTabs(prev => [...prev, {id: tabId, snippetId: snippet.id, title: snippet.name || snippet.slug}]);
@@ -121,20 +185,24 @@ export const StaticPagesAdminIsland: React.FC<Props> = (props) => {
         setActiveTabId(tabId);
     };
 
-    const closeSnippetTab = (tabId: string) => {
+    private readonly closeSnippetTab = (tabId: string) => {
+        const {activeTabId} = this.ui.getData();
+        const {setSnippetTabs, setActiveTabId} = this;
         setSnippetTabs(prev => prev.filter(t => t.id !== tabId));
         if (activeTabId === tabId) {
             setActiveTabId(null);
         }
     };
 
-    const updateSnippetTabLabel = (snippetId: number, title: string) => {
+    private readonly updateSnippetTabLabel = (snippetId: number, title: string) => {
+        const {setSnippetTabs} = this;
         setSnippetTabs(prev => prev.map(t => t.snippetId === snippetId ? {...t, title} : t));
     };
 
-    // ── Create page ──
-
-    const handleCreatePage = () => {
+    private readonly handleCreatePage = () => {
+        const {createUrl, labels, withSending} = this.props;
+        const {newSlug, newTitle} = this.ui.getData();
+        const {openPageTab, setPages, setShowCreateForm, setNewSlug, setNewTitle} = this;
         if (!newSlug.trim()) return;
         void withSending(async () => {
             try {
@@ -158,9 +226,9 @@ export const StaticPagesAdminIsland: React.FC<Props> = (props) => {
         });
     };
 
-    // ── Toggle publish from list ──
-
-    const handleTogglePublish = (page: StaticPage) => {
+    private readonly handleTogglePublish = (page: StaticPage) => {
+        const {updateUrl, labels, withSending} = this.props;
+        const {setPages} = this;
         void withSending(async () => {
             const newPublished = page.is_published ? 0 : 1;
             try {
@@ -180,9 +248,9 @@ export const StaticPagesAdminIsland: React.FC<Props> = (props) => {
         });
     };
 
-    // ── Delete from list ──
-
-    const handleDeletePage = async (page: StaticPage) => {
+    private readonly handleDeletePage = async (page: StaticPage) => {
+        const {deleteUrl, labels, withSending, confirm} = this.props;
+        const {closePageTab, setPages} = this;
         const ok = await confirm(
             labels.deleteConfirm,
             {variant: 'danger', confirmLabel: labels.actionDelete},
@@ -204,42 +272,32 @@ export const StaticPagesAdminIsland: React.FC<Props> = (props) => {
         });
     };
 
-    // ── Callbacks from PageEditorTab ──
-
-    const handlePageUpdated = (updatedPage: StaticPage) => {
+    private readonly handlePageUpdated = (updatedPage: StaticPage) => {
+        const {updatePageTabLabel, setPages} = this;
         setPages(prev => prev.map(p => p.id === updatedPage.id ? updatedPage : p));
         updatePageTabLabel(updatedPage.id, updatedPage.title || updatedPage.slug);
     };
 
-    const handlePageDeleted = (pageId: number) => {
+    private readonly handlePageDeleted = (pageId: number) => {
+        const {closePageTab, setPages} = this;
         setPages(prev => prev.filter(p => p.id !== pageId));
         closePageTab(`page-${pageId}`);
     };
 
-    // ── Snippet callbacks ──
-
-    const handleSnippetUpdated = (updatedSnippet: Snippet) => {
+    private readonly handleSnippetUpdated = (updatedSnippet: Snippet) => {
+        const {updateSnippetTabLabel, setSnippets} = this;
         setSnippets(prev => prev.map(s => s.id === updatedSnippet.id ? updatedSnippet : s));
         updateSnippetTabLabel(updatedSnippet.id, updatedSnippet.name || updatedSnippet.slug);
     };
 
-    const handleSnippetDeleted = (snippetId: number) => {
+    private readonly handleSnippetDeleted = (snippetId: number) => {
+        const {closeSnippetTab, setSnippets} = this;
         setSnippets(prev => prev.filter(s => s.id !== snippetId));
         closeSnippetTab(`snippet-${snippetId}`);
     };
 
-    // ── TabNav setup ──
-
-    const currentActiveId = activeTabId ?? 'pages';
-
-    const allTabs: TabDef[] = [
-        {id: 'pages', label: labels.title, closeable: false},
-        {id: 'snippets', label: labels.snippets, closeable: false},
-        ...pageTabs.map(t => ({id: t.id, label: t.title, closeable: true})),
-        ...snippetTabs.map(t => ({id: t.id, label: t.title, closeable: true})),
-    ];
-
-    const handleTabSelect = (id: string) => {
+    private readonly handleTabSelect = (id: string) => {
+        const {setActiveTabId} = this;
         if (id === 'pages' || id === 'snippets') {
             setActiveTabId(id === 'pages' ? null : id);
         } else {
@@ -247,7 +305,8 @@ export const StaticPagesAdminIsland: React.FC<Props> = (props) => {
         }
     };
 
-    const handleTabClose = (id: string) => {
+    private readonly handleTabClose = (id: string) => {
+        const {closePageTab, closeSnippetTab} = this;
         if (id.startsWith('snippet-')) {
             closeSnippetTab(id);
         } else {
@@ -255,12 +314,56 @@ export const StaticPagesAdminIsland: React.FC<Props> = (props) => {
         }
     };
 
+    private readonly toggleCreateForm = () => this.setShowCreateForm(!this.ui.getData().showCreateForm);
+    private readonly cancelCreateForm = () => this.setShowCreateForm(false);
+    private readonly changeSlug = (event: React.ChangeEvent<HTMLInputElement>) => this.setNewSlug(event.target.value);
+    private readonly changeTitle = (event: React.ChangeEvent<HTMLInputElement>) => this.setNewTitle(event.target.value);
+
+    private readonly handleSnippetCreated = (snippet: Snippet) => {
+        this.setSnippets(previous => [...previous, snippet]);
+        this.openSnippetTab(snippet);
+    };
+
+    private readonly handleToggleSnippet = (snippet: Snippet) => {
+        const {withSending, snippetUpdateUrl, labels} = this.props;
+        const newActive = snippet.is_active ? 0 : 1;
+        void withSending(async () => {
+            try {
+                const res = await sendPost<any, {success: boolean}>(snippetUpdateUrl, {id: snippet.id, is_active: newActive});
+                if ((res as any)?.error) { showToast((res as any).error, 'danger'); return; }
+                this.setSnippets(previous => previous.map(item => item.id === snippet.id ? {...item, is_active: newActive} : item));
+            } catch (err: any) { showToast(err?.message ?? labels.error, 'danger'); }
+        });
+    };
+
+    public render() {
+        const state = this.view() as ShellState;
+        return this.renderShell(state);
+    }
+
+    private renderShell(state: ShellState) {
+        const {updateUrl, deleteUrl, blocksUrl, saveBlocksUrl, uploadImageUrl, deleteImageUrl, snippetCreateUrl, snippetUpdateUrl, snippetDeleteUrl, headerFooterSnippetsUrl, publicBaseUrl, labels, sending, withSending, confirm, confirmState, handleConfirm, handleCancel} = this.props;
+        const {pages, snippets, templateVariables, showCreateForm, newSlug, newTitle, loaded, snippetsLoaded, pageTabs, snippetTabs, activeTabId} = state;
+        const {openPageTab, openSnippetTab, handleCreatePage, handleTogglePublish, handleDeletePage, handlePageUpdated, handlePageDeleted, handleSnippetUpdated, handleSnippetDeleted, handleTabSelect, handleTabClose} = this;
+    // ── TabNav setup ──
+
+    const currentActiveId = activeTabId ?? 'pages';
+
+    const allTabs: TabDef[] = [
+        {id: 'pages', label: labels.title, closeable: false},
+        {id: 'snippets', label: labels.snippets, closeable: false},
+        ...pageTabs.map(toTabDef),
+        ...snippetTabs.map(toTabDef),
+    ];
+
+
+
     return (
         <>
             <PageHeader title={labels.title} icon={<FileText size={22} aria-hidden="true" />} />
             <div className="section-soft" data-test-id="admin-static-pages">
-            <div className="flex items-center justify-between gap-3">
-                <div className="flex-1 min-w-0">
+            <div className="static-admin-toolbar">
+                <div className="static-admin-tabs">
                     <TabNav
                         tabs={allTabs}
                         activeId={currentActiveId}
@@ -271,8 +374,8 @@ export const StaticPagesAdminIsland: React.FC<Props> = (props) => {
                 {currentActiveId === 'pages' && (
                     <button
                         type="button"
-                        className="btn btn-primary btn-sm shrink-0 disabled:opacity-60 relative -top-2.5"
-                        onClick={() => setShowCreateForm(!showCreateForm)}
+                        className="static-admin-create-open"
+                        onClick={this.toggleCreateForm}
                         disabled={sending}
                     >
                         + {labels.createOpen || labels.create}
@@ -281,123 +384,11 @@ export const StaticPagesAdminIsland: React.FC<Props> = (props) => {
             </div>
 
             {currentActiveId === 'pages' && (
-                <div className="space-y-6">
-                    {showCreateForm && (
-                        <section className="rounded-lg border border-default bg-surface p-5">
-                            <h2 className="text-lg font-semibold text-on-surface mb-3">{labels.createTitle}</h2>
-                            <div className="grid gap-4 md:grid-cols-2">
-                                <label className="block">
-                                    <span className="mb-1 block text-sm font-medium text-on-surface">{labels.slug}</span>
-                                    <input
-                                        className="form-control w-full border-default"
-                                        value={newSlug}
-                                        onChange={e => setNewSlug(e.target.value)}
-                                    />
-                                    <span className="text-xs text-muted mt-1 block">{labels.slugHint}</span>
-                                </label>
-                                <label className="block">
-                                    <span className="mb-1 block text-sm font-medium text-on-surface">{labels.pageTitle}</span>
-                                    <input
-                                        className="form-control w-full border-default"
-                                        value={newTitle}
-                                        onChange={e => setNewTitle(e.target.value)}
-                                    />
-                                </label>
-                            </div>
-                            <div className="mt-4 flex gap-2">
-                                <button
-                                    type="button"
-                                    className="btn btn-primary disabled:opacity-60"
-                                    onClick={handleCreatePage}
-                                    disabled={sending || !newSlug.trim()}
-                                >
-                                    {labels.create}
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn btn-secondary"
-                                    onClick={() => setShowCreateForm(false)}
-                                >
-                                    {labels.actionCancel}
-                                </button>
-                            </div>
-                        </section>
-                    )}
-
-                    {loaded && pages.length === 0 && (
-                        <div className="text-center text-muted py-8">{labels.empty}</div>
-                    )}
-                    {pages.length > 0 && (
-                        <div className="overflow-x-auto rounded-lg border border-default">
-                            <table className="admin-table">
-                                <thead>
-                                    <tr className="border-b border-subtle text-left">
-                                        <th className="px-4 py-3">{labels.slug}</th>
-                                        <th className="px-4 py-3">{labels.pageTitle}</th>
-                                        <th className="px-4 py-3"></th>
-                                        <th className="px-4 py-3"></th>
-                                        <th className="px-4 py-3"></th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-subtle bg-surface">
-                                    {pages.map(page => {
-                                        const isOpenInTab = pageTabs.some(t => t.pageId === page.id);
-                                        return (
-                                            <tr key={page.id} className={isOpenInTab ? 'bg-accent-subtle' : ''}>
-                                                <td className="px-4 py-3 font-mono text-xs">{page.slug}</td>
-                                                <td className="px-4 py-3">{page.title_rendered || page.title}</td>
-                                                <td className="px-4 py-3">
-                                                    <button
-                                                        type="button"
-                                                        className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${page.is_published ? 'status-success' : 'status-muted'}`}
-                                                        onClick={() => handleTogglePublish(page)}
-                                                        disabled={sending}
-                                                    >
-                                                        {page.is_published ? labels.published : labels.draft}
-                                                    </button>
-                                                </td>
-                                                <td className="px-4 py-3 text-muted text-xs">{formatTs(page.updated_at)}</td>
-                                                <td className="px-4 py-3">
-                                                    <div className="flex items-center gap-2">
-                                                        <button
-                                                            type="button"
-                                                            className="text-accent hover:text-on-surface text-xs underline"
-                                                            onClick={() => openPageTab(page)}
-                                                        >
-                                                            {labels.editPage}
-                                                        </button>
-                                                        <a
-                                                            href={publicBaseUrl + page.slug}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="text-accent hover:text-on-surface text-xs underline"
-                                                        >
-                                                            {labels.openPage}
-                                                        </a>
-                                                        <button
-                                                            type="button"
-                                                            className="text-danger hover:text-on-surface text-xs underline"
-                                                            onClick={() => void handleDeletePage(page)}
-                                                            disabled={sending}
-                                                        >
-                                                            {labels.actionDelete}
-                                                        </button>
-                                                        <EntityHistoryButton
-                                                            entityType="static_page"
-                                                            entityId={page.id}
-                                                            className="text-accent hover:text-on-surface text-xs underline"
-                                                            testIdSuffix={`page-${page.id}`}
-                                                        />
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
+                <StaticPagesList labels={labels} sending={sending} showCreateForm={showCreateForm}
+                    newSlug={newSlug} newTitle={newTitle} loaded={loaded} pages={pages} pageTabs={pageTabs}
+                    publicBaseUrl={publicBaseUrl} handleCreatePage={handleCreatePage}
+                    handleTogglePublish={handleTogglePublish} openPageTab={openPageTab} handleDeletePage={handleDeletePage}
+                    changeSlug={this.changeSlug} changeTitle={this.changeTitle} cancelCreateForm={this.cancelCreateForm} />
             )}
 
             {currentActiveId === 'snippets' && (
@@ -411,21 +402,9 @@ export const StaticPagesAdminIsland: React.FC<Props> = (props) => {
                     sending={sending}
                     withSending={withSending}
                     confirm={confirm}
-                    onSnippetCreated={(s: Snippet) => {
-                        setSnippets(prev => [...prev, s]);
-                        openSnippetTab(s);
-                    }}
+                    onSnippetCreated={this.handleSnippetCreated}
                     onSnippetDeleted={handleSnippetDeleted}
-                    onToggleActive={(s: Snippet) => {
-                        const newActive = s.is_active ? 0 : 1;
-                        void withSending(async () => {
-                            try {
-                                const res = await sendPost<any, {success: boolean}>(snippetUpdateUrl, {id: s.id, is_active: newActive});
-                                if ((res as any)?.error) { showToast((res as any).error, 'danger'); return; }
-                                setSnippets(prev => prev.map(x => x.id === s.id ? {...x, is_active: newActive} : x));
-                            } catch (err: any) { showToast(err?.message ?? labels.error, 'danger'); }
-                        });
-                    }}
+                    onToggleActive={this.handleToggleSnippet}
                     onOpenSnippet={openSnippetTab}
                     snippetTabs={snippetTabs}
                 />
@@ -474,4 +453,11 @@ export const StaticPagesAdminIsland: React.FC<Props> = (props) => {
             </div>
         </>
     );
+    }
+}
+
+export const StaticPagesAdminIsland: React.FC<Props> = props => {
+    const sending = useSending();
+    const confirmation = useConfirm();
+    return <StaticPagesAdmin {...props} {...sending} {...confirmation} />;
 };

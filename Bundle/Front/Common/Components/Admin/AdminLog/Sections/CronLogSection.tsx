@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {useState, useMemo} from 'react';
+import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
 import {CronLogEntry, CronFilterOptions, GridConfig} from '../types';
 import {AdminLogGrid} from '../AdminLogGrid';
 import {PageResponse} from '@common/hooks/data/usePagination';
@@ -16,47 +16,47 @@ interface Props {
     filterOptions: CronFilterOptions;
 }
 
-const statusBadge = (status: CronLogEntry['status']): React.ReactNode => {
-    const cls: Record<CronLogEntry['status'], string> = {
-        success: 'status-success',
-        error: 'status-danger',
-        running: 'status-warning',
-    };
-    return <span className={`badge ${cls[status]}`}>{status}</span>;
-};
+interface Filters {
+    taskFilter: string;
+    dateFrom: string;
+    dateTo: string;
+}
 
-const formatDuration = (ms: number): string => {
+const emptyFilters = (): Filters => ({taskFilter: '', dateFrom: '', dateTo: ''});
+
+function formatDuration(ms: number): string {
     if (ms < 1000) return `${ms} ms`;
     const sec = ms / 1000;
     if (sec < 60) return `${sec.toFixed(2)} s`;
     const min = Math.floor(sec / 60);
     const restSec = (sec - min * 60).toFixed(0);
     return `${min}m ${restSec}s`;
-};
+}
 
 const truncate = (s: string, n: number): string => (s.length > n ? s.slice(0, n) + '…' : s);
+const rowKey = (row: CronLogEntry) => row.id;
+const rowTestId = (row: CronLogEntry) => `cron-row-${row.id}`;
 
-export const CronLogSection: React.FC<Props> = ({pageUrl, initialData, filterOptions}) => {
-    const [selected, setSelected] = useState<CronLogEntry | null>(null);
-    const [taskFilter, setTaskFilter] = useState<string>('');
-    const [dateFrom, setDateFrom] = useState<string>('');
-    const [dateTo, setDateTo] = useState<string>('');
+function taskOption(name: string) {
+    return <option key={name} value={name}>{name}</option>;
+}
 
-    const resetAll = (): void => {
-        setTaskFilter('');
-        setDateFrom('');
-        setDateTo('');
-    };
+const renders = {
+    started_at: (row: CronLogEntry) => <span className="admin-log-section-time">{formatTs(row.started_at)}</span>,
+    task_name: (row: CronLogEntry) => <span className="admin-log-section-mono">{row.task_name}</span>,
+    status: (row: CronLogEntry) => <span className={row.status === 'success' ? 'admin-log-section-status-success' : row.status === 'error' ? 'admin-log-section-status-danger' : 'admin-log-section-status-warning'}>{row.status}</span>,
+    duration_ms: (row: CronLogEntry) => <span className="admin-log-section-mono">{formatDuration(row.duration_ms)}</span>,
+    output: (row: CronLogEntry) => row.output ? <span className="admin-log-section-output">{truncate(row.output, 80)}</span> : null,
+    error_message: (row: CronLogEntry) => row.error_message ? <span className="admin-log-section-error">{truncate(row.error_message, 60)}</span> : null,
+};
 
-    const hasActiveFilter = !!(taskFilter || dateFrom || dateTo);
-
-    const extraParams = useMemo(() => ({
-        taskName: taskFilter,
-        dateFrom: dateFrom ? Math.floor(new Date(dateFrom + 'T00:00:00Z').getTime() / 1000) : 0,
-        dateTo: dateTo ? Math.floor(new Date(dateTo + 'T23:59:59Z').getTime() / 1000) : 0,
-    }), [taskFilter, dateFrom, dateTo]);
-
-    const config: GridConfig = useMemo(() => ({
+export class CronLogSection extends AntiHookComponent<Props> {
+    private readonly filters = new Carburetor<Filters>(emptyFilters());
+    private readonly selection = new Carburetor<{selected: CronLogEntry | null}>({selected: null});
+    private readonly selected = this.connectSelection(this.selection, state => state.selected);
+    private lastFilters: Filters | null = null;
+    private extraParams: Record<string, unknown> = {};
+    private readonly config: GridConfig = {
         columns: [
             {key: 'started_at', label: t.CronLog_Date()},
             {key: 'task_name', label: t.CronLog_Task()},
@@ -68,88 +68,66 @@ export const CronLogSection: React.FC<Props> = ({pageUrl, initialData, filterOpt
         searchFields: ['task_name', 'status', 'output', 'error_message'],
         sortFields: ['id', 'started_at', 'duration_ms', 'task_name', 'status'],
         pageSize: DEFAULT_PAGE_SIZE,
-    }), []);
+    };
 
-    return (
-        <div>
-            <div className="admin-log-filters">
-                <div className="filter-cell">
-                    <label htmlFor="cron-task">{t.CronLog_Filter_Task()}</label>
-                    <select
-                        id="cron-task"
-                        className="form-select text-sm"
-                        value={taskFilter}
-                        onChange={e => setTaskFilter(e.target.value)}
-                        data-test-id="cron-task-filter"
-                    >
-                        <option value="">{t.CronLog_Filter_All()}</option>
-                        {filterOptions.taskNames.map(name => <option key={name} value={name}>{name}</option>)}
-                    </select>
-                </div>
-                <div className="filter-cell">
-                    <label htmlFor="cron-date-from">{t.Admin_Log_Filter_DateFrom()}</label>
-                    <DateInput
-                        id="cron-date-from"
-                        className="text-sm"
-                        value={dateFrom}
-                        onChange={e => setDateFrom(e.target.value)}
-                        data-test-id="cron-date-from"
-                    />
-                </div>
-                <div className="filter-cell">
-                    <label htmlFor="cron-date-to">{t.Admin_Log_Filter_DateTo()}</label>
-                    <DateInput
-                        id="cron-date-to"
-                        className="text-sm"
-                        value={dateTo}
-                        onChange={e => setDateTo(e.target.value)}
-                        data-test-id="cron-date-to"
-                    />
-                </div>
-                <div className="filter-actions">
-                    {hasActiveFilter && (
-                        <button
-                            type="button"
-                            className="btn btn-sm btn-outline-secondary"
-                            onClick={resetAll}
-                            data-test-id="cron-reset"
-                            aria-label={t.Admin_Log_Filter_Reset()}
-                            title={t.Admin_Log_Filter_Reset()}
-                        >
-                            ×
-                        </button>
-                    )}
-                </div>
+    private patch(patch: Partial<Filters>): void {
+        this.filters.setData({...this.filters.getData(), ...patch});
+    }
+
+    private readonly changeTask = (event: React.ChangeEvent<HTMLSelectElement>) => this.patch({taskFilter: event.target.value});
+    private readonly changeFrom = (event: React.ChangeEvent<HTMLInputElement>) => this.patch({dateFrom: event.target.value});
+    private readonly changeTo = (event: React.ChangeEvent<HTMLInputElement>) => this.patch({dateTo: event.target.value});
+    private readonly resetAll = () => this.filters.setData(emptyFilters());
+    private readonly selectRow = (selected: CronLogEntry) => this.selection.setData({selected});
+    private readonly closeDetail = () => this.selection.setData({selected: null});
+
+    private params(filters: Filters): Record<string, unknown> {
+        const last = this.lastFilters;
+        if (!last || last.taskFilter !== filters.taskFilter || last.dateFrom !== filters.dateFrom || last.dateTo !== filters.dateTo) {
+            this.lastFilters = {...filters};
+            this.extraParams = {
+                taskName: filters.taskFilter,
+                dateFrom: filters.dateFrom ? Math.floor(new Date(filters.dateFrom + 'T00:00:00Z').getTime() / 1000) : 0,
+                dateTo: filters.dateTo ? Math.floor(new Date(filters.dateTo + 'T23:59:59Z').getTime() / 1000) : 0,
+            };
+        }
+        return this.extraParams;
+    }
+
+    private renderFilters(filters: Filters): React.ReactNode {
+        const hasActiveFilter = !!(filters.taskFilter || filters.dateFrom || filters.dateTo);
+        return <div className="admin-log-filters">
+            <div className="filter-cell">
+                <label htmlFor="cron-task">{t.CronLog_Filter_Task()}</label>
+                <select id="cron-task" className="admin-log-section-select" value={filters.taskFilter} onChange={this.changeTask} data-test-id="cron-task-filter">
+                    <option value="">{t.CronLog_Filter_All()}</option>
+                    {this.props.filterOptions.taskNames.map(taskOption)}
+                </select>
             </div>
+            <div className="filter-cell">
+                <label htmlFor="cron-date-from">{t.Admin_Log_Filter_DateFrom()}</label>
+                <DateInput id="cron-date-from" value={filters.dateFrom} onChange={this.changeFrom} data-test-id="cron-date-from" />
+            </div>
+            <div className="filter-cell">
+                <label htmlFor="cron-date-to">{t.Admin_Log_Filter_DateTo()}</label>
+                <DateInput id="cron-date-to" value={filters.dateTo} onChange={this.changeTo} data-test-id="cron-date-to" />
+            </div>
+            <div className="filter-actions">
+                {hasActiveFilter && <button type="button" className="admin-log-section-reset" onClick={this.resetAll}
+                    data-test-id="cron-reset" aria-label={t.Admin_Log_Filter_Reset()} title={t.Admin_Log_Filter_Reset()}>×</button>}
+            </div>
+        </div>;
+    }
 
-            <AdminLogGrid
-                pageUrl={pageUrl}
-                initialData={initialData}
-                config={config}
-                extraParams={extraParams}
-                rowKey={r => r.id}
-                rowTestId={r => `cron-row-${r.id}`}
-                emptyMessage={t.CronLog_Empty()}
-                onRowClick={row => setSelected(row)}
-                renders={{
-                    started_at: r => <span className="text-muted text-xs whitespace-nowrap">{formatTs(r.started_at)}</span>,
-                    task_name: r => <span className="font-mono text-sm">{r.task_name}</span>,
-                    status: r => statusBadge(r.status),
-                    duration_ms: r => <span className="font-mono text-sm">{formatDuration(r.duration_ms)}</span>,
-                    output: r => r.output
-                        ? <span className="text-sm truncate max-w-[300px] inline-block">{truncate(r.output, 80)}</span>
-                        : null,
-                    error_message: r => r.error_message
-                        ? <span className="text-danger text-sm truncate max-w-[200px] inline-block">{truncate(r.error_message, 60)}</span>
-                        : null,
-                }}
-            />
-
-            {selected && (
-                <LogDetailModal onClose={() => setSelected(null)}>
-                    <CronLogDetail row={selected} />
-                </LogDetailModal>
-            )}
-        </div>
-    );
-};
+    public render() {
+        const filters = this.useCarburetor(this.filters);
+        const selected = this.selected();
+        const {pageUrl, initialData} = this.props;
+        return <div>
+            {this.renderFilters(filters)}
+            <AdminLogGrid pageUrl={pageUrl} initialData={initialData} config={this.config} extraParams={this.params(filters)}
+                rowKey={rowKey} rowTestId={rowTestId} emptyMessage={t.CronLog_Empty()} onRowClick={this.selectRow} renders={renders} />
+            {selected && <LogDetailModal onClose={this.closeDetail}><CronLogDetail row={selected} /></LogDetailModal>}
+        </div>;
+    }
+}
