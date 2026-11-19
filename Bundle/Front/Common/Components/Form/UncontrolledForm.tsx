@@ -36,9 +36,7 @@ export interface UncontrolledFormHandle {
  */
 export const UncontrolledForm = React.forwardRef<UncontrolledFormHandle, FormProps>(
     function UncontrolledForm(props, ref) {
-        const viewRef = React.useRef<FormView>(null);
-        React.useImperativeHandle(ref, () => viewRef.current!, []);
-        return <FormView {...props} ref={viewRef} />;
+        return <FormView {...props} ref={ref as React.Ref<FormView>} />;
     },
 );
 

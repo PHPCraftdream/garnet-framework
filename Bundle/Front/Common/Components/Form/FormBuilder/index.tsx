@@ -7,8 +7,7 @@
  */
 
 import * as React from 'react';
-import {useState} from 'react';
-import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
+import {AntiHookComponent, Carburetor, type TReadonly} from '@react-carburetor/core';
 import {TGridSelectField} from '@common/Dom/GridTable/Models';
 import {GridUtils} from '@common/Dom/GridTable/GridUtils';
 import {printUtDateTime} from '@common/Utils/Str/printUtDateTime';
@@ -111,7 +110,7 @@ class FormBuilderStatusState {
 }
 
 type FormBuilderViewProps = FormBuilderProps & {status: FormBuilderStatusState};
-type FormBuilderBodyProps = FormBuilderViewProps & {snapshot: FormBuilderStatus};
+type FormBuilderBodyProps = FormBuilderViewProps & {snapshot: TReadonly<FormBuilderStatus>};
 
 class FormBuilderView extends AntiHookComponent<FormBuilderViewProps> {
 	private readonly snapshot = this.connectSelection(() => this.props.status.store, state => state);
@@ -139,20 +138,23 @@ function initialFormValues({detailsInfo, data, isNew = false}: FormBuilderProps)
 	return initial;
 }
 
-export const FormBuilder: React.FC<FormBuilderProps> = props => {
-	const [status] = useState(() => new FormBuilderStatusState(initialFormValues(props)));
-	return <FormBuilderView {...props} status={status} />;
-};
+export class FormBuilder extends AntiHookComponent<FormBuilderProps> {
+	private readonly status = new FormBuilderStatusState(initialFormValues(this.props));
+
+	public render() {
+		return <FormBuilderView {...this.props} status={this.status} />;
+	}
+}
 
 interface FormBuilderStatusPanelProps {
-	commonErrors: string[];
+	commonErrors: readonly string[];
 	progress: number | null;
 	submitting: boolean;
 	onCancel?: () => void;
 	buttonText: string;
 }
 
-function renderCommonErrors(errors: string[]): React.ReactNode[] {
+function renderCommonErrors(errors: readonly string[]): React.ReactNode[] {
 	const counts = new Map<string, number>();
 	const nodes: React.ReactNode[] = [];
 	for (const error of errors) {
