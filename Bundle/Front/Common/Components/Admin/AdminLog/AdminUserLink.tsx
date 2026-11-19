@@ -43,7 +43,8 @@ class AdminUserLinkView extends AntiHookComponent<Props & {openUser: React.Conte
     }
 }
 
-export const AdminUserLink: React.FC<Props> = props => {
-    const {openUser} = React.useContext(UserDetailContext);
-    return <AdminUserLinkView {...props} openUser={openUser} />;
-};
+export const AdminUserLink: React.FC<Props> = props => (
+    <UserDetailContext.Consumer>
+        {({openUser}) => <AdminUserLinkView {...props} openUser={openUser} />}
+    </UserDetailContext.Consumer>
+);

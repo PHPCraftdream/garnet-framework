@@ -1,7 +1,8 @@
 import * as React from 'react';
-import {useMemo, useImperativeHandle, forwardRef} from 'react';
+import {forwardRef} from 'react';
 import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
-import {usePagination, PageResponse} from '../../../hooks/data/usePagination';
+import type {PageResponse} from '../../../hooks/data/usePagination';
+import {PaginationController} from '../../../hooks/data/PaginationController';
 import {AdminGridPagination} from './AdminGridPagination';
 import {GlobalRenders, GridConfig} from './types';
 import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
@@ -73,58 +74,135 @@ function createCellRenderer<T>(renders: RowRenders<T>, globalRenders: GlobalRend
     };
 }
 
-function AdminGridNetwork<T>({pageUrl, initialData, config, rowKey, renders = emptyRenders, globalRenders = emptyGlobalRenders, emptyMessage, expandRenderer, expandable, onRowClick, rowTestId, extraParams, gridRef, query, sortField, sortDir, onSearch, onSort}: NetworkProps<T>) {
+type NetworkState<T> = {snapshot: ReturnType<PaginationController<T>['snapshot']>};
 
-    // The server does the search/sort/paging now — this object is the
-    // reactive trigger usePagination watches to know when to refetch from
-    // page 1 (see its debounce effect).
-    const params = useMemo(
-        () => ({query, sortField, sortDir, ...extraParams}),
-        [query, sortField, sortDir, extraParams],
-    );
-
-    const {items: paged, setItems, page: safePage, totalPages: pageCount, total, loading, goToPage, perPage: pageSize, setPerPage, refresh} =
-        usePagination<T>({url: pageUrl, initialData: initialData ?? undefined, params});
-
-    useImperativeHandle(gridRef, () => ({setItems, refresh}), [setItems, refresh]);
-
-    const renderCell = useMemo(() => createCellRenderer(renders, globalRenders), [renders, globalRenders]);
-
-    const paginationProps = {
-        page: safePage,
-        totalPages: pageCount,
-        total,
-        loading,
-        onPageChange: goToPage,
-        pageSize,
-        onPageSizeChange: setPerPage,
+class AdminGridNetwork<T> extends AntiHookComponent<NetworkProps<T>, NetworkState<T>> {
+    private readonly pagination = new PaginationController<T>({
+        url: this.props.pageUrl,
+        initialData: this.props.initialData,
+        params: this.createParams(),
+    });
+    public state: NetworkState<T> = {snapshot: this.pagination.snapshot()};
+    private readonly handle: AdminGridHandle<T> = {setItems: this.pagination.setItems, refresh: this.pagination.refresh};
+    private attachedRef: NetworkProps<T>['gridRef'] = null;
+    private unsubscribe?: () => void;
+    private readonly updateOnParentRender = true;
+    private cellRenderer?: {
+        renders: RowRenders<T>;
+        globalRenders: GlobalRenders;
+        render: ReturnType<typeof createCellRenderer<T>>;
     };
 
-    return (
-        <>
-            {config.searchFields.length > 0 && (
-                <AdminGridSearch value={query} placeholder={t.Grid_Search()} onChange={onSearch} />
-            )}
+    private createParams() {
+        const {query, sortField, sortDir, extraParams} = this.props;
+        return {query, sortField, sortDir, ...extraParams};
+    }
 
-            <AdminGridPagination position="top" {...paginationProps} />
+    private updateRef(ref: NetworkProps<T>['gridRef']): void {
+        if (this.attachedRef === ref) return;
+        const previous = this.attachedRef;
+        this.attachedRef = null;
+        if (typeof previous === 'function') previous(null);
+        else if (previous) previous.current = null;
 
+        this.attachedRef = ref;
+        if (typeof ref === 'function') ref(this.handle);
+        else if (ref) ref.current = this.handle;
+    }
+
+    public shouldComponentUpdate(nextProps: Readonly<NetworkProps<T>>, nextState: Readonly<NetworkState<T>>): boolean {
+        return super.shouldComponentUpdate(nextProps, nextState) || this.updateOnParentRender;
+    }
+
+    private readonly syncSnapshot = (): void => {
+        const snapshot = this.pagination.snapshot();
+        this.setState(previous => previous.snapshot === snapshot ? null : {snapshot});
+    };
+
+    public componentDidMount(): void {
+        super.componentDidMount();
+        this.unsubscribe = this.pagination.subscribeSnapshot(this.syncSnapshot);
+        this.pagination.start();
+        this.syncSnapshot();
+        this.updateRef(this.props.gridRef);
+    }
+
+    public componentDidUpdate(previousProps: Readonly<NetworkProps<T>>): void {
+        super.componentDidUpdate(previousProps);
+        const {pageUrl, query, sortField, sortDir, extraParams, gridRef} = this.props;
+        if (pageUrl !== previousProps.pageUrl) this.pagination.setUrl(pageUrl);
+        if (query !== previousProps.query || sortField !== previousProps.sortField || sortDir !== previousProps.sortDir
+            || extraParams !== previousProps.extraParams) {
+            this.pagination.setParams(this.createParams());
+        }
+        this.updateRef(gridRef);
+    }
+
+    public componentWillUnmount(): void {
+        this.unsubscribe?.();
+        this.unsubscribe = undefined;
+        this.pagination.dispose();
+        try {
+            this.updateRef(null);
+        } finally {
+            super.componentWillUnmount();
+        }
+    }
+
+    private renderTable() {
+        const {config, rowKey, renders = emptyRenders, globalRenders = emptyGlobalRenders, emptyMessage, expandRenderer,
+            expandable, onRowClick, rowTestId, sortField, sortDir, onSort} = this.props;
+        const {items: paged} = this.state.snapshot;
+        if (this.cellRenderer?.renders !== renders || this.cellRenderer.globalRenders !== globalRenders) {
+            this.cellRenderer = {renders, globalRenders, render: createCellRenderer(renders, globalRenders)};
+        }
+        const renderCell = this.cellRenderer.render;
+
+        return (
             <AdminGridTableShell>
-                    <AdminGridHeader
-                        columns={config.columns}
-                        sortFields={config.sortFields}
-                        sortField={sortField}
-                        sortDir={sortDir}
-                        hasExpander={!!expandRenderer}
-                        onSort={onSort}
-                    />
-                    <AdminGridBody rows={paged} columns={config.columns} rowKey={rowKey} renderCell={renderCell}
-                        emptyMessage={emptyMessage} expandRenderer={expandRenderer} expandable={expandable}
-                        onRowClick={onRowClick} rowTestId={rowTestId} />
+                <AdminGridHeader
+                    columns={config.columns}
+                    sortFields={config.sortFields}
+                    sortField={sortField}
+                    sortDir={sortDir}
+                    hasExpander={!!expandRenderer}
+                    onSort={onSort}
+                />
+                <AdminGridBody rows={paged} columns={config.columns} rowKey={rowKey} renderCell={renderCell}
+                    emptyMessage={emptyMessage} expandRenderer={expandRenderer} expandable={expandable}
+                    onRowClick={onRowClick} rowTestId={rowTestId} />
             </AdminGridTableShell>
+        );
+    }
 
-            <AdminGridPagination position="bottom" {...paginationProps} />
-        </>
-    );
+    public render() {
+        const {config, query, onSearch} = this.props;
+        const {page: safePage, totalPages: pageCount, total, loading, perPage: pageSize} = this.state.snapshot;
+        const {goToPage, setPerPage} = this.pagination;
+        const paginationProps = {
+            page: safePage,
+            totalPages: pageCount,
+            total,
+            loading,
+            onPageChange: goToPage,
+            pageSize,
+            onPageSizeChange: setPerPage,
+        };
+
+        return (
+            <>
+                {config.searchFields.length > 0 && (
+                    <AdminGridSearch value={query} placeholder={t.Grid_Search()} onChange={onSearch} />
+                )}
+
+                <AdminGridPagination position="top" {...paginationProps} />
+
+                {this.renderTable()}
+
+                <AdminGridPagination position="bottom" {...paginationProps} />
+            </>
+        );
+    }
 }
 
 class AdminGridController<T> extends AntiHookComponent<ControllerProps<T>> {
