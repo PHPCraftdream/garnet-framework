@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {useState, useRef, useCallback, useEffect} from 'react';
+import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
 
 interface AdminDashboardProps {
     currentApp: string;
@@ -7,187 +7,239 @@ interface AdminDashboardProps {
     csrfToken: string;
 }
 
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({currentApp, apps, csrfToken}) => {
-    const [selectedApp, setSelectedApp] = useState(currentApp);
-    const [activeApp, setActiveApp] = useState(currentApp);
-    const [output, setOutput] = useState('');
-    const [isRunning, setIsRunning] = useState(false);
-    const outputRef = useRef<HTMLPreElement>(null);
-    const eventSourceRef = useRef<EventSource | null>(null);
+const JSON_HEADERS = {'Content-Type': 'application/json'};
+const readJson = (response: Response) => response.json();
+const renderAppOption = (app: string) => <option key={app} value={app}>{app}</option>;
+const returnToAdmin = () => {
+    window.location.href = '/__garnet/';
+};
 
-    const scrollToBottom = useCallback(() => {
-        if (outputRef.current) {
-            outputRef.current.scrollTop = outputRef.current.scrollHeight;
+export class AdminDashboard extends AntiHookComponent<AdminDashboardProps> {
+    private readonly ui = new Carburetor({
+        selectedApp: this.props.currentApp,
+        activeApp: this.props.currentApp,
+        output: '',
+        isRunning: false,
+    });
+    private readonly outputRef = React.createRef<HTMLPreElement>();
+    private eventSource: EventSource | null = null;
+    private commandGeneration = 0;
+    private unmounted = false;
+
+    private readonly scrollToBottom = () => {
+        const pre = this.outputRef.current;
+        if (pre) {
+            pre.scrollTop = pre.scrollHeight;
         }
-    }, []);
+    };
 
-    useEffect(scrollToBottom, [output, scrollToBottom]);
+    protected useEffects(): void {
+        this.unmounted = false;
+        // Scroll only after React has committed the new output to the DOM.
+        this.useEffect('scrollOutput', this.scrollToBottom, [this.outputRef.current?.textContent]);
+    }
 
-    const appendOutput = useCallback((text: string) => {
-        setOutput(prev => prev + text);
-    }, []);
+    public componentWillUnmount(): void {
+        this.unmounted = true;
+        this.closeCommand();
+        super.componentWillUnmount();
+    }
 
-    const stopCmd = useCallback(() => {
-        if (eventSourceRef.current) {
-            eventSourceRef.current.close();
-            eventSourceRef.current = null;
-            setIsRunning(false);
-            appendOutput('\n--- Stopped ---\n');
+    private patchUi(updates: Partial<ReturnType<AdminDashboard['ui']['getData']>>): void {
+        this.ui.setData({...this.ui.getData(), ...updates});
+    }
+
+    private appendOutput(text: string): void {
+        this.patchUi({output: this.ui.getData().output + text});
+    }
+
+    private closeCommand(): void {
+        ++this.commandGeneration;
+        this.eventSource?.close();
+        this.eventSource = null;
+    }
+
+    private readonly stopCmd = () => {
+        if (this.eventSource) {
+            this.closeCommand();
+            this.patchUi({isRunning: false});
+            this.appendOutput('\n--- Stopped ---\n');
         }
-    }, [appendOutput]);
+    };
 
-    const runCmd = useCallback((cmd: string) => {
-        stopCmd();
-        setOutput('$ php garnet ' + cmd + '\n');
-        setIsRunning(true);
+    private runCmd(cmd: string): void {
+        this.stopCmd();
+        const generation = ++this.commandGeneration;
+        this.patchUi({output: '$ php garnet ' + cmd + '\n', isRunning: true});
 
-        // exec is CSRF-protected: EventSource can only issue a plain GET (no
-        // body, no custom headers), so the CSRF-checked step happens here as
-        // a real POST that trades the token for a single-use, short-lived
-        // ticket; the GET below only ever redeems that ticket, never the cmd
-        // directly. See AdminApp::handleExecTicket()/handleExec().
+        // EventSource cannot POST the CSRF token, so its GET only redeems a ticket.
         fetch('/__garnet/api/exec-ticket', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({cmd, csrf: csrfToken}),
+            headers: JSON_HEADERS,
+            body: JSON.stringify({cmd, csrf: this.props.csrfToken}),
         })
-            .then(r => r.json())
+            .then(readJson)
             .then(data => {
+                if (generation !== this.commandGeneration) return;
                 if (!data.ticket) {
-                    appendOutput('Error: ' + (data.error || 'could not start command') + '\n');
-                    setIsRunning(false);
-
+                    this.appendOutput('Error: ' + (data.error || 'could not start command') + '\n');
+                    this.patchUi({isRunning: false});
                     return;
                 }
 
                 const es = new EventSource('/__garnet/api/exec?ticket=' + encodeURIComponent(data.ticket));
-                eventSourceRef.current = es;
+                this.eventSource = es;
 
-                es.onmessage = (e) => {
-                    appendOutput(JSON.parse(e.data) + '\n');
-                };
-
-                es.addEventListener('done', (e: MessageEvent) => {
-                    appendOutput('\nDone (exit ' + e.data + ')\n');
-                    es.close();
-                    eventSourceRef.current = null;
-                    setIsRunning(false);
+                es.addEventListener('message', (e) => {
+                    if (this.eventSource === es) {
+                        this.appendOutput(JSON.parse(e.data) + '\n');
+                    }
                 });
-
-                es.onerror = () => {
-                    appendOutput('\n--- Connection lost ---\n');
-                    es.close();
-                    eventSourceRef.current = null;
-                    setIsRunning(false);
-                };
+                es.addEventListener('done', (e: MessageEvent) => {
+                    this.finishCommand(es, '\nDone (exit ' + e.data + ')\n');
+                });
+                es.addEventListener('error', () => {
+                    this.finishCommand(es, '\n--- Connection lost ---\n');
+                });
             })
             .catch(err => {
-                appendOutput('Error: ' + err.message + '\n');
-                setIsRunning(false);
+                if (generation !== this.commandGeneration) return;
+                this.appendOutput('Error: ' + err.message + '\n');
+                this.patchUi({isRunning: false});
             });
-    }, [stopCmd, appendOutput, csrfToken]);
+    }
 
-    const switchApp = useCallback(() => {
-        // NOTE: raw fetch (not sendPost) is intentional here — the `/__garnet/*`
-        // endpoints are served by the GarnetCli admin server (a separate backend
-        // from the main app), and do not share its CSRF token / response shape.
-        fetch('/__garnet/api/app-use', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({app: selectedApp, csrf: csrfToken}),
-        })
-            .then(r => r.json())
-            .then(data => {
-                if (data.ok) {
-                    setActiveApp(selectedApp);
-                    appendOutput('Switched to: ' + selectedApp + '\n');
-                } else {
-                    appendOutput('Error: ' + (data.error || 'unknown') + '\n');
-                }
-            })
-            .catch(err => appendOutput('Error: ' + err.message + '\n'));
-    }, [selectedApp, csrfToken, appendOutput]);
+    private finishCommand(es: EventSource, message: string): void {
+        if (this.eventSource !== es) return;
+        this.appendOutput(message);
+        this.closeCommand();
+        this.patchUi({isRunning: false});
+    }
 
-    const logout = useCallback(() => {
-        // NOTE: raw fetch (not sendPost) — see switchApp comment above. This hits
-        // the GarnetCli admin server, not the main app. window.location.href is
-        // also acceptable here because we are deliberately leaving the admin SPA.
+    private readonly selectApp = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        this.patchUi({selectedApp: e.target.value});
+    };
+
+    private readonly switchApp = async () => {
+        const {selectedApp} = this.ui.getData();
+        try {
+            const response = await fetch('/__garnet/api/app-use', {
+                method: 'POST',
+                headers: JSON_HEADERS,
+                body: JSON.stringify({app: selectedApp, csrf: this.props.csrfToken}),
+            });
+            const data = await readJson(response);
+            if (this.unmounted) return;
+            if (data.ok) {
+                this.patchUi({activeApp: selectedApp});
+                this.appendOutput('Switched to: ' + selectedApp + '\n');
+            } else {
+                this.appendOutput('Error: ' + (data.error || 'unknown') + '\n');
+            }
+        } catch (err) {
+            if (!this.unmounted) this.appendOutput('Error: ' + (err as Error).message + '\n');
+        }
+    };
+
+    private readonly logout = () => {
         fetch('/__garnet/logout', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({csrf: csrfToken}),
-        }).then(() => {
-            window.location.href = '/__garnet/';
-        });
-    }, [csrfToken]);
+            headers: JSON_HEADERS,
+            body: JSON.stringify({csrf: this.props.csrfToken}),
+        }).then(returnToAdmin);
+    };
 
-    const cmdBtn = 'px-4 py-2 text-sm font-medium text-white rounded disabled:opacity-40 disabled:cursor-not-allowed';
+    private readonly build = () => this.runCmd('build');
+    private readonly watch = () => this.runCmd('build:watch');
+    private readonly prepare = () => this.runCmd('prepare');
+    private readonly migrate = () => this.runCmd('migration');
+    private readonly clear = () => this.patchUi({output: ''});
 
-    return (
-        <div className="min-h-screen bg-gray-50">
-            <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-                <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-                    <h1 className="text-xl font-bold text-gray-900">Garnet Admin</h1>
-                    <button onClick={logout} className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded border border-gray-200">
+    private renderHeader() {
+        return (
+            <header className="clidashboard-header">
+                <div className="clidashboard-header-inner">
+                    <h1 className="clidashboard-title">Garnet Admin</h1>
+                    <button onClick={this.logout} className="clidashboard-logout">
                         Logout
                     </button>
                 </div>
             </header>
+        );
+    }
 
-            <main className="max-w-4xl mx-auto px-6 py-6 space-y-4">
-                {/* App Switcher */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                    <div className="flex items-center gap-3">
-                        <span className="text-sm font-medium text-gray-600">App:</span>
-                        <select
-                            value={selectedApp}
-                            onChange={e => setSelectedApp(e.target.value)}
-                            className="border border-gray-300 rounded px-2 py-1 text-sm text-gray-700 bg-white"
-                        >
-                            {apps.map(app => (
-                                <option key={app} value={app}>{app}</option>
-                            ))}
-                        </select>
-                        <button
-                            onClick={switchApp}
-                            disabled={selectedApp === activeApp}
-                            className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded disabled:opacity-40 disabled:cursor-not-allowed"
-                        >
-                            Switch
-                        </button>
-                        {activeApp && (
-                            <span className="text-xs text-gray-400">Current: {activeApp}</span>
-                        )}
-                    </div>
-                </div>
-
-                {/* Command Buttons */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                    <div className="flex flex-wrap gap-2">
-                        <button onClick={() => runCmd('build')} disabled={isRunning} className={`${cmdBtn} bg-green-600 hover:bg-green-700`}>Build</button>
-                        <button onClick={() => runCmd('build:watch')} disabled={isRunning} className={`${cmdBtn} bg-yellow-500 hover:bg-yellow-600`}>Build:Watch</button>
-                        <button onClick={() => runCmd('prepare')} disabled={isRunning} className={`${cmdBtn} bg-cyan-500 hover:bg-cyan-600`}>Prepare</button>
-                        <button onClick={() => runCmd('migration')} disabled={isRunning} className={`${cmdBtn} bg-red-600 hover:bg-red-700`}>Migration</button>
-                        {isRunning && (
-                            <button onClick={stopCmd} className={`${cmdBtn} bg-gray-500 hover:bg-gray-600`}>Stop</button>
-                        )}
-                    </div>
-                </div>
-
-                {/* Output Terminal */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                    <div className="flex items-center justify-between mb-3">
-                        <h2 className="text-sm font-medium text-gray-600">Output</h2>
-                        <button onClick={() => setOutput('')} className="text-xs text-gray-400 hover:text-gray-600">Clear</button>
-                    </div>
-                    <pre
-                        ref={outputRef}
-                        className="bg-gray-900 text-green-400 rounded p-4 h-96 overflow-y-auto text-sm font-mono whitespace-pre-wrap"
+    private renderAppSwitcher(selectedApp: string, activeApp: string) {
+        const {apps} = this.props;
+        return (
+            <div className="clidashboard-card">
+                <div className="clidashboard-app-row">
+                    <span className="clidashboard-label">App:</span>
+                    <select
+                        value={selectedApp}
+                        onChange={this.selectApp}
+                        className="clidashboard-select"
                     >
-                        {output}
-                    </pre>
+                        {apps.map(renderAppOption)}
+                    </select>
+                    <button
+                        onClick={this.switchApp}
+                        disabled={selectedApp === activeApp}
+                        className="clidashboard-switch"
+                    >
+                        Switch
+                    </button>
+                    {activeApp && (
+                        <span className="clidashboard-current">Current: {activeApp}</span>
+                    )}
                 </div>
-            </main>
-        </div>
-    );
-};
+            </div>
+        );
+    }
+
+    private renderCommands(isRunning: boolean) {
+        return (
+            <div className="clidashboard-card">
+                <div className="clidashboard-command-row">
+                    <button onClick={this.build} disabled={isRunning} className="clidashboard-build">Build</button>
+                    <button onClick={this.watch} disabled={isRunning} className="clidashboard-watch">Build:Watch</button>
+                    <button onClick={this.prepare} disabled={isRunning} className="clidashboard-prepare">Prepare</button>
+                    <button onClick={this.migrate} disabled={isRunning} className="clidashboard-migration">Migration</button>
+                    {isRunning && (
+                        <button onClick={this.stopCmd} className="clidashboard-stop">Stop</button>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
+    private renderOutput(output: string) {
+        return (
+            <div className="clidashboard-card">
+                <div className="clidashboard-output-header">
+                    <h2 className="clidashboard-label">Output</h2>
+                    <button onClick={this.clear} className="clidashboard-clear">Clear</button>
+                </div>
+                <pre
+                    ref={this.outputRef}
+                    className="clidashboard-output"
+                >
+                    {output}
+                </pre>
+            </div>
+        );
+    }
+
+    public render() {
+        const {selectedApp, activeApp, output, isRunning} = this.useCarburetor(this.ui);
+        return (
+            <div className="clidashboard-page">
+                {this.renderHeader()}
+                <main className="clidashboard-main">
+                    {this.renderAppSwitcher(selectedApp, activeApp)}
+                    {this.renderCommands(isRunning)}
+                    {this.renderOutput(output)}
+                </main>
+            </div>
+        );
+    }
+}

@@ -1,3 +1,28 @@
+/* Match the stock Tailwind colors without resetting the global palette. */
+:root {
+  --palette-clidash-white: #fff;
+  --palette-clidash-gray-50: oklch(98.5% 0.002 247.839);
+  --palette-clidash-gray-100: oklch(96.7% 0.003 264.542);
+  --palette-clidash-gray-200: oklch(92.8% 0.006 264.531);
+  --palette-clidash-gray-300: oklch(87.2% 0.01 258.338);
+  --palette-clidash-gray-400: oklch(70.7% 0.022 261.325);
+  --palette-clidash-gray-500: oklch(55.1% 0.027 264.364);
+  --palette-clidash-gray-600: oklch(44.6% 0.03 256.802);
+  --palette-clidash-gray-700: oklch(37.3% 0.034 259.733);
+  --palette-clidash-gray-900: oklch(21% 0.034 264.665);
+  --palette-clidash-blue-600: oklch(54.6% 0.245 262.881);
+  --palette-clidash-blue-700: oklch(48.8% 0.243 264.376);
+  --palette-clidash-green-400: oklch(79.2% 0.209 151.711);
+  --palette-clidash-green-600: oklch(62.7% 0.194 149.214);
+  --palette-clidash-green-700: oklch(52.7% 0.154 150.069);
+  --palette-clidash-yellow-500: oklch(79.5% 0.184 86.047);
+  --palette-clidash-yellow-600: oklch(68.1% 0.162 75.834);
+  --palette-clidash-cyan-500: oklch(71.5% 0.143 215.221);
+  --palette-clidash-cyan-600: oklch(60.9% 0.126 221.723);
+  --palette-clidash-red-600: oklch(57.7% 0.245 27.325);
+  --palette-clidash-red-700: oklch(50.5% 0.213 27.518);
+}
+
 /* Preserve the CLI Admin's existing Tailwind palette. */
 /* carburetor-disable-next-line valid-color-role */
 @theme inline {
@@ -13,6 +38,41 @@
   --color-cliaccesshint-ink: var(--color-gray-400);
   /* carburetor-disable-next-line valid-color-role */
   --color-cliaccessdenied-ink: var(--color-gray-500);
+  --color-clidashpage-wash: var(--palette-clidash-gray-50);
+  --color-clidashheader-wash: var(--palette-clidash-white);
+  --color-clidashheader-edge: var(--palette-clidash-gray-200);
+  --color-clidashtitle-ink: var(--palette-clidash-gray-900);
+  --color-clidashlogout-wash: var(--palette-clidash-gray-100);
+  --color-clidashlogout-wash-hover: var(--palette-clidash-gray-200);
+  --color-clidashlogout-ink: var(--palette-clidash-gray-700);
+  --color-clidashlogout-edge: var(--palette-clidash-gray-200);
+  --color-clidashcard-wash: var(--palette-clidash-white);
+  --color-clidashcard-edge: var(--palette-clidash-gray-200);
+  --color-clidashselect-edge: var(--palette-clidash-gray-300);
+  --color-clidashselect-ink: var(--palette-clidash-gray-700);
+  --color-clidashselect-wash: var(--palette-clidash-white);
+  --color-clidashswitch-wash: var(--palette-clidash-blue-600);
+  --color-clidashswitch-wash-hover: var(--palette-clidash-blue-700);
+  --color-clidashswitch-ink: var(--palette-clidash-white);
+  --color-clidashbuild-ink: var(--palette-clidash-white);
+  --color-clidashbuild-wash: var(--palette-clidash-green-600);
+  --color-clidashbuild-wash-hover: var(--palette-clidash-green-700);
+  --color-clidashwatch-ink: var(--palette-clidash-white);
+  --color-clidashwatch-wash: var(--palette-clidash-yellow-500);
+  --color-clidashwatch-wash-hover: var(--palette-clidash-yellow-600);
+  --color-clidashprepare-ink: var(--palette-clidash-white);
+  --color-clidashprepare-wash: var(--palette-clidash-cyan-500);
+  --color-clidashprepare-wash-hover: var(--palette-clidash-cyan-600);
+  --color-clidashmigration-ink: var(--palette-clidash-white);
+  --color-clidashmigration-wash: var(--palette-clidash-red-600);
+  --color-clidashmigration-wash-hover: var(--palette-clidash-red-700);
+  --color-clidashstop-ink: var(--palette-clidash-white);
+  --color-clidashstop-wash: var(--palette-clidash-gray-500);
+  --color-clidashstop-wash-hover: var(--palette-clidash-gray-600);
+  --color-clidashclear-ink: var(--palette-clidash-gray-400);
+  --color-clidashclear-ink-hover: var(--palette-clidash-gray-600);
+  --color-clidashoutput-wash: var(--palette-clidash-gray-900);
+  --color-clidashoutput-ink: var(--palette-clidash-green-400);
 }
 
 @utility tone-cliaccessinherit-plain { @apply text-inherit; }
@@ -49,4 +109,68 @@
   .cliaccess-hint { @apply tone-cliaccesshint-plain shape-cliaccess-hint type-cliaccess-hint; }
   .cliaccess-denied-hint { @apply tone-cliaccessdenied-plain type-cliaccess-hint; }
   .cliaccess-inline-command { @apply tone-cliaccesscommand-soft shape-cliaccess-inline-command; }
+}
+
+@utility tone-clidashpage-soft { @apply bg-clidashpage-wash; }
+@utility shape-clidashboard-page { @apply min-h-screen; }
+@utility tone-clidashheader-outlined { @apply bg-clidashheader-wash border-clidashheader-edge; }
+@utility shape-clidashboard-header { @apply border-b; }
+@utility layout-clidashboard-header { @apply sticky top-0 z-10; }
+@utility shape-clidashboard-header-inner { @apply max-w-4xl mx-auto px-6 py-4; }
+@utility layout-clidashboard-header-inner { @apply flex items-center justify-between; }
+@utility tone-clidashtitle-plain { @apply text-clidashtitle-ink; }
+@utility type-clidashboard-title { @apply text-xl font-bold; }
+@utility tone-clidashlogout-outlined { @apply bg-clidashlogout-wash hover:bg-clidashlogout-wash-hover text-clidashlogout-ink border-clidashlogout-edge; }
+@utility shape-clidashboard-logout { @apply px-3 py-1.5 rounded border; }
+@utility type-clidashboard-small { @apply text-sm; }
+@utility type-clidashboard-xs { @apply text-xs; }
+@utility shape-clidashboard-main { @apply max-w-4xl mx-auto px-6 py-6 space-y-4; }
+@utility tone-clidashcard-outlined { @apply bg-clidashcard-wash border-clidashcard-edge; }
+@utility shape-clidashboard-card { @apply rounded-lg border p-4; }
+@utility effect-clidashboard-card { @apply shadow-sm; }
+@utility layout-clidashboard-app-row { @apply flex items-center gap-3; }
+@utility type-clidashboard-medium { @apply text-sm font-medium; }
+@utility tone-clidashselect-outlined { @apply border-clidashselect-edge text-clidashselect-ink bg-clidashselect-wash; }
+@utility shape-clidashboard-select { @apply border rounded px-2 py-1; }
+@utility tone-clidashswitch-soft { @apply bg-clidashswitch-wash hover:bg-clidashswitch-wash-hover text-clidashswitch-ink; }
+@utility shape-clidashboard-switch { @apply px-3 py-1 rounded; }
+@utility effect-clidashboard-disabled { @apply disabled:opacity-40; }
+@utility behavior-clidashboard-disabled { @apply disabled:cursor-not-allowed; }
+@utility layout-clidashboard-command-row { @apply flex flex-wrap gap-2; }
+@utility shape-clidashboard-command { @apply px-4 py-2 rounded; }
+@utility tone-clidashbuild-soft { @apply text-clidashbuild-ink bg-clidashbuild-wash hover:bg-clidashbuild-wash-hover; }
+@utility tone-clidashwatch-soft { @apply text-clidashwatch-ink bg-clidashwatch-wash hover:bg-clidashwatch-wash-hover; }
+@utility tone-clidashprepare-soft { @apply text-clidashprepare-ink bg-clidashprepare-wash hover:bg-clidashprepare-wash-hover; }
+@utility tone-clidashmigration-soft { @apply text-clidashmigration-ink bg-clidashmigration-wash hover:bg-clidashmigration-wash-hover; }
+@utility tone-clidashstop-soft { @apply text-clidashstop-ink bg-clidashstop-wash hover:bg-clidashstop-wash-hover; }
+@utility layout-clidashboard-output-header { @apply flex items-center justify-between; }
+@utility shape-clidashboard-output-header { @apply mb-3; }
+@utility tone-clidashclear-plain { @apply text-clidashclear-ink hover:text-clidashclear-ink-hover; }
+@utility tone-clidashoutput-soft { @apply bg-clidashoutput-wash text-clidashoutput-ink; }
+@utility shape-clidashboard-output { @apply rounded p-4 h-96; }
+@utility layout-clidashboard-output { @apply overflow-y-auto; }
+@utility type-clidashboard-output { @apply text-sm font-mono whitespace-pre-wrap; }
+
+@layer components {
+  .clidashboard-page { @apply tone-clidashpage-soft shape-clidashboard-page; }
+  .clidashboard-header { @apply tone-clidashheader-outlined layout-clidashboard-header shape-clidashboard-header; }
+  .clidashboard-header-inner { @apply tone-cliaccessinherit-plain layout-clidashboard-header-inner shape-clidashboard-header-inner; }
+  .clidashboard-title { @apply tone-clidashtitle-plain type-clidashboard-title; }
+  .clidashboard-logout { @apply tone-clidashlogout-outlined shape-clidashboard-logout type-clidashboard-small; }
+  .clidashboard-main { @apply tone-cliaccessinherit-plain shape-clidashboard-main; }
+  .clidashboard-card { @apply tone-clidashcard-outlined shape-clidashboard-card effect-clidashboard-card; }
+  .clidashboard-app-row { @apply tone-cliaccessinherit-plain layout-clidashboard-app-row; }
+  .clidashboard-label { @apply tone-cliaccessmessage-plain type-clidashboard-medium; }
+  .clidashboard-select { @apply tone-clidashselect-outlined shape-clidashboard-select type-clidashboard-small; }
+  .clidashboard-switch { @apply tone-clidashswitch-soft shape-clidashboard-switch type-clidashboard-small effect-clidashboard-disabled behavior-clidashboard-disabled; }
+  .clidashboard-current { @apply tone-cliaccesshint-plain type-clidashboard-xs; }
+  .clidashboard-command-row { @apply tone-cliaccessinherit-plain layout-clidashboard-command-row; }
+  .clidashboard-build { @apply tone-clidashbuild-soft shape-clidashboard-command type-clidashboard-medium effect-clidashboard-disabled behavior-clidashboard-disabled; }
+  .clidashboard-watch { @apply tone-clidashwatch-soft shape-clidashboard-command type-clidashboard-medium effect-clidashboard-disabled behavior-clidashboard-disabled; }
+  .clidashboard-prepare { @apply tone-clidashprepare-soft shape-clidashboard-command type-clidashboard-medium effect-clidashboard-disabled behavior-clidashboard-disabled; }
+  .clidashboard-migration { @apply tone-clidashmigration-soft shape-clidashboard-command type-clidashboard-medium effect-clidashboard-disabled behavior-clidashboard-disabled; }
+  .clidashboard-stop { @apply tone-clidashstop-soft shape-clidashboard-command type-clidashboard-medium effect-clidashboard-disabled behavior-clidashboard-disabled; }
+  .clidashboard-output-header { @apply tone-cliaccessinherit-plain layout-clidashboard-output-header shape-clidashboard-output-header; }
+  .clidashboard-clear { @apply tone-clidashclear-plain type-clidashboard-xs; }
+  .clidashboard-output { @apply tone-clidashoutput-soft shape-clidashboard-output type-clidashboard-output layout-clidashboard-output; }
 }
