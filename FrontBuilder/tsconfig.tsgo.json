@@ -2,8 +2,9 @@
   "//": "Type-check config for tsgo (@typescript/native-preview / TS 7). The",
   "//2": "native compiler dropped legacy options (baseUrl, moduleResolution=node10)",
   "//3": "that the rspack/ts-node tsconfig.json still uses, so type-checking has",
-  "//4": "its own modern config. Covers the framework frontend (../Bundle/Front)",
-  "//5": "plus FrontBuilder's own build sources.",
+  "//4": "its own modern config. Covers the framework frontend (../Bundle/Front),",
+  "//5": "the CLI admin console frontend (../Kernel/Io/GarnetCli/Admin/Ui/Front)",
+  "//6": "and FrontBuilder's own build sources.",
   "compilerOptions": {
     "skipLibCheck": true,
     "allowJs": true,
@@ -29,6 +30,8 @@
     "**/*.ts",
     "**/*.tsx",
     "../Bundle/Front/**/*.ts",
-    "../Bundle/Front/**/*.tsx"
+    "../Bundle/Front/**/*.tsx",
+    "../Kernel/Io/GarnetCli/Admin/Ui/Front/**/*.ts",
+    "../Kernel/Io/GarnetCli/Admin/Ui/Front/**/*.tsx"
   ]
 }
