@@ -36,18 +36,6 @@
   .mobile-topbar { display: none; }
 }
 
-.mobile-topbar-brand {
-  @apply font-semibold text-on-surface text-base truncate;
-}
-
-.mobile-topbar-utility {
-  @apply flex items-center gap-1;
-}
-
-.mobile-balance-pill {
-  @apply inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium text-accent bg-accent-subtle no-underline;
-}
-
 .mobile-drawer {
   @apply fixed top-0 bottom-0 right-0 z-50 w-72 max-w-[80vw] bg-surface flex flex-col;
   transform: translateX(100%);

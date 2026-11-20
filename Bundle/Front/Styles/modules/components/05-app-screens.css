@@ -152,12 +152,6 @@
   @apply text-[11px] uppercase tracking-wider font-semibold;
 }
 
-/* ─── stat tiles with coloured values ─── */
-
-.stat-value-success { @apply text-2xl font-bold text-success; }
-.stat-value-accent  { @apply text-2xl font-bold text-accent; }
-.stat-value-warning { @apply text-2xl font-bold text-warning; }
-
 /* Header inside calendar day cell. */
 .cal-day-head {
   @apply text-center py-1.5 px-1 border-b border-default text-xs font-medium;

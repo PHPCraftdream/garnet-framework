@@ -332,68 +332,6 @@
     &:hover { @apply bg-info-subtle text-on-surface; }
 }
 
-.admin-dash-page {
-    @apply min-h-screen bg-page;
-}
-
-.admin-dash-topbar {
-    @apply bg-surface shadow;
-}
-
-.admin-dash-topbar-inner {
-    @apply max-w-4xl mx-auto px-4 py-4 flex items-center justify-between;
-}
-
-.admin-dash-title {
-    @apply text-xl font-bold text-on-surface;
-}
-
-.admin-dash-main {
-    @apply max-w-4xl mx-auto px-4 py-6 space-y-6;
-}
-
-.admin-dash-panel {
-    @apply bg-surface rounded-lg shadow p-4;
-}
-
-.admin-dash-panel-row {
-    @apply flex items-center gap-3;
-}
-
-.admin-dash-panel-actions {
-    @apply flex flex-wrap gap-2;
-}
-
-.admin-dash-panel-header {
-    @apply flex items-center justify-between mb-2;
-}
-
-.admin-dash-panel-label {
-    @apply font-medium text-secondary;
-}
-
-.admin-dash-panel-hint {
-    @apply text-sm text-muted;
-}
-
-.admin-dash-panel-mini-action {
-    @apply text-xs text-muted hover:text-on-surface bg-transparent border-0 cursor-pointer;
-}
-
-.admin-dash-select {
-    @apply border border-default rounded px-3 py-1.5 text-sm bg-surface text-on-surface;
-}
-
-/*
- * Terminal-style output panel (e.g. AdminDashboard cmd runner output).
- * We use bg-surface-alt + text-success to stay inside the 4-layer rule:
- * the visual "console-on-dark" look is the dark-theme rendering of these
- * layer-3 classes, and light-theme stays readable too.
- */
-.terminal-panel {
-    @apply bg-surface-alt text-success rounded p-4 h-96 overflow-y-auto text-sm font-mono whitespace-pre-wrap;
-}
-
 /* ---------- Misc Utilities ---------- */
 
 .fs-5 { @apply text-xl; }

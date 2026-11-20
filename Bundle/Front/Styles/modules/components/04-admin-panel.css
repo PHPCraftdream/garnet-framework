@@ -182,15 +182,6 @@
   color: var(--color-status-green);
 }
 
-/* Extended profile compact card inside UserDetailPanel.detailTab */
-.admin-profile-card {
-  @apply bg-surface-alt rounded p-3 text-sm mb-4;
-}
-
-.admin-profile-row {
-  @apply flex gap-6 flex-wrap;
-}
-
 /* Misc admin layout helpers */
 .admin-filter-bar {
   @apply flex flex-wrap gap-2 mb-4;
@@ -275,31 +266,6 @@
   @apply inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-success-subtle text-success;
 }
 
-/* Time-slot list row — bordered card-like row used in upcoming widgets. */
-.time-slot-row {
-  @apply flex items-center justify-between p-3 rounded-lg border border-default bg-surface;
-}
-
-/* Time-slot group — wraps multiple items for the same time slot. */
-.time-slot-group {
-  @apply rounded-lg border border-default bg-surface-alt p-3 flex flex-col gap-3;
-}
-.time-slot-group-header {
-  @apply flex items-center justify-between gap-2 flex-wrap;
-}
-.time-slot-group-title {
-  @apply text-base font-semibold text-on-surface;
-}
-.time-slot-group-meta {
-  @apply text-sm text-muted;
-}
-.time-slot-group-count {
-  @apply inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-accent-subtle text-accent;
-}
-.time-slot-group-list {
-  @apply flex flex-col gap-3;
-}
-
 /* News feed group suffix — "+ N more" tail under primary line. */
 .news-group-suffix {
   @apply text-xs text-muted mt-0.5 italic;
@@ -322,16 +288,6 @@
 }
 .stat-tile-label {
   @apply text-xs text-muted mt-1;
-}
-
-/* Quick-link pill (horizontal: icon + text). */
-.quick-link-pill {
-  @apply flex items-center gap-2 px-4 py-2.5 rounded-lg border border-default bg-surface hover:bg-surface-hover hover:border-strong transition-colors text-sm font-medium text-secondary no-underline;
-}
-
-/* Quick-link tile (vertical: icon over text). */
-.quick-link-tile {
-  @apply flex flex-col items-center gap-1.5 p-4 rounded-lg border border-default bg-surface hover:bg-surface-hover hover:border-strong transition-colors text-center no-underline;
 }
 
 /* Avatar circle (initials, accent surface). */
