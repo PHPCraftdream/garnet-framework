@@ -3,5 +3,9 @@
 // directory next door (where the SPA shell is rendered server-side).
 @source "../..";
 @source "../../../templates";
+// The committed bundle sits under the scanned root; reading it back would make
+// the generated CSS depend on its own previous output (a rebuild would keep
+// changing the emitted theme variables until it settled).
+@source not "../../dist";
 
 @import (inline) "./admin-access.css";
