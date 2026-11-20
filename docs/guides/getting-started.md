@@ -36,11 +36,19 @@ command once Node.js is on your PATH).
 
 The FrontBuilder installs `@react-carburetor/core` and the native
 `@react-carburetor/lint` at 0.3.0. Its oxlint preset runs alongside the
-Garnet rules. `npm --prefix FrontBuilder run lint:carburetor` checks the
-functional stylesheets and the scoped controls. The stylesheets are imported by
-`framework.less`; their Garnet roles bridge existing theme variables so custom
-and dark themes keep working. Those role aliases and the missing stock-colour
-reset have narrowly scoped native-lint suppressions during migration.
+Garnet rules, and `carburetor/no-react-hooks-in-components` is an error
+everywhere: framework components are hook-free `AntiHookComponent` classes, and
+the application template's `.oxlintrc.json` enables the same rule for new apps.
+`npm --prefix FrontBuilder run lint:carburetor` scans `Bundle/Front` and the CLI
+admin front (the vendored `Bundle/Front/ThirdParty/**` is ignored in
+`.carburetorrc.json` and `.oxlintrc.json`). The functional stylesheets
+(`Styles/modules/carburetor-*.css`) are imported by `framework.less`; their
+Garnet roles bridge existing theme variables so custom and dark themes keep
+working. Those role aliases and the missing stock-colour reset have narrowly
+scoped native-lint suppressions during migration. The older global component
+stylesheets (`Styles/modules/components/*.css`) stay as a compatibility layer
+for applications until they migrate — see `docs/guides/legacy-styles-audit.md`
+for which classes the application still uses.
 
 DurationSelect accepts `variant="compact"` instead of an arbitrary `className`;
 its default and compact styles follow the framework's `form-select` and
