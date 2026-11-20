@@ -184,6 +184,13 @@ jobs:
       - name: Set up frontend toolchain (garnet setup)
         run: php bin/garnet setup --skip-composer
 
+      # The carburetor oxlint plugin starts its native linter from inside the
+      # oxlint host; on Linux the default overcommit heuristic refuses that
+      # fork (ENOMEM) even with memory free. The plugin's own error message
+      # prescribes this step.
+      - name: Allow the oxlint plugin to start the native linter
+        run: sudo sysctl -w vm.overcommit_memory=1
+
       - name: oxlint + tsgo
         working-directory: FrontBuilder
         run: npm run check
@@ -314,6 +321,18 @@ jobs:
           fi
 
           exit $status
+
+      # A contributor on another OS cannot always reproduce the Linux rebuild
+      # (lightningcss colour maths differs between platform binaries). When the
+      # guard fails, keep the Linux rebuild so it can be committed as is:
+      #   gh run download <run-id> -n admin-dist-linux-rebuild -D Kernel/Io/GarnetCli/Admin/Ui/dist
+      - name: Keep the Linux rebuild for download
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-dist-linux-rebuild
+          path: Kernel/Io/GarnetCli/Admin/Ui/dist
+          retention-days: 7
 
   i18n-gen-staleness:
     name: i18n generated files — committed TS matches PHP source
