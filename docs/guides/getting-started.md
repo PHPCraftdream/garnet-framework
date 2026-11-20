@@ -47,7 +47,7 @@ Garnet roles bridge existing theme variables so custom and dark themes keep
 working. Those role aliases and the missing stock-colour reset have narrowly
 scoped native-lint suppressions during migration. The older global component
 stylesheets (`Styles/modules/components/*.css`) stay as a compatibility layer
-for applications until they migrate — see `docs/guides/legacy-styles-audit.md`
+for applications until they migrate — see `docs/reference/legacy-styles-audit.md`
 for which classes the application still uses.
 
 DurationSelect accepts `variant="compact"` instead of an arbitrary `className`;

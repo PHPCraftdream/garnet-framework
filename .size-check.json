@@ -8,6 +8,14 @@
     "Templates/Application/Foreground/TwigTemplates/Foreground": "часть той же заготовки",
     "Templates/Application/Migrations/Items": "нумерованные миграции заготовки: порядок и есть структура",
     "Templates/Application/Common": "часть той же заготовки",
-    "tooling/mcp/browser/collector/parts": "нумерованные куски ОДНОГО скрипта: загрузчик читает каталог по порядку имён и склеивает их в один инъектируемый файл — номер в имени и есть структура, подкаталог её разорвёт"
+    "tooling/mcp/browser/collector/parts": "нумерованные куски ОДНОГО скрипта: загрузчик читает каталог по порядку имён и склеивает их в один инъектируемый файл — номер в имени и есть структура, подкаталог её разорвёт",
+    "Bundle/Front/Styles/modules": "плоский набор функциональных css-модулей (carburetor-*.css): framework.less импортирует их по путям, пути перечислены в .carburetorrc.json, а приложение подключает часть из них по vendor-пути в своём lint:carburetor — подкаталоги сломают все три места; перегруппировка — вместе с миграцией приложения",
+    "Bundle/Front/Common/Components/Layout/Navigation": "публичные пути импорта (@common/Components/Layout/Navigation/*): приложения импортируют эти файлы по пути, подкаталог сломает каждого потребителя; миграция на «один компонент — один файл» разнесла каталог, перегруппировка — вместе с миграцией приложения",
+    "Bundle/Front/Common/Components/Form/FormBuilder": "публичные пути импорта (@common/Components/Form/FormBuilder/*): index.tsx и поля используют GridTable и приложения; перегруппировка — вместе с миграцией приложения",
+    "Bundle/Front/Common/Components/Admin/AdminGrid": "публичные пути импорта (@common/Components/Admin/AdminGrid/*): сетку и её типы импортируют приложения; перегруппировка — вместе с миграцией приложения",
+    "Bundle/Front/Common/Components/Feedback": "публичные пути импорта (@common/Components/Feedback/*): тосты, баннеры и модалки импортируют приложения; превышение было до миграции",
+    "Bundle/Front/Common/Components/Admin/SystemSettings/SystemSettingsPage/Tabs": "по файлу на вкладку настроек; подкаталог разорвёт список вкладок, которые страница подключает по путям",
+    "Bundle/Front/Common/Components/Controls": "публичные пути импорта (@common/Components/Controls/*): приложения импортируют контролы по пути; превышение было до миграции",
+    "Bundle/Front/Common/Components/ui": "публичные пути импорта (@common/Components/ui/*): Radix-обёртки (Dialog, Select, Combobox, DateInput…) импортируют приложения; перегруппировка — вместе с миграцией приложения"
   }
 }
