@@ -6,18 +6,26 @@
  * Needs no DB: login is the one-shot CLI token flow (`adminLogin`).
  */
 
+import type { Page } from '@playwright/test';
 import { test, expect } from '../../helpers/scoped-test';
 import { newScopedContext } from '../../helpers/scoped-test';
 import { adminLogin } from '../../helpers/role-login';
 
-const button = (page: import('@playwright/test').Page, name: string) =>
-	page.getByRole('button', { name, exact: true });
+const button = (page: Page, name: string) => page.getByRole('button', { name, exact: true });
+
+// The console is dev-only (GARNET_ENV=dev or an IDE marker directory above the
+// app); anywhere else it answers a JSON 404.
+async function skipUnlessConsole(page: Page): Promise<void> {
+	const resp = await page.request.get('/__garnet/');
+	test.skip(resp.status() === 404, 'admin console is dev-only: serve the app with GARNET_ENV=dev');
+}
 
 test.describe('CLI admin dashboard', () => {
 	test('renders the island with its styles applied', async ({ browser }) => {
 		const context = await newScopedContext(browser);
 		const page = await context.newPage();
 		try {
+			await skipUnlessConsole(page);
 			await adminLogin(page);
 			await expect(page.getByRole('heading', { name: 'Garnet Admin' })).toBeVisible();
 			for (const name of ['Build', 'Build:Watch', 'Prepare', 'Migration', 'Logout', 'Clear']) {
@@ -40,6 +48,7 @@ test.describe('CLI admin dashboard', () => {
 		const context = await newScopedContext(browser);
 		const page = await context.newPage();
 		try {
+			await skipUnlessConsole(page);
 			await adminLogin(page);
 			const output = page.locator('pre.clidashboard-output');
 
@@ -59,10 +68,12 @@ test.describe('CLI admin dashboard', () => {
 		const context = await newScopedContext(browser);
 		const page = await context.newPage();
 		try {
+			await skipUnlessConsole(page);
 			await adminLogin(page);
 			await button(page, 'Logout').click();
+			// Back on the login page: it shows the command instead of the controls.
+			await expect(page.locator('code', { hasText: 'php garnet admin' })).toBeVisible();
 			await expect(button(page, 'Logout')).toHaveCount(0);
-			await expect(page.getByRole('heading', { name: 'Garnet Admin' })).toHaveCount(0);
 		} finally {
 			await context.close();
 		}

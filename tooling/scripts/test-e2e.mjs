@@ -135,7 +135,12 @@ async function main() {
 		// the `garnet serve` process tree it launches (the Node dev server +
 		// its pool of `php -S` workers), which then holds file locks in the
 		// temp app dir and makes cleanup's rmSync fail with EPERM.
-		server = spawn('php', ['garnet', 'serve', `--workers=${SERVER_WORKERS}`], { cwd: appDir, stdio: 'inherit' });
+		// GARNET_ENV=dev: the CLI admin console (/__garnet/) is dev-only and a temp dir has no IDE markers.
+		server = spawn('php', ['garnet', 'serve', `--workers=${SERVER_WORKERS}`], {
+			cwd: appDir,
+			stdio: 'inherit',
+			env: { ...process.env, GARNET_ENV: 'dev' },
+		});
 
 		await waitForServer('http://localhost:8001/', 30_000);
 
