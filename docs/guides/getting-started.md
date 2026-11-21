@@ -38,7 +38,10 @@ The FrontBuilder installs `@react-carburetor/core` and the native
 `@react-carburetor/lint` at 0.3.0. Its oxlint preset runs alongside the
 Garnet rules, and `carburetor/no-react-hooks-in-components` is an error
 everywhere: framework components are hook-free `AntiHookComponent` classes, and
-the application template's `.oxlintrc.json` enables the same rule for new apps.
+the application template's `.oxlintrc.json` enables the same rule for new apps,
+and its `npm run check` also runs `lint:carburetor` (the framework's native
+linter over `Front`, `Common` and `Dashboard`, configured by the template's
+`.carburetorrc.json`).
 `npm --prefix FrontBuilder run lint:carburetor` scans `Bundle/Front` and the CLI
 admin front (the vendored `Bundle/Front/ThirdParty/**` is ignored in
 `.carburetorrc.json` and `.oxlintrc.json`). The functional stylesheets

@@ -10,12 +10,13 @@
     "dev": "rspack build --watch --config rspack.config.ts",
     "serve": "rspack serve --config rspack.config.ts",
     "lint": "cd .. && oxlint Bundle/Front FrontBuilder Kernel/Io/GarnetCli/Admin/Ui/Front",
-    "lint:fix": "cd .. && oxlint --fix Bundle/Front FrontBuilder",
+    "lint:fix": "cd .. && oxlint --fix Bundle/Front FrontBuilder Kernel/Io/GarnetCli/Admin/Ui/Front",
     "lint:carburetor": "cd .. && carburetor-lint Bundle/Front Kernel/Io/GarnetCli/Admin/Ui/Front",
     "test:lint-plugin": "node oxlint-plugins/garnet-tsx-rules.test.js",
     "typecheck": "tsgo --noEmit -p tsconfig.tsgo.json",
     "typecheck:tsc": "tsc --noEmit",
-    "check": "npm run test:lint-plugin && npm run lint && npm run lint:carburetor && npm run typecheck"
+    "check:tsx-coverage": "node ../tooling/scripts/check-tsx-coverage.mjs",
+    "check": "npm run test:lint-plugin && npm run check:tsx-coverage && npm run lint && npm run lint:carburetor && npm run typecheck"
   },
   "dependencies": {
     "@fancyapps/ui": "^5.0.20",

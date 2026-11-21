@@ -1,0 +1,4 @@
+{
+  "ignore": ["**/I18nGen/**", "**/ThirdParty/**"],
+  "rules": {"no-react-hooks-in-components": "error"}
+}

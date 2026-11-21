@@ -4,8 +4,9 @@
     "description": "Type dependencies for IDE support. Build is done via FrontBuilder/rspack.config.ts.",
     "scripts": {
         "lint": "oxlint Front Common Dashboard",
+        "lint:carburetor": "node vendor/phpcraftdream/garnet-framework/FrontBuilder/node_modules/@react-carburetor/lint/bin/carburetor-lint.js Front Common Dashboard",
         "typecheck": "tsgo --noEmit -p tsconfig.tsgo.json",
-        "check": "npm run lint && npm run typecheck"
+        "check": "npm run lint && npm run lint:carburetor && npm run typecheck"
     },
     "devDependencies": {
         "oxlint": "^1.0.0",
