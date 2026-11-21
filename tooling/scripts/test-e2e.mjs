@@ -26,6 +26,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const frameworkRoot = path.resolve(__dirname, '..', '..');
 const keep = process.argv.includes('--keep');
 
+// Low parallelism by default: a cold rspack build next to a 32-worker php
+// pool and parallel Playwright workers has crashed the whole machine.
+// Already-set variables win, so a stronger box can raise them.
+for (const [name, value] of Object.entries({ RAYON_NUM_THREADS: '2', UV_THREADPOOL_SIZE: '2' })) {
+	process.env[name] ??= value;
+}
+const SERVER_WORKERS = '2';
+
 const SAFE_SPECS = [
 	'specs/smoke.spec.ts',
 	'specs/framework-bundle/api-no-react-import.spec.ts',
@@ -127,7 +135,7 @@ async function main() {
 		// the `garnet serve` process tree it launches (the Node dev server +
 		// its pool of `php -S` workers), which then holds file locks in the
 		// temp app dir and makes cleanup's rmSync fail with EPERM.
-		server = spawn('php', ['garnet', 'serve'], { cwd: appDir, stdio: 'inherit' });
+		server = spawn('php', ['garnet', 'serve', `--workers=${SERVER_WORKERS}`], { cwd: appDir, stdio: 'inherit' });
 
 		await waitForServer('http://localhost:8001/', 30_000);
 
@@ -142,7 +150,7 @@ async function main() {
 		// a real migrated database. See the matching comment in
 		// Templates/Application/.github/workflows/ci.yml's `e2e` job and
 		// docs/guides/e2e-testing.md for how to run them against a DB-enabled app.
-		run('npx', ['playwright', 'test', ...SAFE_SPECS, '--reporter=list'], {
+		run('npx', ['playwright', 'test', ...SAFE_SPECS, '--reporter=list', '--workers=1'], {
 			cwd: path.join(appDir, 'Tests'),
 		});
 	} finally {
