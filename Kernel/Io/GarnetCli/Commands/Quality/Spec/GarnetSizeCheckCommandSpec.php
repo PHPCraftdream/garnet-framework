@@ -73,6 +73,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\GarnetCli\Commands\Quality\Spec {
                 expect(GarnetSizeCheckCommand::isSkipped('Front/I18nGen/I18nDataRU.ts'))->toBe(true);
                 expect(GarnetSizeCheckCommand::isSkipped('Public/assets/app/gen/js/a.gen.js'))->toBe(true);
                 expect(GarnetSizeCheckCommand::isSkipped('Tests/.auth/admin-0.json'))->toBe(true);
+                expect(GarnetSizeCheckCommand::isSkipped('.rush/locks/session-1.lock'))->toBe(true);
             });
 
             it('не исключает каталог, чьё имя лишь НАЧИНАЕТСЯ с исключённого', function (): void {
