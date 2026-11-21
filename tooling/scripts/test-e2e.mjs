@@ -32,6 +32,7 @@ const SAFE_SPECS = [
 	'specs/framework-bundle/cron-cli.spec.ts',
 	'specs/framework-bundle/html-lang.spec.ts',
 	'specs/framework-bundle/auth-page-chrome.spec.ts',
+	'specs/framework-bundle/cli-admin-dashboard.spec.ts',
 ];
 
 /** @param {string} cmd @param {string[]} args @param {import('node:child_process').SpawnSyncOptions} [opts] */
