@@ -18,6 +18,12 @@ export const resolveConfig = (modules: string[]) => ({
 	},
 });
 
+// The app root for Tailwind's @source in framework.less. The stylesheet used to
+// guess it as six directories up from its own real path, which is the app only
+// when the framework sits in <app>/vendor/phpcraftdream/; behind a symlink or
+// junction the real path is shallow and six hops up reach the drive root.
+const garnetAppRoot = (process.env.COMMON_GARNET_WEB_DIR || frameworkRoot).split(path.sep).join('/');
+
 export const moduleRules = (isProduction: boolean): RuleSetRule[] => [
 	{
 		test: /\.tsx?$/,
@@ -74,7 +80,10 @@ export const moduleRules = (isProduction: boolean): RuleSetRule[] => [
 					},
 				},
 			},
-			{loader: 'less-loader'},
+			{
+				loader: 'less-loader',
+				options: {lessOptions: {globalVars: {garnetAppRoot: JSON.stringify(garnetAppRoot)}}},
+			},
 		],
 		type: 'css',
 	},
