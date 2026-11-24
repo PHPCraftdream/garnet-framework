@@ -63,6 +63,39 @@ supported symbol moves and the public contract for the 0.1.x line.
 ### Known limitations
 See [`README.md` → Known limitations](README.md#known-limitations-v0x).
 
+## [0.1.3] — no suppressions in React code
+
+0.1.1 and 0.1.2 were released without entries here; see the git history.
+
+### Fixed
+- The static-pages admin did not re-render: its components selected the whole
+  store with `connectSelection(store, state => state)`, which reads no field and
+  subscribes to nothing. The create form kept an empty slug and a disabled
+  button. They now select their fields by name.
+- Searching the Mail log answered 500 (`Unknown column 'account_name'`):
+  `account_name` / `account_login` are hydrated after the query, so the search
+  covers the real `mail_log` columns only.
+
+### Changed (apps that pass a class string must adapt)
+- `className` / `errorClassName` are gone from the Radix wrappers (`Dialog`,
+  `Select`, `Tooltip`), `Combobox`, `Dropzone`, `UncontrolledForm`,
+  `UncontrolledInput`, `UncontrolledSelect`, `UncontrolledTextarea`,
+  `AdminUserLink`. Each renders its own functional class.
+- Callers that need their own Function pass a template element instead of a
+  string: `UserLink anchor={<a className="…" />}`,
+  `EntityHistoryButton button={<button className="…" />}`,
+  `DateInput field={<input className="…" />}`. The class stays a literal at the
+  call site, where `require-function-class` checks it. A Function given this way
+  replaces the framework's, it is not appended to it.
+- Navigation links are marked with `data-hot-click` / `data-no-hot` attributes;
+  the `hot-click` / `no-hot` classes keep working.
+- `Validators` (grid validators) is a plain object instead of a class of statics.
+
+### Tooling
+- `require-function-class` is an error for every `.tsx` file, the warnings of the
+  `recommended` preset are errors, and `carburetor-lint` runs with
+  `--deny-warnings`. No suppression directive is left in the React sources.
+
 ## Stability
 
 While the version is `0.x`, the public API may change between minor
