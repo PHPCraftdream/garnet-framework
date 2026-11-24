@@ -1,6 +1,5 @@
 import * as React from 'react';
 import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
-import {cn} from '@common/Utils/Ui/cn';
 import {sendPostFormData} from '@common/Api/Send/sendPostFormData';
 
 /** A file that has been uploaded to pending storage (Phase 1). */
@@ -22,7 +21,6 @@ interface Props {
     label?: string;
     uploadingLabel?: string;
     removeLabel?: string;
-    className?: string;
 }
 
 interface DropzoneState {
@@ -129,10 +127,9 @@ export default class Dropzone extends AntiHookComponent<Props> {
     public render() {
         const {isDragging, uploading, error} = this.useCarburetor(this.store);
         const {files, maxFiles = 10, accept = 'image/jpeg,image/png,image/gif,image/webp', label,
-            uploadingLabel = 'Uploading...', className} = this.props;
+            uploadingLabel = 'Uploading...'} = this.props;
         const canAdd = this.canAdd();
-        // carburetor-disable-next-line require-function-class
-        return <div className={className ? cn('dropzone-shell', className) : 'dropzone-shell'} data-test-id="dropzone">
+        return <div className="dropzone-shell" data-test-id="dropzone">
             <div className="dropzone-area" data-dragging={isDragging} data-uploading={uploading} data-disabled={!canAdd}
                 onDragOver={this.handleDragOver} onDragLeave={this.handleDragLeave} onDrop={this.handleDrop}
                 onClick={this.handleClick} data-test-id="dropzone-area">

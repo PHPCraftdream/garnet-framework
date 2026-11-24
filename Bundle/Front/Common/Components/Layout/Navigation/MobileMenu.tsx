@@ -44,8 +44,7 @@ function renderTopbar(items: MenuItem[], utility?: UtilityClusterData) {
     return (
         <header className="mobile-topbar">
             <a href="/"
-                // carburetor-disable-next-line require-function-class
-                className="mobile-topbar-logo no-hot" aria-label={items[0]?.label} data-test-id="mobile-topbar-logo">
+                className="mobile-topbar-logo" data-no-hot aria-label={items[0]?.label} data-test-id="mobile-topbar-logo">
                 <img src="/favicon.ico" alt="" width={26} height={26} />
             </a>
             <label htmlFor="show--menu" className="hamburger-btn" aria-label="Menu" data-test-id="mobile-menu-toggle">

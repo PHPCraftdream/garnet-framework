@@ -9,8 +9,6 @@ interface Props {
     options: IDataListItem[];
     disabled?: boolean;
     required?: boolean;
-    className?: string;
-    errorClassName?: string;
     testId?: string;
     onBlur?: (value: string, el: HTMLSelectElement) => void;
 }
@@ -41,8 +39,7 @@ class SelectView extends AntiHookComponent<Props & {inputRef: React.ForwardedRef
                     defaultValue={p.defaultValue ?? ''}
                     disabled={p.disabled}
                     required={p.required}
-                    // carburetor-disable-next-line require-function-class
-                    className={p.className ?? 'uncontrolled-select'}
+                    className="uncontrolled-select"
                     data-test-id={p.testId}
                     onBlur={p.onBlur ? this.blur : undefined}
                     aria-invalid={error ? 'true' : undefined}
@@ -50,8 +47,7 @@ class SelectView extends AntiHookComponent<Props & {inputRef: React.ForwardedRef
                     {p.options.map(renderOption)}
                 </select>
                 {error && (
-                    // carburetor-disable-next-line require-function-class
-                    <div className={p.errorClassName ?? 'garnet-form-error'} data-uncontrolled-error={p.errorClassName == null ? true : undefined} data-test-id={p.testId ? `${p.testId}-error` : undefined}>
+                    <div className="garnet-form-error" data-uncontrolled-error="true" data-test-id={p.testId ? `${p.testId}-error` : undefined}>
                         {error}
                     </div>
                 )}

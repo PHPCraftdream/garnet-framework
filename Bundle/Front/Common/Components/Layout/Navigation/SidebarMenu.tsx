@@ -11,8 +11,8 @@ class SidebarMenuItem extends AntiHookComponent<{item: MenuItem}> {
         return (
             <li className="sidebar-menu-item">
                 <a href={item.href}
-                    // carburetor-disable-next-line require-function-class
-                    className={`hot-click ${item.active ? 'nav-side-link-active' : 'nav-side-link'}`}
+                    data-hot-click
+                    className={item.active ? 'nav-side-link-active' : 'nav-side-link'}
                     title={item.label} data-test-id={`sidebar-${item.label.toLowerCase().replace(/ /g, '-')}`}>
                     {Icon ? <Icon size={20} /> : null}
                     <span className="nav-side-label">{item.label}</span>

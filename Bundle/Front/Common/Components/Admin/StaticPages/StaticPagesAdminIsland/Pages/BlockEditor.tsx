@@ -35,6 +35,23 @@ type EditorState = {
     pendingDeleteUrl: string | null;
 };
 type PendingDelete = {url: string; action: () => Promise<void>};
+type GalleryImage = {url: string; alt: string};
+
+async function appendUploaded(uploaded: Promise<GalleryImage[]>, file: File, uploadImageUrl: string): Promise<GalleryImage[]> {
+    const images = await uploaded;
+    const fd = new FormData();
+    fd.append('file', file);
+    const res = await sendPostFormData<FormData, {success: boolean; url: string}>(uploadImageUrl, fd);
+    return res?.url ? [...images, {url: res.url, alt: ''}] : images;
+}
+
+/** Загрузка по очереди: порядок сохраняется, после ошибки следующие файлы не уходят. */
+function uploadInOrder(files: File[], uploadImageUrl: string, initial: GalleryImage[]): Promise<GalleryImage[]> {
+    return files.reduce<Promise<GalleryImage[]>>(
+        (uploaded, file) => appendUploaded(uploaded, file, uploadImageUrl),
+        Promise.resolve(initial),
+    );
+}
 
 const parseJsonContent = (content: string): Record<string, any> => {
     try { return JSON.parse(content) || {}; } catch { return {}; }
@@ -169,17 +186,7 @@ export class BlockEditor extends AntiHookComponent<BlockEditorProps> {
         setImgUploading(true);
         try {
             const galData = parseJsonContent(localContent);
-            const images: {url: string; alt: string}[] = [...(galData.images || [])];
-            // Последовательная загрузка сохраняет порядок и останавливается при ошибке.
-            for (const file of files) {
-                const fd = new FormData();
-                fd.append('file', file);
-                // eslint-disable-next-line no-await-in-loop
-                const res = await sendPostFormData<FormData, {success: boolean; url: string}>(uploadImageUrl, fd);
-                if (res?.url) {
-                    images.push({url: res.url, alt: ''});
-                }
-            }
+            const images = await uploadInOrder(files, uploadImageUrl, [...(galData.images || [])]);
             const data = {...galData, images};
             const json = JSON.stringify(data);
             setLocalContent(json);

@@ -45,6 +45,9 @@ export const hotClickHandler = (event: MouseEvent, element: HTMLElement): void =
     }
 };
 
+/** A link marked for hot navigation: `data-hot-click` (current) or the `hot-click` class (legacy). */
+const isHotLink = (a: Element): boolean => a.hasAttribute('data-hot-click') || a.classList.contains('hot-click');
+
 /**
  * Is this a same-origin link we may navigate without a full reload?
  * Bails out for everything that must keep native behaviour: new-tab / download
@@ -54,7 +57,7 @@ export const hotClickHandler = (event: MouseEvent, element: HTMLElement): void =
  * so they're skipped here too.
  */
 const isEligibleInternalLink = (a: HTMLAnchorElement): boolean => {
-    if (a.classList.contains('hot-click') || a.classList.contains('no-hot') || a.hasAttribute('data-no-hot')) {
+    if (isHotLink(a) || a.classList.contains('no-hot') || a.hasAttribute('data-no-hot')) {
         return false;
     }
     if (a.target && a.target !== '' && a.target !== '_self') {
@@ -107,13 +110,25 @@ const generalLinkHandler = (event: MouseEvent): void => {
     hotClickHandler(event, a);
 };
 
+/** Delegated handler for links carrying the `data-hot-click` attribute. */
+const markedLinkHandler = (event: MouseEvent): void => {
+    const target = event.target as Element | null;
+    const a = target && typeof target.closest === 'function'
+        ? (target.closest('a[data-hot-click]') as HTMLAnchorElement | null)
+        : null;
+    if (!a) return;
+
+    hotClickHandler(event, a);
+};
+
 /**
  * Initialises hot navigation (no full page reload) within a container: applies
- * to links with the hot-click class and to any other eligible internal link.
+ * to links marked `data-hot-click` (or the legacy `hot-click` class) and to any other eligible internal link.
  *
  * @param container The container element.
  */
 export const hotClickInit = (container: HTMLElement) => {
     classClick(container, 'hot-click', hotClickHandler);
+    container.addEventListener('click', markedLinkHandler);
     container.addEventListener('click', generalLinkHandler);
 };

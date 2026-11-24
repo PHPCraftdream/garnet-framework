@@ -11,7 +11,7 @@
     "serve": "rspack serve --config rspack.config.ts",
     "lint": "cd .. && oxlint Bundle/Front FrontBuilder Kernel/Io/GarnetCli/Admin/Ui/Front",
     "lint:fix": "cd .. && oxlint --fix Bundle/Front FrontBuilder Kernel/Io/GarnetCli/Admin/Ui/Front",
-    "lint:carburetor": "cd .. && carburetor-lint Bundle/Front Kernel/Io/GarnetCli/Admin/Ui/Front",
+    "lint:carburetor": "cd .. && carburetor-lint --deny-warnings Bundle/Front Kernel/Io/GarnetCli/Admin/Ui/Front",
     "test:lint-plugin": "node oxlint-plugins/garnet-tsx-rules.test.js",
     "typecheck": "tsgo --noEmit -p tsconfig.tsgo.json",
     "typecheck:tsc": "tsc --noEmit",

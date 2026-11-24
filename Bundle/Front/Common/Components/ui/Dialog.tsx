@@ -1,6 +1,5 @@
 import * as React from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import {cn} from '@common/Utils/Ui/cn';
 
 const Dialog = DialogPrimitive.Root;
 const DialogTrigger = DialogPrimitive.Trigger;
@@ -10,13 +9,11 @@ const DialogPortal = DialogPrimitive.Portal;
 
 const DialogOverlay = React.forwardRef<
     React.ElementRef<typeof DialogPrimitive.Overlay>,
-    React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
->(({className, ...props}, ref) => (
+    Omit<React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>, 'className'>
+>((props, ref) => (
     <DialogPrimitive.Overlay
         ref={ref}
-        // Внешний className сохраняется для совместимости.
-        // carburetor-disable-next-line require-function-class
-        className={cn('radix-dialog-overlay', className)}
+        className="radix-dialog-overlay"
         {...props}
     />
 ));
@@ -24,15 +21,13 @@ DialogOverlay.displayName = 'DialogOverlay';
 
 const DialogContent = React.forwardRef<
     React.ElementRef<typeof DialogPrimitive.Content>,
-    React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({className, children, ...props}, ref) => (
+    Omit<React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>, 'className'>
+>(({children, ...props}, ref) => (
     <DialogPortal>
         <DialogOverlay />
         <DialogPrimitive.Content
             ref={ref}
-            // Внешний className сохраняется для совместимости.
-            // carburetor-disable-next-line require-function-class
-            className={cn('radix-dialog-content', className)}
+            className="radix-dialog-content"
             {...props}
         >
             {children}
@@ -47,21 +42,17 @@ const DialogContent = React.forwardRef<
 ));
 DialogContent.displayName = 'DialogContent';
 
-const DialogHeader: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({className, ...props}) => (
-    // Внешний className сохраняется для совместимости.
-    // carburetor-disable-next-line require-function-class
-    <div className={cn('radix-dialog-header', className)} {...props} />
+const DialogHeader: React.FC<Omit<React.HTMLAttributes<HTMLDivElement>, 'className'>> = (props) => (
+    <div className="radix-dialog-header" {...props} />
 );
 
 const DialogTitle = React.forwardRef<
     React.ElementRef<typeof DialogPrimitive.Title>,
-    React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
->(({className, ...props}, ref) => (
+    Omit<React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>, 'className'>
+>((props, ref) => (
     <DialogPrimitive.Title
         ref={ref}
-        // Внешний className сохраняется для совместимости.
-        // carburetor-disable-next-line require-function-class
-        className={cn('radix-dialog-title', className)}
+        className="radix-dialog-title"
         {...props}
     />
 ));
@@ -69,13 +60,11 @@ DialogTitle.displayName = 'DialogTitle';
 
 const DialogDescription = React.forwardRef<
     React.ElementRef<typeof DialogPrimitive.Description>,
-    React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
->(({className, ...props}, ref) => (
+    Omit<React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>, 'className'>
+>((props, ref) => (
     <DialogPrimitive.Description
         ref={ref}
-        // Внешний className сохраняется для совместимости.
-        // carburetor-disable-next-line require-function-class
-        className={cn('radix-dialog-description', className)}
+        className="radix-dialog-description"
         {...props}
     />
 ));

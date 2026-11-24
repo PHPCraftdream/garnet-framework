@@ -8,7 +8,6 @@ interface UserLinkProps {
     name: string;
     isExpert?: boolean;
     profileUrl?: string;
-    className?: string;
     children?: React.ReactNode;
     onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
 }
@@ -39,14 +38,9 @@ class UserLinkView extends AntiHookComponent<UserLinkProps & {preview: ReturnTyp
     };
 
     render() {
-        const {id, name, isExpert, profileUrl, className, children} = this.props;
+        const {id, name, isExpert, profileUrl, children} = this.props;
         if (!id) return <>{children ?? name}</>;
         const href = appUrl(profileUrl ?? (isExpert ? `/expert/id~${id}` : `/user/id~${id}`));
-        if (className != null) {
-            // Сохраняем публичный параметр className.
-            // carburetor-disable-next-line require-function-class
-            return <a href={href} className={className} onClick={this.handleClick}>{children ?? name}</a>;
-        }
         return <a href={href} className="common-link" onClick={this.handleClick}>{children ?? name}</a>;
     }
 }

@@ -14,8 +14,6 @@ interface Props {
     step?: number | string;
     autoFocus?: boolean;
     autoComplete?: string;
-    className?: string;
-    errorClassName?: string;
     testId?: string;
     onBlur?: (value: string, el: HTMLInputElement) => void;
 }
@@ -49,15 +47,13 @@ class InputView extends AntiHookComponent<Props & {inputRef: React.ForwardedRef<
                     step={p.step}
                     autoFocus={p.autoFocus}
                     autoComplete={p.autoComplete}
-                    // carburetor-disable-next-line require-function-class
-                    className={p.className ?? 'uncontrolled-field'}
+                    className="uncontrolled-field"
                     data-test-id={p.testId}
                     onBlur={p.onBlur ? this.blur : undefined}
                     aria-invalid={error ? 'true' : undefined}
                 />
                 {error && (
-                    // carburetor-disable-next-line require-function-class
-                    <div className={p.errorClassName ?? 'garnet-form-error'} data-uncontrolled-error={p.errorClassName == null ? true : undefined} data-test-id={p.testId ? `${p.testId}-error` : undefined}>
+                    <div className="garnet-form-error" data-uncontrolled-error="true" data-test-id={p.testId ? `${p.testId}-error` : undefined}>
                         {error}
                     </div>
                 )}

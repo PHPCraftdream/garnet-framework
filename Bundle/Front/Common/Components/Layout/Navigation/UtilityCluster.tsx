@@ -49,8 +49,8 @@ export const UtilityCluster: React.FC<UtilityClusterProps> = ({
         <div className="utility-cluster">
             <a
                 href={balanceUrl}
-                // carburetor-disable-next-line require-function-class
-                className="utility-balance hot-click"
+                data-hot-click
+                className="utility-balance"
                 title={balanceLabel}
                 data-test-id="util-balance"
                 aria-current={balanceActive ? 'page' : undefined}
@@ -114,8 +114,8 @@ const UtilityIconButton: React.FC<UtilityIconButtonProps> = ({
     return (
         <a
             href={href}
-            // carburetor-disable-next-line require-function-class
-            className="utility-icon-button hot-click"
+            data-hot-click
+            className="utility-icon-button"
             title={label}
             data-test-id={testId}
             aria-current={active ? 'page' : undefined}

@@ -94,7 +94,7 @@ export class StaticPagesList extends AntiHookComponent<Props> {
                         <EntityHistoryButton
                             entityType="static_page"
                             entityId={page.id}
-                            className="static-admin-link"
+                            variant="row-link"
                             testIdSuffix={`page-${page.id}`}
                         />
                     </div>

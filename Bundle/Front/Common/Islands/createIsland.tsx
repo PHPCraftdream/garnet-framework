@@ -123,7 +123,6 @@ export function createIsland<P>(config: {
             .catch((e: unknown) => {
                 const message = `island '${config.className}' did not mount`;
                 reportHandledError(message, e);
-                // eslint-disable-next-line no-console
                 console.error(`[garnet] ${message}`, e);
             });
     });

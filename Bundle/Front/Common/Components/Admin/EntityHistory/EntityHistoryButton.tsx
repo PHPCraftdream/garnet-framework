@@ -12,8 +12,8 @@ interface Props {
     title?: string;
     /** Override list endpoint. Defaults to /admin/entity-history/~list. */
     listUrl?: string;
-    /** Optional className passed to the button. */
-    className?: string;
+    /** Look of the button: a plain button (default) or a text link inside a table row. */
+    variant?: 'button' | 'row-link';
     /** Optional data-test-id suffix; final id is `entity-history-btn-${suffix}` if provided. */
     testIdSuffix?: string;
 }
@@ -37,10 +37,8 @@ export class EntityHistoryButton extends AntiHookComponent<Props> {
     };
 
     private renderButton(label: string, testId: string, title: string) {
-        const {className} = this.props;
-        if (className != null) {
-            // carburetor-disable-next-line require-function-class
-            return <button type="button" className={className} onClick={this.open} data-test-id={testId} title={title}>{label}</button>;
+        if (this.props.variant === 'row-link') {
+            return <button type="button" className="static-admin-link" onClick={this.open} data-test-id={testId} title={title}>{label}</button>;
         }
         return <button type="button" className="entity-history-button" onClick={this.open} data-test-id={testId} title={title}>{label}</button>;
     }

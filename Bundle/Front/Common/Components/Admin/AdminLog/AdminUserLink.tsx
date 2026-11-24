@@ -14,7 +14,6 @@ interface Props {
     id: number;
     name: string;
     role?: string;
-    className?: string;
 }
 
 class AdminUserLinkView extends AntiHookComponent<Props & {openUser: React.ContextType<typeof UserDetailContext>['openUser']}> {
@@ -26,16 +25,12 @@ class AdminUserLinkView extends AntiHookComponent<Props & {openUser: React.Conte
     };
 
     render() {
-        const {id, name, role, className = ''} = this.props;
+        const {id, name, role} = this.props;
         if (!id) {
-            // Дополнительный класс — часть публичного API.
-            // carburetor-disable-next-line require-function-class
-            return <span className={className}>{name || '—'}</span>;
+            return <span>{name || '—'}</span>;
         }
         return (
-            // Дополнительный класс — часть публичного API.
-            // carburetor-disable-next-line require-function-class
-            <span className={className ? `common-entity-link ${className}` : 'common-entity-link'}>
+            <span className="common-entity-link">
                 <a href={appUrl(`/admin/#user=${id}`)} className="common-link" onClick={this.handleClick}>{name || `#${id}`}</a>
                 {role && <span className="common-role-tag">{role}</span>}
             </span>

@@ -11,8 +11,6 @@ interface Props {
     disabled?: boolean;
     required?: boolean;
     autoFocus?: boolean;
-    className?: string;
-    errorClassName?: string;
     testId?: string;
     onBlur?: (value: string, el: HTMLTextAreaElement) => void;
 }
@@ -43,15 +41,13 @@ class TextareaView extends AntiHookComponent<Props & {inputRef: React.ForwardedR
                     disabled={p.disabled}
                     required={p.required}
                     autoFocus={p.autoFocus}
-                    // carburetor-disable-next-line require-function-class
-                    className={p.className ?? 'uncontrolled-field'}
+                    className="uncontrolled-field"
                     data-test-id={p.testId}
                     onBlur={p.onBlur ? this.blur : undefined}
                     aria-invalid={error ? 'true' : undefined}
                 />
                 {error && (
-                    // carburetor-disable-next-line require-function-class
-                    <div className={p.errorClassName ?? 'garnet-form-error'} data-uncontrolled-error={p.errorClassName == null ? true : undefined} data-test-id={p.testId ? `${p.testId}-error` : undefined}>
+                    <div className="garnet-form-error" data-uncontrolled-error="true" data-test-id={p.testId ? `${p.testId}-error` : undefined}>
                         {error}
                     </div>
                 )}

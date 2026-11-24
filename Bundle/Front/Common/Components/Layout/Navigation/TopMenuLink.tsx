@@ -11,8 +11,8 @@ export class TopMenuLink extends AntiHookComponent<{item: MenuItem}> {
         return (
             <li className="top-menu-item">
                 <a href={item.href}
-                    // carburetor-disable-next-line require-function-class
-                    className={`hot-click ${item.active ? 'nav-top-link-active' : 'nav-top-link'}`}
+                    data-hot-click
+                    className={item.active ? 'nav-top-link-active' : 'nav-top-link'}
                     title={item.label} data-test-id={`nav-${item.label.toLowerCase().replace(/ /g, '-')}`}>
                     {Icon ? <Icon size={18} /> : null}
                     <span className="top-menu-label">{item.label}</span>

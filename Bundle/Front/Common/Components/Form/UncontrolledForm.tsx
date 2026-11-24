@@ -4,7 +4,6 @@ import {FormErrorProvider, FormErrorStore} from './useFormErrors';
 
 interface FormProps {
     onSubmit: (values: Record<string, string>, form: HTMLFormElement) => Promise<void> | void;
-    className?: string;
     'data-test-id'?: string;
     children: React.ReactNode;
 }
@@ -65,8 +64,6 @@ class FormView extends AntiHookComponent<FormProps> implements UncontrolledFormH
             <FormErrorProvider value={this.errors}>
                 <form
                     onSubmit={this.handleSubmit}
-                    // carburetor-disable-next-line require-function-class
-                    className={this.props.className}
                     data-test-id={this.props['data-test-id']}
                 >
                     {this.props.children}

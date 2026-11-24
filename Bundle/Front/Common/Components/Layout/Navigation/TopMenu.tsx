@@ -32,8 +32,7 @@ class TopMenuView extends AntiHookComponent<TopMenuProps & {live: LiveCounts | n
             <nav className="nav-topbar">
                 <div className="nav-topbar-row">
                     <a href="/"
-                        // carburetor-disable-next-line require-function-class
-                        className="nav-topbar-logo no-hot" title={items[0]?.label} aria-label={items[0]?.label}
+                        className="nav-topbar-logo" data-no-hot title={items[0]?.label} aria-label={items[0]?.label}
                         data-test-id="topbar-logo">
                         <img className="top-menu-logo-image" src="/favicon.ico" alt="" width={28} height={28} />
                     </a>

@@ -1,6 +1,5 @@
 import * as React from 'react';
 import * as SelectPrimitive from '@radix-ui/react-select';
-import {cn} from '@common/Utils/Ui/cn';
 
 const Select = SelectPrimitive.Root;
 const SelectGroup = SelectPrimitive.Group;
@@ -8,13 +7,11 @@ const SelectValue = SelectPrimitive.Value;
 
 const SelectTrigger = React.forwardRef<
     React.ElementRef<typeof SelectPrimitive.Trigger>,
-    React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
->(({className, children, ...props}, ref) => (
+    Omit<React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>, 'className'>
+>(({children, ...props}, ref) => (
     <SelectPrimitive.Trigger
         ref={ref}
-        // Внешний className сохраняется для совместимости.
-        // carburetor-disable-next-line require-function-class
-        className={cn('radix-select-trigger', className)}
+        className="radix-select-trigger"
         {...props}
     >
         {children}
@@ -29,14 +26,12 @@ SelectTrigger.displayName = 'SelectTrigger';
 
 const SelectContent = React.forwardRef<
     React.ElementRef<typeof SelectPrimitive.Content>,
-    React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
->(({className, children, position = 'popper', ...props}, ref) => (
+    Omit<React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>, 'className'>
+>(({children, position = 'popper', ...props}, ref) => (
     <SelectPrimitive.Portal>
         <SelectPrimitive.Content
             ref={ref}
-            // Внешний className сохраняется для совместимости.
-            // carburetor-disable-next-line require-function-class
-            className={cn('radix-select-content', className)}
+            className="radix-select-content"
             data-popper={position === 'popper' ? '' : undefined}
             position={position}
             {...props}
@@ -54,13 +49,11 @@ SelectContent.displayName = 'SelectContent';
 
 const SelectItem = React.forwardRef<
     React.ElementRef<typeof SelectPrimitive.Item>,
-    React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
->(({className, children, ...props}, ref) => (
+    Omit<React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>, 'className'>
+>(({children, ...props}, ref) => (
     <SelectPrimitive.Item
         ref={ref}
-        // Внешний className сохраняется для совместимости.
-        // carburetor-disable-next-line require-function-class
-        className={cn('radix-select-item', className)}
+        className="radix-select-item"
         {...props}
     >
         <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
@@ -77,13 +70,11 @@ SelectItem.displayName = 'SelectItem';
 
 const SelectLabel = React.forwardRef<
     React.ElementRef<typeof SelectPrimitive.Label>,
-    React.ComponentPropsWithoutRef<typeof SelectPrimitive.Label>
->(({className, ...props}, ref) => (
+    Omit<React.ComponentPropsWithoutRef<typeof SelectPrimitive.Label>, 'className'>
+>((props, ref) => (
     <SelectPrimitive.Label
         ref={ref}
-        // Внешний className сохраняется для совместимости.
-        // carburetor-disable-next-line require-function-class
-        className={cn('radix-select-label', className)}
+        className="radix-select-label"
         {...props}
     />
 ));

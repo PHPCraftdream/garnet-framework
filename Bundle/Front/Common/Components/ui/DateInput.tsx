@@ -5,7 +5,7 @@ import {DateInputState} from './DateInputState';
 
 type DateInputType = 'date' | 'time' | 'datetime-local' | 'month' | 'week';
 
-interface Props extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
+interface Props extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type' | 'className'> {
     type?: DateInputType;
 }
 
@@ -141,20 +141,18 @@ class DateInputView extends AntiHookComponent<DateInputViewProps> {
     }
 
     private renderField({open, positioned, top, left}: ReturnType<DateInputState['store']['getData']>) {
-        const {inputRef, type = 'date', onFocus, onClick, onChange, onBlur, className, value, defaultValue, name, min, max, ...rest} = this.props;
+        const {inputRef, type = 'date', onFocus, onClick, onChange, onBlur, value, defaultValue, name, min, max, ...rest} = this.props;
         if (type !== 'date') {
-            return <LegacyNativeInput type={type} extraClass={className} onFocus={onFocus} onClick={onClick} onChange={onChange} onBlur={onBlur} value={value} defaultValue={defaultValue} name={name} min={min} max={max} ref={inputRef} {...rest} />;
+            return <LegacyNativeInput type={type} onFocus={onFocus} onClick={onClick} onChange={onChange} onBlur={onBlur} value={value} defaultValue={defaultValue} name={name} min={min} max={max} ref={inputRef} {...rest} />;
         }
         const currentIsoValue = String(value ?? defaultValue ?? '');
-        const inputCls = ['custom-date-input', className].filter(Boolean).join(' ');
 
         return (
         <div ref={this.setWrapper} className="cdp-wrapper" data-custom-datepicker>
             <input
                 ref={this.setInput}
                 type="date"
-                // carburetor-disable-next-line require-function-class
-                className={inputCls}
+                className="custom-date-input"
                 value={value as string | number | readonly string[] | undefined}
                 defaultValue={defaultValue as string | number | readonly string[] | undefined}
                 name={name}
@@ -198,7 +196,7 @@ function tryShow(input: HTMLInputElement): void {
     }
 }
 
-type NativeProps = Omit<Props, 'className'> & {extraClass?: string};
+type NativeProps = Props;
 class NativeDateField extends AntiHookComponent<NativeProps & {inputRef: React.ForwardedRef<HTMLInputElement>}> {
     private readonly focus = (event: React.FocusEvent<HTMLInputElement>) => {
         tryShow(event.currentTarget);
@@ -210,11 +208,8 @@ class NativeDateField extends AntiHookComponent<NativeProps & {inputRef: React.F
     };
 
     render() {
-        const {inputRef, type, onFocus: _onFocus, onClick: _onClick, extraClass, ...rest} = this.props;
-        const cls = ['cdp-native-input', extraClass].filter(Boolean).join(' ');
-        // Совместимость с произвольным классом вызывающей стороны.
-        // carburetor-disable-next-line require-function-class
-        return <input ref={inputRef} type={type} className={cls} onFocus={this.focus} onClick={this.click} {...rest} />;
+        const {inputRef, type, onFocus: _onFocus, onClick: _onClick, ...rest} = this.props;
+        return <input ref={inputRef} type={type} className="cdp-native-input" onFocus={this.focus} onClick={this.click} {...rest} />;
     }
 }
 

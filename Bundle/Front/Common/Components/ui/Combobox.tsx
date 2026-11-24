@@ -1,7 +1,6 @@
 import * as React from 'react';
 import {AntiHookComponent} from '@react-carburetor/core';
 import * as Popover from '@radix-ui/react-popover';
-import {cn} from '@common/Utils/Ui/cn';
 import {ComboboxState} from './ComboboxState';
 
 interface ComboboxOption {
@@ -16,7 +15,6 @@ interface ComboboxProps {
     placeholder?: string;
     searchPlaceholder?: string;
     emptyText?: string;
-    className?: string;
     testId?: string;
 }
 
@@ -49,12 +47,10 @@ export class Combobox extends AntiHookComponent<ComboboxProps> {
     }
 
     private renderContent({open, search}: {open: boolean; search: string}) {
-        const {options, value, placeholder = 'Select...', searchPlaceholder = 'Search...', emptyText = 'No results', className, testId} = this.props;
+        const {options, value, placeholder = 'Select...', searchPlaceholder = 'Search...', emptyText = 'No results', testId} = this.props;
         const selectedLabel = this.selectedLabel();
         const filtered = search.trim() ? options.filter(option => option.label.toLowerCase().includes(search.toLowerCase())) : options;
-        // Внешний className остаётся на кнопке для совместимости.
-        // carburetor-disable-next-line require-function-class
-        const trigger = (<button type="button" role="combobox" aria-expanded={open} className={className ? cn('combobox-trigger', className) : 'combobox-trigger'} data-empty={!value} data-test-id={testId}>
+        const trigger = (<button type="button" role="combobox" aria-expanded={open} className="combobox-trigger" data-empty={!value} data-test-id={testId}>
             <span className="combobox-trigger-label">{selectedLabel || placeholder}</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="combobox-chevron"><path d="m6 9 6 6 6-6" /></svg>
         </button>);
