@@ -5,8 +5,15 @@ import {DateInputState} from './DateInputState';
 
 type DateInputType = 'date' | 'time' | 'datetime-local' | 'month' | 'week';
 
+type FieldTemplate = React.ReactElement<React.InputHTMLAttributes<HTMLInputElement> & React.RefAttributes<HTMLInputElement>>;
+
+const DATE_FIELD: FieldTemplate = <input className="custom-date-input" />;
+const NATIVE_FIELD: FieldTemplate = <input className="cdp-native-input" />;
+
 interface Props extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type' | 'className'> {
     type?: DateInputType;
+    /** Template for the rendered input, e.g. `<input className="my-function" />`; defaults to the framework look. */
+    field?: FieldTemplate;
 }
 
 /**
@@ -141,31 +148,30 @@ class DateInputView extends AntiHookComponent<DateInputViewProps> {
     }
 
     private renderField({open, positioned, top, left}: ReturnType<DateInputState['store']['getData']>) {
-        const {inputRef, type = 'date', onFocus, onClick, onChange, onBlur, value, defaultValue, name, min, max, ...rest} = this.props;
+        const {inputRef, field, type = 'date', onFocus, onClick, onChange, onBlur, value, defaultValue, name, min, max, ...rest} = this.props;
         if (type !== 'date') {
-            return <LegacyNativeInput type={type} onFocus={onFocus} onClick={onClick} onChange={onChange} onBlur={onBlur} value={value} defaultValue={defaultValue} name={name} min={min} max={max} ref={inputRef} {...rest} />;
+            return <LegacyNativeInput type={type} field={field} onFocus={onFocus} onClick={onClick} onChange={onChange} onBlur={onBlur} value={value} defaultValue={defaultValue} name={name} min={min} max={max} ref={inputRef} {...rest} />;
         }
         const currentIsoValue = String(value ?? defaultValue ?? '');
 
         return (
         <div ref={this.setWrapper} className="cdp-wrapper" data-custom-datepicker>
-            <input
-                ref={this.setInput}
-                type="date"
-                className="custom-date-input"
-                value={value as string | number | readonly string[] | undefined}
-                defaultValue={defaultValue as string | number | readonly string[] | undefined}
-                name={name}
-                min={min}
-                max={max}
-                onMouseDown={this.mouseDown}
-                onClick={this.click}
-                onKeyDown={this.keyDown}
-                onFocus={onFocus}
-                onChange={onChange}
-                onBlur={onBlur}
-                {...rest}
-            />
+            {React.cloneElement(field ?? DATE_FIELD, {
+                ref: this.setInput,
+                type: 'date',
+                value: value as string | number | readonly string[] | undefined,
+                defaultValue: defaultValue as string | number | readonly string[] | undefined,
+                name,
+                min,
+                max,
+                onMouseDown: this.mouseDown,
+                onClick: this.click,
+                onKeyDown: this.keyDown,
+                onFocus,
+                onChange,
+                onBlur,
+                ...rest,
+            })}
             {open && (
                 <Portal>
                     <div
@@ -208,8 +214,8 @@ class NativeDateField extends AntiHookComponent<NativeProps & {inputRef: React.F
     };
 
     render() {
-        const {inputRef, type, onFocus: _onFocus, onClick: _onClick, ...rest} = this.props;
-        return <input ref={inputRef} type={type} className="cdp-native-input" onFocus={this.focus} onClick={this.click} {...rest} />;
+        const {inputRef, field, type, onFocus: _onFocus, onClick: _onClick, ...rest} = this.props;
+        return React.cloneElement(field ?? NATIVE_FIELD, {ref: inputRef, type, onFocus: this.focus, onClick: this.click, ...rest});
     }
 }
 

@@ -3,6 +3,8 @@ import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
 import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
 import {EntityHistoryDrawer} from './EntityHistoryDrawer';
 
+const DEFAULT_BUTTON = <button className="entity-history-button" />;
+
 interface Props {
     entityType: string;
     entityId: string | number;
@@ -12,8 +14,8 @@ interface Props {
     title?: string;
     /** Override list endpoint. Defaults to /admin/entity-history/~list. */
     listUrl?: string;
-    /** Look of the button: a plain button (default) or a text link inside a table row. */
-    variant?: 'button' | 'row-link';
+    /** Template for the rendered button, e.g. `<button className="my-function" />`; defaults to the framework button. */
+    button?: React.ReactElement<React.ButtonHTMLAttributes<HTMLButtonElement>>;
     /** Optional data-test-id suffix; final id is `entity-history-btn-${suffix}` if provided. */
     testIdSuffix?: string;
 }
@@ -37,10 +39,8 @@ export class EntityHistoryButton extends AntiHookComponent<Props> {
     };
 
     private renderButton(label: string, testId: string, title: string) {
-        if (this.props.variant === 'row-link') {
-            return <button type="button" className="static-admin-link" onClick={this.open} data-test-id={testId} title={title}>{label}</button>;
-        }
-        return <button type="button" className="entity-history-button" onClick={this.open} data-test-id={testId} title={title}>{label}</button>;
+        const {button = DEFAULT_BUTTON} = this.props;
+        return React.cloneElement(button, {type: 'button', onClick: this.open, 'data-test-id': testId, title}, label);
     }
 
     public render() {

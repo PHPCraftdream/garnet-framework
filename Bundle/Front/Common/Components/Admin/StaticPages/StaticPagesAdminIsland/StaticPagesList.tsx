@@ -4,6 +4,8 @@ import {EntityHistoryButton} from '@common/Components/Admin/EntityHistory/Entity
 import {formatTs} from '@common/Utils/Time/DateUtils';
 import type {Labels, PageTabInfo, StaticPage} from './types';
 
+const ROW_LINK_BUTTON = <button className="static-admin-link" />;
+
 interface Props {
     labels: Labels;
     sending: boolean;
@@ -94,7 +96,7 @@ export class StaticPagesList extends AntiHookComponent<Props> {
                         <EntityHistoryButton
                             entityType="static_page"
                             entityId={page.id}
-                            variant="row-link"
+                            button={ROW_LINK_BUTTON}
                             testIdSuffix={`page-${page.id}`}
                         />
                     </div>

@@ -3,11 +3,15 @@ import {AntiHookComponent} from '@react-carburetor/core';
 import {usePreview} from './PreviewContext';
 import {appUrl} from '@common/Utils/Url/appUrl';
 
+const DEFAULT_ANCHOR = <a className="common-link" />;
+
 interface UserLinkProps {
     id: number;
     name: string;
     isExpert?: boolean;
     profileUrl?: string;
+    /** Template for the rendered anchor, e.g. `<a className="my-function" />`; defaults to the framework link. */
+    anchor?: React.ReactElement<React.AnchorHTMLAttributes<HTMLAnchorElement>>;
     children?: React.ReactNode;
     onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
 }
@@ -38,9 +42,9 @@ class UserLinkView extends AntiHookComponent<UserLinkProps & {preview: ReturnTyp
     };
 
     render() {
-        const {id, name, isExpert, profileUrl, children} = this.props;
+        const {id, name, isExpert, profileUrl, anchor = DEFAULT_ANCHOR, children} = this.props;
         if (!id) return <>{children ?? name}</>;
         const href = appUrl(profileUrl ?? (isExpert ? `/expert/id~${id}` : `/user/id~${id}`));
-        return <a href={href} className="common-link" onClick={this.handleClick}>{children ?? name}</a>;
+        return React.cloneElement(anchor, {href, onClick: this.handleClick}, children ?? name);
     }
 }
