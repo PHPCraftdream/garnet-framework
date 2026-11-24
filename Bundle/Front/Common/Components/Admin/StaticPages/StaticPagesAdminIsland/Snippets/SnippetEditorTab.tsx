@@ -33,7 +33,7 @@ class SnippetEditorView extends AntiHookComponent<EditorProps> {
         localContent: this.props.initialSnippet?.content ?? '',
         showPreview: false,
     });
-    private readonly view = this.connectSelection(() => this.ui, state => state);
+    private readonly view = this.connectSelection(() => this.ui, state => ({snippet: state.snippet, localContent: state.localContent, showPreview: state.showPreview}));
     private readonly textareaRef = React.createRef<HTMLTextAreaElement>();
 
     public componentDidUpdate(previous: EditorProps) {

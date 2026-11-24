@@ -49,7 +49,7 @@ class StaticPagesAdmin extends AntiHookComponent<ShellProps> {
         pageTabs: [], snippetTabs: [], activeTabId: null,
     });
 
-    private readonly view = this.connectSelection(() => this.ui, state => state);
+    private readonly view = this.connectSelection(() => this.ui, state => ({pages: state.pages, snippets: state.snippets, templateVariables: state.templateVariables, showCreateForm: state.showCreateForm, newSlug: state.newSlug, newTitle: state.newTitle, loaded: state.loaded, snippetsLoaded: state.snippetsLoaded, pageTabs: state.pageTabs, snippetTabs: state.snippetTabs, activeTabId: state.activeTabId}));
 
     public componentDidMount(): void {
         super.componentDidMount();

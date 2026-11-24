@@ -27,7 +27,7 @@ type ListState = {showCreateForm: boolean; newSlug: string; newName: string; new
 
 export class SnippetsListPanel extends AntiHookComponent<SnippetsListPanelProps> {
     private readonly ui = new Carburetor<ListState>({showCreateForm: false, newSlug: '', newName: '', newType: 'block', filterType: ''});
-    private readonly view = this.connectSelection(() => this.ui, state => state);
+    private readonly view = this.connectSelection(() => this.ui, state => ({showCreateForm: state.showCreateForm, newSlug: state.newSlug, newName: state.newName, newType: state.newType, filterType: state.filterType}));
 
     private readonly toggleCreate = () => {
         const state = this.ui.getData();

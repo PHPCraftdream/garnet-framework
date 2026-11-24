@@ -51,7 +51,7 @@ class PageEditorTabView extends AntiHookComponent<EditorProps> {
         localBlocks: [], nextTempId: -1, blocksDirty: false,
         headerSnippetOptions: [], footerSnippetOptions: [], addingAtPosition: null,
     });
-    private readonly view = this.connectSelection(() => this.ui, state => state);
+    private readonly view = this.connectSelection(() => this.ui, state => ({editingPage: state.editingPage, localBlocks: state.localBlocks, nextTempId: state.nextTempId, blocksDirty: state.blocksDirty, headerSnippetOptions: state.headerSnippetOptions, footerSnippetOptions: state.footerSnippetOptions, addingAtPosition: state.addingAtPosition}));
 
     public componentDidMount() {
         super.componentDidMount();

@@ -48,7 +48,7 @@ export class BlockEditor extends AntiHookComponent<BlockEditorProps> {
         showPagePicker: false,
         pendingDeleteUrl: null,
     });
-    private readonly view = this.connectSelection(() => this.ui, state => state);
+    private readonly view = this.connectSelection(() => this.ui, state => ({localContent: state.localContent, imgUploading: state.imgUploading, showPreview: state.showPreview, showPagePicker: state.showPagePicker, pendingDeleteUrl: state.pendingDeleteUrl}));
     private readonly textareaRef = React.createRef<HTMLTextAreaElement>();
     private pendingDeleteAction: (() => Promise<void>) | null = null;
 

@@ -49,7 +49,7 @@ const defaultLogo = {url: '', alt: '', link: '/', height: 40};
 
 export class HeaderEditor extends AntiHookComponent<HeaderProps> {
     private readonly ui = new Carburetor<{logoUploading: boolean}>({logoUploading: false});
-    private readonly view = this.connectSelection(() => this.ui, state => state);
+    private readonly view = this.connectSelection(() => this.ui, state => ({logoUploading: state.logoUploading}));
 
     private updateLogo(field: string, value: string | number) {
         const {data, onChange} = this.props;
