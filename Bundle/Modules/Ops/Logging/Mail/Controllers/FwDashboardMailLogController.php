@@ -55,7 +55,8 @@ namespace PHPCraftdream\Garnet\Bundle\Modules\Ops\Logging\Mail\Controllers {
             array $filters = [],
         ): array {
             $isAdmin = static::isAdmin();
-            $searchFields = ['recipient_email', 'account_name', 'account_login', 'mail_type', 'subject', 'status', 'error_log'];
+            // account_name/account_login are hydrated after the query, not columns of mail_log.
+            $searchFields = ['recipient_email', 'mail_type', 'subject', 'status', 'error_log'];
 
             if ($isAdmin) {
                 $searchFields[] = 'body_html';
