@@ -162,6 +162,12 @@ function getRealPageLoaderCode(): string {
 		'var import_Enums = { ECommonEvents: { PAGE_RELOADED: "PAGE_RELOADED" } };'
 	);
 
+	// The default timeout lives in its own module now; any number will do here.
+	code = code.replace(
+		/var import_PageLoaderDefaults = __toESM\(require\("@common\/Dom\/PageLoader\/PageLoaderDefaults"\)\);/g,
+		'var import_PageLoaderDefaults = { default: 5000 };'
+	);
+
 	// Replace the final loadStyles/swapBody call with no-op
 	code = code.replace(
 		/return PageLoader\.loadStyles\(stylesToLoad\)\s*\.then\(\(\) => PageLoader\.swapBody\(doc, scriptsToLoad\)\);/g,

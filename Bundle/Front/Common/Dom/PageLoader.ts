@@ -237,8 +237,8 @@ export const PageLoader = {
             }
         }
 
-        return this.loadStyles(stylesToLoad)
-            .then(() => this.swapBody(doc, scriptsToLoad));
+        return PageLoader.loadStyles(stylesToLoad)
+            .then(() => PageLoader.swapBody(doc, scriptsToLoad));
     },
 
     /**
@@ -290,10 +290,10 @@ export const PageLoader = {
                     body.removeChild(n);
                 }
             }
-            body.appendChild(this.buildBodyFragment(doc));
+            body.appendChild(PageLoader.buildBodyFragment(doc));
             // Clear the click-time "leaving" dim so the new content isn't faded.
             body.classList.remove('page-leaving', 'page-swapping');
-            return this.loadScripts(scriptsToLoad).then(emitReloaded);
+            return PageLoader.loadScripts(scriptsToLoad).then(emitReloaded);
         };
 
         const prefersReduce = typeof window !== 'undefined'
@@ -313,12 +313,12 @@ export const PageLoader = {
             // has rendered + hydrated.
             const incoming = document.createElement('div');
             incoming.className = 'page-swap-incoming';
-            incoming.appendChild(this.buildBodyFragment(doc));
+            incoming.appendChild(PageLoader.buildBodyFragment(doc));
 
             body.classList.add('page-swapping');
             body.appendChild(incoming);
 
-            return this.loadScripts(scriptsToLoad)
+            return PageLoader.loadScripts(scriptsToLoad)
                 .then(emitReloaded)
                 .then(() => new Promise<void>((resolve) => {
                     let done = false;
