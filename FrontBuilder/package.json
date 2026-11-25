@@ -9,7 +9,7 @@
     "build": "rspack build --config rspack.config.ts",
     "dev": "rspack build --watch --config rspack.config.ts",
     "serve": "rspack serve --config rspack.config.ts",
-    "lint": "cd .. && oxlint Bundle/Front FrontBuilder Kernel/Io/GarnetCli/Admin/Ui/Front",
+    "lint": "cd .. && oxlint --deny-warnings Bundle/Front FrontBuilder Kernel/Io/GarnetCli/Admin/Ui/Front",
     "lint:fix": "cd .. && oxlint --fix Bundle/Front FrontBuilder Kernel/Io/GarnetCli/Admin/Ui/Front",
     "lint:carburetor": "cd .. && carburetor-lint --deny-warnings Bundle/Front Kernel/Io/GarnetCli/Admin/Ui/Front",
     "test:lint-plugin": "node oxlint-plugins/garnet-tsx-rules.test.js",

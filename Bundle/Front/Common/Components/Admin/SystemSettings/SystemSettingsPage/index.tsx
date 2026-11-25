@@ -41,6 +41,7 @@ type PageState = {
 };
 
 export class SystemSettingsPage extends AntiHookComponent<SystemSettingsPageProps> {
+    /** Stores the settings-page state and its loading and submission flags. */
     private readonly page = new Carburetor<PageState>({
         settings: this.props.settings,
         activeTab: 'smtp',
@@ -53,6 +54,7 @@ export class SystemSettingsPage extends AntiHookComponent<SystemSettingsPageProp
         sending: false,
         sendingTestEmail: false,
     });
+    /** Selects the state fields consumed by the page render. */
     private readonly view = this.connectSelection(() => this.page, data => ({
         settings: data.settings,
         activeTab: data.activeTab,
@@ -65,25 +67,32 @@ export class SystemSettingsPage extends AntiHookComponent<SystemSettingsPageProp
         sending: data.sending,
         sendingTestEmail: data.sendingTestEmail,
     }));
+    /** Prevents concurrent settings submissions. */
     private sendingGuard = false;
+    /** Prevents concurrent test-email requests. */
     private testEmailGuard = false;
+    /** Tracks the inputs used for the last history load. */
     private historyDependencies: {activeTab: TabKey; historyListUrl: string | undefined} | null = null;
 
+    /** Starts loading history when the page mounts. */
     public componentDidMount(): void {
         super.componentDidMount();
         this.syncHistory();
     }
 
+    /** Reloads history when the page's relevant props or state change. */
     public componentDidUpdate(previousProps: Readonly<SystemSettingsPageProps>): void {
         super.componentDidUpdate(previousProps);
         this.syncHistory();
     }
 
+    /** Clears history dependencies before unmounting. */
     public componentWillUnmount(): void {
         this.historyDependencies = null;
         super.componentWillUnmount();
     }
 
+    /** Loads history when its tab or endpoint changes. */
     private syncHistory(): void {
         const activeTab = this.page.getData().activeTab;
         const {historyListUrl} = this.props;
@@ -93,49 +102,62 @@ export class SystemSettingsPage extends AntiHookComponent<SystemSettingsPageProp
         if (activeTab === 'history') void this.loadHistory();
     }
 
+    /** Replaces the settings held by the page. */
     private readonly setSettings: React.Dispatch<React.SetStateAction<SettingsData>> = (value) => {
         const state = this.page.getData();
         const settings = typeof value === 'function' ? value(this.page.snapshot().settings) : value;
         this.page.setData({...state, settings});
     };
 
+    /** Changes the selected settings tab. */
     private readonly setActiveTab = (activeTab: TabKey): void => {
         this.page.setData({...this.page.getData(), activeTab});
     };
 
+    /** Updates the test-email address in page state. */
     private readonly setTestEmail: React.Dispatch<React.SetStateAction<string>> = (value) => {
         const state = this.page.getData();
         this.page.setData({...state, testEmail: typeof value === 'function' ? value(state.testEmail) : value});
     };
 
+    /** Updates the selected test-email message type. */
     private readonly setTestMailType: React.Dispatch<React.SetStateAction<string>> = (value) => {
         const state = this.page.getData();
         this.page.setData({...state, testMailType: typeof value === 'function' ? value(state.testMailType) : value});
     };
 
+    /** Selects or clears the history row shown in the detail modal. */
     private readonly setHistoryDetail = (historyDetail: EntityHistoryRow | null): void => {
         this.page.setData({...this.page.getData(), historyDetail});
     };
 
+    /** Closes the selected history-row detail. */
     private readonly closeHistoryDetail = (): void => { this.setHistoryDetail(null); };
+    /** Reloads the history list. */
     private readonly refreshHistory = (): void => { void this.loadHistory(); };
 
+    /** Fetches and stores the history rows when an endpoint is configured. */
     private readonly loadHistory = async (): Promise<void> => {
         const {historyListUrl} = this.props;
         if (!historyListUrl) return;
         this.page.setData({...this.page.getData(), historyLoading: true});
         try {
-            const resp = await sendPost<{limit: number}, {success: boolean; rows: EntityHistoryRow[]}>(historyListUrl, {limit: 200});
+            const resp = await sendPost<
+                {limit: number},
+                {success: boolean; rows: EntityHistoryRow[]}
+            >(historyListUrl, {limit: 200});
             this.page.setData({...this.page.getData(), historyRows: resp.rows ?? []});
         } finally {
             this.page.setData({...this.page.getData(), historyLoading: false});
         }
     };
 
+    /** Updates one SMTP setting while preserving the other SMTP values. */
     private readonly updateSmtp = (field: keyof SettingsData['smtp'], value: string | boolean): void => {
         this.setSettings(prev => ({...prev, smtp: {...prev.smtp, [field]: value}}));
     };
 
+    /** Saves the current settings and reports the result to the user. */
     private readonly handleSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
         event.preventDefault();
         if (this.sendingGuard) return;
@@ -184,6 +206,7 @@ export class SystemSettingsPage extends AntiHookComponent<SystemSettingsPageProp
         })();
     };
 
+    /** Sends a test email using the current SMTP settings. */
     private readonly handleSendTestEmail = (): void => {
         if (this.testEmailGuard) return;
         this.testEmailGuard = true;
@@ -221,6 +244,7 @@ export class SystemSettingsPage extends AntiHookComponent<SystemSettingsPageProp
         })();
     };
 
+    /** Renders the active settings form tab. */
     private renderForm(state: PageState) {
         const {settings, activeTab, testEmail, testMailType, sending, sendingTestEmail} = state;
         const {labels, uploadImageUrl, deleteImageUrl, mailTypes = []} = this.props;
@@ -242,7 +266,12 @@ export class SystemSettingsPage extends AntiHookComponent<SystemSettingsPageProp
                     />
                 )}
                 {activeTab === 'registration' && (
-                    <RegistrationTab settings={settings} setSettings={this.setSettings} labels={labels} sending={sending} />
+                    <RegistrationTab
+                        settings={settings}
+                        setSettings={this.setSettings}
+                        labels={labels}
+                        sending={sending}
+                    />
                 )}
                 {activeTab === 'penalty' && labels.cancellationPenaltyTab && (
                     <PenaltyTab settings={settings} setSettings={this.setSettings} labels={labels} sending={sending} />
@@ -264,6 +293,7 @@ export class SystemSettingsPage extends AntiHookComponent<SystemSettingsPageProp
         );
     }
 
+    /** Renders optional panels and the history tab. */
     private renderPanels(state: PageState) {
         const {activeTab, historyRows, historyLoading} = state;
         const {opcacheResetUrl, versionInfo, historyListUrl, labels} = this.props;
@@ -284,6 +314,7 @@ export class SystemSettingsPage extends AntiHookComponent<SystemSettingsPageProp
         );
     }
 
+    /** Renders the page's message, tab strip, form, and panels. */
     private renderSection(state: PageState) {
         const {message, activeTab} = state;
         const {labels, historyListUrl} = this.props;
@@ -294,19 +325,29 @@ export class SystemSettingsPage extends AntiHookComponent<SystemSettingsPageProp
                         {message.text}
                     </div>
                 )}
-                <SettingsTabStrip activeTab={activeTab} labels={labels} historyListUrl={historyListUrl} onSelect={this.setActiveTab} />
+                <SettingsTabStrip
+                    activeTab={activeTab}
+                    labels={labels}
+                    historyListUrl={historyListUrl}
+                    onSelect={this.setActiveTab}
+                />
                 {this.renderForm(state)}
                 {this.renderPanels(state)}
             </div>
         );
     }
 
+    /** Renders the system-settings page. */
     public render() {
         const state = this.view() as PageState;
         const {labels} = this.props;
         return (
             <div className="settings-page" data-test-id="admin-system-settings">
-                <PageHeader title={labels.title} subtitle={labels.subtitle} icon={<Settings size={22} aria-hidden="true" />} />
+                <PageHeader
+                    title={labels.title}
+                    subtitle={labels.subtitle}
+                    icon={<Settings size={22} aria-hidden="true" />}
+                />
                 {this.renderSection(state)}
                 {state.historyDetail && (
                     <EntityHistoryDetailModal row={state.historyDetail} onClose={this.closeHistoryDetail} />

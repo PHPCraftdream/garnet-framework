@@ -15,6 +15,7 @@ export class ImageUploader {
     // server keeps the full image and the crop frame can be rebuilt on re-edit.
     protected selectedFile: File | null = null;
 
+    /** Creates an uploader and registers its file-input handler. */
     constructor(
         protected fileInput: DomEl<HTMLInputElement>,
         protected previewImage: DomEl<HTMLImageElement>,
@@ -26,6 +27,7 @@ export class ImageUploader {
         fileInput.getEl()?.addEventListener('input', this.handleFileUpload, {capture: true});
     }
 
+    /** Sends an upload blob and its crop data to the change handler. */
     protected changeBlob = (data: Blob | null): void => {
         if  (data) {
             this.fileInput.clearErrors();
@@ -34,6 +36,7 @@ export class ImageUploader {
         this.onChange(data, this.cropData);
     }
 
+    /** Persists the selected original file or the changed crop. */
     protected handleSaveCrop = () => {
         if (this.selectedFile) {
             // New upload: send the ORIGINAL file (+ crop rectangle), not the crop.
@@ -45,6 +48,7 @@ export class ImageUploader {
         }
     };
 
+    /** Stores the latest crop rectangle and schedules its save. */
     protected handleCropEvent = (cropParams: Cropper.CropEvent) => {
         if (this.lastCrop) {
             clearTimeout(this.lastCrop);
@@ -62,6 +66,7 @@ export class ImageUploader {
         this.lastCrop = setTimeout(this.handleSaveCrop, 400) as unknown as number;
     };
 
+    /** Selects image data and initializes the cropper when necessary. */
     public selectImageData = (imageData: string | null): Promise<unknown> => {
         const timeout = 150;
 
@@ -99,6 +104,7 @@ export class ImageUploader {
         this.onChange(null, null);
     };
 
+    /** Validates and loads the file currently selected by the input. */
     public handleFileUpload = (): void => {
         const inputElement = this.fileInput.getEl();
         const file = inputElement.files?.[0];
@@ -140,7 +146,7 @@ export class ImageUploader {
 
         const reader = new FileReader();
 
-        reader.onload = (event: ProgressEvent<FileReader>) => {
+        reader.addEventListener('load', (event: ProgressEvent<FileReader>) => {
             const dataUrl = event.target?.result as string;
 
             // The browser's `type` comes from the extension, so a text file
@@ -153,44 +159,37 @@ export class ImageUploader {
             // silently amounts to no action is the worst of both answers.
             const probe = new Image();
 
-            probe.onerror = (): void => {
+            probe.addEventListener('error', (): void => {
                 this.fileInput.clearErrors();
                 this.fileInput.appendError(I18nFramework.Upload_BrokenImage());
                 this.fileInput.getEl().value = '';
                 this.selectedFile = null;
-            };
+            }, {once: true});
 
-            probe.onload = (): void => {
+            probe.addEventListener('load', (): void => {
                 this.selectedFile = file;
 
                 const img = this.previewImage.getEl();
 
                 img.src = dataUrl;
                 this.selectImageData(img.src);
-            };
+            }, {once: true});
 
             probe.src = dataUrl;
-        };
+        }, {once: true});
 
         reader.readAsDataURL(file);
     }
 
+    /** Returns the current cropper instance. */
     public getCropper = (): Cropper => {
         return this.cropper;
     }
 
+    /** Returns the most recently recorded crop rectangle. */
     public getCropData = (): ICropData => {
         return this.cropData;
     }
 }
 
-export const makeUploadImage = (
-    fileInput: DomEl<HTMLInputElement>,
-    previewImage: DomEl<HTMLImageElement>,
-    cropperOptions: Record<string, number | boolean | string>,
-    onSelect: TSelectImageHandler,
-    onChange: TCropHandler,
-    onCropChange?: (cropData: ICropData) => void,
-): ImageUploader => {
-    return new ImageUploader(fileInput, previewImage, cropperOptions, onSelect, onChange, onCropChange);
-}
+export {makeUploadImage} from '@common/Utils/Upload/makeUploadImage';

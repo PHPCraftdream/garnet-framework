@@ -10,7 +10,10 @@ interface Props {
     size?: 'sm' | 'md';
 }
 
-export default function SendButton({onClick, disabled, sending, label, testId, variant = 'primary', size = 'md'}: Props) {
+/** Renders the send action with its pending state and selected visual variant. */
+export default function SendButton({
+    onClick, disabled, sending, label, testId, variant = 'primary', size = 'md',
+}: Props) {
     return (
         <button
             type="button"

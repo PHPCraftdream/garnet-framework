@@ -23,26 +23,34 @@ declare global {
 }
 import {IApiSuccessResponse} from '@common/Support/Models';
 import {I18nFramework} from '@framework/I18nGen/I18nFramework';
-import {iconSvg} from '@common/Utils/Ui/LucideIcons';
+import {iconSvg} from '@common/Utils/Ui/iconSvg';
 
 export class GridTable extends Component {
+	/** Grid.js instance rendered for this table. */
 	protected grid!: Grid;
+	/** React root used to render the edit form. */
 	protected formRoot: Root | null = null;
+	/** Parsed grid configuration. */
 	protected gridInfo: IGridInfo | null = null;
+	/** Container holding the rendered grid. */
 	protected gridContainer: DomEl<HTMLElement> | null = null;
+	/** Container holding the edit form. */
 	protected editContainer: DomEl<HTMLElement> | null = null;
+	/** Container holding grid header actions. */
 	protected headerContainer: DomEl<HTMLElement> | null = null;
 
+	/** Row data indexed by escaped identifier. */
 	protected dataMap: Record<string, Record<string, unknown>> = {};
+	/** Column metadata indexed by field identifier. */
 	protected columnsMap: Record<string, {name: string; type: TGridFieldType}> = {};
+	/** Whether the current form creates a new row. */
 	protected isNewItem: boolean = false;
 
+	/** Initializes containers, grid data, and delegated action handlers. */
 	init = () => {
-		const main = this;
-
-		this.editContainer = main.get('.edit-container');
-		this.gridContainer = main.get('.grid-container');
-		this.headerContainer = main.get('.header-container');
+		this.editContainer = this.get('.edit-container');
+		this.gridContainer = this.get('.grid-container');
+		this.headerContainer = this.get('.header-container');
 
 		this.get('.grid-info')?.then((domEl) => {
 			const obj = decode(domEl.text());
@@ -66,6 +74,7 @@ export class GridTable extends Component {
 		classClick(this.mainElement, 'grid-add', this.addHandler);
 	};
 
+	/** Renders the add action in the grid header. */
 	protected buildHeader = () => {
 		if (!this.headerContainer) return;
 
@@ -76,6 +85,7 @@ export class GridTable extends Component {
 		this.headerContainer.setHtml(addButton);
 	};
 
+	/** Creates and renders the Grid.js instance from the current configuration. */
 	protected buildGrid = () => {
 		if (!this.gridInfo || !this.gridContainer) return;
 
@@ -88,6 +98,7 @@ export class GridTable extends Component {
 		this.grid.render(this.gridContainer.getEl());
 	};
 
+	/** Builds columns and display rows from grid configuration. */
 	protected makeGridConfig = (
 		gridData: IGridInfo,
 	): {columns: TColumn[]; data: (string | ReturnType<typeof html>)[][]} => {
@@ -152,8 +163,12 @@ export class GridTable extends Component {
 					newRow.push(
 						html(
 							`<div class="d-flex gap-2">` +
-								`<span class="garnet-control grid-edit" data-id="${rowId}" title="${I18nFramework.Common_Edit?.() || 'Edit'}">${iconSvg('file-text')}</span>` +
-								`<span class="garnet-control grid-delete" data-id="${rowId}" title="${I18nFramework.Common_Delete?.() || 'Delete'}">${iconSvg('trash-2')}</span>` +
+								`<span class="garnet-control grid-edit" data-id="${rowId}" ` +
+									`title="${I18nFramework.Common_Edit?.() || 'Edit'}">` +
+									`${iconSvg('file-text')}</span>` +
+								`<span class="garnet-control grid-delete" data-id="${rowId}" ` +
+									`title="${I18nFramework.Common_Delete?.() || 'Delete'}">` +
+									`${iconSvg('trash-2')}</span>` +
 								`</div>`,
 						),
 					);
@@ -188,6 +203,7 @@ export class GridTable extends Component {
 		return {columns, data};
 	};
 
+	/** Mounts the form used to create or edit a row. */
 	protected renderForm = (data: Record<string, unknown>, isNew: boolean) => {
 		const el = this.editContainer?.getEl();
 		if (!el || !this.gridInfo) return;
@@ -208,6 +224,7 @@ export class GridTable extends Component {
 		);
 	};
 
+	/** Closes the edit form and restores the grid. */
 	protected cancelEditHandler = () => {
 		if (!this.editContainer || !this.gridContainer || !this.grid) return;
 
@@ -224,6 +241,7 @@ export class GridTable extends Component {
 		this.grid.forceRender();
 	};
 
+	/** Opens the form for the selected existing row. */
 	protected editHandler = (event: MouseEvent, element: HTMLElement): void => {
 		const id = element?.dataset?.id;
 		if (!id) return;
@@ -235,6 +253,7 @@ export class GridTable extends Component {
 		this.editContainer?.toggle(true);
 	};
 
+	/** Opens an empty form to add a row. */
 	protected addHandler = (): void => {
 		this.isNewItem = true;
 		this.renderForm({}, true);
@@ -242,6 +261,7 @@ export class GridTable extends Component {
 		this.editContainer?.toggle(true);
 	};
 
+	/** Deletes the selected row through the configured endpoint. */
 	protected deleteHandler = async (event: MouseEvent, element: HTMLElement): Promise<void> => {
 		const id = element?.dataset?.id;
 		if (!id || !this.gridInfo) return;
@@ -280,7 +300,11 @@ export class GridTable extends Component {
 			} else {
 				// TODO: tech debt — replace native alert() with showToast/ConfirmModal once
 				// GridTable is migrated to React (see deleteHandler note above).
-				alert((result as {error?: string}).error || I18nFramework.Common_DeleteError?.() || 'Failed to delete item');
+				alert(
+					(result as {error?: string}).error ||
+						I18nFramework.Common_DeleteError?.() ||
+						'Failed to delete item',
+				);
 			}
 		} catch (e) {
 			console.error('Delete error:', e);
@@ -289,6 +313,7 @@ export class GridTable extends Component {
 		}
 	};
 
+	/** Updates local grid data after a successful form submission. */
 	protected handleSuccess = (result: IApiSuccessResponse<Record<string, unknown>>): void => {
 		if (!this.gridInfo) return;
 

@@ -40,6 +40,7 @@ export class PrefetchCache<T = unknown> {
     private readonly ttlMs: number;
     private readonly maxEntries: number;
 
+    /** Creates the cache with its time-to-live and capacity limits. */
     constructor(options: PrefetchCacheOptions = {}) {
         this.ttlMs = options.ttlMs ?? DEFAULT_TTL_MS;
         this.maxEntries = options.maxEntries ?? DEFAULT_MAX_ENTRIES;
@@ -51,6 +52,7 @@ export class PrefetchCache<T = unknown> {
         return Date.now() - entry.settledAt < this.ttlMs;
     }
 
+    /** Evicts the oldest cached entry when capacity is reached. */
     private evictOldestIfFull(): void {
         if (this.entries.size < this.maxEntries) return;
         const oldestKey = this.entries.keys().next().value;
@@ -66,6 +68,7 @@ export class PrefetchCache<T = unknown> {
         this.entries.delete(oldestKey);
     }
 
+    /** Starts and stores a cacheable fetch request. */
     private start(key: string, fetcher: Fetcher<T>): CacheEntry<T> {
         const controller = new AbortController();
         const entry: CacheEntry<T> = {
@@ -103,6 +106,7 @@ export class PrefetchCache<T = unknown> {
         return entry;
     }
 
+    /** Returns a fresh entry, removing expired entries. */
     private freshEntry(key: string): CacheEntry<T> | null {
         const existing = this.entries.get(key);
         if (existing && this.isFresh(existing)) return existing;
@@ -119,11 +123,8 @@ export class PrefetchCache<T = unknown> {
         this.start(key, fetcher);
     }
 
-    /**
-     * Consume: return the in-flight/fresh promise for `key` if one exists,
-     * otherwise start a fresh request. Call from the actual click handler.
-     * Marks the entry consumed so cancel()/eviction won't abort it out from
-     * under the caller.
+    /** Returns the cached promise or starts a request.
+     * Marks the entry consumed so cancellation and eviction do not abort it.
      */
     consume(key: string, fetcher: Fetcher<T>): Promise<T> {
         const fresh = this.freshEntry(key);
@@ -132,11 +133,8 @@ export class PrefetchCache<T = unknown> {
         return entry.promise;
     }
 
-    /**
-     * Cancel an in-flight, not-yet-consumed prefetch — e.g. the pointer left
-     * the link before the click. No-op for anything already consumed or
-     * already settled: consumed work is never interrupted, settled work has
-     * nothing left to cancel.
+    /** Aborts an in-flight prefetch that has not been consumed.
+     * Does nothing for consumed or already settled requests.
      */
     cancel(key: string): void {
         const entry = this.entries.get(key);

@@ -1,4 +1,7 @@
+/** Translation data for EN. */
 export class I18nDataEN {
-    static lang = 'EN';
-    static hello_dashboard = 'Hello, world!';
+    /** Language code for this translation set. */
+    static lang = "EN";
+    /** Translation text for `hello_dashboard`. */
+    static hello_dashboard = "Hello, world!";
 }

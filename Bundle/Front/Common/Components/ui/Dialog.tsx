@@ -2,8 +2,6 @@ import * as React from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 
 const Dialog = DialogPrimitive.Root;
-const DialogTrigger = DialogPrimitive.Trigger;
-const DialogClose = DialogPrimitive.Close;
 
 const DialogPortal = DialogPrimitive.Portal;
 
@@ -42,10 +40,6 @@ const DialogContent = React.forwardRef<
 ));
 DialogContent.displayName = 'DialogContent';
 
-const DialogHeader: React.FC<Omit<React.HTMLAttributes<HTMLDivElement>, 'className'>> = (props) => (
-    <div className="radix-dialog-header" {...props} />
-);
-
 const DialogTitle = React.forwardRef<
     React.ElementRef<typeof DialogPrimitive.Title>,
     Omit<React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>, 'className'>
@@ -70,4 +64,4 @@ const DialogDescription = React.forwardRef<
 ));
 DialogDescription.displayName = 'DialogDescription';
 
-export {Dialog, DialogTrigger, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogDescription};
+export {Dialog};

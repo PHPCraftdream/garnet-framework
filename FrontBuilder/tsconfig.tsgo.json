@@ -19,6 +19,7 @@
     "strictNullChecks": false,
     "noImplicitAny": false,
     "paths": {
+      "@/*": ["./*"],
       "@common/*": ["../Bundle/Front/Common/*"],
       "@framework/*": ["../Bundle/Front/*"],
       "gridjs/dist/src/types": ["./node_modules/gridjs/dist/src/types"]

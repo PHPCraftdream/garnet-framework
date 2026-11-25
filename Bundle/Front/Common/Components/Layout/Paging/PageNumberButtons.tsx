@@ -16,10 +16,12 @@ interface PageButtonProps {
 }
 
 class PageButton extends React.Component<PageButtonProps> {
+    /** Calls the page-change callback for this page. */
     private readonly handleClick = (): void => {
         this.props.onPageChange(this.props.page);
     };
 
+    /** Renders a page button or page-number strip. */
     public render() {
         const {page, current, loading} = this.props;
         return (
@@ -39,14 +41,22 @@ class PageButton extends React.Component<PageButtonProps> {
 
 /** Numbered page-link strip used by Pagination. */
 export class PageNumberButtons extends React.Component<Props> {
+    /** Renders a page number or an ellipsis marker. */
     private readonly renderPage = (page: number | '...', index: number): React.ReactNode => {
         if (page === '...') {
             return <span key={`ellipsis-${index}`} className="common-pgn-ellipsis">...</span>;
         }
         const {currentPage, loading, onPageChange} = this.props;
-        return <PageButton key={page} page={page} current={page === currentPage} loading={loading} onPageChange={onPageChange} />;
+        return <PageButton
+            key={page}
+            page={page}
+            current={page === currentPage}
+            loading={loading}
+            onPageChange={onPageChange}
+        />;
     };
 
+    /** Renders a page button or page-number strip. */
     public render() {
         return <>{this.props.pages.map(this.renderPage)}</>;
     }

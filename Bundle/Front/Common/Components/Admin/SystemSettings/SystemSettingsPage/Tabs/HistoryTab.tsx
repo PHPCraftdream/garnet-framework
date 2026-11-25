@@ -3,7 +3,7 @@
  */
 import * as React from 'react';
 import {EntityHistoryRow, EntityHistoryTable} from '@common/Components/Admin/EntityHistory/EntityHistoryTable';
-import {SystemSettingsLabels} from '../types';
+import {SystemSettingsLabels} from '@common/Components/Admin/SystemSettings/SystemSettingsPage/types';
 
 interface HistoryTabProps {
     labels: SystemSettingsLabels;
@@ -13,6 +13,7 @@ interface HistoryTabProps {
     onRowClick: (row: EntityHistoryRow) => void;
 }
 
+/** Renders the settings change history and exposes refresh and row selection. */
 export const HistoryTab: React.FC<HistoryTabProps> = ({labels, historyRows, historyLoading, onRefresh, onRowClick}) => (
 <section
     className="settings-history-panel"

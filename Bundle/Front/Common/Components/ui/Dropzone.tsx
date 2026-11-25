@@ -33,14 +33,17 @@ export default class Dropzone extends AntiHookComponent<Props> {
     private readonly inputRef = React.createRef<HTMLInputElement>();
     private readonly store = new Carburetor<DropzoneState>({isDragging: false, uploading: false, error: null});
 
+    /** Handles setStateData. */
     private setStateData(update: Partial<DropzoneState>): void {
         this.store.setData({...this.store.getData(), ...update});
     }
 
+    /** Handles canAdd. */
     private canAdd(): boolean {
         return this.props.files.length < (this.props.maxFiles ?? 10);
     }
 
+    /** Handles uploadFile. */
     private readonly uploadFile = async (file: File): Promise<void> => {
         if (!this.canAdd()) return;
         const {uploadUrl, onUpload} = this.props;
@@ -52,7 +55,8 @@ export default class Dropzone extends AntiHookComponent<Props> {
             if (result.error) {
                 this.setStateData({error: result.error});
             } else {
-                onUpload({pendingId: result.pendingId, previewUrl: result.previewUrl, name: result.name, size: result.size});
+                onUpload({pendingId: result.pendingId, previewUrl: result.previewUrl,
+                    name: result.name, size: result.size});
             }
         } catch (err: any) {
             this.setStateData({error: err.message || 'Upload failed'});
@@ -61,6 +65,7 @@ export default class Dropzone extends AntiHookComponent<Props> {
         }
     };
 
+    /** Handles handleFiles. */
     private readonly handleFiles = (fileList: FileList | File[]): void => {
         const remaining = (this.props.maxFiles ?? 10) - this.props.files.length;
         for (const file of Array.from(fileList).slice(0, remaining)) {
@@ -68,6 +73,7 @@ export default class Dropzone extends AntiHookComponent<Props> {
         }
     };
 
+    /** Handles handleRemove. */
     private readonly handleRemove = async (event: React.MouseEvent<HTMLButtonElement>): Promise<void> => {
         event.stopPropagation();
         const pendingId = Number(event.currentTarget.value);
@@ -82,18 +88,21 @@ export default class Dropzone extends AntiHookComponent<Props> {
         onRemove(pendingId);
     };
 
+    /** Handles handleDragOver. */
     private readonly handleDragOver = (event: React.DragEvent): void => {
         event.preventDefault();
         event.stopPropagation();
         if (this.canAdd()) this.setStateData({isDragging: true});
     };
 
+    /** Handles handleDragLeave. */
     private readonly handleDragLeave = (event: React.DragEvent): void => {
         event.preventDefault();
         event.stopPropagation();
         this.setStateData({isDragging: false});
     };
 
+    /** Handles handleDrop. */
     private readonly handleDrop = (event: React.DragEvent): void => {
         event.preventDefault();
         event.stopPropagation();
@@ -101,10 +110,12 @@ export default class Dropzone extends AntiHookComponent<Props> {
         if (this.canAdd() && event.dataTransfer.files.length > 0) this.handleFiles(event.dataTransfer.files);
     };
 
+    /** Handles handleClick. */
     private readonly handleClick = (): void => {
         if (this.canAdd()) this.inputRef.current?.click();
     };
 
+    /** Handles handleInputChange. */
     private readonly handleInputChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
         if (event.target.files && event.target.files.length > 0) {
             this.handleFiles(event.target.files);
@@ -112,11 +123,13 @@ export default class Dropzone extends AntiHookComponent<Props> {
         }
     };
 
+    /** Handles renderFile. */
     private readonly renderFile = (file: UploadedFile) => {
         const {removeLabel = 'Remove'} = this.props;
         const size = file.size < 1024 ? file.size + 'B' : file.size < 1024 * 1024
             ? (file.size / 1024).toFixed(1) + 'KB' : (file.size / (1024 * 1024)).toFixed(1) + 'MB';
-        return <div key={file.pendingId} className="dropzone-preview" data-test-id={`dropzone-preview-${file.pendingId}`}>
+        return <div key={file.pendingId} className="dropzone-preview"
+            data-test-id={`dropzone-preview-${file.pendingId}`}>
             <img src={file.previewUrl} alt={file.name} className="dropzone-image" />
             <button type="button" className="dropzone-remove" title={removeLabel} value={file.pendingId}
                 onClick={this.handleRemove} data-test-id={`dropzone-remove-${file.pendingId}`}>×</button>
@@ -124,6 +137,7 @@ export default class Dropzone extends AntiHookComponent<Props> {
         </div>;
     };
 
+    /** Handles render. */
     public render() {
         const {isDragging, uploading, error} = this.useCarburetor(this.store);
         const {files, maxFiles = 10, accept = 'image/jpeg,image/png,image/gif,image/webp', label,
@@ -148,7 +162,9 @@ export default class Dropzone extends AntiHookComponent<Props> {
                 </div>}
             </div>
             {error && <div className="dropzone-error" data-test-id="dropzone-error">{error}</div>}
-            {files.length > 0 && <div className="dropzone-previews" data-test-id="dropzone-previews">{files.map(this.renderFile)}</div>}
+            {files.length > 0 && <div className="dropzone-previews" data-test-id="dropzone-previews">
+                {files.map(this.renderFile)}
+            </div>}
         </div>;
     }
 }

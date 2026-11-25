@@ -1,7 +1,8 @@
 import * as React from 'react';
 import {AntiHookComponent} from '@react-carburetor/core';
 import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
-import {formatHistoryTime, renderHistoryValue} from './entityHistoryFormat';
+import {formatHistoryTime} from './entityHistoryFormat';
+import {renderHistoryValue} from './renderHistoryValue';
 
 export interface EntityHistoryRow {
     id: number;
@@ -28,6 +29,7 @@ interface Props {
     rowTestIdPrefix?: string;
 }
 
+/** Renders one changed field in a history row. */
 function renderDiffEntry([field, change]: [string, {old: unknown; new: unknown}]) {
     return <li key={field}>
         <strong>{field}:</strong>{' '}
@@ -38,12 +40,14 @@ function renderDiffEntry([field, change]: [string, {old: unknown; new: unknown}]
 }
 
 export class EntityHistoryTable extends AntiHookComponent<Props> {
+    /** Opens the selected history row. */
     private readonly onOpen = (event: React.MouseEvent<HTMLButtonElement>): void => {
         const index = Number(event.currentTarget.dataset.rowIndex);
         const row = this.props.rows[index];
         if (row) this.props.onRowClick?.(row);
     };
 
+    /** Renders the changed fields or optional comment for one row. */
     private renderChanges(row: EntityHistoryRow, index: number) {
         const fields = row.diff ? Object.keys(row.diff) : [];
         if (fields.length === 0) return row.comment ? <span>{row.comment}</span> : <span className="entity-history-muted">—</span>;
@@ -54,17 +58,23 @@ export class EntityHistoryTable extends AntiHookComponent<Props> {
         return <ul className="entity-history-diff">{Object.entries(row.diff!).map(renderDiffEntry)}</ul>;
     }
 
+    /** Renders one history row. */
     private readonly renderRow = (row: EntityHistoryRow, index: number) => {
         const {showAction = true, rowTestIdPrefix = 'entity-history-row'} = this.props;
         const actor = row.actor_name || row.actor_login_resolved || row.actor_login || '—';
         return <tr key={row.id} className="entity-history-row" data-test-id={`${rowTestIdPrefix}-${row.id}`}>
             <td className="entity-history-time">{formatHistoryTime(row.created_at)}</td>
-            <td className="entity-history-cell"><span title={row.actor_id ? `#${row.actor_id}` : undefined}>{actor}</span></td>
-            {showAction && <td className="entity-history-cell"><code data-test-id={`entity-history-action-${row.id}`}>{row.action}</code></td>}
+            <td className="entity-history-cell">
+                <span title={row.actor_id ? `#${row.actor_id}` : undefined}>{actor}</span>
+            </td>
+            {showAction && <td className="entity-history-cell">
+                <code data-test-id={`entity-history-action-${row.id}`}>{row.action}</code>
+            </td>}
             <td className="entity-history-cell">{this.renderChanges(row, index)}</td>
         </tr>;
     };
 
+    /** Renders the history table. */
     public render() {
         const {rows, showAction = true, dataTestId = 'entity-history-table'} = this.props;
         return <table className="entity-history-table" data-test-id={dataTestId}>

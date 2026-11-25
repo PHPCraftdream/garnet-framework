@@ -2,6 +2,7 @@
  * Конструктор форм: собирает поля по описанию сетки и отправляет их.
  *
  * Файл называется index, чтобы путь импорта остался прежним —
+ *
  * @common/Components/Form/FormBuilder используют и GridTable, и форма
  * регистрации приложения, причём GridTable импортирует ещё и тип пропсов.
  */
@@ -16,7 +17,7 @@ import {ICropData, TFromMap, TFromNestedMap} from '@common/Support/Models';
 import {sendPostFormData} from '@common/Api/Send/sendPostFormData';
 import {makeFormData} from '@common/Api/Send/makeFormData';
 import {Loader2} from 'lucide-react';
-import {UncontrolledForm, type UncontrolledFormHandle} from '../UncontrolledForm';
+import {UncontrolledForm, type UncontrolledFormHandle} from '@common/Components/Form/UncontrolledForm';
 import {FormBuilderProps} from './types';
 import {runFieldValidation} from './validation';
 import {FormRow} from './FormRow';
@@ -43,6 +44,7 @@ class FormBuilderStatusState {
 	private cachedRevision = -1;
 	public readonly store: Carburetor<FormBuilderStatus>;
 
+/** Handles this operation. */
 	public constructor(initial: Record<string, any>) {
 		const {tracked, opaque} = this.splitValues(initial);
 		this.opaqueValues = opaque;
@@ -52,6 +54,7 @@ class FormBuilderStatusState {
 		});
 	}
 
+/** Handles this operation. */
 	private splitValues(values: Record<string, any>): {
 		tracked: Record<string, TrackedFieldValue>;
 		opaque: Map<string, unknown>;
@@ -61,11 +64,13 @@ class FormBuilderStatusState {
 		for (const [key, value] of Object.entries(values)) {
 			const isOpaque = value !== null && (typeof value === 'object' || typeof value === 'function');
 			if (isOpaque) opaque.set(key, value);
-			Object.defineProperty(tracked, key, {value: isOpaque ? null : value, enumerable: true, writable: true, configurable: true});
+			Object.defineProperty(tracked, key, {value: isOpaque ? null : value, enumerable: true, writable: true,
+    configurable: true});
 		}
 		return {tracked, opaque};
 	}
 
+/** Handles this operation. */
 	public readonly getValues = (): Record<string, any> => {
 		const state = this.store.getData();
 		if (this.cachedValues && this.cachedRevision === state.valuesRevision) return this.cachedValues;
@@ -79,6 +84,7 @@ class FormBuilderStatusState {
 		return values;
 	};
 
+/** Handles this operation. */
 	public readonly setValues: React.Dispatch<React.SetStateAction<Record<string, any>>> = update => {
 		const previous = this.getValues();
 		const values = typeof update === 'function' ? update(previous) : update;
@@ -90,20 +96,24 @@ class FormBuilderStatusState {
 		this.store.setData({...state, values: tracked, valuesRevision: state.valuesRevision + 1});
 	};
 
+/** Handles this operation. */
 	public readonly setFieldErrors: React.Dispatch<React.SetStateAction<Record<string, string>>> = update => {
 		const state = this.store.getData();
 		const fieldErrors = typeof update === 'function' ? update(state.fieldErrors) : update;
 		if (fieldErrors !== state.fieldErrors) this.store.setData({...state, fieldErrors});
 	};
 
+/** Handles this operation. */
 	public readonly setCommonErrors = (commonErrors: string[]): void => {
 		this.store.setData({...this.store.getData(), commonErrors});
 	};
 
+/** Handles this operation. */
 	public readonly setSubmitting = (submitting: boolean): void => {
 		this.store.setData({...this.store.getData(), submitting});
 	};
 
+/** Handles this operation. */
 	public readonly setProgress = (progress: number | null): void => {
 		this.store.setData({...this.store.getData(), progress});
 	};
@@ -115,11 +125,13 @@ type FormBuilderBodyProps = FormBuilderViewProps & {snapshot: TReadonly<FormBuil
 class FormBuilderView extends AntiHookComponent<FormBuilderViewProps> {
 	private readonly snapshot = this.connectSelection(() => this.props.status.store, state => state);
 
+/** Handles this operation. */
 	public render() {
 		return <FormBuilderBody {...this.props} snapshot={this.snapshot()} />;
 	}
 }
 
+/** Handles this operation. */
 function initialFormValues({detailsInfo, data, isNew = false}: FormBuilderProps): Record<string, any> {
 	const initial: Record<string, any> = {};
 	for (const column of detailsInfo.detailsFields) {
@@ -141,6 +153,7 @@ function initialFormValues({detailsInfo, data, isNew = false}: FormBuilderProps)
 export class FormBuilder extends AntiHookComponent<FormBuilderProps> {
 	private readonly status = new FormBuilderStatusState(initialFormValues(this.props));
 
+/** Handles this operation. */
 	public render() {
 		return <FormBuilderView {...this.props} status={this.status} />;
 	}
@@ -154,18 +167,22 @@ interface FormBuilderStatusPanelProps {
 	buttonText: string;
 }
 
+/** Handles this operation. */
 function renderCommonErrors(errors: readonly string[]): React.ReactNode[] {
 	const counts = new Map<string, number>();
 	const nodes: React.ReactNode[] = [];
 	for (const error of errors) {
 		const occurrence = counts.get(error) ?? 0;
 		counts.set(error, occurrence + 1);
-		nodes.push(<div key={JSON.stringify([error, occurrence])} className="form-builder-common-error" role="alert">{error}</div>);
+		nodes.push(<div key={JSON.stringify([error, occurrence])} className="form-builder-common-error"
+    role="alert">{error}</div>);
 	}
 	return nodes;
 }
 
-function FormBuilderStatusPanel({commonErrors, progress, submitting, onCancel, buttonText}: FormBuilderStatusPanelProps) {
+/** Handles this operation. */
+function FormBuilderStatusPanel({commonErrors, progress, submitting, onCancel, buttonText}:
+    FormBuilderStatusPanelProps) {
 	return (
 		<FormRow label={' '}>
 			{commonErrors.length > 0 && (
@@ -199,9 +216,11 @@ function FormBuilderStatusPanel({commonErrors, progress, submitting, onCancel, b
 class FormBuilderBody extends AntiHookComponent<FormBuilderBodyProps> {
 	private readonly photoDataRef = {current: {} as Record<string, Blob | null>};
 	private readonly cropInfoRef = {current: {} as Record<string, ICropData | null>};
-	private readonly inputRefs = {current: {} as Record<string, HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>};
+	private readonly inputRefs = {current: {} as Record<string, HTMLInputElement | HTMLSelectElement |
+    HTMLTextAreaElement>};
 	private readonly formRef = React.createRef<UncontrolledFormHandle>();
 
+/** Handles this operation. */
 	private readonly handleFieldChange = (column: string, value: any) => {
 		const {setValues, setFieldErrors} = this.props.status;
 		setValues(prev => ({...prev, [column]: value}));
@@ -213,14 +232,17 @@ class FormBuilderBody extends AntiHookComponent<FormBuilderBodyProps> {
 		});
 	};
 
+/** Handles this operation. */
 	private readonly handlePhotoChange = (column: string, file: Blob | null, cropInfo: ICropData | null) => {
 		const {photoDataRef, cropInfoRef} = this;
 		photoDataRef.current[column] = file;
 		cropInfoRef.current[column] = cropInfo;
 	};
 
+/** Handles this operation. */
 	private readonly handleSubmit = (formEl: HTMLFormElement | undefined) => {
-		const {status, detailsInfo, data, isNew = false, defaultValues = EMPTY_DEFAULT_VALUES, beforeSubmit, onSuccess, onFail} = this.props;
+		const {status, detailsInfo, data, isNew = false, defaultValues = EMPTY_DEFAULT_VALUES, beforeSubmit,
+    onSuccess, onFail} = this.props;
 		const {setFieldErrors, setCommonErrors, setSubmitting, setProgress} = status;
 		const values = status.getValues();
 		const {formRef, photoDataRef, cropInfoRef, inputRefs} = this;
@@ -367,15 +389,20 @@ class FormBuilderBody extends AntiHookComponent<FormBuilderBodyProps> {
 			});
 	};
 
-	private readonly handleFormSubmit = (_values: Record<string, string>, form: HTMLFormElement) => this.handleSubmit(form);
+/** Handles this operation. */
+	private readonly handleFormSubmit = (_values: Record<string, string>, form: HTMLFormElement) =>
+    this.handleSubmit(form);
 
+/** Handles this operation. */
 	private readonly renderField = (column: string) => {
 		const {detailsInfo, data, isNew = false, status, snapshot} = this.props;
 		return <FormBuilderFieldRow key={column} column={column} detailsInfo={detailsInfo} data={data}
-			isNew={isNew} value={status.getValues()[column]} error={snapshot.fieldErrors[column]} submitting={snapshot.submitting}
+			isNew={isNew} value={status.getValues()[column]} error={snapshot.fieldErrors[column]}
+    submitting={snapshot.submitting}
 			inputRefs={this.inputRefs} onFieldChange={this.handleFieldChange} onPhotoChange={this.handlePhotoChange} />;
 	};
 
+/** Handles this operation. */
 	render() {
 		const {detailsInfo, snapshot, isNew = false, onCancel, footer} = this.props;
 		const {commonErrors, progress, submitting} = snapshot;

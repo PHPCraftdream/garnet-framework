@@ -19,10 +19,12 @@ const comboboxOption = (item: IDataListItem) => ({value: String(item.value), lab
 const nativeOption = (item: IDataListItem) => <option key={item.value} value={item.value}>{item.text}</option>;
 
 class NativeDatalistSelect extends React.Component<DatalistSelectProps> {
+/** Handles this operation. */
 	private readonly handleChange = (event: React.ChangeEvent<HTMLSelectElement>): void => {
 		this.props.onChange(event.target.value);
 	};
 
+/** Handles this operation. */
 	public render() {
 		const {column, value, items, disabled} = this.props;
 		return (
@@ -39,6 +41,7 @@ class NativeDatalistSelect extends React.Component<DatalistSelectProps> {
 	}
 }
 
+/** Handles this operation. */
 export const DatalistSelect: React.FC<DatalistSelectProps> = ({column, value, items, disabled, onChange}) => {
 	if (items.length > 10) {
 		return (

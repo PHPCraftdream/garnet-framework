@@ -2,7 +2,8 @@ import {readNumber} from '@common/Utils/Str/readNumber';
 import {I18nFramework} from '@framework/I18nGen/I18nFramework';
 
 export const Validators = {
-    max_len: (value: string, args: string[], _el: HTMLInputElement): string | boolean => {
+    /** Accepts values within the configured maximum length. */
+    max_len: (value: string, args: readonly string[], _el: HTMLInputElement): string | boolean => {
         const val = readNumber(args?.[0]);
 
         if (value.length > val) {
@@ -12,7 +13,8 @@ export const Validators = {
         return true;
     },
 
-    min_len: (value: string, args: string[], _el: HTMLInputElement): string | boolean => {
+    /** Accepts values within the configured minimum length. */
+    min_len: (value: string, args: readonly string[], _el: HTMLInputElement): string | boolean => {
         const val = readNumber(args?.[0]);
 
         if (value.length < val) {
@@ -22,18 +24,20 @@ export const Validators = {
         return true;
     },
 
-    len: (value: string, args: string[], _el: HTMLInputElement): string | boolean => {
+    /** Accepts values whose length falls within the configured range. */
+    len: (value: string, args: readonly string[], _el: HTMLInputElement): string | boolean => {
         const min = readNumber(args?.[0]);
         const max = readNumber(args?.[1]);
 
-        if (value.length > max || value.length < min ) {
+        if (value.length > max || value.length < min) {
             return I18nFramework.Common_Len([min + '', max + '']);
         }
 
         return true;
     },
 
-    nameSymbols: (value: string, _args: string[], _el: HTMLInputElement): string | boolean => {
+    /** Accepts names containing letters, spaces, and commas. */
+    nameSymbols: (value: string, _args: readonly string[], _el: HTMLInputElement): string | boolean => {
         if (!/^[\p{L} ,]+$/u.test(value)) {
             return I18nFramework.Common_IncorrectValue();
         }
@@ -41,7 +45,8 @@ export const Validators = {
         return true;
     },
 
-    simpleText: (value: string, _args: string[], _el: HTMLInputElement): string | boolean => {
+    /** Accepts text containing letters, punctuation, symbols, and basic ASCII. */
+    simpleText: (value: string, _args: readonly string[], _el: HTMLInputElement): string | boolean => {
         if (!/^[\p{L}\p{P}\p{So} -~]*$/u.test(value)) {
             return I18nFramework.Common_IncorrectValue();
         }
@@ -49,7 +54,8 @@ export const Validators = {
         return true;
     },
 
-    in_array: (value: string, args: string[], _el: HTMLInputElement): string | boolean => {
+    /** Accepts only values listed in the arguments. */
+    in_array: (value: string, args: readonly string[], _el: HTMLInputElement): string | boolean => {
         const v = value + '';
 
         for (let arg of args) {
@@ -61,11 +67,13 @@ export const Validators = {
         return I18nFramework.Common_IncorrectValue();
     },
 
-    required: (value: string, _args: string[], _el: HTMLInputElement): string | boolean => {
+    /** Rejects an empty value. */
+    required: (value: string, _args: readonly string[], _el: HTMLInputElement): string | boolean => {
         return value ? true : I18nFramework.Common_RequiredValue();
     },
 
-    tzExists: (value: string, _args: string[], _el: HTMLInputElement): string | boolean => {
+    /** Accepts only browser-supported time zones. */
+    tzExists: (value: string, _args: readonly string[], _el: HTMLInputElement): string | boolean => {
         const browserTimeZones = Intl.supportedValuesOf('timeZone');
 
         for (let tz of browserTimeZones) {
@@ -77,7 +85,8 @@ export const Validators = {
         return I18nFramework.Common_IncorrectValue();
     },
 
-    email: (value: string, _args: string[], _el: HTMLInputElement): string | boolean => {
+    /** Accepts empty values or a basic email address. */
+    email: (value: string, _args: readonly string[], _el: HTMLInputElement): string | boolean => {
         if (!value) {
             return true;
         }
@@ -91,7 +100,8 @@ export const Validators = {
         return true;
     },
 
-    int: (value: string, _args: string[], _el: HTMLInputElement): string | boolean => {
+    /** Accepts empty values or an integer. */
+    int: (value: string, _args: readonly string[], _el: HTMLInputElement): string | boolean => {
         if (value === '' || value === null || value === undefined) {
             return true;
         }
@@ -103,7 +113,8 @@ export const Validators = {
         return true;
     },
 
-    min: (value: string, args: string[], _el: HTMLInputElement): string | boolean => {
+    /** Accepts values at least the configured minimum. */
+    min: (value: string, args: readonly string[], _el: HTMLInputElement): string | boolean => {
         const min = readNumber(args?.[0]);
         const numValue = value === '' ? Infinity : Number(value);
 
@@ -118,11 +129,12 @@ export const Validators = {
         return true;
     },
 
-    minVal: (value: string, args: string[], _el: HTMLInputElement): string | boolean => {
+    minVal: (value: string, args: readonly string[], _el: HTMLInputElement): string | boolean => {
         return Validators.min(value, args, _el);
     },
 
-    max: (value: string, args: string[], _el: HTMLInputElement): string | boolean => {
+    /** Accepts values at most the configured maximum. */
+    max: (value: string, args: readonly string[], _el: HTMLInputElement): string | boolean => {
         const max = readNumber(args?.[0]);
         const numValue = value === '' ? -Infinity : Number(value);
 
@@ -137,11 +149,12 @@ export const Validators = {
         return true;
     },
 
-    maxVal: (value: string, args: string[], _el: HTMLInputElement): string | boolean => {
+    maxVal: (value: string, args: readonly string[], _el: HTMLInputElement): string | boolean => {
         return Validators.max(value, args, _el);
     },
 
-    url: (value: string, _args: string[], _el: HTMLInputElement): string | boolean => {
+    /** Accepts empty values or valid URLs. */
+    url: (value: string, _args: readonly string[], _el: HTMLInputElement): string | boolean => {
         if (!value) {
             return true;
         }
@@ -153,7 +166,8 @@ export const Validators = {
         }
     },
 
-    alphanumeric: (value: string, _args: string[], _el: HTMLInputElement): string | boolean => {
+    /** Accepts empty values or ASCII letters and digits. */
+    alphanumeric: (value: string, _args: readonly string[], _el: HTMLInputElement): string | boolean => {
         if (!value) {
             return true;
         }
@@ -165,7 +179,8 @@ export const Validators = {
         return true;
     },
 
-    match: (value: string, args: string[], _el: HTMLInputElement): string | boolean => {
+    /** Requires the value to match the selected input. */
+    match: (value: string, args: readonly string[], _el: HTMLInputElement): string | boolean => {
         const targetSelector = args?.[0];
 
         if (!targetSelector) {
@@ -185,7 +200,8 @@ export const Validators = {
         return true;
     },
 
-    pattern: (value: string, args: string[], _el: HTMLInputElement): string | boolean => {
+    /** Requires the value to satisfy a supplied regular expression. */
+    pattern: (value: string, args: readonly string[], _el: HTMLInputElement): string | boolean => {
         if (!value) {
             return true;
         }

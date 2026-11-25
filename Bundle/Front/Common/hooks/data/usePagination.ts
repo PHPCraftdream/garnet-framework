@@ -47,6 +47,7 @@ export interface UsePaginationResult<T> {
     refresh: () => void;
 }
 
+/** Provides page data and navigation controls. */
 export function usePagination<T = Record<string, unknown>>(options: UsePaginationOptions<T>): UsePaginationResult<T> {
     const {url, params, perPage, debounceMs = 300} = options;
     const [controller] = useState(() => new PaginationController(options));

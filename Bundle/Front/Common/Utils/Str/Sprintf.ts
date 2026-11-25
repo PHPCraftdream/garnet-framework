@@ -12,7 +12,7 @@
  * Hence one pass: `%%` is matched by the same regex as the placeholders, and
  * consumes no argument.
  */
-export const sprintf = (format: string, args: (string | number)[]): string => {
+export const sprintf = (format: string, args: readonly (string | number)[]): string => {
     let index = 0;
     return format.replace(/%[sd%]/g, (match: string): string => {
         if (match === '%%') {

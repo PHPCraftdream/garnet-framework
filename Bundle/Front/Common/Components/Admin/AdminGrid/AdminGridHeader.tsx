@@ -19,8 +19,10 @@ interface HeaderCellProps {
 }
 
 class AdminGridHeaderCell extends React.Component<HeaderCellProps> {
+    /** Handles handleSort. */
     private readonly handleSort = (): void => { this.props.onSort(this.props.column.key); };
 
+    /** Handles render. */
     public render() {
         const {column, sortable, active, sortDir} = this.props;
         return (
@@ -32,7 +34,8 @@ class AdminGridHeaderCell extends React.Component<HeaderCellProps> {
                 onClick={sortable ? this.handleSort : undefined}
             >
                 {column.label}
-                {sortable && <span className={active ? 'admin-grid-sort-active' : 'admin-grid-sort-idle'}>{active ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>}
+                {sortable && <span className={active ? 'admin-grid-sort-active' :
+                    'admin-grid-sort-idle'}>{active ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}</span>}
             </th>
         );
     }
@@ -40,11 +43,15 @@ class AdminGridHeaderCell extends React.Component<HeaderCellProps> {
 
 /** Controlled header; the grid owns sorting and all server requests. */
 export class AdminGridHeader extends React.Component<Props> {
+    /** Handles renderColumn. */
     private readonly renderColumn = (column: GridColumnConfig): React.ReactNode => {
         const {sortFields, sortField, sortDir, onSort} = this.props;
-        return <AdminGridHeaderCell key={column.key} column={column} sortable={sortFields.includes(column.key)} active={sortField === column.key} sortDir={sortDir} onSort={onSort} />;
+        return <AdminGridHeaderCell key={column.key} column={column}
+            sortable={sortFields.includes(column.key)} active={sortField === column.key} sortDir={sortDir}
+            onSort={onSort} />;
     };
 
+    /** Handles render. */
     public render() {
         return (
             <thead>

@@ -1,5 +1,6 @@
 import * as React from 'react';
-import {AdminGrid as BaseAdminGrid, AdminGridProps, AdminGridHandle} from '../AdminGrid/AdminGrid';
+import {AdminGrid as BaseAdminGrid, AdminGridProps, AdminGridHandle} from
+    '@common/Components/Admin/AdminGrid/AdminGrid';
 
 /**
  * Generic AdminGrid wrapper for the Common AdminLog components.
@@ -7,6 +8,7 @@ import {AdminGrid as BaseAdminGrid, AdminGridProps, AdminGridHandle} from '../Ad
  * directly by BaseAdminGrid via `@framework/I18nGen/I18nFramework`.
  * Kept as a thin wrapper so callers can plug in log-specific renders later.
  */
+/** Handles AdminLogGridInner. */
 function AdminLogGridInner<T>(props: AdminGridProps<T>, ref: React.ForwardedRef<AdminGridHandle<T>>) {
     return <BaseAdminGrid {...props} ref={ref} />;
 }

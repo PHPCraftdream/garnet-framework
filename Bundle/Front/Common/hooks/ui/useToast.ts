@@ -20,12 +20,16 @@ export interface ToastControls {
 }
 
 class ToastStore extends Carburetor<ToastState> {
+    /** Initializes hidden toast state. */
     constructor() { super({message: '', type: 'primary', visible: false}); }
+    /** Returns the current toast snapshot. */
     readonly snapshot = () => this.getData();
+    /** Subscribes to toast-state changes. */
     readonly subscribeSnapshot = (listener: () => void) => {
         const id = this.subscribe(listener);
         return () => this.unsubscribe(id);
     };
+    /** Updates the current toast. */
     readonly setToast = (value: ToastState | ((previous: ToastState) => ToastState)) => {
         const previous = this.getData();
         const next = typeof value === 'function' ? value(previous) : value;
@@ -39,10 +43,13 @@ class ToastStore extends Carburetor<ToastState> {
     };
 }
 
+/** Creates a toast store. */
 function createToastStore(): ToastStore { return new ToastStore(); }
 
+/** Creates the hidden toast state. */
 function hiddenToast(previous: ToastState): ToastState { return {...previous, visible: false}; }
 
+/** Provides toast state and actions. */
 export function useToast(): ToastControls {
     const [store] = useState(createToastStore);
     const toast = useSyncExternalStore(store.subscribeSnapshot, store.snapshot, store.snapshot);

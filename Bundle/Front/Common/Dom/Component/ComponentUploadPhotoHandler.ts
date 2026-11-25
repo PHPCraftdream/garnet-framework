@@ -19,6 +19,7 @@ interface IParams {
     visibilityMode?: 'photo-data-attribute';
 }
 
+/** Implements componentUploadPhotoHandler for the shared frontend API. */
 export const componentUploadPhotoHandler = (params: IParams): Promise<IResult> => {
     const {
         photoBlock,

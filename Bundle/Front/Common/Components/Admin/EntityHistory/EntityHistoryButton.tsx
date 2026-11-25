@@ -14,7 +14,7 @@ interface Props {
     title?: string;
     /** Override list endpoint. Defaults to /admin/entity-history/~list. */
     listUrl?: string;
-    /** Template for the rendered button, e.g. `<button className="my-function" />`; defaults to the framework button. */
+    /** Template for the rendered button; defaults to the framework button. */
     button?: React.ReactElement<React.ButtonHTMLAttributes<HTMLButtonElement>>;
     /** Optional data-test-id suffix; final id is `entity-history-btn-${suffix}` if provided. */
     testIdSuffix?: string;
@@ -31,26 +31,38 @@ interface Props {
 export class EntityHistoryButton extends AntiHookComponent<Props> {
     private readonly store = new Carburetor({open: false});
 
+    /** Opens the history drawer. */
     private readonly open = (): void => {
         this.store.setData({open: true});
     };
+    /** Closes the history drawer. */
     private readonly close = (): void => {
         this.store.setData({open: false});
     };
 
+    /** Builds the configured history button. */
     private renderButton(label: string, testId: string, title: string) {
         const {button = DEFAULT_BUTTON} = this.props;
         return React.cloneElement(button, {type: 'button', onClick: this.open, 'data-test-id': testId, title}, label);
     }
 
+    /** Renders the trigger and the drawer when open. */
     public render() {
         const {entityType, entityId, label, title, listUrl, testIdSuffix} = this.props;
         const {open} = this.useCarburetor(this.store);
         const buttonLabel = label ?? t.EntityHistory_DefaultLabel();
-        const testId = testIdSuffix ? `entity-history-btn-${testIdSuffix}` : `entity-history-btn-${entityType}-${entityId}`;
+        const testId = testIdSuffix
+            ? `entity-history-btn-${testIdSuffix}`
+            : `entity-history-btn-${entityType}-${entityId}`;
         return <>
             {this.renderButton(buttonLabel, testId, title ?? buttonLabel)}
-            {open && <EntityHistoryDrawer entityType={entityType} entityId={entityId} title={title} listUrl={listUrl} onClose={this.close} />}
+            {open && <EntityHistoryDrawer
+                entityType={entityType}
+                entityId={entityId}
+                title={title}
+                listUrl={listUrl}
+                onClose={this.close}
+            />}
         </>;
     }
 }

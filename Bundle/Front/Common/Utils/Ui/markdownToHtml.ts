@@ -5,39 +5,47 @@ const SAFE_TAGS = ['a', 'blockquote', 'br', 'code', 'em', 'h2', 'h3', 'hr', 'li'
 const SAFE_ATTR = ['class', 'href', 'rel', 'target'];
 const SAFE_URI = /^(?:(?:https?|mailto|tel):|\/|#|\?)/i;
 
+/** Converts a page slug token to a safe-path anchor snippet. */
 function pageLink(_: string, slug: string): string {
     return `<a href="${appUrl('/page/view~' + slug)}" class="text-accent">${slug}</a>`;
 }
 
+/** Removes the markdown quote prefix from a line. */
 function blockquoteLine(line: string): string {
     return line.replace(/^>\s+/, '');
 }
 
+/** Converts a markdown blockquote into blockquote markup. */
 function blockquote(match: string): string {
     const lines = match.trim().split('\n').map(blockquoteLine);
     return '<blockquote>' + lines.join('<br/>') + '</blockquote>';
 }
 
+/** Converts a markdown unordered-list line to an item. */
 function unorderedItem(line: string): string {
     const text = line.replace(/^[-*]\s+/, '');
     return `<li>${text}</li>`;
 }
 
+/** Wraps markdown unordered-list lines in a list element. */
 function unorderedList(match: string): string {
     const items = match.trim().split('\n').map(unorderedItem).join('');
     return `<ul>${items}</ul>`;
 }
 
+/** Converts a markdown ordered-list line to an item. */
 function orderedItem(line: string): string {
     const text = line.replace(/^\d+\.\s+/, '');
     return `<li>${text}</li>`;
 }
 
+/** Wraps markdown ordered-list lines in a list element. */
 function orderedList(match: string): string {
     const items = match.trim().split('\n').map(orderedItem).join('');
     return `<ol>${items}</ol>`;
 }
 
+/** Wraps a plain-text markdown block in a paragraph when needed. */
 function paragraph(block: string): string {
     block = block.trim();
     if (!block) return '';
@@ -54,7 +62,7 @@ function paragraph(block: string): string {
  * Supports: **bold**, *italic*, [link](url), - list items, ordered lists, paragraphs, line breaks, hr,
  * ## headings, > blockquotes, {link:slug} page links.
  */
-export function markdownToHtml(md: string): string {
+function markdownToHtml(md: string): string {
     if (!md) return '';
 
     // Replace {link:slug} with a visual placeholder
@@ -99,3 +107,5 @@ export function markdownToHtml(md: string): string {
         ALLOWED_URI_REGEXP: SAFE_URI,
     });
 }
+
+export {markdownToHtml};

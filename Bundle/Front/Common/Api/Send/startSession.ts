@@ -14,6 +14,7 @@ export interface StartSessionResponse {
 
 const emptyErrorBody = () => ({});
 
+/** Implements startSession for the shared frontend API. */
 export const startSession = async (consentMarketing: boolean): Promise<string> => {
     const payload: StartSessionPayload & { action: 'start-session' } = {
         action: 'start-session',

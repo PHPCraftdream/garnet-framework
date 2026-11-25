@@ -4,47 +4,75 @@ import {SaveButton} from './SaveButton';
 
 /** Controlled support-contact settings. */
 export class ContactsTab extends React.Component<TabProps> {
+    /** Updates the support email in the controlled settings. */
     private readonly handleEmail = (event: React.ChangeEvent<HTMLInputElement>): void => {
         this.props.setSettings(prev => ({
             ...prev,
-            supportContacts: {...(prev.supportContacts ?? {email: '', phone: '', telegram: ''}), email: event.target.value},
+            supportContacts: {
+                ...(prev.supportContacts ?? {email: '', phone: '', telegram: ''}),
+                email: event.target.value,
+            },
         }));
     };
 
+    /** Updates the support phone in the controlled settings. */
     private readonly handlePhone = (event: React.ChangeEvent<HTMLInputElement>): void => {
         this.props.setSettings(prev => ({
             ...prev,
-            supportContacts: {...(prev.supportContacts ?? {email: '', phone: '', telegram: ''}), phone: event.target.value},
+            supportContacts: {
+                ...(prev.supportContacts ?? {email: '', phone: '', telegram: ''}),
+                phone: event.target.value,
+            },
         }));
     };
 
+    /** Updates the support Telegram handle in the controlled settings. */
     private readonly handleTelegram = (event: React.ChangeEvent<HTMLInputElement>): void => {
         this.props.setSettings(prev => ({
             ...prev,
-            supportContacts: {...(prev.supportContacts ?? {email: '', phone: '', telegram: ''}), telegram: event.target.value},
+            supportContacts: {
+                ...(prev.supportContacts ?? {email: '', phone: '', telegram: ''}),
+                telegram: event.target.value,
+            },
         }));
     };
 
+    /** Renders the editable support-contact fields. */
     private renderFields() {
         const {settings, labels} = this.props;
         return (
             <div className="settings-fields-grid">
                 <label className="settings-field-label">
                     <span className="settings-field-caption">{labels.supportContactEmail}</span>
-                    <input type="email" className="settings-native-field" value={settings.supportContacts?.email ?? ''} onChange={this.handleEmail} />
+                    <input
+                        type="email"
+                        className="settings-native-field"
+                        value={settings.supportContacts?.email ?? ''}
+                        onChange={this.handleEmail}
+                    />
                 </label>
                 <label className="settings-field-label">
                     <span className="settings-field-caption">{labels.supportContactPhone}</span>
-                    <input className="settings-native-field" value={settings.supportContacts?.phone ?? ''} onChange={this.handlePhone} />
+                    <input
+                        className="settings-native-field"
+                        value={settings.supportContacts?.phone ?? ''}
+                        onChange={this.handlePhone}
+                    />
                 </label>
                 <label className="settings-field-label-wide">
                     <span className="settings-field-caption">{labels.supportContactTelegram}</span>
-                    <input className="settings-native-field" placeholder="@username" value={settings.supportContacts?.telegram ?? ''} onChange={this.handleTelegram} />
+                    <input
+                        className="settings-native-field"
+                        placeholder="@username"
+                        value={settings.supportContacts?.telegram ?? ''}
+                        onChange={this.handleTelegram}
+                    />
                 </label>
             </div>
         );
     }
 
+    /** Renders the support-contact settings panel. */
     public render() {
         const {labels, sending} = this.props;
         return (

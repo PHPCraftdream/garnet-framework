@@ -6,8 +6,10 @@ import {ConfirmModal} from '@common/Components/Feedback/ConfirmModal';
 import {useSending} from '@common/hooks/data/useSending';
 import {useConfirm} from '@common/hooks/ui/useConfirm';
 import {markdownToHtml} from '@common/Utils/Ui/markdownToHtml';
-import {SNIPPET_TYPES, SNIPPET_TYPE_LABELS} from '../types';
-import {StaticPage, Snippet, Labels} from '../types';
+import {SNIPPET_TYPES} from '@common/Components/Admin/StaticPages/StaticPagesAdminIsland/values/snippetTypes';
+import {SNIPPET_TYPE_LABELS} from
+    '@common/Components/Admin/StaticPages/StaticPagesAdminIsland/values/snippetTypeLabels';
+import {StaticPage, Snippet, Labels} from '@common/Components/Admin/StaticPages/StaticPagesAdminIsland/types';
 import {HeaderEditor, HeaderData} from './HeaderEditor';
 import {FooterEditor, FooterData} from './FooterEditor';
 
@@ -33,29 +35,51 @@ class SnippetEditorView extends AntiHookComponent<EditorProps> {
         localContent: this.props.initialSnippet?.content ?? '',
         showPreview: false,
     });
-    private readonly view = this.connectSelection(() => this.ui, state => ({snippet: state.snippet, localContent: state.localContent, showPreview: state.showPreview}));
+    private readonly view = this.connectSelection(
+        () => this.ui,
+        state => ({snippet: state.snippet, localContent: state.localContent, showPreview: state.showPreview}),
+    );
     private readonly textareaRef = React.createRef<HTMLTextAreaElement>();
 
+    /** Synchronizes the loaded snippet when its initial data arrives. */
     public componentDidUpdate(previous: EditorProps) {
         super.componentDidUpdate(previous);
-        if (previous.initialSnippet !== this.props.initialSnippet && this.props.initialSnippet && !this.ui.getData().snippet) {
+        if (
+            previous.initialSnippet !== this.props.initialSnippet
+            && this.props.initialSnippet
+            && !this.ui.getData().snippet
+        ) {
             this.ui.setData({...this.ui.getData(), snippet: {...this.props.initialSnippet}});
         }
     }
 
-    private readonly changeName = (event: React.ChangeEvent<HTMLInputElement>) => this.updateField('name', event.target.value);
-    private readonly changeSlug = (event: React.ChangeEvent<HTMLInputElement>) => this.updateField('slug', event.target.value);
-    private readonly changeActive = (event: React.ChangeEvent<HTMLInputElement>) => this.updateField('is_active', event.target.checked ? 1 : 0);
-    private readonly changeContent = (event: React.ChangeEvent<HTMLTextAreaElement>) => this.ui.setData({...this.ui.getData(), localContent: event.target.value});
-    private readonly handleStructuredChange = (data: any) => this.ui.setData({...this.ui.getData(), localContent: JSON.stringify(data)});
+    /** Copies a changed snippet name into editor state. */
+    private readonly changeName = (event: React.ChangeEvent<HTMLInputElement>) =>
+        this.updateField('name', event.target.value);
+    /** Copies a changed snippet slug into editor state. */
+    private readonly changeSlug = (event: React.ChangeEvent<HTMLInputElement>) =>
+        this.updateField('slug', event.target.value);
+    /** Saves the active checkbox value in editor state. */
+    private readonly changeActive = (event: React.ChangeEvent<HTMLInputElement>) =>
+        this.updateField('is_active', event.target.checked ? 1 : 0);
+    /** Copies textarea changes into the local content. */
+    private readonly changeContent = (event: React.ChangeEvent<HTMLTextAreaElement>) =>
+        this.ui.setData({...this.ui.getData(), localContent: event.target.value});
+    /** Serializes structured editor data into local content. */
+    private readonly handleStructuredChange = (data: any) =>
+        this.ui.setData({...this.ui.getData(), localContent: JSON.stringify(data)});
+    /** Switches from preview back to editing. */
     private readonly showEdit = () => this.ui.setData({...this.ui.getData(), showPreview: false});
+    /** Shows the content preview. */
     private readonly showPreview = () => this.ui.setData({...this.ui.getData(), showPreview: true});
 
+    /** Updates a field on the current snippet when one is loaded. */
     private updateField(field: keyof Snippet, value: string | number) {
         const state = this.ui.getData();
         if (state.snippet) this.ui.setData({...state, snippet: {...state.snippet, [field]: value}});
     }
 
+    /** Updates editor content when the selected snippet type changes. */
     private readonly handleTypeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const newType = event.target.value;
         const state = this.ui.getData();
@@ -65,7 +89,10 @@ class SnippetEditorView extends AntiHookComponent<EditorProps> {
             let parsed: any;
             try { parsed = JSON.parse(localContent); } catch { parsed = null; }
             if (newType === 'header' && (!parsed || !Array.isArray(parsed.items))) {
-                localContent = JSON.stringify({logo: {url: '', alt: '', link: '/', height: 40}, items: [], layout: 'left', sticky: false});
+                    localContent = JSON.stringify({
+                        logo: {url: '', alt: '', link: '/', height: 40},
+                        items: [], layout: 'left', sticky: false,
+                    });
             } else if (newType === 'footer' && (!parsed || !Array.isArray(parsed.columns))) {
                 localContent = JSON.stringify({columns: [], copyright: '', layout: 'columns'});
             }
@@ -73,6 +100,7 @@ class SnippetEditorView extends AntiHookComponent<EditorProps> {
         this.ui.setData({...state, snippet: {...state.snippet, snippet_type: newType}, localContent});
     };
 
+    /** Wraps selected textarea text in Markdown markers from the clicked control. */
     private readonly insertMarkdown = (event: React.MouseEvent<HTMLButtonElement>) => {
         const ta = this.textareaRef.current;
         if (!ta) return;
@@ -92,6 +120,7 @@ class SnippetEditorView extends AntiHookComponent<EditorProps> {
         });
     };
 
+    /** Saves the current snippet fields and edited content. */
     private readonly handleSave = () => {
         const state = this.ui.getData();
         if (!state.snippet) return;
@@ -114,6 +143,7 @@ class SnippetEditorView extends AntiHookComponent<EditorProps> {
         });
     };
 
+    /** Confirms and submits deletion of the current snippet. */
     private readonly handleDelete = async () => {
         const current = this.ui.getData().snippet;
         if (!current) return;
@@ -130,14 +160,17 @@ class SnippetEditorView extends AntiHookComponent<EditorProps> {
         });
     };
 
+    /** Renders an option for a snippet type. */
     private readonly renderTypeOption = (type: string) => (
         <option key={type} value={type}>{(SNIPPET_TYPE_LABELS[type] ?? (() => type))(this.props.labels)}</option>
     );
 
+    /** Renders the editor using its connected state. */
     public render() {
         return this.renderEditor(this.view() as EditorState);
     }
 
+    /** Renders the structured or Markdown content editor for a snippet. */
     private renderContentEditor(state: EditorState, snippet: Snippet) {
         const {labels, pages, uploadImageUrl, deleteImageUrl, sending} = this.props;
         const {localContent, showPreview} = state;
@@ -145,37 +178,79 @@ class SnippetEditorView extends AntiHookComponent<EditorProps> {
             let data: any;
             try { data = JSON.parse(localContent) || {}; } catch { data = {}; }
             if (snippet.snippet_type === 'header') {
-                const headerData: HeaderData = {logo: data.logo || {url: '', alt: '', link: '/', height: 40}, items: Array.isArray(data.items) ? data.items : [], layout: data.layout || 'left', sticky: !!data.sticky};
-                return <HeaderEditor data={headerData} onChange={this.handleStructuredChange} labels={labels} pages={pages} uploadImageUrl={uploadImageUrl} deleteImageUrl={deleteImageUrl} />;
+                const headerData: HeaderData = {
+                    logo: data.logo || {url: '', alt: '', link: '/', height: 40},
+                    items: Array.isArray(data.items) ? data.items : [],
+                    layout: data.layout || 'left',
+                    sticky: !!data.sticky,
+                };
+                return <HeaderEditor
+                    data={headerData}
+                    onChange={this.handleStructuredChange}
+                    labels={labels}
+                    pages={pages}
+                    uploadImageUrl={uploadImageUrl}
+                    deleteImageUrl={deleteImageUrl}
+                />;
             }
-            const footerData: FooterData = {columns: Array.isArray(data.columns) ? data.columns : [], copyright: data.copyright || '', layout: data.layout || 'columns'};
-            return <FooterEditor data={footerData} onChange={this.handleStructuredChange} labels={labels} pages={pages} />;
+            const footerData: FooterData = {
+                columns: Array.isArray(data.columns) ? data.columns : [],
+                copyright: data.copyright || '',
+                layout: data.layout || 'columns',
+            };
+            return <FooterEditor
+                data={footerData}
+                onChange={this.handleStructuredChange}
+                labels={labels}
+                pages={pages}
+            />;
         }
         const isMarkdownType = snippet.snippet_type !== 'variable';
         return <>
             {isMarkdownType && <div className="snippet-format-bar">
-                <button type="button" className="snippet-format-bold" data-before="**" data-after="**" onClick={this.insertMarkdown} title="Bold">B</button>
-                <button type="button" className="snippet-format-italic" data-before="*" data-after="*" onClick={this.insertMarkdown} title="Italic">I</button>
-                <button type="button" className="snippet-format-button" data-before="## " onClick={this.insertMarkdown} title="Heading 2">H2</button>
-                <button type="button" className="snippet-format-button" data-before="### " onClick={this.insertMarkdown} title="Heading 3">H3</button>
+                <button type="button" className="snippet-format-bold" data-before="**" data-after="**"
+                    onClick={this.insertMarkdown} title="Bold">B</button>
+                <button type="button" className="snippet-format-italic" data-before="*" data-after="*"
+                    onClick={this.insertMarkdown} title="Italic">I</button>
+                <button type="button" className="snippet-format-button" data-before="## "
+                    onClick={this.insertMarkdown} title="Heading 2">H2</button>
+                <button type="button" className="snippet-format-button" data-before="### "
+                    onClick={this.insertMarkdown} title="Heading 3">H3</button>
                 <span className="snippet-format-divider" />
-                <button type="button" className="snippet-format-button" data-before="[" data-after="](url)" onClick={this.insertMarkdown} title="Link">Link</button>
-                <button type="button" className="snippet-format-button" data-before="- " onClick={this.insertMarkdown} title="List">List</button>
-                <button type="button" className="snippet-format-button" data-before="1. " onClick={this.insertMarkdown} title="Ordered list">OL</button>
+                <button type="button" className="snippet-format-button" data-before="[" data-after="](url)"
+                    onClick={this.insertMarkdown} title="Link">Link</button>
+                <button type="button" className="snippet-format-button" data-before="- "
+                    onClick={this.insertMarkdown} title="List">List</button>
+                <button type="button" className="snippet-format-button" data-before="1. "
+                    onClick={this.insertMarkdown} title="Ordered list">OL</button>
                 <span className="snippet-format-divider" />
-                <button type="button" className="snippet-format-button" data-before="> " onClick={this.insertMarkdown} title="Quote">Quote</button>
-                <button type="button" className="snippet-format-button" data-before={'\n---\n'} onClick={this.insertMarkdown} title="Horizontal rule">HR</button>
+                <button type="button" className="snippet-format-button" data-before="> "
+                    onClick={this.insertMarkdown} title="Quote">Quote</button>
+                <button type="button" className="snippet-format-button" data-before={'\n---\n'}
+                    onClick={this.insertMarkdown} title="Horizontal rule">HR</button>
                 <span className="snippet-format-divider" />
                 <div className="snippet-mode">
-                    <button type="button" className="snippet-mode-button" aria-pressed={!showPreview} onClick={this.showEdit}>Edit</button>
-                    <button type="button" className="snippet-mode-button" aria-pressed={showPreview} onClick={this.showPreview}>Preview</button>
+                    <button type="button" className="snippet-mode-button" aria-pressed={!showPreview}
+                        onClick={this.showEdit}>Edit</button>
+                    <button type="button" className="snippet-mode-button" aria-pressed={showPreview}
+                        onClick={this.showPreview}>Preview</button>
                 </div>
             </div>}
-            {showPreview && isMarkdownType ? <div className="md-preview" dangerouslySetInnerHTML={{__html: markdownToHtml(localContent)}} /> :
-                <textarea ref={this.textareaRef} className="snippet-content" rows={12} value={localContent} onChange={this.changeContent} disabled={sending} />}
+            {showPreview && isMarkdownType ?
+                <div className="md-preview"
+                    dangerouslySetInnerHTML={{__html: markdownToHtml(localContent)}} /> :
+                <textarea
+                    ref={this.textareaRef}
+                    className="snippet-content"
+                    rows={12}
+                    value={localContent}
+                    onChange={this.changeContent}
+                    disabled={sending}
+                />}
         </>;
     }
 
+    /** Renders the snippet form, content editor, and confirmation modal. */
     private renderEditor(state: EditorState) {
         const {snippet} = state;
         const {labels, sending, confirmState, handleConfirm, handleCancel} = this.props;
@@ -185,22 +260,30 @@ class SnippetEditorView extends AntiHookComponent<EditorProps> {
             <section className="snippet-editor">
                 <div className="static-admin-toolbar">
                     <h2 className="static-admin-create-title">{labels.snippetsEditTitle}: {snippet.slug}</h2>
-                    <button type="button" className="snippet-delete" onClick={this.handleDelete} disabled={sending}>{labels.actionDelete}</button>
+                    <button type="button" className="snippet-delete" onClick={this.handleDelete}
+                    disabled={sending}>{labels.actionDelete}</button>
                 </div>
                 <div className="static-admin-snippets-fields">
-                    <label className="static-admin-label"><span className="static-admin-caption">{labels.snippetsName}</span>
+                    <label className="static-admin-label">
+                        <span className="static-admin-caption">{labels.snippetsName}</span>
                         <input className="static-admin-input" value={snippet.name} onChange={this.changeName} />
                     </label>
-                    <label className="static-admin-label"><span className="static-admin-caption">{labels.snippetsSlug}</span>
+                    <label className="static-admin-label">
+                        <span className="static-admin-caption">{labels.snippetsSlug}</span>
                         <input className="static-admin-input" value={snippet.slug} onChange={this.changeSlug} />
                     </label>
-                    <label className="static-admin-label"><span className="static-admin-caption">{labels.snippetsType}</span>
-                        <select className="static-admin-input" value={snippet.snippet_type} onChange={this.handleTypeChange}>{SNIPPET_TYPES.map(this.renderTypeOption)}</select>
+                    <label className="static-admin-label">
+                        <span className="static-admin-caption">{labels.snippetsType}</span>
+                        <select className="static-admin-input" value={snippet.snippet_type}
+                            onChange={this.handleTypeChange}>
+                            {SNIPPET_TYPES.map(this.renderTypeOption)}
+                        </select>
                     </label>
                 </div>
                 <div>{this.renderContentEditor(state, snippet)}</div>
                 <div className="snippet-save-row">
-                    <button type="button" className="snippet-save" onClick={this.handleSave} disabled={sending}>{labels.savePage}</button>
+                    <button type="button" className="snippet-save" onClick={this.handleSave}
+                        disabled={sending}>{labels.savePage}</button>
                     <label className="snippet-active-label">
                         <input type="checkbox" checked={!!snippet.is_active} onChange={this.changeActive} />
                         <span className="snippet-active-caption">{labels.snippetsActive}</span>
@@ -213,6 +296,7 @@ class SnippetEditorView extends AntiHookComponent<EditorProps> {
     }
 }
 
+/** Renders a snippet editor tab with sending and confirmation controls. */
 export const SnippetEditorTab: React.FC<SnippetEditorTabProps> = props => {
     const sending = useSending();
     const confirmation = useConfirm();

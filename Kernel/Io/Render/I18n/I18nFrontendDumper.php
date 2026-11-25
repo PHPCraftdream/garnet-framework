@@ -5,12 +5,13 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Render\I18n {
 
     class I18nFrontendDumper {
         /**
-         * @param array $langData
-         * @param string $dir
-         * @param string $bundleName
-         * @param bool $isFrameworkBundle
-         * @return void
-         * @throws CommonException
+         * Write typed frontend translations for a bundle.
+         *
+         * @param array $langData Translation maps indexed by language code.
+         * @param string $dir Existing output directory.
+         * @param string $bundleName Bundle identifier used in the export name.
+         * @param bool $isFrameworkBundle Whether this is the framework bundle.
+         * @throws CommonException When the frontend template cannot be read.
          */
         public static function dump(array $langData, string $dir, string $bundleName, bool $isFrameworkBundle): void {
             $dir = realpath($dir);
@@ -24,26 +25,31 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Render\I18n {
 
             foreach ($langData as $lang => $data) {
                 $className = "I18nData{$lang}";
-                $classNames[] = $className;
                 $fileName = "{$className}.ts";
-
-                $fields = ["    static lang = '{$lang}';"];
+                $fields = [
+                    '    /** Language code for this translation set. */',
+                    '    lang: ' . self::formatStringLiteral((string)$lang, '    lang: ') . ',',
+                ];
+                $hasTranslations = false;
 
                 foreach ($data as $key => $value) {
-                    if (mb_strtolower($key) !== 'lang') {
-                        $v = str_replace("'", "\\'", $value);
-                        $fields[] = "    static {$key} = '{$v}';";
-                        $methods[$key] = $key;
+                    if (mb_strtolower((string)$key) === 'lang') {
+                        continue;
                     }
+
+                    $key = (string)$key;
+                    $fields[] = "    /** Translation text for `{$key}`. */";
+                    $fields[] = "    {$key}: " . self::formatStringLiteral((string)$value, "    {$key}: ") . ',';
+                    $methods[$key] = $key;
+                    $hasTranslations = true;
                 }
 
-                if (count($fields) < 2) {
+                if (!$hasTranslations) {
                     continue;
                 }
 
-                $fields = join("\n", $fields);
-
-                $content = "export class {$className} {\n{$fields}\n}\n";
+                $classNames[] = $className;
+                $content = "/** Translation data for {$lang}. */\nexport const {$className} = {\n" . join("\n", $fields) . "\n} as const;\n";
                 file_put_contents($dir . DIRECTORY_SEPARATOR . $fileName, $content);
             }
 
@@ -52,7 +58,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Render\I18n {
             $imports = join("\n", $imports);
             $className = "I18n{$bundleName}";
 
-            // Корень пакета: отсюда до него пять уровней (I18n → Render → Io → Kernel → корень).
+            // The package root is four levels above this directory.
             $baseDir = dirname(__DIR__, 4);
             $templatePath = $baseDir . DIRECTORY_SEPARATOR . 'Templates' . DIRECTORY_SEPARATOR . 'CodeFiles' . DIRECTORY_SEPARATOR . 'TrTs.template';
             $classTemplate = @file_get_contents($templatePath);
@@ -73,13 +79,51 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Render\I18n {
 
             $methods = array_values($methods);
             $methods = array_map(
-                fn ($m) => "    {$m}: t = (a = []) => this.t('{$m}', a);",
+                fn ($method) => "    /** Translation lookup for `{$method}`. */\n    {$method}: t = (a = []) => this.t('{$method}', a);",
                 $methods
             );
 
             $tr = str_replace('[[methods]]', join("\n", $methods), $tr);
-
             file_put_contents($dir . DIRECTORY_SEPARATOR . "{$className}.ts", $tr);
+        }
+
+        /**
+         * Format a string literal as concatenated, value-preserving lines.
+         */
+        private static function formatStringLiteral(string $value, string $prefix): string {
+            $characters = mb_str_split($value, 1, 'UTF-8');
+            $chunks = [];
+            $chunk = '';
+
+            foreach ($characters as $character) {
+                $candidate = $chunk . $character;
+                $encoded = json_encode($candidate, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+                if ($encoded === false) {
+                    $encoded = "''";
+                }
+
+                $firstLineLength = mb_strlen($prefix . $encoded . ' +', 'UTF-8');
+                $continuationLength = mb_strlen('        ' . $encoded . ' +', 'UTF-8');
+
+                if ($chunk !== '' && max($firstLineLength, $continuationLength) > 120) {
+                    $chunks[] = $chunk;
+                    $chunk = $character;
+                } else {
+                    $chunk = $candidate;
+                }
+            }
+
+            if ($chunk !== '' || $chunks === []) {
+                $chunks[] = $chunk;
+            }
+
+            $literals = array_map(
+                static fn ($part) => json_encode($part, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: "''",
+                $chunks
+            );
+
+            return join(" +\n        ", $literals);
         }
     }
 }

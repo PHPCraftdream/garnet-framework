@@ -8,7 +8,10 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "@/*": ["../Front/*"]
+    }
   },
   "include": ["specs/**/*.ts", "helpers/**/*.ts", "playwright.config.ts"]
 }

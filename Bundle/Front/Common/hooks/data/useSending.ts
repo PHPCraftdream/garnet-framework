@@ -2,12 +2,16 @@ import {useState, useCallback, useRef, useSyncExternalStore} from 'react';
 import {Carburetor} from '@react-carburetor/core';
 
 class SendingStore extends Carburetor<{sending: boolean}> {
+    /** Initializes the sending state. */
     constructor() { super({sending: false}); }
+    /** Returns the current sending snapshot. */
     readonly snapshot = () => this.getData();
+    /** Subscribes to sending-state changes. */
     readonly subscribeSnapshot = (listener: () => void) => {
         const id = this.subscribe(listener);
         return () => this.unsubscribe(id);
     };
+    /** Updates the sending state. */
     readonly setSending = (sending: boolean) => {
         const previous = this.getData();
         if (previous.sending === sending) return;
@@ -20,8 +24,10 @@ class SendingStore extends Carburetor<{sending: boolean}> {
     };
 }
 
+/** Creates a sending-state store. */
 function createSendingStore(): SendingStore { return new SendingStore(); }
 
+/** Provides sending state and a guarded async runner. */
 export function useSending() {
     const [store] = useState(createSendingStore);
     const {sending} = useSyncExternalStore(store.subscribeSnapshot, store.snapshot, store.snapshot);

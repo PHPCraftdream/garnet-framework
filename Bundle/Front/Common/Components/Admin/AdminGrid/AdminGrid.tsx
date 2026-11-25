@@ -1,8 +1,8 @@
 import * as React from 'react';
 import {forwardRef} from 'react';
 import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
-import type {PageResponse} from '../../../hooks/data/usePagination';
-import {PaginationController} from '../../../hooks/data/PaginationController';
+import type {PageResponse} from '@common/hooks/data/usePagination';
+import {PaginationController} from '@common/hooks/data/PaginationController';
 import {AdminGridPagination} from './AdminGridPagination';
 import {GlobalRenders, GridConfig} from './types';
 import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
@@ -51,6 +51,7 @@ export interface AdminGridProps<T> {
 
 type SortDir = 'asc' | 'desc';
 
+/** Handles getField. */
 function getField(row: unknown, field: string): unknown {
     return (row as Record<string, unknown>)[field];
 }
@@ -65,6 +66,7 @@ type NetworkProps<T> = ControllerProps<T> & GridState & {
 const emptyRenders: Record<string, never> = {};
 const emptyGlobalRenders: GlobalRenders = {};
 
+/** Handles createCellRenderer. */
 function createCellRenderer<T>(renders: RowRenders<T>, globalRenders: GlobalRenders) {
     return (row: T, key: string): React.ReactNode => {
         if (renders[key]) return renders[key]!(row);
@@ -83,7 +85,8 @@ class AdminGridNetwork<T> extends AntiHookComponent<NetworkProps<T>, NetworkStat
         params: this.createParams(),
     });
     public state: NetworkState<T> = {snapshot: this.pagination.snapshot()};
-    private readonly handle: AdminGridHandle<T> = {setItems: this.pagination.setItems, refresh: this.pagination.refresh};
+    private readonly handle: AdminGridHandle<T> = {setItems: this.pagination.setItems, refresh:
+        this.pagination.refresh};
     private attachedRef: NetworkProps<T>['gridRef'] = null;
     private unsubscribe?: () => void;
     private readonly updateOnParentRender = true;
@@ -93,11 +96,13 @@ class AdminGridNetwork<T> extends AntiHookComponent<NetworkProps<T>, NetworkStat
         render: ReturnType<typeof createCellRenderer<T>>;
     };
 
+    /** Handles createParams. */
     private createParams() {
         const {query, sortField, sortDir, extraParams} = this.props;
         return {query, sortField, sortDir, ...extraParams};
     }
 
+    /** Handles updateRef. */
     private updateRef(ref: NetworkProps<T>['gridRef']): void {
         if (this.attachedRef === ref) return;
         const previous = this.attachedRef;
@@ -110,15 +115,18 @@ class AdminGridNetwork<T> extends AntiHookComponent<NetworkProps<T>, NetworkStat
         else if (ref) ref.current = this.handle;
     }
 
+    /** Handles shouldComponentUpdate. */
     public shouldComponentUpdate(nextProps: Readonly<NetworkProps<T>>, nextState: Readonly<NetworkState<T>>): boolean {
         return super.shouldComponentUpdate(nextProps, nextState) || this.updateOnParentRender;
     }
 
+    /** Handles syncSnapshot. */
     private readonly syncSnapshot = (): void => {
         const snapshot = this.pagination.snapshot();
         this.setState(previous => previous.snapshot === snapshot ? null : {snapshot});
     };
 
+    /** Handles componentDidMount. */
     public componentDidMount(): void {
         super.componentDidMount();
         this.unsubscribe = this.pagination.subscribeSnapshot(this.syncSnapshot);
@@ -127,6 +135,7 @@ class AdminGridNetwork<T> extends AntiHookComponent<NetworkProps<T>, NetworkStat
         this.updateRef(this.props.gridRef);
     }
 
+    /** Handles componentDidUpdate. */
     public componentDidUpdate(previousProps: Readonly<NetworkProps<T>>): void {
         super.componentDidUpdate(previousProps);
         const {pageUrl, query, sortField, sortDir, extraParams, gridRef} = this.props;
@@ -138,6 +147,7 @@ class AdminGridNetwork<T> extends AntiHookComponent<NetworkProps<T>, NetworkStat
         this.updateRef(gridRef);
     }
 
+    /** Handles componentWillUnmount. */
     public componentWillUnmount(): void {
         this.unsubscribe?.();
         this.unsubscribe = undefined;
@@ -149,6 +159,7 @@ class AdminGridNetwork<T> extends AntiHookComponent<NetworkProps<T>, NetworkStat
         }
     }
 
+    /** Handles renderTable. */
     private renderTable() {
         const {config, rowKey, renders = emptyRenders, globalRenders = emptyGlobalRenders, emptyMessage, expandRenderer,
             expandable, onRowClick, rowTestId, sortField, sortDir, onSort} = this.props;
@@ -175,6 +186,7 @@ class AdminGridNetwork<T> extends AntiHookComponent<NetworkProps<T>, NetworkStat
         );
     }
 
+    /** Handles render. */
     public render() {
         const {config, query, onSearch} = this.props;
         const {page: safePage, totalPages: pageCount, total, loading, perPage: pageSize} = this.state.snapshot;
@@ -209,6 +221,7 @@ class AdminGridController<T> extends AntiHookComponent<ControllerProps<T>> {
     private readonly controls = new Carburetor<GridState>({query: '', sortField: null, sortDir: 'asc'});
     private committedSortField: string | null = null;
 
+    /** Handles componentDidUpdate. */
     public componentDidUpdate(previousProps: Readonly<ControllerProps<T>>): void {
         super.componentDidUpdate(previousProps);
         this.committedSortField = this.controls.getData().sortField;
@@ -217,14 +230,17 @@ class AdminGridController<T> extends AntiHookComponent<ControllerProps<T>> {
     // Caller-owned config and renderers can change in place.
     private readonly updateOnParentRender = true;
 
+    /** Handles shouldComponentUpdate. */
     public shouldComponentUpdate(nextProps: Readonly<ControllerProps<T>>, nextState: Readonly<{}>): boolean {
         return super.shouldComponentUpdate(nextProps, nextState) || this.updateOnParentRender;
     }
 
+    /** Handles handleSearch. */
     private readonly handleSearch: React.ChangeEventHandler<HTMLInputElement> = (event) => {
         this.controls.setData({...this.controls.getData(), query: event.target.value});
     };
 
+    /** Handles handleSort. */
     private readonly handleSort = (key: string): void => {
         if (!this.props.config.sortFields.includes(key)) return;
         const state = this.controls.getData();
@@ -233,12 +249,15 @@ class AdminGridController<T> extends AntiHookComponent<ControllerProps<T>> {
             : {...state, sortField: key, sortDir: 'asc'});
     };
 
+    /** Handles render. */
     public render() {
         const {query, sortField, sortDir} = this.useCarburetor(this.controls);
-        return <AdminGridNetwork {...this.props} query={query} sortField={sortField} sortDir={sortDir} onSearch={this.handleSearch} onSort={this.handleSort} />;
+        return <AdminGridNetwork {...this.props} query={query} sortField={sortField} sortDir={sortDir}
+            onSearch={this.handleSearch} onSort={this.handleSort} />;
     }
 }
 
+/** Handles AdminGridInner. */
 function AdminGridInner<T>(props: AdminGridProps<T>, ref: React.ForwardedRef<AdminGridHandle<T>>) {
     return <AdminGridController {...props} gridRef={ref} />;
 }

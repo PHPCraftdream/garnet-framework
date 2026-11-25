@@ -1,6 +1,6 @@
 {
   "$schema": "./vendor/phpcraftdream/garnet-framework/FrontBuilder/node_modules/oxlint/configuration_schema.json",
-  "extends": ["./vendor/phpcraftdream/garnet-framework/FrontBuilder/node_modules/@react-carburetor/core/dist/lint/recommended.oxlintrc.json"],
+  "extends": ["./vendor/phpcraftdream/garnet-framework/FrontBuilder/node_modules/@react-carburetor/core/dist/lint/recommended.oxlintrc.json", "./vendor/phpcraftdream/garnet-framework/FrontBuilder/node_modules/@react-carburetor/core/dist/lint/house-style.oxlintrc.json"],
   "jsPlugins": ["./vendor/phpcraftdream/garnet-framework/FrontBuilder/oxlint-plugins/garnet-tsx-rules.js", "./vendor/phpcraftdream/garnet-framework/FrontBuilder/node_modules/@react-carburetor/core/dist/lint/index.mjs"],
   "plugins": ["react", "typescript", "unicorn", "import"],
   "env": {
@@ -18,7 +18,6 @@
     "**/build/**",
     "**/*.gen.js",
     "**/*.gen.css",
-    "**/I18nGen/**",
     "vendor/**"
   ],
   "rules": {
@@ -43,6 +42,33 @@
     "garnet-tsx/max-component-lines": "warn",
     "garnet-tsx/max-component-nesting": "warn",
 
-    "carburetor/no-react-hooks-in-components": "error"
+    "carburetor/no-react-hooks-in-components": "error",
+    "carburetor/no-capturing-hook-selector": "error",
+    "carburetor/no-closure-in-update": "error",
+    "carburetor/require-hoisted-constant": "error",
+    "carburetor/no-direct-data-write": "error",
+    "carburetor/no-escaping-tracked-data": "error",
+    "carburetor/no-function-in-render": "error",
+    "carburetor/no-handler-created-in-render": "error",
+    "carburetor/max-render-depth": "error",
+    "carburetor/max-render-lines": "error",
+    "carburetor/no-unrecognized-base": "error",
+    "carburetor/no-store-read-in-effect-deps": "error",
+    "carburetor/prefer-store-effect": "error",
+    "carburetor/no-memo-over-store-read": "error",
+    "carburetor/no-untrackable-draft-mutation": "error",
+    "carburetor/no-untrackable-store-data": "error",
+    "carburetor/require-effect-deps": "error",
+    "carburetor/require-method-for-closure": "error",
+    "carburetor/require-module-function": "error",
+    "carburetor/require-subscription-disposal": "error",
+    "carburetor/max-line-length": "error",
+    "carburetor/no-blank-line-after-tsdoc": "error",
+    "carburetor/no-parent-import": ["error", { "roots": [{ "path": "Common", "prefix": "@common/" }, { "path": "Front", "prefix": "@framework/" }] }],
+    "carburetor/prefer-readonly-array-param": "error",
+    "carburetor/require-tsdoc": "error",
+    "carburetor/tsdoc-blank-line-before-tags": "error",
+    "carburetor/one-export-per-file": "error",
+    "carburetor/no-module-level-store": "error"
   }
 }

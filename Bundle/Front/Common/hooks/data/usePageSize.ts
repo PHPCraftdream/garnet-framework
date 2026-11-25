@@ -1,16 +1,22 @@
 import {useState, useEffect, useCallback, useSyncExternalStore} from 'react';
 import {Carburetor} from '@react-carburetor/core';
-import {readPageSize, writePageSize} from '@common/Utils/Data/pagination';
+import {readPageSize} from '@common/Utils/Data/pagination/readPageSize';
+import {writePageSize} from '@common/Utils/Data/pagination/writePageSize';
 
+/** Creates a store for the page size. */
 function createPageSizeStore(): PageSizeStore { return new PageSizeStore(); }
 
 class PageSizeStore extends Carburetor<{size: number}> {
+    /** Initializes the store from the saved page size. */
     constructor() { super({size: readPageSize()}); }
+    /** Returns the current page-size snapshot. */
     readonly snapshot = () => this.getData();
+    /** Subscribes to page-size snapshot changes. */
     readonly subscribeSnapshot = (listener: () => void) => {
         const id = this.subscribe(listener);
         return () => this.unsubscribe(id);
     };
+    /** Updates the current page size. */
     readonly setSize = (size: number) => {
         const previous = this.getData();
         if (Object.is(previous.size, size)) return;

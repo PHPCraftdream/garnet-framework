@@ -1,13 +1,11 @@
 import * as React from 'react';
 import {Clock, Check} from 'lucide-react';
 import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
-import {
-    resolvedUserTz,
-    resolvedBrowserTz,
-    userTzDiffersFromBrowser,
-    formatTs,
-    tzOffsetMinutes,
-} from '@common/Utils/Time/DateUtils';
+import {formatTs} from '@common/Utils/Time/DateUtils/format/formatTs';
+import {resolvedUserTz} from '@common/Utils/Time/DateUtils/tz/resolvedUserTz';
+import {resolvedBrowserTz} from '@common/Utils/Time/DateUtils/tz/resolvedBrowserTz';
+import {userTzDiffersFromBrowser} from '@common/Utils/Time/DateUtils/tz/userTzDiffersFromBrowser';
+import {tzOffsetMinutes} from '@common/Utils/Time/DateUtils/tz/tzOffsetMinutes';
 import {Banner} from './Banner';
 
 interface Props {
@@ -17,6 +15,7 @@ interface Props {
     infoOnly?: boolean;
 }
 
+/** Format an offset in minutes as localized timezone difference text. */
 function formatDiff(minutes: number): string {
     if (minutes === 0) return t.Tz_Diff_Same();
     const abs = Math.abs(minutes);

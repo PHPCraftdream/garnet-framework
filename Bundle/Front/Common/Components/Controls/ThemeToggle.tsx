@@ -1,18 +1,21 @@
 import * as React from 'react';
 import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
 import {Sun, Moon} from 'lucide-react';
-import {getTheme, setTheme} from '@common/Utils/Ui/ThemeManager';
+import {getTheme} from '@common/Utils/Ui/theme/getTheme';
+import {setTheme} from '@common/Utils/Ui/theme/setTheme';
 import {I18nFramework} from '@framework/I18nGen/I18nFramework';
 
 export class ThemeToggle extends AntiHookComponent<{testId?: string}> {
     private readonly themeState = new Carburetor({theme: getTheme()});
 
+    /** Switch the active theme and persist the new selection. */
     private readonly toggleTheme = () => {
         const next = this.themeState.getData().theme === 'light' ? 'dark' : 'light';
         setTheme(next);
         this.themeState.setData({theme: next});
     };
 
+    /** Render the theme toggle with its localized accessible label. */
     public render() {
         const {testId = 'theme-toggle-btn'} = this.props;
         const {theme} = this.useCarburetor(this.themeState);

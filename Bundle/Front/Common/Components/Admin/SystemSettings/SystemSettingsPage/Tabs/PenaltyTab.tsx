@@ -4,12 +4,14 @@ import {SaveButton} from './SaveButton';
 
 /** Controlled cancellation-penalty settings. */
 export class PenaltyTab extends React.Component<TabProps> {
+    /** Clamps the entered percentage and updates cancellation settings. */
     private readonly handleChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
         const raw = event.target.value === '' ? 0 : parseInt(event.target.value, 10);
         const clamped = Number.isFinite(raw) ? Math.max(0, Math.min(100, raw)) : 0;
         this.props.setSettings(prev => ({...prev, cancellationPenaltyPercent: clamped}));
     };
 
+    /** Renders the cancellation penalty input and save action. */
     public render() {
         const {settings, labels, sending} = this.props;
         return (
@@ -27,7 +29,9 @@ export class PenaltyTab extends React.Component<TabProps> {
                         step={1}
                         inputMode="numeric"
                         className="settings-penalty-input"
-                        value={Number.isFinite(settings.cancellationPenaltyPercent) ? settings.cancellationPenaltyPercent : 0}
+                        value={Number.isFinite(settings.cancellationPenaltyPercent)
+                            ? settings.cancellationPenaltyPercent
+                            : 0}
                         onChange={this.handleChange}
                     />
                 </label>

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {AntiHookComponent} from '@react-carburetor/core';
-import {usePreview} from './PreviewContext';
+import {usePreview} from './usePreview';
 import {appUrl} from '@common/Utils/Url/appUrl';
 
 const DEFAULT_ANCHOR = <a className="common-link" />;
@@ -16,11 +16,10 @@ interface UserLinkProps {
     onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
 }
 
-/**
- * Foreground-only link to a user/expert profile.
- * Inside a PreviewProvider tree, plain left-click opens the preview modal.
- * Modifier-clicks (Ctrl/Meta/Shift, middle button) and absent provider fall back
- * to navigation.
+/** Render a foreground link to a user or expert profile.
+ *
+ * Inside a provider, plain left-click opens the preview; other clicks navigate.
+ * Modifier-clicks and absent providers fall back to navigation.
  *
  * @deprecated The `isExpert` prop is legacy. Use `profileUrl` for domain-agnostic routing.
  */
@@ -30,6 +29,7 @@ export const UserLink: React.FC<UserLinkProps> = (props) => {
 };
 
 class UserLinkView extends AntiHookComponent<UserLinkProps & {preview: ReturnType<typeof usePreview>}> {
+    /** Handle navigation or open the preview for an unmodified left-click. */
     private readonly handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
         const {onClick, preview, id, name} = this.props;
         onClick?.(e);
@@ -41,6 +41,7 @@ class UserLinkView extends AntiHookComponent<UserLinkProps & {preview: ReturnTyp
         }
     };
 
+    /** Render the user link with its profile destination. */
     render() {
         const {id, name, isExpert, profileUrl, anchor = DEFAULT_ANCHOR, children} = this.props;
         if (!id) return <>{children ?? name}</>;

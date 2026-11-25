@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {AdminUserLink} from '../AdminUserLink';
+import {AdminUserLink} from '@common/Components/Admin/AdminLog/AdminUserLink';
 import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
 
 export interface RequestLogRow {
@@ -19,6 +19,7 @@ interface Props {
     accounts: Record<string, string>;
 }
 
+/** Handles RequestLogDetail. */
 export const RequestLogDetail: React.FC<Props> = ({row, accounts}) => (
     <div data-test-id="log-detail-requests">
         <div className="log-detail-grid">

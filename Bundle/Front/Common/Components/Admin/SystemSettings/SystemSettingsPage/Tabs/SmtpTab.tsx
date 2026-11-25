@@ -1,6 +1,6 @@
 /** SMTP settings and the adjacent test-email controls. */
 import * as React from 'react';
-import {SettingsData, SystemSettingsLabels, MailTypeOption} from '../types';
+import {SettingsData, SystemSettingsLabels, MailTypeOption} from '@common/Components/Admin/SystemSettings/SystemSettingsPage/types';
 import {SaveButton} from './SaveButton';
 
 interface SmtpTabProps {
@@ -20,17 +20,48 @@ interface SmtpTabProps {
 const renderMailOption = (option: MailTypeOption) => <option key={option.id} value={option.id}>{option.label}</option>;
 
 export class SmtpTab extends React.Component<SmtpTabProps> {
-    private readonly changeScheme = (e: React.ChangeEvent<HTMLSelectElement>): void => { this.props.updateSmtp('scheme', e.target.value); };
-    private readonly changeHost = (e: React.ChangeEvent<HTMLInputElement>): void => { this.props.updateSmtp('host', e.target.value); };
-    private readonly changePort = (e: React.ChangeEvent<HTMLInputElement>): void => { this.props.updateSmtp('port', e.target.value); };
-    private readonly changeUser = (e: React.ChangeEvent<HTMLInputElement>): void => { this.props.updateSmtp('user', e.target.value); };
-    private readonly changePassword = (e: React.ChangeEvent<HTMLInputElement>): void => { this.props.updateSmtp('password', e.target.value); };
-    private readonly changeFrom = (e: React.ChangeEvent<HTMLInputElement>): void => { this.props.updateSmtp('from', e.target.value); };
-    private readonly changeEnabled = (e: React.ChangeEvent<HTMLInputElement>): void => { this.props.updateSmtp('enabled', e.target.checked); };
-    private readonly changeVerifyPeer = (e: React.ChangeEvent<HTMLInputElement>): void => { this.props.updateSmtp('verify_peer', e.target.checked); };
-    private readonly changeTestEmail = (e: React.ChangeEvent<HTMLInputElement>): void => { this.props.setTestEmail(e.target.value); };
-    private readonly changeMailType = (e: React.ChangeEvent<HTMLSelectElement>): void => { this.props.setTestMailType(e.target.value); };
+    /** Updates the SMTP connection scheme. */
+    private readonly changeScheme = (e: React.ChangeEvent<HTMLSelectElement>): void => {
+        this.props.updateSmtp('scheme', e.target.value);
+    };
+    /** Updates the SMTP server host. */
+    private readonly changeHost = (e: React.ChangeEvent<HTMLInputElement>): void => {
+        this.props.updateSmtp('host', e.target.value);
+    };
+    /** Updates the SMTP server port. */
+    private readonly changePort = (e: React.ChangeEvent<HTMLInputElement>): void => {
+        this.props.updateSmtp('port', e.target.value);
+    };
+    /** Updates the SMTP authentication user. */
+    private readonly changeUser = (e: React.ChangeEvent<HTMLInputElement>): void => {
+        this.props.updateSmtp('user', e.target.value);
+    };
+    /** Updates the SMTP authentication password. */
+    private readonly changePassword = (e: React.ChangeEvent<HTMLInputElement>): void => {
+        this.props.updateSmtp('password', e.target.value);
+    };
+    /** Updates the SMTP sender address. */
+    private readonly changeFrom = (e: React.ChangeEvent<HTMLInputElement>): void => {
+        this.props.updateSmtp('from', e.target.value);
+    };
+    /** Toggles SMTP delivery. */
+    private readonly changeEnabled = (e: React.ChangeEvent<HTMLInputElement>): void => {
+        this.props.updateSmtp('enabled', e.target.checked);
+    };
+    /** Toggles peer certificate verification. */
+    private readonly changeVerifyPeer = (e: React.ChangeEvent<HTMLInputElement>): void => {
+        this.props.updateSmtp('verify_peer', e.target.checked);
+    };
+    /** Updates the destination for the test email. */
+    private readonly changeTestEmail = (e: React.ChangeEvent<HTMLInputElement>): void => {
+        this.props.setTestEmail(e.target.value);
+    };
+    /** Updates the selected test message type. */
+    private readonly changeMailType = (e: React.ChangeEvent<HTMLSelectElement>): void => {
+        this.props.setTestMailType(e.target.value);
+    };
 
+    /** Renders SMTP connection and authentication fields. */
     private renderSmtpFields() {
         const {settings, labels} = this.props;
         return (
@@ -48,7 +79,12 @@ export class SmtpTab extends React.Component<SmtpTabProps> {
                 </label>
                 <label className="settings-field-label">
                     <span className="settings-field-caption">{labels.smtpPort}</span>
-                    <input className="settings-native-field" inputMode="numeric" value={settings.smtp.port} onChange={this.changePort} />
+                    <input
+                        className="settings-native-field"
+                        inputMode="numeric"
+                        value={settings.smtp.port}
+                        onChange={this.changePort}
+                    />
                 </label>
                 <label className="settings-field-label">
                     <span className="settings-field-caption">{labels.smtpUser}</span>
@@ -56,7 +92,12 @@ export class SmtpTab extends React.Component<SmtpTabProps> {
                 </label>
                 <label className="settings-field-label-wide">
                     <span className="settings-field-caption">{labels.smtpPassword}</span>
-                    <input type="password" className="settings-native-field" value={settings.smtp.password} onChange={this.changePassword} />
+                    <input
+                        type="password"
+                        className="settings-native-field"
+                        value={settings.smtp.password}
+                        onChange={this.changePassword}
+                    />
                 </label>
                 <label className="settings-field-label-wide">
                     <span className="settings-field-caption">{labels.smtpFrom}</span>
@@ -66,25 +107,37 @@ export class SmtpTab extends React.Component<SmtpTabProps> {
         );
     }
 
+    /** Renders SMTP enablement and certificate options. */
     private renderSmtpOptions() {
         const {settings, labels} = this.props;
         return (
             <div className="settings-smtp-options">
                 <label className="settings-smtp-option">
-                    <input type="checkbox" className="settings-smtp-checkbox" checked={settings.smtp.enabled} onChange={this.changeEnabled} />
+                    <input
+                        type="checkbox"
+                        className="settings-smtp-checkbox"
+                        checked={settings.smtp.enabled}
+                        onChange={this.changeEnabled}
+                    />
                     <span>
                         <span className="settings-smtp-enabled-title">{labels.smtpEnabled}</span>
                         <span className="settings-smtp-enabled-hint">{labels.smtpEnabledHint}</span>
                     </span>
                 </label>
                 <label className="settings-smtp-option">
-                    <input type="checkbox" className="settings-smtp-checkbox" checked={settings.smtp.verify_peer} onChange={this.changeVerifyPeer} />
+                    <input
+                        type="checkbox"
+                        className="settings-smtp-checkbox"
+                        checked={settings.smtp.verify_peer}
+                        onChange={this.changeVerifyPeer}
+                    />
                     <span className="settings-smtp-option-title">{labels.smtpVerifyPeer}</span>
                 </label>
             </div>
         );
     }
 
+    /** Renders the test-email form and send action. */
     private renderTestEmail() {
         const {labels, testEmail, testMailType, mailTypes, sendingTestEmail, onSendTestEmail} = this.props;
         return (
@@ -96,21 +149,36 @@ export class SmtpTab extends React.Component<SmtpTabProps> {
                 <div className="settings-smtp-test-row">
                     <label className="settings-smtp-test-email-label">
                         <span className="settings-field-caption">{labels.testEmailLabel}</span>
-                        <input type="email" className="settings-native-field" placeholder={labels.testEmailPlaceholder} value={testEmail}
-                            onChange={this.changeTestEmail} data-test-id="admin-system-test-email-input" />
+                        <input
+                            type="email"
+                            className="settings-native-field"
+                            placeholder={labels.testEmailPlaceholder}
+                            value={testEmail}
+                            onChange={this.changeTestEmail}
+                            data-test-id="admin-system-test-email-input"
+                        />
                     </label>
                     {mailTypes.length > 0 && (
                         <label className="settings-smtp-test-type-label">
                             <span className="settings-field-caption">{labels.testEmailType ?? ''}</span>
-                            <select className="settings-native-field" value={testMailType} onChange={this.changeMailType}
-                                data-test-id="admin-system-test-email-type">
+                            <select
+                                className="settings-native-field"
+                                value={testMailType}
+                                onChange={this.changeMailType}
+                                data-test-id="admin-system-test-email-type"
+                            >
                                 <option value="">{labels.testEmailTypeGeneric ?? ''}</option>
                                 {mailTypes.map(renderMailOption)}
                             </select>
                         </label>
                     )}
-                    <button type="button" className="settings-test-email-button" disabled={sendingTestEmail} onClick={onSendTestEmail}
-                        data-test-id="admin-system-test-email-send">
+                    <button
+                        type="button"
+                        className="settings-test-email-button"
+                        disabled={sendingTestEmail}
+                        onClick={onSendTestEmail}
+                        data-test-id="admin-system-test-email-send"
+                    >
                         {sendingTestEmail ? labels.testEmailSending : labels.testEmailSend}
                     </button>
                 </div>
@@ -118,6 +186,7 @@ export class SmtpTab extends React.Component<SmtpTabProps> {
         );
     }
 
+    /** Renders SMTP settings and the test-email controls. */
     public render() {
         const {labels, sending} = this.props;
         return (

@@ -2,6 +2,7 @@ import {IAuthData} from '@framework/auth/Models';
 import {EPhase} from '@framework/auth/Enums';
 import {I18nFramework as I18n} from '@framework/I18nGen/I18nFramework';
 
+/** Returns hint parameters for the authentication state. */
 export const getHintParams = (state?: IAuthData): { hint: string, classes: string} => {
     const cls = 'text-sm mb-3';
 
@@ -14,7 +15,8 @@ export const getHintParams = (state?: IAuthData): { hint: string, classes: strin
             return {hint: newText, classes: `${cls} text-danger`};
         }
         case EPhase.INPUT_EMAIL_AFTER_FAIL_TRIES: {
-            let newText = `${I18n.Auth_ExhaustedInputAttempts()}. ${I18n.Auth_RequestNewCode()}. ${I18n.Auth_EmailHint()}`;
+            let newText = `${I18n.Auth_ExhaustedInputAttempts()}. ${I18n.Auth_RequestNewCode()}. ` +
+                I18n.Auth_EmailHint();
             return {hint: newText, classes: `${cls} text-danger`};
         }
         case EPhase.INPUT_EMAIL_WRONG_VALUE: {

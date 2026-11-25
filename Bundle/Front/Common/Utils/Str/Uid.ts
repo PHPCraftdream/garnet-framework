@@ -1,5 +1,6 @@
 let counter = 0;
 
+/** Creates a unique identifier with an optional prefix. */
 export const uid = (prefix: string = ''): string => {
     counter++;
     const timestamp = Date.now().toString(36);

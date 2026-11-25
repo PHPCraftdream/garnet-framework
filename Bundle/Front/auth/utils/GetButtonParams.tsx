@@ -2,6 +2,7 @@ import {IAuthData} from '@framework/auth/Models';
 import {EPhase} from '@framework/auth/Enums';
 import {I18nFramework as I18n} from '@framework/I18nGen/I18nFramework';
 
+/** Returns button parameters for the authentication state. */
 export const getButtonParams = (state?: IAuthData): { title: string, classes: string } => {
     const cls = 'btn w-full py-2';
 

@@ -2,7 +2,7 @@ import * as React from 'react';
 import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
 import {sendPost} from '@common/Api/Send/sendPost';
 import {appUrl} from '@common/Utils/Url/appUrl';
-import {useBodyScrollLock} from '@common/hooks/ui/useBodyScrollLock';
+import {useBodyScrollLock} from '@common/hooks/ui/internal/useBodyScrollLock';
 import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
 import {EntityHistoryRow, EntityHistoryTable} from './EntityHistoryTable';
 import {Portal} from '@common/Components/Layout/Portal';
@@ -23,32 +23,44 @@ const ScrollLock: React.FC = () => {
     return null;
 };
 
+/** Prevents clicks inside the drawer from closing it. */
 function stopPropagation(event: React.MouseEvent): void {
     event.stopPropagation();
 }
 
 export class EntityHistoryDrawer extends AntiHookComponent<Props> {
-    private readonly store = new Carburetor<{rows: EntityHistoryRow[]; loading: boolean; error: string}>({rows: [], loading: false, error: ''});
+    private readonly store = new Carburetor<{
+        rows: EntityHistoryRow[];
+        loading: boolean;
+        error: string;
+    }>({rows: [], loading: false, error: ''});
     private readonly rows = this.connectSelection(this.store, state => state.rows);
     private request = 0;
 
+    /** Loads history when the drawer opens. */
     public componentDidMount(): void {
         super.componentDidMount();
         document.addEventListener('keydown', this.onKey);
         void this.load();
     }
 
+    /** Reloads history when its entity or endpoint changes. */
     public componentDidUpdate(previous: Readonly<Props>): void {
         super.componentDidUpdate(previous);
-        if (previous.entityType !== this.props.entityType || previous.entityId !== this.props.entityId || previous.listUrl !== this.props.listUrl) void this.load();
+        const entityChanged = previous.entityType !== this.props.entityType
+            || previous.entityId !== this.props.entityId
+            || previous.listUrl !== this.props.listUrl;
+        if (entityChanged) void this.load();
     }
 
+    /** Invalidates pending requests and removes the key listener. */
     public componentWillUnmount(): void {
         this.request++;
         document.removeEventListener('keydown', this.onKey);
         super.componentWillUnmount();
     }
 
+    /** Fetches the current entity's history rows. */
     private async load(): Promise<void> {
         const request = ++this.request;
         const {entityType, entityId, listUrl} = this.props;
@@ -66,20 +78,29 @@ export class EntityHistoryDrawer extends AntiHookComponent<Props> {
         }
     }
 
+    /** Closes the drawer when Escape is pressed. */
     private readonly onKey = (event: KeyboardEvent): void => {
         if (event.key === 'Escape') this.props.onClose();
     };
+    /** Closes the drawer when its backdrop is clicked. */
     private readonly onOverlay = (event: React.MouseEvent<HTMLDivElement>): void => {
         if (event.target === event.currentTarget) this.props.onClose();
     };
 
+    /** Renders the entity history drawer. */
     public render() {
         const {entityType, entityId, title, onClose} = this.props;
         const {loading, error} = this.useCarburetor(this.store);
         const rows = this.rows();
         const heading = title ?? `${t.EntityHistory_Title()} — ${entityType} #${entityId}`;
         return <Portal><ScrollLock /><div className="entity-history-overlay" onClick={this.onOverlay} data-test-id="entity-history-modal">
-            <div role="dialog" aria-modal="true" aria-label={heading} className="entity-history-card" onClick={stopPropagation}>
+            <div
+                role="dialog"
+                aria-modal="true"
+                aria-label={heading}
+                className="entity-history-card"
+                onClick={stopPropagation}
+            >
                 <div className="entity-history-header">
                     <h3 className="entity-history-title">{heading}</h3>
                     <button type="button" className="entity-history-close" onClick={onClose} data-test-id="entity-history-close">&times;</button>

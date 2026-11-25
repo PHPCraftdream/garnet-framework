@@ -21,12 +21,14 @@ type PhotoFieldProps = {
 	onFileChange: (column: string, file: Blob | null, cropInfo: ICropData | null) => void;
 };
 
+/** Handles this operation. */
 function photoPath(uploadPath: string | undefined, value: unknown, data: Record<string, unknown>): string | null {
 	return !value ? null : (uploadPath || '').replace(/({(\w+)})/gi, (_, __, match) => {
 		return (data[match] || 'null') as string;
 	}) + value;
 }
 
+/** Handles this operation. */
 function renderPhotoControls(readOnly: boolean) {
 	return (
 		<div className="photo-controls-column">
@@ -44,10 +46,24 @@ function renderPhotoControls(readOnly: boolean) {
 	);
 }
 
+/** Renders the upload button only when the field is editable. */
+function renderUploadButton(readOnly: boolean): React.ReactNode {
+	if (readOnly) return null;
+	return (
+		<button
+			type="button" className="upload-img-btn" data-photo-hidden="true"
+			title={I18nFramework.Action_Upload()}
+		>
+			<Upload size={18} />
+		</button>
+	);
+}
+
 export class PhotoField extends AntiHookComponent<PhotoFieldProps> {
 	private readonly containerRef = React.createRef<HTMLDivElement>();
 	private invalidateMount?: () => void;
 
+/** Handles this operation. */
 	public componentDidMount(): void {
 		super.componentDidMount();
 		const el = this.containerRef.current;
@@ -74,11 +90,13 @@ export class PhotoField extends AntiHookComponent<PhotoFieldProps> {
 		});
 	}
 
+	/** Deactivates the upload callback when the field unmounts. */
 	public componentWillUnmount(): void {
 		this.invalidateMount?.();
 		super.componentWillUnmount();
 	}
 
+	/** Renders the image input, crop controls, and optional size hint. */
 	public render() {
 		const {value, fieldInfo, disabled} = this.props;
 		const readOnly = fieldInfo.readOnly || disabled;
@@ -90,13 +108,11 @@ export class PhotoField extends AntiHookComponent<PhotoFieldProps> {
 			: I18nFramework.Upload_ImageHint([megabytes(maxBytes)]);
 
 		return (
-			<div ref={this.containerRef} className={readOnly ? 'photo-field-readonly' : 'photo-field-area'} data-photo-readonly={readOnly ? 'true' : undefined}>
-				<input type="file" className="input-file" data-photo-hidden="true" accept="image/png, image/jpeg, image/jpg, image/gif" />
-				{!readOnly && (
-					<button type="button" className="upload-img-btn" data-photo-hidden="true" title={I18nFramework.Action_Upload()}>
-						<Upload size={18} />
-					</button>
-				)}
+			<div ref={this.containerRef} className={readOnly ? 'photo-field-readonly' : 'photo-field-area'}
+				data-photo-readonly={readOnly ? 'true' : undefined}>
+				<input type="file" className="input-file" data-photo-hidden="true"
+					accept="image/png, image/jpeg, image/jpg, image/gif" />
+				{renderUploadButton(!!readOnly)}
 				<div className="crop-block" data-photo-hidden="true">
 					<div className="photo-preview-box">
 						<img className="image-src" alt="loading" src="data:," />

@@ -8,7 +8,7 @@ import {getHintParams} from '@framework/auth/utils/GetHintParams';
 import {getButtonParams} from '@framework/auth/utils/GetButtonParams';
 import {CodeTimer} from '@framework/auth/utils/CodeTimer';
 import {AuthConsentFields} from '@framework/auth/AuthConsentFields';
-import {renderMarkdownLinks} from '@common/Utils/Url/staticPageUrl';
+import {renderMarkdownLinks} from '@common/Utils/Url/renderMarkdownLinks';
 import {getInputParams} from './utils/GetInputParams';
 import {handleRequestCode} from '@framework/auth/utils/HandleRequestCode';
 import {handleCheckCode} from '@framework/auth/utils/HandleCheckCode';
@@ -39,16 +39,19 @@ export class Auth2Island extends AntiHookComponent<Partial<IAuthData>> {
     private timeoutPhase = this.store.getData().auth.phase;
     private timeoutHandler = this.makeTimeoutHandler(this.store.getData().auth);
 
+    /** Marks the component as mounted. */
     public componentDidMount(): void {
         super.componentDidMount();
         this.mounted = true;
     }
 
+    /** Marks the component as unmounted. */
     public componentWillUnmount(): void {
         this.mounted = false;
         super.componentWillUnmount();
     }
 
+/** Updates authentication state while mounted. */
     private readonly setData: TSetAuthState = update => {
         if (!this.mounted) return;
         const current = this.store.getData();
@@ -60,14 +63,17 @@ export class Auth2Island extends AntiHookComponent<Partial<IAuthData>> {
         this.store.setData({...current, auth});
     };
 
+    /** Creates a timeout handler for the authentication phase. */
     private makeTimeoutHandler(snapshot: IAuthData): () => void {
         return () => this.setData({...snapshot, phase: EPhase.INPUT_EMAIL_AFTER_TIMEOUT});
     }
 
+    /** Updates consent state while mounted. */
     private setConsent(patch: Partial<Pick<AuthRuntime, 'pdConsent' | 'mkConsent' | 'csrfReady'>>): void {
         if (this.mounted) this.store.setData({...this.store.getData(), ...patch});
     }
 
+    /** Dispatches the action for the current phase. */
     private buttonClick(phase: EPhase): void {
         switch (phase) {
             case EPhase.INPUT_EMAIL:
@@ -88,6 +94,7 @@ export class Auth2Island extends AntiHookComponent<Partial<IAuthData>> {
         }
     }
 
+    /** Updates personal-data consent. */
     private readonly changePersonal = async (event: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
         const checked = event.currentTarget.checked;
         const {csrfReady, mkConsent} = this.store.getData();
@@ -102,10 +109,12 @@ export class Auth2Island extends AntiHookComponent<Partial<IAuthData>> {
         }
     };
 
+    /** Updates marketing consent. */
     private readonly changeMarketing = (event: React.ChangeEvent<HTMLInputElement>): void => {
         this.setConsent({mkConsent: event.currentTarget.checked});
     };
 
+    /** Handles authentication form submission. */
     private readonly onSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
         event.preventDefault();
         const {auth, pdConsent, csrfReady} = this.store.getData();
@@ -114,11 +123,13 @@ export class Auth2Island extends AntiHookComponent<Partial<IAuthData>> {
         }
     };
 
+    /** Renders the authentication island. */
     public render() {
         const {auth, pdConsent, mkConsent, csrfReady} = this.useCarburetor(this.store);
         return this.renderForm({...auth}, pdConsent, mkConsent, csrfReady);
     }
 
+    /** Renders the authentication form for the current state. */
     private renderForm(state: IAuthData, pdConsent: boolean, mkConsent: boolean, csrfReady: boolean) {
         if (!state?.phase) {
             return (
@@ -168,7 +179,10 @@ export class Auth2Island extends AntiHookComponent<Partial<IAuthData>> {
                             data-test-id={emailPhase ? 'auth-login-input' : 'auth-code-input'}
                         />
                     </div>
-                    <div className="auth2-hint" data-tone={phase === EPhase.INPUT_EMAIL || phase === EPhase.INPUT_CODE ? undefined : 'danger'}>{hint?.hint}</div>
+                    <div
+                        className="auth2-hint"
+                        data-tone={phase === EPhase.INPUT_EMAIL || phase === EPhase.INPUT_CODE ? undefined : 'danger'}
+                    >{hint?.hint}</div>
                     {emailPhase && (
                         <AuthConsentFields
                             personalChecked={pdConsent}

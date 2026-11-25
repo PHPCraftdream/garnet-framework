@@ -7,9 +7,13 @@
  * интерфейса.
  */
 import * as React from 'react';
-import {SystemSettingsLabels} from '../types';
+import {SystemSettingsLabels} from '@common/Components/Admin/SystemSettings/SystemSettingsPage/types';
 
-export const SaveButton: React.FC<{labels: SystemSettingsLabels; sending: boolean}> = ({labels, sending}) => (
+/** Renders the save control for a settings form. */
+export const SaveButton: React.FC<{
+    labels: SystemSettingsLabels;
+    sending: boolean;
+}> = ({labels, sending}) => (
     <div className="settings-save-wrapper">
         <button
             type="submit"

@@ -1,10 +1,13 @@
 // noinspection DuplicatedCode
 [[imports]]
 
+/** Translation lookup function signature. */
 type t = (args?: (string|number)[]) => string;
 
+/** Provides typed access to this bundle's translations. */
 class I18n extends I18nBase {
 [[methods]]
 }
 
+/** Active translations for this bundle. */
 export const [[className]] = new I18n([[[classNames]]]);

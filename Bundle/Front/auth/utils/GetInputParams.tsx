@@ -1,6 +1,7 @@
 import {IAuthData} from '@framework/auth/Models';
 import {EPhase} from '@framework/auth/Enums';
 
+/** Returns input parameters for the authentication state. */
 export const getInputParams = (state?: IAuthData): { type: string; name: string; autoComplete: string } => {
     switch (state?.phase) {
         case EPhase.INPUT_EMAIL:

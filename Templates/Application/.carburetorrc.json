@@ -1,4 +1,33 @@
 {
-  "ignore": ["**/I18nGen/**", "**/ThirdParty/**"],
-  "rules": {"no-react-hooks-in-components": "error"}
+  "ignore": ["**/ThirdParty/**"],
+  "rules": {
+    "no-react-hooks-in-components": "error",
+    "no-capturing-hook-selector": "error",
+    "no-closure-in-update": "error",
+    "require-hoisted-constant": "error",
+    "no-direct-data-write": "error",
+    "no-escaping-tracked-data": "error",
+    "no-function-in-render": "error",
+    "no-handler-created-in-render": "error",
+    "max-render-depth": "error",
+    "max-render-lines": "error",
+    "no-unrecognized-base": "error",
+    "no-store-read-in-effect-deps": "error",
+    "prefer-store-effect": "error",
+    "no-memo-over-store-read": "error",
+    "no-untrackable-draft-mutation": "error",
+    "no-untrackable-store-data": "error",
+    "require-effect-deps": "error",
+    "require-method-for-closure": "error",
+    "require-module-function": "error",
+    "require-subscription-disposal": "error",
+    "max-line-length": "error",
+    "no-blank-line-after-tsdoc": "error",
+    "no-parent-import": ["error", { "roots": [{ "path": "Common", "prefix": "@common/" }, { "path": "Front", "prefix": "@framework/" }, { "path": "Front", "prefix": "@/" }] }],
+    "prefer-readonly-array-param": "error",
+    "require-tsdoc": "error",
+    "tsdoc-blank-line-before-tags": "error",
+    "one-export-per-file": "error",
+    "no-module-level-store": "error"
+  }
 }

@@ -1,6 +1,6 @@
-declare function setInterval(handler: TimerHandler, timeout?: number, ...arguments: any[]): number;
+declare function setInterval(handler: TimerHandler, timeout?: number, ...args: any[]): number;
 
-declare function setTimeout(handler: TimerHandler, timeout?: number, ...arguments: any[]): number;
+declare function setTimeout(handler: TimerHandler, timeout?: number, ...args: any[]): number;
 
 declare function clearInterval(id: number | undefined): void;
 

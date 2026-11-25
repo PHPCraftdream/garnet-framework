@@ -26,10 +26,15 @@ const MAX_VISIBLE = 5;
 
 class ToastManagerClass {
     private listeners: Set<Listener> = new Set();
-    private timers: Map<number, {timer: ReturnType<typeof setTimeout> | null; remaining: number; startedAt: number}> = new Map();
+    private timers: Map<number, {
+        timer: ReturnType<typeof setTimeout> | null;
+        remaining: number;
+        startedAt: number;
+    }> = new Map();
     private entries: ToastEntry[] = [];
     private nextId = 1;
 
+    /** Listen for toast events dispatched by React-free application code. */
     constructor() {
         if (typeof window !== 'undefined') {
             window.addEventListener(TOAST_EVENT, (e: Event) => {
@@ -39,6 +44,7 @@ class ToastManagerClass {
         }
     }
 
+    /** Add a toast to the visible queue and start its expiry timer. */
     show(message: string, type: ToastType = 'primary') {
         const id = this.nextId;
         this.nextId += 1;
@@ -55,13 +61,14 @@ class ToastManagerClass {
         this.startTimer(id, TOAST_TTL_MS);
     }
 
+    /** Remove a toast and cancel its expiry timer. */
     hide(id: number) {
         this.clearTimer(id);
         this.entries = this.entries.filter(e => e.id !== id);
         this.notify();
     }
 
-    /** Hovering holds a toast open — reading a long reason takes longer than 4s. */
+    /** Pause a toast's expiry countdown while it is being read. */
     pause(id: number) {
         const t = this.timers.get(id);
 
@@ -75,6 +82,7 @@ class ToastManagerClass {
         });
     }
 
+    /** Resume a paused toast's remaining expiry countdown. */
     resume(id: number) {
         const t = this.timers.get(id);
 
@@ -83,12 +91,14 @@ class ToastManagerClass {
         this.startTimer(id, t.remaining);
     }
 
+    /** Register a listener and immediately provide the current entries. */
     subscribe(fn: Listener) {
         this.listeners.add(fn);
         fn(this.entries);
         return () => { this.listeners.delete(fn); };
     }
 
+    /** Start or replace the expiry timer for a toast. */
     private startTimer(id: number, ms: number) {
         this.clearTimer(id);
         this.timers.set(id, {
@@ -98,6 +108,7 @@ class ToastManagerClass {
         });
     }
 
+    /** Cancel and forget a toast's expiry timer. */
     private clearTimer(id: number) {
         const t = this.timers.get(id);
 
@@ -106,6 +117,7 @@ class ToastManagerClass {
         this.timers.delete(id);
     }
 
+    /** Notify subscribers with the current toast entries. */
     private notify() {
         const snapshot = this.entries;
         this.listeners.forEach(fn => fn(snapshot));

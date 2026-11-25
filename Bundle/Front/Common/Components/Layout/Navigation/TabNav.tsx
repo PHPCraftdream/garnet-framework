@@ -2,6 +2,7 @@ import * as React from 'react';
 import {TabBreadcrumb} from './TabBreadcrumb';
 import {TabClose} from './TabClose';
 
+/** Describes a tab and its optional parent in the navigation hierarchy. */
 export interface TabDef {
     id: string;
     label: string;
@@ -16,7 +17,8 @@ interface Props {
     onClose?: (id: string) => void;
 }
 
-function buildBreadcrumb(tabs: TabDef[], activeId: string): TabDef[] {
+/** Builds the active tab's chain of known parent tabs, from root to leaf. */
+function buildBreadcrumb(tabs: readonly TabDef[], activeId: string): TabDef[] {
     const map = new Map<string, TabDef>();
     for (const tab of tabs) map.set(tab.id, tab);
     const chain: TabDef[] = [];
@@ -36,8 +38,10 @@ interface TabButtonProps {
 }
 
 class TabButton extends React.Component<TabButtonProps> {
+    /** Selects this tab when its tab button is clicked. */
     private readonly handleClick = (): void => { this.props.onSelect(this.props.tab.id); };
 
+    /** Renders the tab button and its optional close control. */
     public render() {
         const {tab, active, onClose} = this.props;
         return (
@@ -56,12 +60,16 @@ class TabButton extends React.Component<TabButtonProps> {
     }
 }
 
+/** Renders the tab strip and breadcrumb for the selected tab. */
 export class TabNav extends React.Component<Props> {
+    /** Renders the requested tab button. */
     private readonly renderTab = (tab: TabDef): React.ReactNode => {
         const {activeId, onSelect, onClose} = this.props;
-        return <TabButton key={tab.id} tab={tab} active={activeId === tab.id} onSelect={onSelect} onClose={onClose} />;
+        return <TabButton key={tab.id} tab={tab} active={activeId === tab.id}
+            onSelect={onSelect} onClose={onClose} />;
     };
 
+    /** Renders the tab strip and active tab breadcrumb. */
     public render() {
         const {tabs, activeId, onSelect} = this.props;
         const breadcrumb = buildBreadcrumb(tabs, activeId);

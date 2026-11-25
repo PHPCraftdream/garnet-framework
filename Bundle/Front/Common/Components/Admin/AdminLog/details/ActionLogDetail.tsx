@@ -1,14 +1,15 @@
 import * as React from 'react';
-import {ActionLog} from '../types';
-import {AdminUserLink} from '../AdminUserLink';
+import {ActionLog} from '@common/Components/Admin/AdminLog/types';
+import {AdminUserLink} from '@common/Components/Admin/AdminLog/AdminUserLink';
 import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
-import {formatTs} from '@common/Utils/Time/DateUtils';
-import {actionLabel} from '../Sections/actionLabel';
+import {formatTs} from '@common/Utils/Time/DateUtils/format/formatTs';
+import {actionLabel} from '@common/Components/Admin/AdminLog/Sections/actionLabel';
 
 interface Props {
     row: ActionLog;
 }
 
+/** Handles ActionLogDetail. */
 export const ActionLogDetail: React.FC<Props> = ({row}) => (
     <div data-test-id="log-detail-actions">
         <div className="log-detail-grid">

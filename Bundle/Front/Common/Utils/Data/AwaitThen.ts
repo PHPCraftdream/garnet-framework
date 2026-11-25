@@ -1,3 +1,4 @@
+/** Resolves with the callback result once a condition passes, or rejects after the retry limit. */
 export const awaitThen = <T>(awaitFunc: () => boolean, then: () => T, timeout = 30, count = 10): Promise<T> => {
     return new Promise((resolve, reject) => {
         let i = 0;

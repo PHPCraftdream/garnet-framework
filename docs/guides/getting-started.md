@@ -35,22 +35,22 @@ run it any time to (re)install. It degrades gracefully when npm is missing
 command once Node.js is on your PATH).
 
 The FrontBuilder installs `@react-carburetor/core` and the native
-`@react-carburetor/lint` at 0.3.0. Its oxlint preset runs alongside the
-Garnet rules, and `carburetor/no-react-hooks-in-components` is an error
-everywhere: framework components are hook-free `AntiHookComponent` classes, and
-the application template's `.oxlintrc.json` enables the same rule for new apps,
-and its `npm run check` also runs `lint:carburetor` (the framework's native
-linter over `Front`, `Common` and `Dashboard`, configured by the template's
-`.carburetorrc.json`).
-`npm --prefix FrontBuilder run lint:carburetor` scans `Bundle/Front` and the CLI
-admin front (the vendored `Bundle/Front/ThirdParty/**` is ignored in
-`.carburetorrc.json` and `.oxlintrc.json`). The functional stylesheets
-(`Styles/modules/carburetor-*.css`) are imported by `framework.less`; their
-Garnet roles bridge existing theme variables so custom and dark themes keep
-working. Those role aliases and the missing stock-colour reset have narrowly
-scoped native-lint suppressions during migration. The older global component
-stylesheets (`Styles/modules/components/*.css`) stay as a compatibility layer
-for applications until they migrate — see `docs/reference/legacy-styles-audit.md`
+`@react-carburetor/lint` at 0.3.0. Both the Carburetor recommended and
+Garnet house-style presets are enabled as errors in oxlint and standalone
+`carburetor-lint`; lint runs with `--deny-warnings`, with no suppressions.
+`carburetor/no-react-hooks-in-components` is an error everywhere: framework
+components are hook-free `AntiHookComponent` classes, and the application
+template's `.oxlintrc.json` enables the same rule for new apps. Its
+`npm run check` also runs `lint:carburetor` (the framework's native linter over
+`Front`, `Common` and `Dashboard`, configured by the template's
+`.carburetorrc.json`). `npm --prefix FrontBuilder run lint:carburetor` scans
+`Bundle/Front` and the CLI admin front (the vendored `Bundle/Front/ThirdParty/**`
+is ignored in `.carburetorrc.json` and `.oxlintrc.json`). The functional
+stylesheets (`Styles/modules/carburetor-*.css`) are imported by `framework.less`;
+their Garnet roles bridge existing theme variables so custom and dark themes
+keep working. The older global component stylesheets
+(`Styles/modules/components/*.css`) stay as a compatibility layer for
+applications until they migrate — see `docs/reference/legacy-styles-audit.md`
 for which classes the application still uses.
 
 DurationSelect accepts `variant="compact"` instead of an arbitrary `className`;

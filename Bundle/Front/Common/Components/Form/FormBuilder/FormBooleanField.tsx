@@ -11,14 +11,17 @@ interface Props {
 
 /** Controlled boolean field used by FormBuilder. */
 export class FormBooleanField extends React.Component<Props> {
+    /** Handles this component operation. */
     private readonly handleChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
         this.props.onChange(this.props.column, event.target.checked);
     };
 
+    /** Handles this component operation. */
     private readonly setInputRef = (element: HTMLInputElement | null): void => {
         if (element) this.props.inputRefs.current[this.props.column] = element;
     };
 
+    /** Handles this component operation. */
     public render() {
         const {column, label, checked, disabled} = this.props;
         return (

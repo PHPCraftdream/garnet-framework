@@ -10,7 +10,7 @@ import {ImageUploadArea} from '@common/Components/Controls/ImageUploadArea';
 import {BlockEditorHeader} from './BlockEditorHeader';
 import {BlockEditorText} from './BlockEditorText';
 import {BlockImageDeleteDialog} from './BlockImageDeleteDialog';
-import {StaticPage, PageBlock, Labels} from '../types';
+import {StaticPage, PageBlock, Labels} from '@common/Components/Admin/StaticPages/StaticPagesAdminIsland/types';
 
 export interface BlockEditorProps {
     block: PageBlock;
@@ -37,7 +37,12 @@ type EditorState = {
 type PendingDelete = {url: string; action: () => Promise<void>};
 type GalleryImage = {url: string; alt: string};
 
-async function appendUploaded(uploaded: Promise<GalleryImage[]>, file: File, uploadImageUrl: string): Promise<GalleryImage[]> {
+/** Uploads one file and appends its URL to the existing gallery images. */
+async function appendUploaded(
+    uploaded: Promise<GalleryImage[]>,
+    file: File,
+    uploadImageUrl: string,
+): Promise<GalleryImage[]> {
     const images = await uploaded;
     const fd = new FormData();
     fd.append('file', file);
@@ -46,7 +51,11 @@ async function appendUploaded(uploaded: Promise<GalleryImage[]>, file: File, upl
 }
 
 /** Загрузка по очереди: порядок сохраняется, после ошибки следующие файлы не уходят. */
-function uploadInOrder(files: File[], uploadImageUrl: string, initial: GalleryImage[]): Promise<GalleryImage[]> {
+function uploadInOrder(
+    files: readonly File[],
+    uploadImageUrl: string,
+    initial: GalleryImage[],
+): Promise<GalleryImage[]> {
     return files.reduce<Promise<GalleryImage[]>>(
         (uploaded, file) => appendUploaded(uploaded, file, uploadImageUrl),
         Promise.resolve(initial),
@@ -65,50 +74,71 @@ export class BlockEditor extends AntiHookComponent<BlockEditorProps> {
         showPagePicker: false,
         pendingDeleteUrl: null,
     });
-    private readonly view = this.connectSelection(() => this.ui, state => ({localContent: state.localContent, imgUploading: state.imgUploading, showPreview: state.showPreview, showPagePicker: state.showPagePicker, pendingDeleteUrl: state.pendingDeleteUrl}));
+    private readonly view = this.connectSelection(
+        () => this.ui,
+        state => ({
+            localContent: state.localContent,
+            imgUploading: state.imgUploading,
+            showPreview: state.showPreview,
+            showPagePicker: state.showPagePicker,
+            pendingDeleteUrl: state.pendingDeleteUrl,
+        }),
+    );
     private readonly textareaRef = React.createRef<HTMLTextAreaElement>();
     private pendingDeleteAction: (() => Promise<void>) | null = null;
 
+    /** Registers the document listener used to dismiss the page picker. */
     public componentDidMount() {
         super.componentDidMount();
         document.addEventListener('click', this.closePagePicker);
     }
 
+    /** Removes the page-picker listener and releases the base component resources. */
     public componentWillUnmount() {
         document.removeEventListener('click', this.closePagePicker);
         super.componentWillUnmount();
     }
 
+    /** Synchronizes the local editor text when the edited block changes externally. */
     public componentDidUpdate(previous: BlockEditorProps) {
         super.componentDidUpdate(previous);
         if (previous.block.content !== this.props.block.content) this.setLocalContent(this.props.block.content);
     }
 
+    /** Replaces the locally edited block content. */
     private readonly setLocalContent = (localContent: string) => this.ui.setData({...this.ui.getData(), localContent});
+    /** Updates whether an image upload is in progress. */
     private readonly setImgUploading = (imgUploading: boolean) => this.ui.setData({...this.ui.getData(), imgUploading});
+    /** Toggles the text preview. */
     private readonly setShowPreview = (showPreview: boolean) => this.ui.setData({...this.ui.getData(), showPreview});
+    /** Toggles the page picker only when its visibility changes. */
     private readonly setShowPagePicker = (showPagePicker: boolean) => {
         const state = this.ui.getData();
         if (state.showPagePicker !== showPagePicker) this.ui.setData({...state, showPagePicker});
     };
+    /** Closes the page picker. */
     private readonly closePagePicker = () => this.setShowPagePicker(false);
+    /** Sets or clears the pending image deletion and its confirmation action. */
     private readonly setPendingDeleteImg = (pending: PendingDelete | null) => {
         this.pendingDeleteAction = pending?.action ?? null;
         this.ui.setData({...this.ui.getData(), pendingDeleteUrl: pending?.url ?? null});
     };
+    /** Cancels the pending image deletion. */
     private readonly cancelDeleteImage = () => this.setPendingDeleteImg(null);
+    /** Runs the pending deletion action and clears its confirmation state. */
     private readonly confirmDeleteImage = () => {
         const action = this.pendingDeleteAction;
         if (action) void action();
         this.setPendingDeleteImg(null);
     };
 
-    // Propagate local text changes to parent state
+    /** Propagates locally edited text to the parent block state. */
     private readonly propagateContent = (content: string) => {
         this.setLocalContent(content);
         this.props.onUpdate(this.props.block, {content});
     };
 
+    /** Wraps the selected textarea text in the supplied Markdown markers. */
     private readonly insertMarkdown = (before: string, after: string) => {
         const localContent = this.ui.getData().localContent;
         const ta = this.textareaRef.current;
@@ -126,8 +156,8 @@ export class BlockEditor extends AntiHookComponent<BlockEditorProps> {
         });
     };
 
-    // ── Image block helpers ──
-    private readonly handleImageUpload = async (files: File[]) => {
+    /** Uploads an image block file and updates its content with the returned URL. */
+    private readonly handleImageUpload = async (files: readonly File[]) => {
         const {uploadImageUrl, labels, block, onUpdate} = this.props;
         const {localContent} = this.ui.getData();
         const {setImgUploading, setLocalContent} = this;
@@ -149,6 +179,7 @@ export class BlockEditor extends AntiHookComponent<BlockEditorProps> {
         finally { setImgUploading(false); }
     };
 
+    /** Updates one field in the image block's JSON content. */
     private readonly updateImageField = (field: string, value: string | boolean) => {
         const {block, onUpdate} = this.props;
         const {localContent} = this.ui.getData();
@@ -160,6 +191,7 @@ export class BlockEditor extends AntiHookComponent<BlockEditorProps> {
         onUpdate(block, {content: json});
     };
 
+    /** Requests confirmation before removing the current image. */
     private readonly removeImage = (url: string) => {
         const {deleteImageUrl, block, onUpdate} = this.props;
         const {localContent} = this.ui.getData();
@@ -178,7 +210,7 @@ export class BlockEditor extends AntiHookComponent<BlockEditorProps> {
         });
     };
 
-    // ── Gallery block helpers ──
+    /** Uploads gallery files sequentially and saves their URLs to the block. */
     private readonly handleGalleryUpload = async (files: File[]) => {
         const {uploadImageUrl, labels, block, onUpdate} = this.props;
         const {localContent} = this.ui.getData();
@@ -195,6 +227,7 @@ export class BlockEditor extends AntiHookComponent<BlockEditorProps> {
         finally { setImgUploading(false); }
     };
 
+    /** Requests confirmation before removing a gallery image by index. */
     private readonly removeGalleryImage = (idx: number) => {
         const {deleteImageUrl, block, onUpdate} = this.props;
         const {localContent} = this.ui.getData();
@@ -220,6 +253,7 @@ export class BlockEditor extends AntiHookComponent<BlockEditorProps> {
         });
     };
 
+    /** Updates one field in the gallery block's JSON content. */
     private readonly updateGalleryField = (field: string, value: any) => {
         const {block, onUpdate} = this.props;
         const {localContent} = this.ui.getData();
@@ -231,6 +265,7 @@ export class BlockEditor extends AntiHookComponent<BlockEditorProps> {
         onUpdate(block, {content: json});
     };
 
+    /** Updates the alternative text for the gallery image at the given index. */
     private readonly updateGalleryImageAlt = (idx: number, alt: string) => {
         const {localContent} = this.ui.getData();
         const {updateGalleryField} = this;
@@ -242,18 +277,39 @@ export class BlockEditor extends AntiHookComponent<BlockEditorProps> {
         updateGalleryField('images', newImages);
     };
 
-    private readonly changeHeading = (event: React.ChangeEvent<HTMLInputElement>) => this.propagateContent(event.target.value);
-    private readonly removeImageClick = (event: React.MouseEvent<HTMLButtonElement>) => this.removeImage(event.currentTarget.dataset.url ?? '');
-    private readonly changeImageAlt = (event: React.ChangeEvent<HTMLInputElement>) => this.updateImageField('alt', event.target.value);
-    private readonly changeImageLightbox = (event: React.ChangeEvent<HTMLInputElement>) => this.updateImageField('lightbox', event.target.checked);
+    /** Copies heading input changes into the block content. */
+    private readonly changeHeading = (event: React.ChangeEvent<HTMLInputElement>) =>
+        this.propagateContent(event.target.value);
+    /** Handles clicks to remove the displayed image. */
+    private readonly removeImageClick = (event: React.MouseEvent<HTMLButtonElement>) =>
+        this.removeImage(event.currentTarget.dataset.url ?? '');
+    /** Copies image alternative-text input changes into block content. */
+    private readonly changeImageAlt = (event: React.ChangeEvent<HTMLInputElement>) =>
+        this.updateImageField('alt', event.target.value);
+    /** Saves the image lightbox checkbox state. */
+    private readonly changeImageLightbox = (event: React.ChangeEvent<HTMLInputElement>) =>
+        this.updateImageField('lightbox', event.target.checked);
+    /** Starts an image-block upload without returning its promise to the control. */
     private readonly uploadImage = (files: File[]) => { void this.handleImageUpload(files); };
+    /** Starts a gallery upload without returning its promise to the control. */
     private readonly uploadGallery = (files: File[]) => { void this.handleGalleryUpload(files); };
-    private readonly removeGalleryClick = (event: React.MouseEvent<HTMLButtonElement>) => this.removeGalleryImage(Number(event.currentTarget.dataset.index));
-    private readonly changeGalleryAlt = (event: React.ChangeEvent<HTMLInputElement>) => this.updateGalleryImageAlt(Number(event.currentTarget.dataset.index), event.target.value);
-    private readonly changeGalleryRows = (event: React.ChangeEvent<HTMLInputElement>) => this.updateGalleryField('rows', Math.max(1, Math.min(10, parseInt(event.target.value, 10) || 2)));
-    private readonly changeGalleryLightbox = (event: React.ChangeEvent<HTMLInputElement>) => this.updateGalleryField('lightbox', event.target.checked);
+    /** Handles clicks to remove a gallery image using its data index. */
+    private readonly removeGalleryClick = (event: React.MouseEvent<HTMLButtonElement>) =>
+        this.removeGalleryImage(Number(event.currentTarget.dataset.index));
+    /** Saves the alternative text entered for a gallery image. */
+    private readonly changeGalleryAlt = (event: React.ChangeEvent<HTMLInputElement>) =>
+        this.updateGalleryImageAlt(Number(event.currentTarget.dataset.index), event.target.value);
+    /** Updates the gallery row count, clamped to the supported range of 1–10. */
+    private readonly changeGalleryRows = (event: React.ChangeEvent<HTMLInputElement>) =>
+        this.updateGalleryField(
+            'rows',
+            Math.max(1, Math.min(10, parseInt(event.target.value, 10) || 2)),
+        );
+    /** Saves the gallery lightbox checkbox state. */
+    private readonly changeGalleryLightbox = (event: React.ChangeEvent<HTMLInputElement>) =>
+        this.updateGalleryField('lightbox', event.target.checked);
 
-    // ── Render block body ──
+    /** Renders one gallery image thumbnail with removal and alt-text controls. */
     private readonly renderGalleryThumbnail = (img: {url: string; alt: string}, idx: number) => {
         const {labels} = this.props;
         return (
@@ -279,6 +335,7 @@ export class BlockEditor extends AntiHookComponent<BlockEditorProps> {
         );
     };
 
+    /** Renders the editor controls appropriate for the current block type. */
     private renderBlockBody(state: EditorState) {
         const {block, labels, disabled, pages} = this.props;
         const {localContent, imgUploading, showPreview, showPagePicker} = state;
@@ -300,7 +357,15 @@ export class BlockEditor extends AntiHookComponent<BlockEditorProps> {
                 <div className="snippet-header-logo-fields">
                     <div className="blk-img-preview">
                         <img src={imgData.url} alt={imgData.alt || ''} className="blk-img-preview-img" />
-                        <button type="button" className="blk-img-preview-remove" data-url={imgData.url} onClick={this.removeImageClick} title={labels.removeImage}>&#215;</button>
+                        <button
+                            type="button"
+                            className="blk-img-preview-remove"
+                            data-url={imgData.url}
+                            onClick={this.removeImageClick}
+                            title={labels.removeImage}
+                        >
+                            &#215;
+                        </button>
                     </div>
                     <input
                         className="static-admin-input"
@@ -328,7 +393,12 @@ export class BlockEditor extends AntiHookComponent<BlockEditorProps> {
                             {images.map(this.renderGalleryThumbnail)}
                         </div>
                     )}
-                    <ImageUploadArea onUpload={this.uploadGallery} uploading={imgUploading} label={labels.uploadImage} multiple />
+                    <ImageUploadArea
+                        onUpload={this.uploadGallery}
+                        uploading={imgUploading}
+                        label={labels.uploadImage}
+                        multiple
+                    />
                     <div className="snippet-save-row">
                         <label className="block-image-label">
                             {labels.galleryRows}
@@ -342,7 +412,11 @@ export class BlockEditor extends AntiHookComponent<BlockEditorProps> {
                             />
                         </label>
                         <label className="block-image-check">
-                            <input type="checkbox" checked={galData.lightbox !== false} onChange={this.changeGalleryLightbox} />
+                            <input
+                                type="checkbox"
+                                checked={galData.lightbox !== false}
+                                onChange={this.changeGalleryLightbox}
+                            />
                             {labels.imageLightbox}
                         </label>
                     </div>
@@ -350,11 +424,24 @@ export class BlockEditor extends AntiHookComponent<BlockEditorProps> {
             );
         }
 
-        return <BlockEditorText labels={labels} pages={pages} localContent={localContent} disabled={disabled}
-            textareaRef={textareaRef} propagateContent={propagateContent} insertMarkdown={insertMarkdown}
-            showPreview={showPreview} showPagePicker={showPagePicker} setShowPreview={setShowPreview} setShowPagePicker={setShowPagePicker} />;
+        return (
+            <BlockEditorText
+                labels={labels}
+                pages={pages}
+                localContent={localContent}
+                disabled={disabled}
+                textareaRef={textareaRef}
+                propagateContent={propagateContent}
+                insertMarkdown={insertMarkdown}
+                showPreview={showPreview}
+                showPagePicker={showPagePicker}
+                setShowPreview={setShowPreview}
+                setShowPagePicker={setShowPagePicker}
+            />
+        );
     }
 
+    /** Renders the block card, editor body, and any image-deletion confirmation. */
     public render() {
         const {block, index, total, labels, disabled, onUpdate, onDelete, onMove, onToggleVisibility} = this.props;
         const state = this.view() as EditorState;

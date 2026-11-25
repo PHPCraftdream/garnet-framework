@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {AntiHookComponent} from '@react-carburetor/core';
-import {useBodyScrollLock} from '@common/hooks/ui/useBodyScrollLock';
+import {useBodyScrollLock} from '@common/hooks/ui/internal/useBodyScrollLock';
 import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
 import {Portal} from '@common/Components/Layout/Portal';
 
@@ -10,13 +10,16 @@ interface Props {
     children: React.ReactNode;
 }
 
+/** Handles LogDetailModal. */
 export const LogDetailModal: React.FC<Props> = (props) => {
     useBodyScrollLock(true);
     return <LogDetailModalView {...props} />;
 };
 
+/** Handles stopPropagation. */
 function stopPropagation(event: React.MouseEvent): void { event.stopPropagation(); }
 
+/** Handles renderHeading. */
 function renderHeading(heading: string, onClose: Props['onClose']) {
     return (
         <div className="entity-history-header">
@@ -36,24 +39,29 @@ function renderHeading(heading: string, onClose: Props['onClose']) {
 }
 
 class LogDetailModalView extends AntiHookComponent<Props> {
+    /** Handles componentDidMount. */
     public componentDidMount(): void {
         super.componentDidMount();
         document.addEventListener('keydown', this.onKey);
     }
 
+    /** Handles componentWillUnmount. */
     public componentWillUnmount(): void {
         document.removeEventListener('keydown', this.onKey);
         super.componentWillUnmount();
     }
 
+    /** Handles onKey. */
     private readonly onKey = (event: KeyboardEvent): void => {
         if (event.key === 'Escape') this.props.onClose();
     };
 
+    /** Handles handleOverlayClick. */
     private readonly handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>): void => {
         if (event.target === event.currentTarget) this.props.onClose();
     };
 
+    /** Handles render. */
     public render() {
         const {title, onClose, children} = this.props;
         const heading = title ?? t.LogDetail_Title();

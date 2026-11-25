@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {AntiHookComponent} from '@react-carburetor/core';
 import {EntityHistoryButton} from '@common/Components/Admin/EntityHistory/EntityHistoryButton';
-import {formatTs} from '@common/Utils/Time/DateUtils';
+import {formatTs} from '@common/Utils/Time/DateUtils/format/formatTs';
 import type {Labels, PageTabInfo, StaticPage} from './types';
 
 const ROW_LINK_BUTTON = <button className="static-admin-link" />;
@@ -25,31 +25,38 @@ interface Props {
     cancelCreateForm: () => void;
 }
 
+/** Displays page rows and the static-page creation form. */
 export class StaticPagesList extends AntiHookComponent<Props> {
+    /** Renders the page list. */
     render() {
         return this.renderList();
     }
 
+    /** Finds the page identified by a row action event. */
     private pageFor(event: React.MouseEvent<HTMLButtonElement>): StaticPage | undefined {
         const id = Number(event.currentTarget.dataset.pageId);
         return this.props.pages.find(page => page.id === id);
     }
 
+    /** Toggles the selected page's published state. */
     private readonly togglePage = (event: React.MouseEvent<HTMLButtonElement>) => {
         const page = this.pageFor(event);
         if (page) this.props.handleTogglePublish(page);
     };
 
+    /** Opens the selected page in an editor tab. */
     private readonly openPage = (event: React.MouseEvent<HTMLButtonElement>) => {
         const page = this.pageFor(event);
         if (page) this.props.openPageTab(page);
     };
 
+    /** Deletes the selected page. */
     private readonly deletePage = (event: React.MouseEvent<HTMLButtonElement>) => {
         const page = this.pageFor(event);
         if (page) void this.props.handleDeletePage(page);
     };
 
+    /** Renders one page row and its actions. */
     private readonly renderRow = (page: StaticPage) => {
         const {pageTabs, sending, labels, publicBaseUrl} = this.props;
         const isOpenInTab = pageTabs.some(t => t.pageId === page.id);
@@ -105,6 +112,7 @@ export class StaticPagesList extends AntiHookComponent<Props> {
         );
     };
 
+    /** Renders the list for the page collection. */
     private renderList() {
         const {labels, sending, showCreateForm, newSlug, newTitle, loaded, pages, handleCreatePage} = this.props;
         return (

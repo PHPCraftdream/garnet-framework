@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
-import {appLocale, resolvedUserTz} from '@common/Utils/Time/DateUtils';
+import {appLocale} from '@common/Utils/Time/DateUtils/tz/appLocale';
+import {resolvedUserTz} from '@common/Utils/Time/DateUtils/tz/resolvedUserTz';
 
 interface Props {
     startDate: string;
@@ -26,6 +27,7 @@ const hasProposedDates = (row: CalendarRow) => row.hasProposed;
 const renderWeekday = (day: string) => <th key={day} className="calendar-weekday">{day}</th>;
 const renderWeek = (row: CalendarRow, index: number) => <tr key={index}>{row.cells}</tr>;
 
+/** Add leading zeroes to a calendar date part. */
 function pad(n: number): string {
     return String(n).padStart(2, '0');
 }
@@ -36,6 +38,7 @@ function parseYMD(s: string): [number, number, number] {
     return [parseInt(parts[0], 10), parseInt(parts[1], 10), parseInt(parts[2], 10)];
 }
 
+/** Keep proposed weeks and the configured neighboring empty weeks. */
 function visibleWeeks(rows: CalendarRow[], hideEmptyWeeks: boolean, extraWeeks: number): CalendarRow[] {
     if (!hideEmptyWeeks) return rows;
 
@@ -53,7 +56,10 @@ function visibleWeeks(rows: CalendarRow[], hideEmptyWeeks: boolean, extraWeeks: 
         if (rows[ri].hasProposed) {
             visibleRows.push(rows[ri]);
             extraAfter = 0;
-        } else if (firstProposedIdx >= 0 && ri < firstProposedIdx && extraWeeks > 0 && ri >= firstProposedIdx - extraWeeks) {
+        } else if (
+            firstProposedIdx >= 0 && ri < firstProposedIdx && extraWeeks > 0 &&
+            ri >= firstProposedIdx - extraWeeks
+        ) {
             visibleRows.push(rows[ri]);
         } else if (lastProposedIdx >= 0 && ri > lastProposedIdx && extraWeeks > 0 && extraAfter < extraWeeks) {
             visibleRows.push(rows[ri]);
@@ -69,15 +75,18 @@ export class Calendar extends AntiHookComponent<Props> {
     // Date maps may change in place between parent renders.
     private readonly updateOnParentRender = true;
 
+    /** Re-render when parent-provided date maps are mutated in place. */
     public shouldComponentUpdate(nextProps: Readonly<Props>, nextState: Readonly<{}>): boolean {
         return super.shouldComponentUpdate(nextProps, nextState) || this.updateOnParentRender;
     }
 
+    /** Notify the parent when a date cell is clicked. */
     private readonly handleClick = (e: React.MouseEvent<HTMLTableCellElement>) => {
         const date = e.currentTarget.dataset.calendarDate;
         if (date) this.props.onDateClick?.(date);
     };
 
+    /** Start dragging a proposed date. */
     private readonly handleDragStart = (e: React.DragEvent<HTMLTableCellElement>) => {
         const date = e.currentTarget.dataset.calendarDate!;
         e.dataTransfer.setData('text/plain', date);
@@ -85,6 +94,7 @@ export class Calendar extends AntiHookComponent<Props> {
         this.dragState.setData({...this.dragState.getData(), dragSourceDate: date});
     };
 
+    /** Mark an eligible date cell as the current drop target. */
     private readonly handleDragOver = (e: React.DragEvent<HTMLTableCellElement>) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
@@ -94,10 +104,12 @@ export class Calendar extends AntiHookComponent<Props> {
         }
     };
 
+    /** Clear the current drop target when the pointer leaves a cell. */
     private readonly handleDragLeave = () => {
         this.dragState.setData({...this.dragState.getData(), dragOverDate: null});
     };
 
+    /** Move the dragged date to the target and reset drag state. */
     private readonly handleDrop = (e: React.DragEvent<HTMLTableCellElement>) => {
         e.preventDefault();
         const dateFrom = e.dataTransfer.getData('text/plain');
@@ -108,12 +120,22 @@ export class Calendar extends AntiHookComponent<Props> {
         }
     };
 
+    /** Clear drag state when a drag operation ends. */
     private readonly handleDragEnd = () => {
         this.dragState.setData({dragOverDate: null, dragSourceDate: null});
     };
 
-    private renderDay(year: number, month: number, day: number, drag: Readonly<DragState>): {cell: React.ReactNode; proposed: boolean} {
-        const {startDate, endDate, isProposed, restrictedDates, availableDates, onDateClick, draggable = false} = this.props;
+    /** Build one date cell with its status, interaction, and drag behavior. */
+    private renderDay(
+        year: number,
+        month: number,
+        day: number,
+        drag: Readonly<DragState>,
+    ): {cell: React.ReactNode; proposed: boolean} {
+        const {
+            startDate, endDate, isProposed, restrictedDates, availableDates,
+            onDateClick, draggable = false,
+        } = this.props;
         const dateStr = `${year}-${pad(month)}-${pad(day)}`;
         let titleAttr = '';
         let clickable = false;
@@ -139,7 +161,9 @@ export class Calendar extends AntiHookComponent<Props> {
             <td
                 key={dateStr}
                 className={dayType === 'proposed'
-                    ? (clickable ? (isDraggable ? 'calendar-proposed-drag-action' : 'calendar-proposed-action') : isDraggable ? 'calendar-proposed-drag' : 'calendar-proposed-day')
+                    ? (clickable
+                        ? (isDraggable ? 'calendar-proposed-drag-action' : 'calendar-proposed-action')
+                        : (isDraggable ? 'calendar-proposed-drag' : 'calendar-proposed-day'))
                     : dayType === 'restricted' ? 'calendar-restricted-day'
                     : dayType === 'available' ? (clickable ? 'calendar-available-action' : 'calendar-available-day')
                     : 'calendar-normal-day'}
@@ -162,6 +186,7 @@ export class Calendar extends AntiHookComponent<Props> {
         return {cell, proposed};
     }
 
+    /** Build the calendar rows for one month. */
     private monthWeeks(year: number, month: number, drag: Readonly<DragState>): CalendarRow[] {
         const month0 = month - 1;
         const firstDay = new Date(year, month0, 1).getDay();
@@ -186,10 +211,13 @@ export class Calendar extends AntiHookComponent<Props> {
         return rows;
     }
 
+    /** Render one month with its localized heading and visible weeks. */
     private renderMonth(year: number, month: number, drag: Readonly<DragState>): React.ReactElement | null {
         const {dayNames, hideEmptyWeeks = false, extraWeeks = 0} = this.props;
         // Use the UI locale, not the browser locale, for month headings.
-        const title = new Intl.DateTimeFormat(appLocale(), {timeZone: resolvedUserTz(), month: 'long', year: 'numeric'}).format(new Date(year, month - 1, 1));
+        const title = new Intl.DateTimeFormat(appLocale(), {
+            timeZone: resolvedUserTz(), month: 'long', year: 'numeric',
+        }).format(new Date(year, month - 1, 1));
         const rows = visibleWeeks(this.monthWeeks(year, month, drag), hideEmptyWeeks, extraWeeks);
         if (hideEmptyWeeks && rows.length === 0) return null;
         return (
@@ -205,6 +233,7 @@ export class Calendar extends AntiHookComponent<Props> {
         );
     }
 
+    /** Render every month in the requested date range. */
     public render() {
         const {startDate, endDate, idPrefix = 'calendar'} = this.props;
         const {dragOverDate, dragSourceDate} = this.useCarburetor(this.dragState);

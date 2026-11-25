@@ -20,15 +20,18 @@ export const UncontrolledSelect = React.forwardRef<HTMLSelectElement, Props>(
     },
 );
 
+/** Handles this operation. */
 function renderOption(item: IDataListItem) {
     return <option key={item.value} value={item.value}>{item.text}</option>;
 }
 
 class SelectView extends AntiHookComponent<Props & {inputRef: React.ForwardedRef<HTMLSelectElement>; error: string}> {
+    /** Handles this component operation. */
     private readonly blur = (event: React.FocusEvent<HTMLSelectElement>) => {
         this.props.onBlur?.(event.currentTarget.value, event.currentTarget);
     };
 
+    /** Handles this component operation. */
     public render() {
         const {inputRef, error, ...p} = this.props;
         return (
@@ -47,7 +50,8 @@ class SelectView extends AntiHookComponent<Props & {inputRef: React.ForwardedRef
                     {p.options.map(renderOption)}
                 </select>
                 {error && (
-                    <div className="garnet-form-error" data-uncontrolled-error="true" data-test-id={p.testId ? `${p.testId}-error` : undefined}>
+                    <div className="garnet-form-error" data-uncontrolled-error="true" data-test-id={p.testId
+    ? `${p.testId}-error` : undefined}>
                         {error}
                     </div>
                 )}

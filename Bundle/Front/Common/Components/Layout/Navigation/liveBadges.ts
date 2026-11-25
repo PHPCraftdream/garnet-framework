@@ -1,12 +1,9 @@
 import {MenuItem, UtilityClusterData, LiveBadgeConfig} from './types';
-import {LiveCounts} from '@common/Utils/Data/liveCounts';
+import {LiveCounts} from '@common/Utils/Data/liveCounts/LiveCounts';
 
-/**
- * Overlay freshly-polled counters onto the server-rendered menu/utility data:
- *   - the menu item tagged id='bookings' gets the live pending-bookings badge;
- *   - the utility cluster's message / support badges get the live unread counts.
- * Returns the inputs unchanged while `live` is null (before the first poll), so
- * the server values stay visible until then. Shared by TopMenu and MobileMenu.
+/** Applies current live counts to menu badges and utility links.
+ *
+ * Preserves server values until the first poll and leaves unavailable balances unchanged.
  */
 export const applyLiveCounts = (
     menuItems: MenuItem[],

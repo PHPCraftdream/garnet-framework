@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {useFormErrors} from '../useFormErrors';
+import {useFormErrors} from '@common/Components/Form/useFormErrors';
 import {FormBuilderError} from './FormBuilderError';
 
 interface Props {
@@ -11,7 +11,8 @@ interface Props {
 }
 
 /** Uncontrolled native textarea for FormBuilder. */
-export const FormBuilderTextarea = React.forwardRef<HTMLTextAreaElement, Props>(function FormBuilderTextarea(props, ref) {
+export const FormBuilderTextarea = React.forwardRef<HTMLTextAreaElement, Props>(
+    function FormBuilderTextarea(props, ref) {
     const error = useFormErrors(props.name) as string;
     return (
         <>
@@ -28,4 +29,5 @@ export const FormBuilderTextarea = React.forwardRef<HTMLTextAreaElement, Props>(
             {error && <FormBuilderError error={error} testId={props.testId} />}
         </>
     );
-});
+    },
+);

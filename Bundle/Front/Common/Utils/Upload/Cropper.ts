@@ -1,3 +1,4 @@
+/** Returns the default options for a square, non-interactive cropper. */
 export const cropperOptions = (): Record<string, number | boolean | string> => {
     return {
         aspectRatio: 1,

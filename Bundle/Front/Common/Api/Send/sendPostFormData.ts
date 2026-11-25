@@ -1,20 +1,12 @@
 import {IGarnetWindow, IApiResponse, TProgressHandler} from '@common/Support/Models';
 import {isMaintenance503} from '@common/Api/maintenance503';
+import {ApiError} from '@common/Api/Send/ApiError';
 
 const w: IGarnetWindow = window as IGarnetWindow;
 
-export class ApiError extends Error {
-    public status: number;
-    public response: IApiResponse | string | null;
+export {ApiError} from '@common/Api/Send/ApiError';
 
-    constructor(message: string, status: number, response?: IApiResponse | string | null) {
-        super(message);
-        this.name = 'ApiError';
-        this.status = status;
-        this.response = response ?? null;
-    }
-}
-
+/** Sends form data and parses the API response. */
 export const sendPostFormData = <Request extends FormData, Response extends {}>(
     url: string,
     formData: Request,
@@ -28,15 +20,15 @@ export const sendPostFormData = <Request extends FormData, Response extends {}>(
         const xhr = new XMLHttpRequest();
 
         if (onProgress) {
-            xhr.upload.onprogress = (event) => {
+            xhr.upload.addEventListener('progress', (event) => {
                 if (event.lengthComputable) {
                     const progress = Math.round((event.loaded / event.total) * 100);
                     onProgress(progress);
                 }
-            };
+            });
         }
 
-        xhr.onload = () => {
+        xhr.addEventListener('load', () => {
             // Maintenance (503): raise the shared toast, reject with a tagged error.
             if (isMaintenance503(xhr.status)) {
                 reject(new ApiError('Common_Maintenance', 503, {maintenance: true} as unknown as IApiResponse));
@@ -56,7 +48,6 @@ export const sendPostFormData = <Request extends FormData, Response extends {}>(
                     xhr.status,
                     responseData
                 ));
-
                 return;
             }
 
@@ -65,15 +56,16 @@ export const sendPostFormData = <Request extends FormData, Response extends {}>(
             } catch {
                 resolve(xhr.response as Response);
             }
-        };
+        });
 
-        xhr.onerror = () => {
+
+        xhr.addEventListener('error', () => {
             reject(new ApiError('Network error or connection failed', 0));
-        };
+        });
 
-        xhr.ontimeout = () => {
+        xhr.addEventListener('timeout', () => {
             reject(new ApiError('Request timeout', 0));
-        };
+        });
 
         xhr.open('POST', url);
         xhr.send(formData);

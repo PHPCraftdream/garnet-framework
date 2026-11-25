@@ -2,8 +2,12 @@ import {z} from 'zod';
 import {TGridFieldInfo} from '@common/Dom/GridTable/Models';
 import {I18nFramework as fw} from '@framework/I18nGen/I18nFramework';
 
+export {getFieldRegisterOptions} from '@common/Utils/Data/getFieldRegisterOptions';
+export {isNumericFieldInfo} from '@common/Utils/Data/isNumericFieldInfo';
+
 type ParsedRule = {name: string; args: string[]};
 
+/** Parses a validator rule into its name and comma-separated arguments. */
 function parseRule(rule: string): ParsedRule | null {
     const match = rule.match(/^(\w+)(?:\[(.+?)])?$/);
     if (!match) return null;
@@ -12,31 +16,32 @@ function parseRule(rule: string): ParsedRule | null {
 
 const NUMERIC_VALIDATORS = new Set(['int', 'min', 'max', 'minVal', 'maxVal']);
 
+/** Narrows unknown values to strings. */
 function isString(value: unknown): value is string {
     return typeof value === 'string';
 }
 
+/** Narrows parsed rules by removing failed parses. */
 function isParsedRule(rule: ParsedRule | null): rule is ParsedRule {
     return rule !== null;
 }
 
+/** Reports whether a parsed validator checks numeric input. */
 function isNumericRule(rule: ParsedRule): boolean {
     return NUMERIC_VALIDATORS.has(rule.name);
 }
 
-function isNumericRuleString(rule: string): boolean {
-    const parsed = parseRule(rule);
-    return !!parsed && isNumericRule(parsed);
-}
-
+/** Checks a non-empty string against the basic email format. */
 function isEmail(value: string): boolean {
     return !value || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
+/** Checks whether the browser recognizes a time zone. */
 function isTimeZone(value: string): boolean {
     return Intl.supportedValuesOf('timeZone').includes(value);
 }
 
+/** Checks whether a string can be parsed as a URL. */
 function isUrl(value: string): boolean {
     if (!value) return true;
     try {
@@ -46,16 +51,7 @@ function isUrl(value: string): boolean {
     }
 }
 
-export function isNumericFieldInfo(fieldInfo: TGridFieldInfo): boolean {
-    const rules = (fieldInfo.validation ?? []).filter(isString);
-    return rules.some(isNumericRuleString);
-}
-
-export function getFieldRegisterOptions(fieldInfo: TGridFieldInfo): Record<string, unknown> {
-    if (isNumericFieldInfo(fieldInfo)) return {valueAsNumber: true};
-    return {};
-}
-
+/** Builds the Zod schema for one grid field. */
 function zodFieldFromInfo(fieldInfo: TGridFieldInfo): z.ZodTypeAny {
     const type = fieldInfo.type;
 
@@ -106,16 +102,10 @@ function zodFieldFromInfo(fieldInfo: TGridFieldInfo): z.ZodTypeAny {
             schema = schema.regex(/^[\p{L}\p{P}\p{So} \x20-\x7E]*$/u, fw.Common_IncorrectValue());
         }
         if (rule.name === 'email') {
-            schema = schema.refine(
-                isEmail,
-                fw.Common_Email(),
-            );
+            schema = schema.refine(isEmail, fw.Common_Email());
         }
         if (rule.name === 'tzExists') {
-            schema = schema.refine(
-                isTimeZone,
-                fw.Common_IncorrectValue(),
-            );
+            schema = schema.refine(isTimeZone, fw.Common_IncorrectValue());
         }
         if (rule.name === 'in_array') {
             const allowed = rule.args;
@@ -144,9 +134,10 @@ function zodFieldFromInfo(fieldInfo: TGridFieldInfo): z.ZodTypeAny {
     return schema;
 }
 
+/** Builds a Zod object schema for visible detail fields. */
 export function zodFromFieldsInfo(
     fields: Record<string, TGridFieldInfo>,
-    detailsFields: string[],
+    detailsFields: readonly string[],
 ): z.ZodObject<Record<string, z.ZodTypeAny>> {
     const shape: Record<string, z.ZodTypeAny> = {};
     for (const column of detailsFields) {

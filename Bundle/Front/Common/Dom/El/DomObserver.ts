@@ -13,6 +13,7 @@ export interface IElementRemoveHandler {
 }
 
 export class DomObserver implements IDomObserver {
+    /** Returns the shared document observer, creating it on first use. */
     static init = (): IDomObserver => {
         if (!w.__GARNET_DOM_OBSERVER__) {
             w.__GARNET_DOM_OBSERVER__ = new DomObserver();
@@ -23,6 +24,7 @@ export class DomObserver implements IDomObserver {
 
     protected observer: MutationObserver;
 
+    /** Starts observing document mutations. */
     constructor() {
         this.observer = new MutationObserver(this.mutationHandler);
         this.observer.observe(document.body, {childList: true, subtree: true});
@@ -34,12 +36,14 @@ export class DomObserver implements IDomObserver {
 
     protected elementRemoveHandlers: Map<string, IElementRemoveHandler> = new Map();
 
+    /** Registers a handler for nodes removed from the document. */
     public defineRemoveHandler = (name: string, handler: NodeHandler): void => {
         if (!this.removeHandlers[name]) {
             this.removeHandlers[name] = handler;
         }
     }
 
+    /** Registers a callback for an element's eventual removal. */
     public registerElementRemoval = (element: HTMLElement, callback: () => void): string => {
         const id = uid('el-rm');
         (element as any)[ELEMENT_ID_PROP] = id;
@@ -47,10 +51,12 @@ export class DomObserver implements IDomObserver {
         return id;
     }
 
+    /** Cancels a previously registered element-removal callback. */
     public unregisterElementRemoval = (id: string): void => {
         this.elementRemoveHandlers.delete(id);
     }
 
+    /** Registers a handler for newly added elements with the given class. */
     public defineAddClassHandler = (className: string, handler: NodeHandler): void => {
         const newHandler = (element: HTMLElement): void => {
             element?.classList?.toggle(className, false);
@@ -67,7 +73,8 @@ export class DomObserver implements IDomObserver {
         this.addSelectors = Object.keys(this.addHandlers).map(toClassSelector).join(', ');
     }
 
-    protected mutationHandler = (mutationsList: MutationRecord[]) => {
+    /** Dispatches removal and addition handlers for observed mutations. */
+    protected mutationHandler = (mutationsList: readonly MutationRecord[]) => {
         for (let mutation of mutationsList) {
             if (mutation.type !== 'childList') {
                 continue;

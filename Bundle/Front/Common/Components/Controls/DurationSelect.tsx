@@ -15,10 +15,12 @@ interface Props {
 const renderOption = (value: number) => <option key={value} value={value}>{value}</option>;
 
 export class DurationSelect extends AntiHookComponent<Props> {
+    /** Convert the selected duration to a number and notify the parent. */
     private readonly handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         this.props.onChange(parseInt(event.target.value));
     };
 
+    /** Render the duration selector and its configured options. */
     public render() {
         const {value, variant, name, id} = this.props;
         return (

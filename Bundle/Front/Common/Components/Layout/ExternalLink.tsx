@@ -6,16 +6,11 @@ interface ExternalLinkProps extends Omit<React.AnchorHTMLAttributes<HTMLAnchorEl
 }
 
 /**
- * Anchor that routes any **untrusted** href through our `/external?to=…`
- * interstitial page so the user sees the destination, can cancel, and the
- * destination's first request originates from our gateway page (which sets
- * `<meta name="referrer" content="no-referrer">`) — Referer is empty,
- * `window.opener` is null, our DOM is unreachable, all without triggering
- * popup blockers (it's a normal `target=_blank` link click).
+ * Securely opens an untrusted destination in a new tab through the gateway.
  *
- * For first-party "open in new tab" (attachments, internal pages) a plain
- * `<a target="_blank" rel="noopener noreferrer">` is fine; this wrapper is
- * for hrefs that came from user input or external systems.
+ * The `/external?to=…` interstitial reveals the destination and limits access to
+ * the opener document while retaining normal link behavior. Use a plain anchor
+ * for trusted first-party links; this wrapper is for user or system input.
  */
 export const ExternalLink: React.FC<ExternalLinkProps> = ({extraRel, children, href, ...props}) => {
     const rel = ['noopener', 'noreferrer', 'nofollow', extraRel].filter(Boolean).join(' ');

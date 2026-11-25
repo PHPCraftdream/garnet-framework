@@ -3,9 +3,9 @@ import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
 import {sendPost} from '@common/Api/Send/sendPost';
 import {DateInput} from '@common/Components/ui/DateInput';
 import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
-import {DEFAULT_PAGE_SIZE} from '@common/Utils/Data/pagination';
-import {LogDetailModal} from '../LogDetailModal';
-import {ErrorLogDetail, ErrorRow} from '../details/ErrorLogDetail';
+import {DEFAULT_PAGE_SIZE} from '@common/Utils/Data/pagination/DEFAULT_PAGE_SIZE';
+import {LogDetailModal} from '@common/Components/Admin/AdminLog/LogDetailModal';
+import {ErrorLogDetail, ErrorRow} from '@common/Components/Admin/AdminLog/details/ErrorLogDetail';
 
 interface PageResponse {
     date: string;
@@ -46,6 +46,7 @@ interface NetworkProps {
 }
 
 const PER_PAGE_OPTIONS = [DEFAULT_PAGE_SIZE, 50, 100, 200];
+/** Handles renderPageOption. */
 function renderPageOption(n: number) { return <option key={n} value={n}>{n}</option>; }
 
 class ErrorsLog extends AntiHookComponent<Props> {
@@ -56,30 +57,46 @@ class ErrorsLog extends AntiHookComponent<Props> {
     private readonly rows = this.connectSelection(this.store, state => state.rows);
     private readonly selected = this.connectSelection(this.store, state => state.selected);
     private loader: LoadPage | null = null;
+    /** Handles setLoader. */
     private readonly setLoader = (load: LoadPage | null) => { this.loader = load; };
+    /** Handles update. */
     private readonly update = (patch: Partial<ErrorState>) => this.store.setData({...this.store.getData(), ...patch});
-    private readonly changeDate = (event: React.ChangeEvent<HTMLInputElement>) => this.update({date: event.target.value});
-    private readonly changeSearch = (event: React.ChangeEvent<HTMLInputElement>) => this.update({search: event.target.value});
-    private readonly changePerPage = (event: React.ChangeEvent<HTMLSelectElement>) => this.update({perPage: parseInt(event.target.value, 10) || 50});
+    /** Handles changeDate. */
+    private readonly changeDate = (event: React.ChangeEvent<HTMLInputElement>) => this.update({date:
+        event.target.value});
+    /** Handles changeSearch. */
+    private readonly changeSearch = (event: React.ChangeEvent<HTMLInputElement>) => this.update({search:
+        event.target.value});
+    /** Handles changePerPage. */
+    private readonly changePerPage = (event: React.ChangeEvent<HTMLSelectElement>) => this.update({perPage:
+        parseInt(event.target.value, 10) || 50});
+    /** Handles applySearch. */
     private readonly applySearch = () => this.update({appliedSearch: this.store.getData().search});
+    /** Handles onSearchKey. */
     private readonly onSearchKey = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter') this.applySearch();
     };
+    /** Handles goPrev. */
     private readonly goPrev = () => {
         const {date, page, appliedSearch, perPage} = this.store.getData();
         if (page > 1) void this.loader?.(date, page - 1, appliedSearch, perPage);
     };
+    /** Handles goNext. */
     private readonly goNext = () => {
         const {date, page, total, appliedSearch, perPage} = this.store.getData();
         if (page < Math.max(1, Math.ceil(total / perPage))) void this.loader?.(date, page + 1, appliedSearch, perPage);
     };
+    /** Handles selectRow. */
     private readonly selectRow = (event: React.MouseEvent<HTMLTableRowElement>) => {
         const row = this.store.getData().rows[Number(event.currentTarget.dataset.rowIndex)];
         if (row) this.update({selected: {...row}});
     };
+    /** Handles closeDetail. */
     private readonly closeDetail = () => this.update({selected: null});
 
-    private renderFilters(dates: readonly string[], date: string, search: string, perPage: number, total: number, loading: boolean) {
+    /** Handles renderFilters. */
+    private renderFilters(dates: readonly string[], date: string, search: string, perPage: number, total:
+        number, loading: boolean) {
         return (
             <div className="admin-log-filters">
                 <div className="filter-cell">
@@ -94,46 +111,57 @@ class ErrorsLog extends AntiHookComponent<Props> {
                 </div>
                 <div className="filter-cell">
                     <label htmlFor="errors-perpage">{t.Grid_Items()}</label>
-                    <select id="errors-perpage" className="admin-log-section-select" value={perPage} onChange={this.changePerPage} data-test-id="errors-perpage-select">
+                    <select id="errors-perpage" className="admin-log-section-select" value={perPage}
+                        onChange={this.changePerPage} data-test-id="errors-perpage-select">
                         {PER_PAGE_OPTIONS.map(renderPageOption)}
                     </select>
                 </div>
                 <div className="filter-actions">
-                    <button type="button" className="admin-request-apply" onClick={this.applySearch} data-test-id="errors-apply">{t.Grid_Search()}</button>
+                    <button type="button" className="admin-request-apply" onClick={this.applySearch}
+                        data-test-id="errors-apply">{t.Grid_Search()}</button>
                     <span className="admin-request-counter">{total}{loading ? ' …' : ''}</span>
                 </div>
             </div>
         );
     }
 
+    /** Handles renderRow. */
     private renderRow = (row: ErrorRow, index: number) => (
         <tr key={`${row.file}-${index}`} data-test-id={`errors-row-${index}`} data-row-index={index}
             className="admin-errors-row" onClick={this.selectRow}>
             <td className="admin-errors-time">{row.ts}</td>
             <td className="admin-errors-name">{row.name}</td>
-            <td className="admin-errors-cell"><div className="admin-errors-message">{row.message.split('\n', 1)[0] ?? ''}</div></td>
+            <td className="admin-errors-cell"><div className="admin-errors-message">{row.message.split('\n',
+                1)[0] ?? ''}</div></td>
         </tr>
     );
 
+    /** Handles renderTable. */
     private renderTable(rows: readonly ErrorRow[], page: number, perPage: number, total: number, loading: boolean) {
         const totalPages = Math.max(1, Math.ceil(total / perPage));
         return (
             <>
                 <div className="admin-request-table-scroll">
                     <table className="admin-request-table">
-                        <thead><tr className="admin-request-heading-row"><th className="admin-errors-heading-time">{t.RequestLog_Time()}</th><th className="admin-request-heading">{t.Logs_Errors_Name()}</th><th className="admin-request-heading">{t.Logs_Errors_Message()}</th></tr></thead>
+                        <thead><tr className="admin-request-heading-row"><th
+                            className="admin-errors-heading-time">{t.RequestLog_Time()}</th><th
+                            className="admin-request-heading">{t.Logs_Errors_Name()}</th><th
+                            className="admin-request-heading">{t.Logs_Errors_Message()}</th></tr></thead>
                         <tbody>{rows.map(this.renderRow)}</tbody>
                     </table>
                 </div>
                 <div className="admin-request-pagination">
-                    <button type="button" className="admin-request-page-button" onClick={this.goPrev} disabled={page <= 1 || loading} data-test-id="errors-prev">‹</button>
+                    <button type="button" className="admin-request-page-button" onClick={this.goPrev}
+                        disabled={page <= 1 || loading} data-test-id="errors-prev">‹</button>
                     <span className="admin-request-page-meta">{page} / {totalPages}</span>
-                    <button type="button" className="admin-request-page-button" onClick={this.goNext} disabled={page >= totalPages || loading} data-test-id="errors-next">›</button>
+                    <button type="button" className="admin-request-page-button" onClick={this.goNext}
+                        disabled={page >= totalPages || loading} data-test-id="errors-next">›</button>
                 </div>
             </>
         );
     }
 
+    /** Handles render. */
     render() {
         const state = this.useCarburetor(this.store);
         const rows = this.rows();
@@ -146,13 +174,16 @@ class ErrorsLog extends AntiHookComponent<Props> {
                 {state.dates.length === 0 || state.total === 0
                     ? <div className="admin-request-empty" data-test-id="errors-empty">{t.Logs_Errors_Empty()}</div>
                     : this.renderTable(rows, state.page, state.perPage, state.total, state.loading)}
-                {selected && <LogDetailModal onClose={this.closeDetail}><ErrorLogDetail row={selected} /></LogDetailModal>}
+                {selected && <LogDetailModal onClose={this.closeDetail}><ErrorLogDetail row={selected}
+                    /></LogDetailModal>}
             </div>
         );
     }
 }
 
-async function fetchErrorPage({pageUrl, update}: Pick<NetworkProps, 'pageUrl' | 'update'>, targetDate: string, targetPage: number, targetSearch: string, targetPerPage: number): Promise<void> {
+/** Handles fetchErrorPage. */
+async function fetchErrorPage({pageUrl, update}: Pick<NetworkProps, 'pageUrl' | 'update'>, targetDate: string,
+    targetPage: number, targetSearch: string, targetPerPage: number): Promise<void> {
     if (!targetDate) {
         update({rows: [], total: 0});
         return;
@@ -169,16 +200,21 @@ async function fetchErrorPage({pageUrl, update}: Pick<NetworkProps, 'pageUrl' | 
     }
 }
 
-function refreshAfterCommit(snapshot: Pick<NetworkProps, 'pageUrl' | 'update'>, date: string, search: string, perPage: number): void {
+/** Handles refreshAfterCommit. */
+function refreshAfterCommit(snapshot: Pick<NetworkProps, 'pageUrl' | 'update'>, date: string, search: string,
+    perPage: number): void {
     queueMicrotask(() => { void fetchErrorPage(snapshot, date, 1, search, perPage); });
 }
 
 class ErrorsLogNetwork extends AntiHookComponent<NetworkProps> {
+    /** Handles loadPage. */
     private readonly loadPage: LoadPage = (date, page, search, perPage) =>
         fetchErrorPage(this.props, date, page, search, perPage);
 
+    /** Handles clearLoader. */
     private readonly clearLoader = () => this.props.setLoader(null);
 
+    /** Handles useEffects. */
     protected useEffects(): void {
         const {pageUrl, date, appliedSearch, perPage, update, setLoader} = this.props;
         this.useEffect('setLoader', () => {
@@ -192,6 +228,7 @@ class ErrorsLogNetwork extends AntiHookComponent<NetworkProps> {
         }, [date, appliedSearch, perPage, pageUrl, update]);
     }
 
+    /** Handles render. */
     render() {
         return null;
     }

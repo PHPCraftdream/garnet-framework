@@ -1,4 +1,4 @@
-import {fetchDocumentPrefetched} from '@common/Dom/Nav/DocumentPrefetch';
+import {fetchDocumentPrefetched} from '@common/Dom/Nav/DocumentPrefetch/fetchDocumentPrefetched';
 import {PageLoader} from '@common/Dom/PageLoader';
 import {RespError} from '@common/Api/RespError';
 import {showToast} from '@common/Components/Feedback/GlobalToast';
@@ -27,6 +27,7 @@ const isStaleBuild = (html: string): boolean => {
     return cur !== '' && next !== '' && cur !== next;
 };
 
+/** Implements goTo for the shared frontend API. */
 export const goTo = (href: string): Promise<void> => {
     const token = ++navToken;
     const superseded = (): boolean => token !== navToken;

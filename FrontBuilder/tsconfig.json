@@ -12,6 +12,7 @@
         "types": ["web"],
         "noImplicitAny": false,
         "paths": {
+            "@/*": ["./*"],
             "@common/*": ["../Bundle/Front/Common/*"],
             "@framework/*": ["../Bundle/Front/*"]
         },

@@ -66,45 +66,81 @@ function getPageNumbers(page: number, totalPages: number): (number | '...')[] {
 }
 
 export default class Pagination extends React.Component<Props> {
+    /** Moves to the previous page. */
     private readonly handlePrev = (): void => {
         this.props.onPageChange(this.props.page - 1);
     };
 
+    /** Moves to the next page. */
     private readonly handleNext = (): void => {
         this.props.onPageChange(this.props.page + 1);
     };
 
+    /** Renders compact previous/next controls. */
     private renderCompact(labels: PaginationLabels) {
         const {page, totalPages, loading} = this.props;
         return (
             <div className="paging-compact-row">
-                <button type="button" className="common-pgn-btn" disabled={page <= 1 || loading} onClick={this.handlePrev} data-test-id="pagination-prev">
+                <button
+                    type="button"
+                    className="common-pgn-btn"
+                    disabled={page <= 1 || loading}
+                    onClick={this.handlePrev}
+                    data-test-id="pagination-prev"
+                >
                     {labels.prev}
                 </button>
                 <span className="common-pgn-info" data-test-id="pagination-info">{page} {labels.of} {totalPages}</span>
-                <button type="button" className="common-pgn-btn" disabled={page >= totalPages || loading} onClick={this.handleNext} data-test-id="pagination-next">
+                <button
+                    type="button"
+                    className="common-pgn-btn"
+                    disabled={page >= totalPages || loading}
+                    onClick={this.handleNext}
+                    data-test-id="pagination-next"
+                >
                     {labels.next}
                 </button>
             </div>
         );
     }
 
+    /** Renders the numbered page controls and optional total. */
     private renderPages(labels: PaginationLabels, pages: (number | '...')[]) {
         const {page, totalPages, total, loading, onPageChange} = this.props;
         return (
             <div className="paging-pages-row">
-                <button type="button" className="common-pgn-btn" disabled={page <= 1 || loading} onClick={this.handlePrev} data-test-id="pagination-prev">
+                <button
+                    type="button"
+                    className="common-pgn-btn"
+                    disabled={page <= 1 || loading}
+                    onClick={this.handlePrev}
+                    data-test-id="pagination-prev"
+                >
                     {labels.prev}
                 </button>
-                <PageNumberButtons pages={pages} currentPage={page} loading={loading} onPageChange={onPageChange} />
-                <button type="button" className="common-pgn-btn" disabled={page >= totalPages || loading} onClick={this.handleNext} data-test-id="pagination-next">
+                <PageNumberButtons
+                    pages={pages}
+                    currentPage={page}
+                    loading={loading}
+                    onPageChange={onPageChange}
+                />
+                <button
+                    type="button"
+                    className="common-pgn-btn"
+                    disabled={page >= totalPages || loading}
+                    onClick={this.handleNext}
+                    data-test-id="pagination-next"
+                >
                     {labels.next}
                 </button>
-                {total != null && <span className="paging-total-info" data-test-id="pagination-info">{total} {labels.items}</span>}
+                {total != null && <span className="paging-total-info" data-test-id="pagination-info">
+                    {total} {labels.items}
+                </span>}
             </div>
         );
     }
 
+    /** Renders the configured pagination controls. */
     public render() {
         const {page, totalPages, compact, labels, pageSize, onPageSizeChange} = this.props;
         const l = labels || fallbackLabels();
@@ -114,7 +150,10 @@ export default class Pagination extends React.Component<Props> {
         return (
             <nav className="paging-navigation" aria-label="Pagination" data-test-id="pagination">
                 {totalPages > 1 && (compact ? this.renderCompact(l) : this.renderPages(l, pages!))}
-                {showSelector && <PageSizeSelector value={pageSize!} onChange={onPageSizeChange!} />}
+                {showSelector && <PageSizeSelector
+                    value={pageSize!}
+                    onChange={onPageSizeChange!}
+                />}
             </nav>
         );
     }

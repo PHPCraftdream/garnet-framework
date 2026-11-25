@@ -26,10 +26,12 @@ export const UncontrolledInput = React.forwardRef<HTMLInputElement, Props>(
 );
 
 class InputView extends AntiHookComponent<Props & {inputRef: React.ForwardedRef<HTMLInputElement>; error: string}> {
+    /** Handles this component operation. */
     private readonly blur = (event: React.FocusEvent<HTMLInputElement>) => {
         this.props.onBlur?.(event.currentTarget.value, event.currentTarget);
     };
 
+    /** Handles this component operation. */
     public render() {
         const {inputRef: ref, error, ...p} = this.props;
         return (
@@ -53,7 +55,8 @@ class InputView extends AntiHookComponent<Props & {inputRef: React.ForwardedRef<
                     aria-invalid={error ? 'true' : undefined}
                 />
                 {error && (
-                    <div className="garnet-form-error" data-uncontrolled-error="true" data-test-id={p.testId ? `${p.testId}-error` : undefined}>
+                    <div className="garnet-form-error" data-uncontrolled-error="true" data-test-id={p.testId
+    ? `${p.testId}-error` : undefined}>
                         {error}
                     </div>
                 )}

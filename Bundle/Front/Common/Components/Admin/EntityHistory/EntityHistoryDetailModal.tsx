@@ -10,6 +10,7 @@ interface Props {
     onClose: () => void;
 }
 
+/** Formats a value for the history detail view. */
 function formatValue(value: unknown): string {
     if (value === null || value === undefined) return '∅';
     if (value === '') return '""';
@@ -17,10 +18,12 @@ function formatValue(value: unknown): string {
     return String(value);
 }
 
+/** Prevents clicks inside the dialog from closing it. */
 function stopPropagation(event: React.MouseEvent): void {
     event.stopPropagation();
 }
 
+/** Renders one changed field in the diff table. */
 function renderDiffRow([field, change]: [string, {old: unknown; new: unknown}]) {
     return <tr key={field} className="entity-history-detail-row">
         <td className="entity-history-field">{field}</td>
@@ -29,6 +32,7 @@ function renderDiffRow([field, change]: [string, {old: unknown; new: unknown}]) 
     </tr>;
 }
 
+/** Renders a table of changed fields, or nothing when there are none. */
 function renderDiff(diff: NonNullable<EntityHistoryRow['diff']>) {
     const entries = Object.entries(diff);
     if (entries.length === 0) return null;
@@ -43,21 +47,26 @@ function renderDiff(diff: NonNullable<EntityHistoryRow['diff']>) {
 }
 
 export class EntityHistoryDetailModal extends AntiHookComponent<Props> {
+    /** Registers the Escape-key listener. */
     public componentDidMount(): void {
         super.componentDidMount();
         document.addEventListener('keydown', this.onKey);
     }
+    /** Removes the Escape-key listener. */
     public componentWillUnmount(): void {
         document.removeEventListener('keydown', this.onKey);
         super.componentWillUnmount();
     }
+    /** Closes the dialog when Escape is pressed. */
     private readonly onKey = (event: KeyboardEvent): void => {
         if (event.key === 'Escape') this.props.onClose();
     };
+    /** Closes the dialog when its backdrop is clicked. */
     private readonly handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>): void => {
         if (event.target === event.currentTarget) this.props.onClose();
     };
 
+    /** Renders the history detail dialog. */
     public render() {
         const {row, onClose} = this.props;
         const actor = row.actor_name || row.actor_login_resolved || row.actor_login || '—';

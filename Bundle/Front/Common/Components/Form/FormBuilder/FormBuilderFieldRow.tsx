@@ -27,30 +27,43 @@ interface Props {
 }
 
 export class FormBuilderFieldRow extends AntiHookComponent<Props> {
+/** Handles this operation. */
 	private readonly setInputRef = (el: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null): void => {
 		if (el) this.props.inputRefs.current[this.props.column] = el;
 	};
 
+/** Handles this operation. */
 	private readonly changeSelect = (value: string): void => {
 		this.props.onFieldChange(this.props.column, value);
 	};
 
+/** Handles this operation. */
 	public render() {
 		const {column, detailsInfo, isNew} = this.props;
 		const fieldInfo = detailsInfo.fields[column];
-		if (!fieldInfo || fieldInfo.hidden || (isNew && fieldInfo.readOnly && column !== detailsInfo.idColumn)) return null;
+		if (
+			!fieldInfo || fieldInfo.hidden ||
+			(isNew && fieldInfo.readOnly && column !== detailsInfo.idColumn)
+		) return null;
 		return this.renderField(fieldInfo);
 	}
 
+/** Handles this operation. */
 	private renderField(fieldInfo: NonNullable<Props['detailsInfo']['fields'][string]>) {
-		const {column, detailsInfo, data, value, error, submitting, inputRefs, onFieldChange, onPhotoChange} = this.props;
+		const {
+			column, detailsInfo, data, value, error, submitting, inputRefs,
+			onFieldChange, onPhotoChange,
+		} = this.props;
 		const type = fieldInfo.type;
 		const label = fieldInfo.name || '';
 
 		if (type === 'photo') {
 			if (!value && fieldInfo.readOnly) return null;
 			return <FormRow label={label} error={error} align="center">
-				<PhotoField column={column} value={value} fieldInfo={fieldInfo} data={data} disabled={submitting} onFileChange={onPhotoChange} />
+				<PhotoField
+					column={column} value={value} fieldInfo={fieldInfo} data={data}
+					disabled={submitting} onFileChange={onPhotoChange}
+				/>
 			</FormRow>;
 		}
 		if (type === 'bool' || GridUtils.isBoolStr(type)) {
@@ -64,7 +77,8 @@ export class FormBuilderFieldRow extends AntiHookComponent<Props> {
 			if (selectArr?.length <= 10) {
 				return <FormRow label={label}>
 					<FormBuilderSelect name={column} defaultValue={value?.toString() || ''} options={selectArr}
-						disabled={fieldInfo.readOnly || submitting} testId={`form-field-${column}`} ref={this.setInputRef} />
+						disabled={fieldInfo.readOnly || submitting}
+						testId={`form-field-${column}`} ref={this.setInputRef} />
 				</FormRow>;
 			}
 			return <FormRow label={label} error={error}>
@@ -75,7 +89,8 @@ export class FormBuilderFieldRow extends AntiHookComponent<Props> {
 		if (type === 'textarea') {
 			return <FormRow label={label}>
 				<FormBuilderTextarea name={column} defaultValue={value?.toString() || ''}
-					disabled={fieldInfo.readOnly || submitting} rows={7} testId={`form-field-${column}`} ref={this.setInputRef} />
+					disabled={fieldInfo.readOnly || submitting} rows={7}
+					testId={`form-field-${column}`} ref={this.setInputRef} />
 			</FormRow>;
 		}
 		if (fieldInfo.readOnly && column !== detailsInfo.idColumn) {
@@ -83,7 +98,8 @@ export class FormBuilderFieldRow extends AntiHookComponent<Props> {
 		}
 		return <FormRow label={label}>
 			<FormBuilderInput name={column} defaultValue={value?.toString() || ''}
-				disabled={fieldInfo.readOnly || submitting} testId={`form-field-${column}`} ref={this.setInputRef} />
+				disabled={fieldInfo.readOnly || submitting}
+				testId={`form-field-${column}`} ref={this.setInputRef} />
 		</FormRow>;
 	}
 }

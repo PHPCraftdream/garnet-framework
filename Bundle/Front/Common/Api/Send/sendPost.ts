@@ -5,7 +5,11 @@ const w: IGarnetWindow = window as IGarnetWindow;
 
 const parseJsonResponse = <T extends {}>(response: Response) => asyncJsonThen<T>(response);
 
-export const sendPost = <Request extends {}, Response extends {}>(url: string, params: Request): Promise<IApiSuccessResponse<Response>> => {
+/** Implements sendPost for the shared frontend API. */
+export const sendPost = <Request extends {}, Response extends {}>(
+    url: string,
+    params: Request,
+): Promise<IApiSuccessResponse<Response>> => {
     const newParams = {...params};
 
     if (w.__GARNET_CSRF__) {

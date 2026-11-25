@@ -2,7 +2,7 @@ import * as React from 'react';
 import {createRoot, Root} from 'react-dom/client';
 import {DomObserver} from '@common/Dom/El/DomObserver';
 import {ErrorBoundary} from '@common/Components/Layout/ErrorBoundary';
-import {reportHandledError} from '@common/Support/Errors/JsErrorReporter';
+import {reportHandledError} from '@common/Support/Errors/reportHandledError';
 
 type LazyImport<P> = () => Promise<{ default: React.ComponentType<P> } | { [key: string]: React.ComponentType<P> }>;
 

@@ -1,10 +1,12 @@
 import * as React from 'react';
 import {AntiHookComponent} from '@react-carburetor/core';
-import {menuIconMap} from '@common/Utils/Ui/LucideIcons';
+import {menuIconMap} from '@common/Utils/Ui/menuIconMap';
 import {MenuItem} from './types';
 import {NavigationCountBadge} from './NavigationCountBadge';
 
+/** Renders one linked entry in the top navigation bar. */
 export class TopMenuLink extends AntiHookComponent<{item: MenuItem}> {
+    /** Renders the menu entry as a top-bar link. */
     public render() {
         const {item} = this.props;
         const Icon = menuIconMap[item.icon];

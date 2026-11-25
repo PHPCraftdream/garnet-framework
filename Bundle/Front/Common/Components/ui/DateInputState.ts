@@ -19,6 +19,7 @@ export class DateInputState {
         visibleMonth: 0,
     });
 
+    /** Opens the calendar at the specified month. */
     public readonly open = (year: number, month: number): void => {
         this.store.setData({
             ...this.store.getData(),
@@ -29,14 +30,17 @@ export class DateInputState {
         });
     };
 
+    /** Closes the calendar and resets its position. */
     public readonly close = (): void => {
         this.store.setData({...this.store.getData(), open: false, positioned: false});
     };
 
+    /** Sets the popup position. */
     public readonly setPosition = (top: number, left: number): void => {
         this.store.setData({...this.store.getData(), positioned: true, top, left});
     };
 
+    /** Moves the visible month by the specified offset. */
     public readonly moveMonth = (offset: number): void => {
         const state = this.store.getData();
         const total = state.visibleYear * 12 + state.visibleMonth + offset;

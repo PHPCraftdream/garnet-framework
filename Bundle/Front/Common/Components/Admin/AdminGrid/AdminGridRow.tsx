@@ -22,10 +22,12 @@ const renderCell = (cell: AdminGridCellContent) => (
 );
 
 /** Controlled row pair; expansion and content are owned by the grid. */
-export function AdminGridRow({testId, clickable, onClick, hasExpander, expanderIcon, cells, expandedContent, totalColumns}: Props) {
+export function AdminGridRow({testId, clickable, onClick, hasExpander, expanderIcon, cells, expandedContent,
+    totalColumns}: Props) {
     return (
         <>
-            <tr data-test-id={testId} className={clickable ? 'admin-grid-row-action' : 'admin-grid-row'} onClick={onClick}>
+            <tr data-test-id={testId} className={clickable ? 'admin-grid-row-action' : 'admin-grid-row'}
+                onClick={onClick}>
                 {hasExpander && <td className="admin-grid-expand-cell">{expanderIcon}</td>}
                 {cells.map(renderCell)}
             </tr>

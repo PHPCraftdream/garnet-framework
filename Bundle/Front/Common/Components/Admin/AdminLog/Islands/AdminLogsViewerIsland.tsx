@@ -3,13 +3,14 @@ import {lazy, Suspense} from 'react';
 import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
 import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
 import {PageResponse} from '@common/hooks/data/usePagination';
-import {ActionLog, MailLogEntry, CronLogEntry, JsErrorEntry, GridConfig, ActionsFilterOptions, MailsFilterOptions, CronFilterOptions, JsErrorsFilterOptions} from '../types';
-import {LogsSection} from '../Sections/LogsSection';
-import {MailLogSection} from '../Sections/MailLogSection';
+import {ActionLog, MailLogEntry, CronLogEntry, JsErrorEntry, GridConfig, ActionsFilterOptions,
+    MailsFilterOptions, CronFilterOptions, JsErrorsFilterOptions} from '@common/Components/Admin/AdminLog/types';
+import {LogsSection} from '@common/Components/Admin/AdminLog/Sections/LogsSection';
+import {MailLogSection} from '@common/Components/Admin/AdminLog/Sections/MailLogSection';
 import {AdminRequestLogIsland} from './AdminRequestLogIsland';
 import {AdminErrorsLogIsland} from './AdminErrorsLogIsland';
-import {CronLogSection} from '../Sections/CronLogSection';
-import {UserDetailContext} from '../../AdminPanel/UserDetailContext';
+import {CronLogSection} from '@common/Components/Admin/AdminLog/Sections/CronLogSection';
+import {UserDetailContext} from '@common/Components/Admin/AdminPanel/UserDetailContext';
 import {PageHeader} from '@common/Components/Layout/PageHeader';
 import {ScrollText} from 'lucide-react';
 import {goTo} from '@common/Dom/Nav/GoTo';
@@ -109,6 +110,7 @@ const tabLabel = (id: TabId): string => {
     }
 };
 
+/** Handles openUser. */
 function openUser(id: number): void {
     goTo(`/admin/#user=${id}`);
 }
@@ -119,6 +121,7 @@ class AdminLogsViewer extends AntiHookComponent<Props> {
     private readonly ui = new Carburetor({tab: readInitialTab(this.props.initialTab)});
     private readonly userContext = {openUser};
 
+    /** Handles selectTab. */
     private readonly selectTab = (event: React.MouseEvent<HTMLButtonElement>): void => {
         const id = event.currentTarget.value;
         if (!isTabId(id)) return;
@@ -126,6 +129,7 @@ class AdminLogsViewer extends AntiHookComponent<Props> {
         writeTabToUrl(id);
     };
 
+    /** Handles renderTabs. */
     private renderTabs(tab: TabId) {
         return (
             <ul className="admin-log-tab-list">
@@ -147,24 +151,30 @@ class AdminLogsViewer extends AntiHookComponent<Props> {
         );
     }
 
+    /** Handles renderContent. */
     private renderContent(tab: TabId) {
         const {endpoints, actions, mails, requests, errors, cron, jsErrors} = this.props;
         switch (tab) {
             case 'actions':
-                return <LogsSection pageUrl={endpoints.actions} initialData={actions.payload} config={actions.gridConfig} filterOptions={actions.filterOptions} />;
+                return <LogsSection pageUrl={endpoints.actions} initialData={actions.payload}
+                    config={actions.gridConfig} filterOptions={actions.filterOptions} />;
             case 'mails':
-                return <MailLogSection pageUrl={endpoints.mails} initialData={mails.payload} config={mails.gridConfig} filterOptions={mails.filterOptions} />;
+                return <MailLogSection pageUrl={endpoints.mails} initialData={mails.payload}
+                    config={mails.gridConfig} filterOptions={mails.filterOptions} />;
             case 'requests':
                 return <AdminRequestLogIsland dates={requests.dates} pageUrl={endpoints.requests} />;
             case 'errors':
                 return <AdminErrorsLogIsland dates={errors.dates} pageUrl={endpoints.errors} />;
             case 'cron':
-                return <CronLogSection pageUrl={endpoints.cron} initialData={cron.payload} filterOptions={cron.filterOptions} />;
+                return <CronLogSection pageUrl={endpoints.cron} initialData={cron.payload}
+                    filterOptions={cron.filterOptions} />;
             case 'js-errors':
-                return <Suspense fallback={null}><JsErrorLogSection pageUrl={endpoints['js-errors']} initialData={jsErrors.payload} filterOptions={jsErrors.filterOptions} /></Suspense>;
+                return <Suspense fallback={null}><JsErrorLogSection pageUrl={endpoints['js-errors']}
+                    initialData={jsErrors.payload} filterOptions={jsErrors.filterOptions} /></Suspense>;
         }
     }
 
+    /** Handles render. */
     render() {
         const {tab} = this.useCarburetor(this.ui);
         return (
@@ -181,4 +191,5 @@ class AdminLogsViewer extends AntiHookComponent<Props> {
     }
 }
 
+/** Handles AdminLogsViewerIsland. */
 export const AdminLogsViewerIsland: React.FC<Props> = props => <AdminLogsViewer {...props} />;

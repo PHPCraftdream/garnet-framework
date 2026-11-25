@@ -22,11 +22,18 @@ export const UncontrolledTextarea = React.forwardRef<HTMLTextAreaElement, Props>
     },
 );
 
-class TextareaView extends AntiHookComponent<Props & {inputRef: React.ForwardedRef<HTMLTextAreaElement>; error: string}> {
+type TextareaViewProps = Props & {
+    inputRef: React.ForwardedRef<HTMLTextAreaElement>;
+    error: string;
+};
+
+class TextareaView extends AntiHookComponent<TextareaViewProps> {
+    /** Handles this component operation. */
     private readonly blur = (event: React.FocusEvent<HTMLTextAreaElement>) => {
         this.props.onBlur?.(event.currentTarget.value, event.currentTarget);
     };
 
+    /** Handles this component operation. */
     public render() {
         const {inputRef, error, ...p} = this.props;
         return (
@@ -47,7 +54,8 @@ class TextareaView extends AntiHookComponent<Props & {inputRef: React.ForwardedR
                     aria-invalid={error ? 'true' : undefined}
                 />
                 {error && (
-                    <div className="garnet-form-error" data-uncontrolled-error="true" data-test-id={p.testId ? `${p.testId}-error` : undefined}>
+                    <div className="garnet-form-error" data-uncontrolled-error="true" data-test-id={p.testId
+    ? `${p.testId}-error` : undefined}>
                         {error}
                     </div>
                 )}

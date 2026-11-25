@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {useFormErrors} from '../useFormErrors';
+import {useFormErrors} from '@common/Components/Form/useFormErrors';
 import {FormBuilderError} from './FormBuilderError';
 
 interface Props {

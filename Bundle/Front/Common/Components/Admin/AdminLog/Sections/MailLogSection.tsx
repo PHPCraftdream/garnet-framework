@@ -1,14 +1,14 @@
 import * as React from 'react';
 import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
-import {MailLogEntry, MailsFilterOptions, GridConfig} from '../types';
-import {AdminLogGrid} from '../AdminLogGrid';
+import {MailLogEntry, MailsFilterOptions, GridConfig} from '@common/Components/Admin/AdminLog/types';
+import {AdminLogGrid} from '@common/Components/Admin/AdminLog/AdminLogGrid';
 import {PageResponse} from '@common/hooks/data/usePagination';
 import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
-import {formatTs} from '@common/Utils/Time/DateUtils';
-import {LogDetailModal} from '../LogDetailModal';
-import {MailLogDetail} from '../details/MailLogDetail';
+import {formatTs} from '@common/Utils/Time/DateUtils/format/formatTs';
+import {LogDetailModal} from '@common/Components/Admin/AdminLog/LogDetailModal';
+import {MailLogDetail} from '@common/Components/Admin/AdminLog/details/MailLogDetail';
 import {Combobox} from '@common/Components/ui/Combobox';
-import {AdminUserLink} from '../AdminUserLink';
+import {AdminUserLink} from '@common/Components/Admin/AdminLog/AdminUserLink';
 
 interface Props {
     pageUrl: string;
@@ -31,14 +31,17 @@ const emptyFilters = (): Filters => ({statusFilter: 'all', userFilter: '', typeF
 const rowKey = (row: MailLogEntry) => row.id;
 const rowTestId = (row: MailLogEntry) => `mails-row-${row.id}`;
 
+/** Handles option. */
 function option(value: string) {
     return <option key={value} value={value}>{value}</option>;
 }
 
+/** Handles accountOption. */
 function accountOption(account: MailsFilterOptions['accounts'][number]) {
     return {value: String(account.id), label: account.name};
 }
 
+/** Handles statusBadge. */
 function statusBadge(status: string): React.ReactNode {
     if (status === 'sent') return <span className="admin-log-section-status-success">{status}</span>;
     if (status === 'failed') return <span className="admin-log-section-status-danger">{status}</span>;
@@ -57,7 +60,8 @@ const renders = {
     </span>,
     mail_type: (row: MailLogEntry) => <span className="admin-log-section-mono">{row.mail_type}</span>,
     status: (row: MailLogEntry) => statusBadge(row.status),
-    error_log: (row: MailLogEntry) => row.error_log ? <span className="admin-log-section-error">{row.error_log}</span> : null,
+    error_log: (row: MailLogEntry) => row.error_log ? <span
+        className="admin-log-section-error">{row.error_log}</span> : null,
 };
 
 export class MailLogSection extends AntiHookComponent<Props> {
@@ -67,19 +71,29 @@ export class MailLogSection extends AntiHookComponent<Props> {
     private lastFilters: Filters | null = null;
     private extraParams: Record<string, unknown> = {};
 
+    /** Handles patch. */
     private patch(patch: Partial<Filters>): void {
         this.filters.setData({...this.filters.getData(), ...patch});
     }
 
+    /** Handles changeUser. */
     private readonly changeUser = (value: string) => this.patch({userFilter: value});
-    private readonly changeType = (event: React.ChangeEvent<HTMLSelectElement>) => this.patch({typeFilter: event.target.value});
-    private readonly changeStatus = (event: React.ChangeEvent<HTMLSelectElement>) => this.patch({statusFilter: event.target.value as MailStatus | 'all'});
+    /** Handles changeType. */
+    private readonly changeType = (event: React.ChangeEvent<HTMLSelectElement>) => this.patch({typeFilter:
+        event.target.value});
+    /** Handles changeStatus. */
+    private readonly changeStatus = (event: React.ChangeEvent<HTMLSelectElement>) => this.patch({statusFilter:
+        event.target.value as MailStatus | 'all'});
+    /** Handles selectRow. */
     private readonly selectRow = (selected: MailLogEntry) => this.selection.setData({selected});
+    /** Handles closeDetail. */
     private readonly closeDetail = () => this.selection.setData({selected: null});
 
+    /** Handles params. */
     private params(filters: Filters): Record<string, unknown> {
         const last = this.lastFilters;
-        if (!last || last.statusFilter !== filters.statusFilter || last.userFilter !== filters.userFilter || last.typeFilter !== filters.typeFilter) {
+        if (!last || last.statusFilter !== filters.statusFilter || last.userFilter !== filters.userFilter ||
+            last.typeFilter !== filters.typeFilter) {
             this.lastFilters = {...filters};
             this.extraParams = {
                 status: filters.statusFilter === 'all' ? '' : filters.statusFilter,
@@ -90,10 +104,12 @@ export class MailLogSection extends AntiHookComponent<Props> {
         return this.extraParams;
     }
 
+    /** Handles renderFilters. */
     private renderFilters(filters: Filters): React.ReactNode {
         const {filterOptions} = this.props;
         const userOptions = [{value: '', label: t.Admin_MailLog_Filter_All()}];
-        if (filterOptions.hasNoAccount) userOptions.push({value: NO_ACCOUNT, label: t.Admin_MailLog_Filter_NoAccount()});
+        if (filterOptions.hasNoAccount) userOptions.push({value: NO_ACCOUNT, label:
+            t.Admin_MailLog_Filter_NoAccount()});
         userOptions.push(...filterOptions.accounts.map(accountOption));
         return <div className="admin-log-filters">
             <div className="admin-log-person-filter">
@@ -104,14 +120,16 @@ export class MailLogSection extends AntiHookComponent<Props> {
             </div>
             <div className="filter-cell">
                 <label htmlFor="mails-type">{t.Admin_MailLog_Filter_Type()}</label>
-                <select id="mails-type" className="admin-log-section-select" value={filters.typeFilter} onChange={this.changeType} data-test-id="mails-type-filter">
+                <select id="mails-type" className="admin-log-section-select" value={filters.typeFilter}
+                    onChange={this.changeType} data-test-id="mails-type-filter">
                     <option value="">{t.Admin_MailLog_Filter_All()}</option>
                     {filterOptions.types.map(option)}
                 </select>
             </div>
             <div className="filter-cell">
                 <label htmlFor="mails-status">{t.Admin_MailLog_Filter_Status()}</label>
-                <select id="mails-status" className="admin-log-section-select" value={filters.statusFilter} onChange={this.changeStatus} data-test-id="mails-status-filter">
+                <select id="mails-status" className="admin-log-section-select" value={filters.statusFilter}
+                    onChange={this.changeStatus} data-test-id="mails-status-filter">
                     <option value="all">{t.Admin_MailLog_Filter_All()}</option>
                     {STATUSES.map(option)}
                 </select>
@@ -119,6 +137,7 @@ export class MailLogSection extends AntiHookComponent<Props> {
         </div>;
     }
 
+    /** Handles render. */
     public render() {
         const filters = this.useCarburetor(this.filters);
         const selected = this.selected();
@@ -126,7 +145,8 @@ export class MailLogSection extends AntiHookComponent<Props> {
         return <div>
             {this.renderFilters(filters)}
             <AdminLogGrid pageUrl={pageUrl} initialData={initialData} config={config} extraParams={this.params(filters)}
-                rowKey={rowKey} rowTestId={rowTestId} emptyMessage={t.Admin_MailLog_Empty()} onRowClick={this.selectRow} renders={renders} />
+                rowKey={rowKey} rowTestId={rowTestId} emptyMessage={t.Admin_MailLog_Empty()}
+                    onRowClick={this.selectRow} renders={renders} />
             {selected && <LogDetailModal onClose={this.closeDetail}><MailLogDetail row={selected} /></LogDetailModal>}
         </div>;
     }

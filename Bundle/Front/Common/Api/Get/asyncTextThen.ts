@@ -1,6 +1,7 @@
 import {RespError} from '@common/Api/RespError';
 import {isMaintenance503} from '@common/Api/maintenance503';
 
+/** Implements asyncTextThen for the shared frontend API. */
 export const asyncTextThen = async (d: Response): Promise<string> => {
     // Maintenance (503): raise the shared toast before treating the body as a
     // normal error response (e.g. hot-click AJAX navigation during maintenance).

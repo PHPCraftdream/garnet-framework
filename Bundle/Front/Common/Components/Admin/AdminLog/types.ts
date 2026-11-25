@@ -1,7 +1,7 @@
 // Generic types for Common AdminLog components.
 // Mirrors the rows produced by Framework-level admin-log endpoints.
 
-import type {GridConfig} from '../AdminGrid/types';
+import type {GridConfig} from '@common/Components/Admin/AdminGrid/types';
 
 export type {GridConfig};
 

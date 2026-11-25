@@ -3,6 +3,7 @@ import {IApiResponse} from '@common/Support/Models';
 
 const parseJsonResponse = <T extends {}>(response: Response) => asyncJsonThen<T>(response);
 
+/** Implements getJson for the shared frontend API. */
 export const getJson = <Response extends {}>(url: string): Promise<IApiResponse<Response>> => {
     const response = fetch(url, {
         method: 'GET',

@@ -2,8 +2,6 @@ import * as React from 'react';
 import * as SelectPrimitive from '@radix-ui/react-select';
 
 const Select = SelectPrimitive.Root;
-const SelectGroup = SelectPrimitive.Group;
-const SelectValue = SelectPrimitive.Value;
 
 const SelectTrigger = React.forwardRef<
     React.ElementRef<typeof SelectPrimitive.Trigger>,
@@ -80,4 +78,4 @@ const SelectLabel = React.forwardRef<
 ));
 SelectLabel.displayName = 'SelectLabel';
 
-export {Select, SelectGroup, SelectValue, SelectTrigger, SelectContent, SelectItem, SelectLabel};
+export {Select};

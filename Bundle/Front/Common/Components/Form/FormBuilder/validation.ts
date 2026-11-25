@@ -10,25 +10,25 @@ import {Validators} from '@common/Dom/GridTable/Validators';
 import {PageEvents} from '@common/Utils/Ui/PageEvents';
 
 
-export const parseValidation = (el: string): TValidationMapped | null => {
-	const params = el.match(/^(\w+)(\[(.+?)])?$/);
-	const name = params?.[1];
-	const args = params?.[3]?.split(',') || [];
-	return name ? {name, args} : null;
-};
+/** Handles this operation. */
+import {parseValidation} from './parseValidation';
 
 const isString = (value: unknown): value is string => typeof value === 'string';
+/** Handles this operation. */
 function readRule(entry: unknown): string | null {
 	if (isString(entry)) return entry;
 	const rule = (entry as unknown[])?.[1];
 	return isString(rule) ? rule : null;
 }
 
+/** Handles this operation. */
 function isParsedRule(rule: TValidationMapped | null): rule is TValidationMapped {
 	return rule !== null;
 }
 
-export const runFieldValidation = (fieldInfo: TGridFieldInfo, value: string, inputEl?: HTMLInputElement): string | true => {
+/** Handles this operation. */
+export const runFieldValidation = (fieldInfo: TGridFieldInfo, value: string, inputEl?: HTMLInputElement):
+    string | true => {
 	const validators = (fieldInfo?.validation || [])
 		.map(readRule)
 		.filter(isString)

@@ -1,5 +1,6 @@
 const MAX_LINES = 500;
 const MAX_COMPONENT_NESTING = 3;
+const LINE_LIMIT_MESSAGE = `This .tsx file has {lineCount} lines — the limit for a component file is ${MAX_LINES}.`;
 
 const TYPE_DECLARATION_TYPES = new Set(['TSInterfaceDeclaration', 'TSTypeAliasDeclaration']);
 
@@ -83,7 +84,9 @@ const oneExportPerComponent = {
                 if (count > 1) {
                     context.report({
                         node,
-                        message: `This .tsx file has ${count} value-level exports — only one export per component file is allowed.`,
+                        message:
+                            `This .tsx file has ${count} value-level exports — ` +
+                            'only one export per component file is allowed.',
                     });
                 }
             },
@@ -111,7 +114,7 @@ const maxComponentLines = {
                 if (lineCount > MAX_LINES) {
                     context.report({
                         node,
-                        message: `This .tsx file has ${lineCount} lines — the limit for a component file is ${MAX_LINES}.`,
+                        message: LINE_LIMIT_MESSAGE.replace('{lineCount}', lineCount),
                     });
                 }
             },
@@ -135,7 +138,9 @@ function isComponentTagName(nameNode) {
 const maxComponentNesting = {
     meta: {
         docs: {
-            description: `JSX component nesting inside a .tsx file must not exceed ${MAX_COMPONENT_NESTING} levels (HTML tags don't count).`,
+            description:
+                `JSX component nesting inside a .tsx file must not exceed ` +
+                `${MAX_COMPONENT_NESTING} levels (HTML tags don't count).`,
         },
     },
     create(context) {
@@ -154,7 +159,8 @@ const maxComponentNesting = {
                 if (depth > MAX_COMPONENT_NESTING) {
                     context.report({
                         node,
-                        message: `JSX component nesting depth is ${depth} — the limit is ${MAX_COMPONENT_NESTING} levels.`,
+                        message:
+                            `JSX component nesting depth is ${depth} — the limit is ${MAX_COMPONENT_NESTING} levels.`,
                     });
                 }
             },

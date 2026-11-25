@@ -1,10 +1,12 @@
 import * as React from 'react';
 import {AntiHookComponent} from '@react-carburetor/core';
-import {menuIconMap} from '@common/Utils/Ui/LucideIcons';
+import {menuIconMap} from '@common/Utils/Ui/menuIconMap';
 import {MenuItem} from './types';
 import {NavigationCountBadge} from './NavigationCountBadge';
 
+/** Renders one menu entry inside the mobile navigation drawer. */
 export class MobileMenuLink extends AntiHookComponent<{item: MenuItem; testIdPrefix: string}> {
+    /** Renders the menu item as a drawer link. */
     public render() {
         const {item, testIdPrefix} = this.props;
         const Icon = menuIconMap[item.icon];

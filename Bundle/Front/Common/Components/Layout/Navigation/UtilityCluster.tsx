@@ -26,6 +26,7 @@ const matchesPath = (pathname: string, url: string): boolean => {
     return pathname === u || pathname.startsWith(u + '/') || pathname.startsWith(u + '~');
 };
 
+/** Renders balance, unread-message, support, and optional profile links. */
 export const UtilityCluster: React.FC<UtilityClusterProps> = ({
     unreadMessages,
     unreadSupport,
@@ -43,7 +44,9 @@ export const UtilityCluster: React.FC<UtilityClusterProps> = ({
     const balanceActive = matchesPath(pathname, balanceUrl);
     const messagesActive = matchesPath(pathname, messagesUrl);
     const supportActive = matchesPath(pathname, supportUrl);
-    const profileActive = profileUrl ? (matchesPath(pathname, profileUrl) || pathname.startsWith(profileUrl + '_')) : false;
+    const profileActive = profileUrl
+        ? (matchesPath(pathname, profileUrl) || pathname.startsWith(profileUrl + '_'))
+        : false;
 
     return (
         <div className="utility-cluster">

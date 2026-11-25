@@ -43,10 +43,11 @@ import { ConfirmModal }    from '@common/Components/Feedback/ConfirmModal';
 import { t }               from '@common/I18n/I18nForeground';
 ```
 
-`@common` resolves to `Bundle/Front/Common/` via the rspack alias
-defined in `FrontBuilder/build/moduleConfig.ts`. Apps reference the
-same `@common` and the same `@framework` aliases — they're framework-
-provided, not per-app.
+`@common` resolves to `Bundle/Front/Common/` via the rspack alias defined in
+`FrontBuilder/build/moduleConfig.ts`. Apps use `@/` for their own `Front/`
+directory; the admin console build maps `@/` to its admin `Front/` source
+root. The existing `@common` and `@framework` aliases remain framework-provided
+and unchanged.
 
 ## Conventions
 

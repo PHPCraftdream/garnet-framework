@@ -9,21 +9,27 @@ import {I18nFramework} from '@framework/I18nGen/I18nFramework';
 import {UtilityCluster} from './UtilityCluster';
 import {NavigationDivider} from './NavigationDivider';
 import {useLiveCounts} from '@common/hooks/data/useLiveCounts';
-import {LiveCounts} from '@common/Utils/Data/liveCounts';
+import {LiveCounts} from '@common/Utils/Data/liveCounts/LiveCounts';
 import {applyLiveCounts} from './liveBadges';
 import {TopMenuLink} from './TopMenuLink';
 
-function navigateAfterLogout(): void { goTo('/'); }
+/** Redirects to the home page after logout completes. */
+function navigateAfterLogout(): void {
+    goTo('/');
+}
 
+/** Sends the logout request and redirects when it completes. */
 function handleLogout(): void {
     void sendPost(window.location.pathname, {action: 'logout'}).then(navigateAfterLogout);
 }
 
+/** Renders one menu item in the top navigation list. */
 function renderItem(item: MenuItem, index: number) {
     return <TopMenuLink key={index} item={item} />;
 }
 
 class TopMenuView extends AntiHookComponent<TopMenuProps & {live: LiveCounts | null}> {
+    /** Renders the top bar and its navigation and utility controls. */
     public render() {
         const {menuItems, utility, liveBadgeConfig, live} = this.props;
         if (!menuItems || menuItems.length === 0) return null;
@@ -42,7 +48,9 @@ class TopMenuView extends AntiHookComponent<TopMenuProps & {live: LiveCounts | n
                         <NavigationDivider />
                         <ThemeToggle />
                         <button type="button" className="top-menu-logout" data-test-id="logout-btn"
-                            title={I18nFramework.Auth_Logout()} onClick={handleLogout} aria-label={I18nFramework.Auth_Logout()}>
+                            title={I18nFramework.Auth_Logout()}
+                            onClick={handleLogout}
+                            aria-label={I18nFramework.Auth_Logout()}>
                             <LogOut size={18} aria-hidden="true" />
                         </button>
                     </div>
@@ -52,6 +60,7 @@ class TopMenuView extends AntiHookComponent<TopMenuProps & {live: LiveCounts | n
     }
 }
 
+/** Renders the top navigation menu with utility links and live counts. */
 export const TopMenu: React.FC<TopMenuProps> = props => {
     const live = useLiveCounts();
     return <TopMenuView {...props} live={live} />;

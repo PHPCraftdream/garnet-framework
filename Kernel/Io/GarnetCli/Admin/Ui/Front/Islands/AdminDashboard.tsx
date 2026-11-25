@@ -26,6 +26,7 @@ export class AdminDashboard extends AntiHookComponent<AdminDashboardProps> {
     private commandGeneration = 0;
     private unmounted = false;
 
+    /** Scrolls the command output to its latest entry. */
     private readonly scrollToBottom = () => {
         const pre = this.outputRef.current;
         if (pre) {
@@ -33,32 +34,38 @@ export class AdminDashboard extends AntiHookComponent<AdminDashboardProps> {
         }
     };
 
+    /** Subscribes to command dashboard updates. */
     protected useEffects(): void {
         this.unmounted = false;
         // Scroll only after React has committed the new output to the DOM.
         this.useEffect('scrollOutput', this.scrollToBottom, [this.outputRef.current?.textContent]);
     }
 
+    /** Disposes dashboard subscriptions. */
     public componentWillUnmount(): void {
         this.unmounted = true;
         this.closeCommand();
         super.componentWillUnmount();
     }
 
+    /** Applies a partial dashboard update. */
     private patchUi(updates: Partial<ReturnType<AdminDashboard['ui']['getData']>>): void {
         this.ui.setData({...this.ui.getData(), ...updates});
     }
 
+    /** Appends output to the active command. */
     private appendOutput(text: string): void {
         this.patchUi({output: this.ui.getData().output + text});
     }
 
+    /** Closes the active command. */
     private closeCommand(): void {
         ++this.commandGeneration;
         this.eventSource?.close();
         this.eventSource = null;
     }
 
+    /** Stops the active command. */
     private readonly stopCmd = () => {
         if (this.eventSource) {
             this.closeCommand();
@@ -67,6 +74,7 @@ export class AdminDashboard extends AntiHookComponent<AdminDashboardProps> {
         }
     };
 
+    /** Runs the selected CLI command. */
     private runCmd(cmd: string): void {
         this.stopCmd();
         const generation = ++this.commandGeneration;
@@ -109,6 +117,7 @@ export class AdminDashboard extends AntiHookComponent<AdminDashboardProps> {
             });
     }
 
+    /** Marks the active command complete. */
     private finishCommand(es: EventSource, message: string): void {
         if (this.eventSource !== es) return;
         this.appendOutput(message);
@@ -116,10 +125,12 @@ export class AdminDashboard extends AntiHookComponent<AdminDashboardProps> {
         this.patchUi({isRunning: false});
     }
 
+    /** Selects the requested application. */
     private readonly selectApp = (e: React.ChangeEvent<HTMLSelectElement>) => {
         this.patchUi({selectedApp: e.target.value});
     };
 
+    /** Switches to the selected application. */
     private readonly switchApp = async () => {
         const {selectedApp} = this.ui.getData();
         try {
@@ -141,6 +152,7 @@ export class AdminDashboard extends AntiHookComponent<AdminDashboardProps> {
         }
     };
 
+    /** Logs out of the admin session. */
     private readonly logout = () => {
         fetch('/__garnet/logout', {
             method: 'POST',
@@ -149,12 +161,18 @@ export class AdminDashboard extends AntiHookComponent<AdminDashboardProps> {
         }).then(returnToAdmin);
     };
 
+    /** Starts the build command. */
     private readonly build = () => this.runCmd('build');
+    /** Starts the watch command. */
     private readonly watch = () => this.runCmd('build:watch');
+    /** Starts the prepare command. */
     private readonly prepare = () => this.runCmd('prepare');
+    /** Starts database migrations. */
     private readonly migrate = () => this.runCmd('migration');
+    /** Clears the command output. */
     private readonly clear = () => this.patchUi({output: ''});
 
+    /** Renders the dashboard header. */
     private renderHeader() {
         return (
             <header className="clidashboard-header">
@@ -168,6 +186,7 @@ export class AdminDashboard extends AntiHookComponent<AdminDashboardProps> {
         );
     }
 
+    /** Renders the application switcher. */
     private renderAppSwitcher(selectedApp: string, activeApp: string) {
         const {apps} = this.props;
         return (
@@ -196,14 +215,21 @@ export class AdminDashboard extends AntiHookComponent<AdminDashboardProps> {
         );
     }
 
+    /** Renders available commands. */
     private renderCommands(isRunning: boolean) {
         return (
             <div className="clidashboard-card">
                 <div className="clidashboard-command-row">
                     <button onClick={this.build} disabled={isRunning} className="clidashboard-build">Build</button>
-                    <button onClick={this.watch} disabled={isRunning} className="clidashboard-watch">Build:Watch</button>
-                    <button onClick={this.prepare} disabled={isRunning} className="clidashboard-prepare">Prepare</button>
-                    <button onClick={this.migrate} disabled={isRunning} className="clidashboard-migration">Migration</button>
+                    <button onClick={this.watch} disabled={isRunning} className="clidashboard-watch">
+                        Build:Watch
+                    </button>
+                    <button onClick={this.prepare} disabled={isRunning} className="clidashboard-prepare">
+                        Prepare
+                    </button>
+                    <button onClick={this.migrate} disabled={isRunning} className="clidashboard-migration">
+                        Migration
+                    </button>
                     {isRunning && (
                         <button onClick={this.stopCmd} className="clidashboard-stop">Stop</button>
                     )}
@@ -212,6 +238,7 @@ export class AdminDashboard extends AntiHookComponent<AdminDashboardProps> {
         );
     }
 
+    /** Renders command output. */
     private renderOutput(output: string) {
         return (
             <div className="clidashboard-card">
@@ -229,6 +256,7 @@ export class AdminDashboard extends AntiHookComponent<AdminDashboardProps> {
         );
     }
 
+    /** Renders the admin dashboard. */
     public render() {
         const {selectedApp, activeApp, output, isRunning} = this.useCarburetor(this.ui);
         return (

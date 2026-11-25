@@ -25,6 +25,7 @@ export function appUrl(path: string, opts: {noPrefix?: boolean} = {}): string {
     return prefix + path;
 }
 
+/** Checks whether a URL path is registered to omit the system prefix. */
 function isNoPrefixPath(path: string): boolean {
     const list: unknown = (window as any).__GARNET_NO_PREFIX_PATHS__;
     if (!Array.isArray(list) || list.length === 0) return false;

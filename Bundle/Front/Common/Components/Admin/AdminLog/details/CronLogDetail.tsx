@@ -1,12 +1,13 @@
 import * as React from 'react';
-import {CronLogEntry} from '../types';
+import {CronLogEntry} from '@common/Components/Admin/AdminLog/types';
 import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
-import {formatTs} from '@common/Utils/Time/DateUtils';
+import {formatTs} from '@common/Utils/Time/DateUtils/format/formatTs';
 
 interface Props {
     row: CronLogEntry;
 }
 
+/** Handles CronLogDetail. */
 export const CronLogDetail: React.FC<Props> = ({row}) => (
     <div data-test-id="log-detail-cron">
         <div className="log-detail-grid">

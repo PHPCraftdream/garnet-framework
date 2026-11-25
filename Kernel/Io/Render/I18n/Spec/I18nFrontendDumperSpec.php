@@ -71,18 +71,39 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Render\I18n\Spec {
                 I18nFrontendDumper::dump($this->langData, $this->tempDir, 'TestBundle', false);
 
                 $ruContent = file_get_contents($this->tempDir . '/I18nDataRU.ts');
-                expect($ruContent)->toContain('export class I18nDataRU');
-                expect($ruContent)->toContain("static lang = 'RU';");
-                expect($ruContent)->toContain("static hello = 'Привет';");
-                expect($ruContent)->toContain("static goodbye = 'До свидания';");
-                expect($ruContent)->toContain("static welcome = 'Добро пожаловать';");
+                expect($ruContent)->toContain('/** Translation data for RU. */');
+                expect($ruContent)->toContain('export const I18nDataRU = {');
+                expect($ruContent)->toContain("/** Language code for this translation set. */\n    lang: \"RU\",");
+                expect($ruContent)->toContain("/** Translation text for `hello`. */\n    hello: \"Привет\",");
+                expect($ruContent)->toContain("/** Translation text for `goodbye`. */\n    goodbye: \"До свидания\",");
+                expect($ruContent)->toContain("/** Translation text for `welcome`. */\n    welcome: \"Добро пожаловать\",");
 
                 $enContent = file_get_contents($this->tempDir . '/I18nDataEN.ts');
-                expect($enContent)->toContain('export class I18nDataEN');
-                expect($enContent)->toContain("static lang = 'EN';");
-                expect($enContent)->toContain("static hello = 'Hello';");
-                expect($enContent)->toContain("static goodbye = 'Goodbye';");
-                expect($enContent)->toContain("static welcome = 'Welcome';");
+                expect($enContent)->toContain('/** Translation data for EN. */');
+                expect($enContent)->toContain('export const I18nDataEN = {');
+                expect($enContent)->toContain("/** Language code for this translation set. */\n    lang: \"EN\",");
+                expect($enContent)->toContain("/** Translation text for `hello`. */\n    hello: \"Hello\",");
+                expect($enContent)->toContain("/** Translation text for `goodbye`. */\n    goodbye: \"Goodbye\",");
+                expect($enContent)->toContain("/** Translation text for `welcome`. */\n    welcome: \"Welcome\",");
+            });
+
+            it('wraps long values without changing their string value', function (): void {
+                $value = str_repeat('unbrokenword', 18) . " line\nwith 'quotes' and \\\\slashes";
+                I18nFrontendDumper::dump(['EN' => ['long_value' => $value]], $this->tempDir, 'TestBundle', false);
+
+                $content = file_get_contents($this->tempDir . '/I18nDataEN.ts');
+                expect($content)->toContain(' +' . "\n");
+                expect($content)->toContain('/** Translation text for `long_value`. */');
+                expect($content)->not->toContain('static readonly');
+
+                foreach (explode("\n", $content) as $line) {
+                    expect(mb_strlen($line, 'UTF-8'))->toBeLessThanOrEqual(120);
+                }
+
+                $literalSource = preg_match('/    long_value: ([\\s\\S]*),\\n/', $content, $matches);
+                expect($literalSource)->toBe(1);
+                $decoded = json_decode('[' . str_replace(" +\n        ", ',', $matches[1]) . ']', true);
+                expect(join('', $decoded))->toBe($value);
             });
 
             it('escapes single quotes in translation values', function (): void {
@@ -96,8 +117,8 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Render\I18n\Spec {
                 I18nFrontendDumper::dump($langData, $this->tempDir, 'TestBundle', false);
 
                 $content = file_get_contents($this->tempDir . '/I18nDataEN.ts');
-                expect($content)->toContain("static it's = 'It\\'s working';");
-                expect($content)->toContain("static don't = 'Don\\'t worry';");
+                expect($content)->toContain("it's: \"It's working\",");
+                expect($content)->toContain("don't: \"Don't worry\",");
             });
 
             it('skips case-insensitive lang key in language data files', function (): void {
@@ -113,11 +134,12 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Render\I18n\Spec {
                 I18nFrontendDumper::dump($langData, $this->tempDir, 'TestBundle', false);
 
                 $content = file_get_contents($this->tempDir . '/I18nDataEN.ts');
-                expect($content)->toContain("static lang = 'EN';");
-                expect($content)->not->toContain("static lang = 'English';");
-                expect($content)->not->toContain("static Lang = 'Lang MixedCase';");
-                expect($content)->not->toContain("static LANG = 'LANG Uppercase';");
-                expect($content)->toContain("static hello = 'Hello';");
+                expect($content)->toContain('export const I18nDataEN = {');
+                expect($content)->toContain('    lang: "EN",');
+                expect($content)->not->toContain('lang: "English",');
+                expect($content)->not->toContain('Lang: "Lang MixedCase",');
+                expect($content)->not->toContain('LANG: "LANG Uppercase",');
+                expect($content)->toContain('hello: "Hello",');
             });
 
             it('creates main I18n class file', function (): void {
@@ -139,8 +161,8 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Render\I18n\Spec {
                 I18nFrontendDumper::dump($this->langData, $this->tempDir, 'TestBundle', false);
 
                 $content = file_get_contents($this->tempDir . '/I18nTestBundle.ts');
-                expect($content)->toContain('type t = (args?: (string|number)[]) => string;');
-                expect($content)->toContain('class I18n extends I18nBase {');
+                expect($content)->toContain("/** Translation lookup function signature. */\ntype t = (args?: (string|number)[]) => string;");
+                expect($content)->toContain("/** Provides typed access to this bundle's translations. */\nclass I18n extends I18nBase {");
                 expect($content)->toContain('export const I18nTestBundle = new I18n([I18nDataRU, I18nDataEN]);');
             });
 
@@ -148,9 +170,9 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Render\I18n\Spec {
                 I18nFrontendDumper::dump($this->langData, $this->tempDir, 'TestBundle', false);
 
                 $content = file_get_contents($this->tempDir . '/I18nTestBundle.ts');
-                expect($content)->toContain("    hello: t = (a = []) => this.t('hello', a);");
-                expect($content)->toContain("    goodbye: t = (a = []) => this.t('goodbye', a);");
-                expect($content)->toContain("    welcome: t = (a = []) => this.t('welcome', a);");
+                expect($content)->toContain("    /** Translation lookup for `hello`. */\n    hello: t = (a = []) => this.t('hello', a);");
+                expect($content)->toContain("    /** Translation lookup for `goodbye`. */\n    goodbye: t = (a = []) => this.t('goodbye', a);");
+                expect($content)->toContain("    /** Translation lookup for `welcome`. */\n    welcome: t = (a = []) => this.t('welcome', a);");
             });
 
             it('returns early when methods array is empty', function (): void {
@@ -220,11 +242,11 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Render\I18n\Spec {
 
                 $content = file_get_contents($this->tempDir . '/I18nTestBundle.ts');
 
-                expect($content)->toContain("    hello: t = (a = []) => this.t('hello', a);");
-                expect($content)->toContain("    greet: t = (a = []) => this.t('greet', a);");
-                expect($content)->toContain("    farewell: t = (a = []) => this.t('farewell', a);");
-                expect($content)->toContain("    bonjour: t = (a = []) => this.t('bonjour', a);");
-                expect($content)->toContain("    aurevoir: t = (a = []) => this.t('aurevoir', a);");
+                expect($content)->toContain("    /** Translation lookup for `hello`. */\n    hello: t = (a = []) => this.t('hello', a);");
+                expect($content)->toContain("    /** Translation lookup for `greet`. */\n    greet: t = (a = []) => this.t('greet', a);");
+                expect($content)->toContain("    /** Translation lookup for `farewell`. */\n    farewell: t = (a = []) => this.t('farewell', a);");
+                expect($content)->toContain("    /** Translation lookup for `bonjour`. */\n    bonjour: t = (a = []) => this.t('bonjour', a);");
+                expect($content)->toContain("    /** Translation lookup for `aurevoir`. */\n    aurevoir: t = (a = []) => this.t('aurevoir', a);");
             });
 
             it('handles special characters in translation values', function (): void {
@@ -238,8 +260,8 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Render\I18n\Spec {
                 I18nFrontendDumper::dump($langData, $this->tempDir, 'TestBundle', false);
 
                 $content = file_get_contents($this->tempDir . '/I18nDataEN.ts');
-                expect($content)->toContain("static newlines = 'Line1\nLine2\nLine3';");
-                expect($content)->toContain("static tabs = 'Tab1\tTab2';");
+                expect($content)->toContain('newlines: "Line1\\\\nLine2\\\\nLine3",');
+                expect($content)->toContain('tabs: "Tab1\\\\tTab2",');
             });
 
             it('overwrites existing files', function (): void {

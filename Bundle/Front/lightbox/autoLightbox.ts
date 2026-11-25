@@ -18,7 +18,10 @@ const makeArrow = (text: string, dir: -1 | 1) => {
     const btn = document.createElement('button');
     btn.innerHTML = text;
     const side = dir === -1 ? 'left:12px' : 'right:12px';
-    btn.style.cssText = `position:absolute;top:50%;${side};transform:translateY(-50%);width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.15);color:#fff;font-size:22px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;`;
+    btn.style.cssText =
+        `position:absolute;top:50%;${side};transform:translateY(-50%);width:40px;height:40px;` +
+        'border-radius:50%;background:rgba(255,255,255,0.15);color:#fff;font-size:22px;' +
+        'border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;';
     btn.addEventListener('click', (e) => {
         e.stopPropagation();
         navigate(dir);
@@ -26,6 +29,7 @@ const makeArrow = (text: string, dir: -1 | 1) => {
     return btn;
 };
 
+/** Renders the selected image, caption, controls, and gallery navigation. */
 function show(src: string, alt?: string): void {
     if (!overlay) {
         overlay = document.createElement('div');
@@ -79,12 +83,14 @@ function show(src: string, alt?: string): void {
     }
 }
 
+/** Advances the active gallery index and displays its image. */
 function navigate(dir: -1 | 1): void {
     currentIndex = (currentIndex + dir + currentGroup.length) % currentGroup.length;
     const link = currentGroup[currentIndex];
     show(link.href, link.getAttribute('data-alt') || undefined);
 }
 
+/** Hides the overlay and restores page scrolling. */
 function close(): void {
     if (overlay) {
         overlay.style.display = 'none';
@@ -93,6 +99,7 @@ function close(): void {
     document.body.style.overflow = '';
 }
 
+/** Handles keyboard dismissal and gallery navigation. */
 function onKeyDown(e: KeyboardEvent): void {
     if (!overlay || overlay.style.display === 'none') return;
     if (e.key === 'Escape') close();
@@ -106,13 +113,16 @@ const onDocumentClick = (e: MouseEvent): void => {
     e.preventDefault();
 
     const group = link.getAttribute('data-lightbox') || '';
-    currentGroup = Array.from(document.querySelectorAll<HTMLAnchorElement>(`a[data-lightbox="${group}"]`));
+    currentGroup = Array.from(
+        document.querySelectorAll<HTMLAnchorElement>(`a[data-lightbox="${group}"]`),
+    );
     currentIndex = currentGroup.indexOf(link);
     if (currentIndex < 0) currentIndex = 0;
 
     show(link.href, link.getAttribute('data-alt') || undefined);
 };
 
+/** Registers click and keyboard handlers for lightbox links. */
 export function initAutoLightbox(): void {
     document.addEventListener('click', onDocumentClick.bind(undefined));
 

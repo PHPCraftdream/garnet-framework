@@ -5,6 +5,7 @@ interface Props {
     ctrl: ToastControls;
 }
 
+/** Displays a toast message with pause and dismiss controls. */
 export const Toast: React.FC<Props> = ({ctrl}) => (
     <div className="toast-container">
         <div
@@ -12,7 +13,12 @@ export const Toast: React.FC<Props> = ({ctrl}) => (
             aria-live="assertive"
             aria-atomic="true"
             className={ctrl.toast.visible ? 'global-toast-message' : 'local-toast-hidden'}
-            data-toast-type={ctrl.toast.type === 'danger' ? 'danger' : ctrl.toast.type === 'success' ? 'success' : ctrl.toast.type === 'warning' ? 'warning' : 'primary'}
+            data-toast-type={
+                ctrl.toast.type === 'danger' ? 'danger'
+                    : ctrl.toast.type === 'success' ? 'success'
+                        : ctrl.toast.type === 'warning' ? 'warning'
+                            : 'primary'
+            }
             onMouseEnter={ctrl.pause}
             onMouseLeave={ctrl.resume}
         >

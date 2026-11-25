@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
-import type {AsyncIconState, UseAsyncIconOptions} from '@common/hooks/ui/useAsyncIcon';
+import type {AsyncIconState, UseAsyncIconOptions} from '@common/hooks/ui/internal/useAsyncIcon';
 import {showToast} from '@common/Components/Feedback/GlobalToast';
 import {isMaintenanceError} from '@common/Api/maintenance503';
 import {I18nFramework} from '@framework/I18nGen/I18nFramework';
@@ -30,17 +30,20 @@ export class AsyncIconButton extends AntiHookComponent<AsyncIconButtonProps> {
     private timer: ReturnType<typeof setTimeout> | null = null;
     private mounted = true;
 
+    /** Mark the component active after mounting. */
     public componentDidMount(): void {
         super.componentDidMount();
         this.mounted = true;
     }
 
+    /** Stop pending timers before the component is removed. */
     public componentWillUnmount(): void {
         this.mounted = false;
         this.clearTimer();
         super.componentWillUnmount();
     }
 
+    /** Cancel any scheduled error-state reset. */
     private clearTimer(): void {
         if (this.timer !== null) {
             clearTimeout(this.timer);
@@ -48,6 +51,7 @@ export class AsyncIconButton extends AntiHookComponent<AsyncIconButtonProps> {
         }
     }
 
+    /** Run the action and manage its loading, error, and recovery states. */
     private async runAction(action: () => unknown | Promise<unknown>, options: UseAsyncIconOptions): Promise<void> {
         const {errorToast, errorMs = 2000, onError, rethrow = false} = options;
         this.clearTimer();
@@ -68,11 +72,13 @@ export class AsyncIconButton extends AntiHookComponent<AsyncIconButtonProps> {
         }
     }
 
+    /** Return the icon to idle after the error display expires. */
     private readonly clearError = (): void => {
         this.timer = null;
         if (this.mounted) this.iconState.setData({state: 'idle'});
     };
 
+    /** Prevent navigation and start the action unless the control is unavailable. */
     private readonly handleClick = (event: React.MouseEvent<HTMLElement>): void => {
         event.preventDefault();
         const {disabled = false, onAction, errorToast, errorMs, onError, rethrow} = this.props;
@@ -80,6 +86,7 @@ export class AsyncIconButton extends AntiHookComponent<AsyncIconButtonProps> {
         void this.runAction(onAction, {errorToast, errorMs, onError, rethrow});
     };
 
+    /** Render the state icon alongside the optional label. */
     private renderInner(state: AsyncIconState) {
         const {icon, label, iconSize = 18, errorIcon} = this.props;
         return (
@@ -90,6 +97,7 @@ export class AsyncIconButton extends AntiHookComponent<AsyncIconButtonProps> {
         );
     }
 
+    /** Build event and accessibility props shared by buttons and links. */
     private sharedProps(isLoading: boolean) {
         const {title, ariaLabel, testId} = this.props;
         return {
@@ -101,28 +109,58 @@ export class AsyncIconButton extends AntiHookComponent<AsyncIconButtonProps> {
         };
     }
 
+    /** Render the action as an anchor or button according to its props. */
     public render() {
-        const {href, variant, disabled = false} = this.props;
+        const {href, disabled = false} = this.props;
         const {state} = this.useCarburetor(this.iconState);
         const isLoading = state === 'loading';
         const inner = this.renderInner(state);
         const shared = this.sharedProps(isLoading);
-        if (href != null) {
-            return (
-                <a
-                    href={href}
-                    className={variant === 'accent-outline' ? 'async-accent-action' : variant === 'muted-outline' ? 'async-muted-action' : undefined}
-                    aria-disabled={disabled || isLoading || undefined}
-                    {...shared}
-                >
-                    {inner}
-                </a>
-            );
-        }
+        if (href != null) return this.renderLink(href, inner, shared, disabled, isLoading);
+        return this.renderButton(inner, shared, disabled, isLoading);
+    }
+
+    /** Render the action as a link while preserving its shared behavior. */
+    private renderLink(
+        href: string,
+        inner: React.ReactNode,
+        shared: ReturnType<AsyncIconButton['sharedProps']>,
+        disabled: boolean,
+        isLoading: boolean,
+    ) {
+        const {variant} = this.props;
+        return (
+            <a
+                href={href}
+                className={
+                    variant === 'accent-outline' ? 'async-accent-action'
+                        : variant === 'muted-outline' ? 'async-muted-action'
+                            : undefined
+                }
+                aria-disabled={disabled || isLoading || undefined}
+                {...shared}
+            >
+                {inner}
+            </a>
+        );
+    }
+
+    /** Render the action as a button while preserving its shared behavior. */
+    private renderButton(
+        inner: React.ReactNode,
+        shared: ReturnType<AsyncIconButton['sharedProps']>,
+        disabled: boolean,
+        isLoading: boolean,
+    ) {
+        const {variant} = this.props;
         return (
             <button
                 type="button"
-                className={variant === 'accent-outline' ? 'async-accent-action' : variant === 'muted-outline' ? 'async-muted-action' : undefined}
+                className={
+                    variant === 'accent-outline' ? 'async-accent-action'
+                        : variant === 'muted-outline' ? 'async-muted-action'
+                            : undefined
+                }
                 disabled={disabled || isLoading}
                 {...shared}
             >

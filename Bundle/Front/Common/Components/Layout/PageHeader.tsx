@@ -32,4 +32,4 @@ export const PageHeader: React.FC<PageHeaderProps> = ({title, subtitle, icon, ac
     </div>
 );
 
-export default PageHeader;
+

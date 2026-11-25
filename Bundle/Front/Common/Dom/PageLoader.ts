@@ -1,6 +1,8 @@
 import {PageEvents} from '@common/Utils/Ui/PageEvents';
 import {ECommonEvents} from '@common/Support/Enums';
 
+import PAGE_LOADER_DEFAULT_TIMEOUT from '@common/Dom/PageLoader/PageLoaderDefaults';
+
 const scheduleReloaded = (resolve: () => void): void => {
     requestAnimationFrame(() => {
         PageEvents.init().emmit(ECommonEvents.PAGE_RELOADED, null);
@@ -10,10 +12,14 @@ const scheduleReloaded = (resolve: () => void): void => {
 
 const emitReloaded = (): Promise<void> => new Promise<void>(scheduleReloaded);
 
-export class PageLoader {
-    static DEFAULT_TIMEOUT = 30000; // 30 seconds
+/** Loads scripts, styles, and server-rendered pages into the current document. */
+export const PageLoader = {
+    /** Default timeout for loading page resources. */
+    DEFAULT_TIMEOUT: PAGE_LOADER_DEFAULT_TIMEOUT,
 
-    static loadScripts(resources: string[], timeout: number = PageLoader.DEFAULT_TIMEOUT): Promise<string[]> {
+
+    /** Loads scripts not already present in the document. */
+    loadScripts(resources: readonly string[], timeout: number = PageLoader.DEFAULT_TIMEOUT): Promise<string[]> {
         if (!resources?.length) {
             return Promise.resolve([]);
         }
@@ -46,14 +52,14 @@ export class PageLoader {
                     reject(new Error(`Timeout loading script: ${resource}`));
                 }, timeout);
 
-                script.onload = () => {
+                script.addEventListener('load', () => {
                     clearTimeout(timeoutId);
                     resolve(resource);
-                };
-                script.onerror = () => {
+                }, {once: true});
+                script.addEventListener('error', () => {
                     clearTimeout(timeoutId);
                     reject(new Error(`Failed to load script: ${resource}`));
-                };
+                }, {once: true});
                 document.head.appendChild(script);
             });
 
@@ -61,9 +67,10 @@ export class PageLoader {
         }
 
         return Promise.all(promises);
-    }
+    },
 
-    static loadStyles(resources: string[], timeout: number = PageLoader.DEFAULT_TIMEOUT): Promise<string[]> {
+    /** Loads stylesheets not already present in the document. */
+    loadStyles(resources: readonly string[], timeout: number = PageLoader.DEFAULT_TIMEOUT): Promise<string[]> {
         const promises: Promise<string>[] = [];
 
         if (!resources?.length) {
@@ -101,14 +108,14 @@ export class PageLoader {
                     reject(new Error(`Timeout loading style: ${resource}`));
                 }, timeout);
 
-                link.onload = () => {
+                link.addEventListener('load', () => {
                     clearTimeout(timeoutId);
                     resolve(resource);
-                };
-                link.onerror = () => {
+                }, {once: true});
+                link.addEventListener('error', () => {
                     clearTimeout(timeoutId);
                     reject(new Error(`Failed to load style: ${resource}`));
-                };
+                }, {once: true});
                 document.head.appendChild(link);
             });
 
@@ -116,9 +123,10 @@ export class PageLoader {
         }
 
         return Promise.all(promises);
-    }
+    },
 
-    static updatePage(html: string): Promise<void> {
+    /** Replaces the current page with parsed server-rendered HTML. */
+    updatePage(html: string): Promise<void> {
         // Single DOMParser pass: regex-extraction of <body>...</body> was
         // brittle (responses with multiline data-* attrs, escaped quotes, or
         // inline JSON containing `</script>` could yield an empty/truncated
@@ -229,17 +237,17 @@ export class PageLoader {
             }
         }
 
-        return PageLoader.loadStyles(stylesToLoad)
-            .then(() => PageLoader.swapBody(doc, scriptsToLoad));
-    }
+        return this.loadStyles(stylesToLoad)
+            .then(() => this.swapBody(doc, scriptsToLoad));
+    },
 
     /**
-     * Build the new body content (everything except <script src>, loaded
-     * separately) into a detached fragment. Inline <script> tags are re-created
-     * via createElement so the browser executes them — a cloned/innerHTML
-     * <script> stays inert.
+     * Build the new body content into a detached fragment. Inline scripts are
+     * recreated so the browser executes them.
+     *
+     * Script resources are loaded separately before this fragment is mounted.
      */
-    private static buildBodyFragment(doc: Document): DocumentFragment {
+    buildBodyFragment(doc: Document): DocumentFragment {
         const frag = document.createDocumentFragment();
 
         for (const node of Array.from(doc.body.childNodes)) {
@@ -259,17 +267,14 @@ export class PageLoader {
         }
 
         return frag;
-    }
+    },
 
-    /**
-     * Swap the page body without the blank flash + un-hydrated flicker.
-     * The new content is mounted in a layer stacked OVER the old
-     * one (absolute, opacity 0), given a couple of frames to render and let its
-     * islands hydrate, then cross-faded in — only after which the old content
-     * is dropped. Falls back to a plain replacement when motion is reduced or
-     * anything goes wrong.
+    /** Swaps the page body with a cross-fade while preserving persistent UI.
+     *
+     * The incoming content gets time to render and hydrate before replacing the
+     * outgoing content; reduced motion and failures use direct replacement.
      */
-    private static swapBody(doc: Document, scriptsToLoad: string[]): Promise<void> {
+    swapBody(doc: Document, scriptsToLoad: readonly string[]): Promise<void> {
         const body = document.body;
 
         // The toast root is created once at boot (Framework.ts) and is NOT part
@@ -285,10 +290,10 @@ export class PageLoader {
                     body.removeChild(n);
                 }
             }
-            body.appendChild(PageLoader.buildBodyFragment(doc));
+            body.appendChild(this.buildBodyFragment(doc));
             // Clear the click-time "leaving" dim so the new content isn't faded.
             body.classList.remove('page-leaving', 'page-swapping');
-            return PageLoader.loadScripts(scriptsToLoad).then(emitReloaded);
+            return this.loadScripts(scriptsToLoad).then(emitReloaded);
         };
 
         const prefersReduce = typeof window !== 'undefined'
@@ -308,12 +313,12 @@ export class PageLoader {
             // has rendered + hydrated.
             const incoming = document.createElement('div');
             incoming.className = 'page-swap-incoming';
-            incoming.appendChild(PageLoader.buildBodyFragment(doc));
+            incoming.appendChild(this.buildBodyFragment(doc));
 
             body.classList.add('page-swapping');
             body.appendChild(incoming);
 
-            return PageLoader.loadScripts(scriptsToLoad)
+            return this.loadScripts(scriptsToLoad)
                 .then(emitReloaded)
                 .then(() => new Promise<void>((resolve) => {
                     let done = false;
@@ -354,5 +359,5 @@ export class PageLoader {
         } catch {
             return directSwap();
         }
-    }
-}
+    },
+};

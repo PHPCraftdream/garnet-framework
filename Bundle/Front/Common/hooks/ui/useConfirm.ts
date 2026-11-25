@@ -16,12 +16,16 @@ export interface ConfirmOptions {
 }
 
 class ConfirmStore extends Carburetor<ConfirmState> {
+    /** Initializes hidden confirmation state. */
     constructor() { super({visible: false, message: '', items: []}); }
+    /** Returns the current confirmation snapshot. */
     readonly snapshot = () => this.getData();
+    /** Subscribes to confirmation-state changes. */
     readonly subscribeSnapshot = (listener: () => void) => {
         const id = this.subscribe(listener);
         return () => this.unsubscribe(id);
     };
+    /** Updates the confirmation state. */
     readonly setConfirmState = (value: ConfirmState | ((previous: ConfirmState) => ConfirmState)) => {
         const previous = this.getData();
         const next = typeof value === 'function' ? value(previous) : value;
@@ -35,10 +39,13 @@ class ConfirmStore extends Carburetor<ConfirmState> {
     };
 }
 
+/** Creates a confirmation store. */
 function createConfirmStore(): ConfirmStore { return new ConfirmStore(); }
 
+/** Closes the active confirmation. */
 function closeConfirmation(previous: ConfirmState): ConfirmState { return {...previous, visible: false}; }
 
+/** Provides confirmation state and actions. */
 export function useConfirm() {
     const [store] = useState(createConfirmStore);
     const confirmState = useSyncExternalStore(store.subscribeSnapshot, store.snapshot, store.snapshot);

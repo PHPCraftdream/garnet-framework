@@ -1,5 +1,7 @@
 import {KeyboardEvent} from 'react';
 
+export {CTRL_ENTER_HINT} from '@common/hooks/ui/internal/CTRL_ENTER_HINT';
+
 /**
  * Returns an onKeyDown handler that calls `onSubmit` when Ctrl+Enter is pressed.
  * Use with textarea elements where Enter creates newlines.
@@ -17,5 +19,3 @@ export function useCtrlEnter(onSubmit: () => void, disabled?: boolean) {
     };
 }
 
-/** Hint text to append to placeholder */
-export const CTRL_ENTER_HINT = ' (Ctrl+Enter)';

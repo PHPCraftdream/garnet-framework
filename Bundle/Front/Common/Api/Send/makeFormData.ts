@@ -36,6 +36,7 @@ const makeFormFlatArr = (obj: TObjToFate, name: string = '', result: TResult = [
     return result;
 };
 
+/** Implements makeFormData for the shared frontend API. */
 export const makeFormData = (obj: TFromMap): FormData => {
     const flatArr = makeFormFlatArr(obj);
     const result = new FormData();

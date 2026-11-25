@@ -7,6 +7,3 @@ export interface UserDetailContextValue {
 export const UserDetailContext = React.createContext<UserDetailContextValue>({
     openUser: () => {},
 });
-
-export const useOpenUser = (): ((accountId: number, label: string) => void) =>
-    React.useContext(UserDetailContext).openUser;

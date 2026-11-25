@@ -1,6 +1,7 @@
 import {EPhase} from '@framework/auth/Enums';
 import {I18nFramework as I18n} from '@framework/I18nGen/I18nFramework';
 
+/** Returns the input placeholder for the authentication phase. */
 export const getInputPlaceholder = (phase?: EPhase) => {
     switch (phase) {
         case EPhase.INPUT_EMAIL:

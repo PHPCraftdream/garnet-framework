@@ -1,4 +1,4 @@
-import type {Labels, PageBlock, Snippet, StaticPage} from '../types';
+import type {Labels, PageBlock, Snippet, StaticPage} from '@common/Components/Admin/StaticPages/StaticPagesAdminIsland/types';
 
 export interface PageEditorProps {
     page: StaticPage;

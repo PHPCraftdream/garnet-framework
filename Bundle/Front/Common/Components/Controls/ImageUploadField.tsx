@@ -52,15 +52,18 @@ export class ImageUploadField extends AntiHookComponent<ImageUploadFieldProps> {
     private confirmResolver: ((value: boolean) => void) | null = null;
     private readonly updateOnParentRender = true;
 
+    /** Re-render when parent-provided values change in place. */
     public shouldComponentUpdate(nextProps: Readonly<ImageUploadFieldProps>, nextState: Readonly<{}>): boolean {
         return super.shouldComponentUpdate(nextProps, nextState) || this.updateOnParentRender;
     }
 
+    /** Forward picked images to the upload routine. */
     private readonly handleUpload = (files: File[]): void => {
         void this.upload(files);
     };
 
-    private async upload(files: File[]): Promise<void> {
+    /** Upload the first image and update the field value on success. */
+    private async upload(files: readonly File[]): Promise<void> {
         const {uploadUrl, onChange, errorLabel} = this.props;
         const file = files[0];
         if (!file) return;
@@ -77,6 +80,7 @@ export class ImageUploadField extends AntiHookComponent<ImageUploadFieldProps> {
         }
     }
 
+    /** Show a confirmation prompt and resolve with the user's choice. */
     private confirm(message: string, confirmLabel?: string): Promise<boolean> {
         return new Promise(resolve => {
             this.confirmResolver = resolve;
@@ -87,6 +91,7 @@ export class ImageUploadField extends AntiHookComponent<ImageUploadFieldProps> {
         });
     }
 
+    /** Hide the confirmation and resolve its pending request. */
     private settleConfirm(confirmed: boolean): void {
         const data = this.fieldStore.getData();
         this.fieldStore.setData({...data, confirmState: {...data.confirmState, visible: false}});
@@ -94,10 +99,14 @@ export class ImageUploadField extends AntiHookComponent<ImageUploadFieldProps> {
         this.confirmResolver = null;
     }
 
+    /** Resolve the pending confirmation as accepted. */
     private readonly handleConfirm = (): void => { this.settleConfirm(true); };
+    /** Resolve the pending confirmation as canceled. */
     private readonly handleCancel = (): void => { this.settleConfirm(false); };
+    /** Start removing the selected image. */
     private readonly handleRemove = (): void => { void this.remove(); };
 
+    /** Confirm and remove the current image, then clear the field value. */
     private async remove(): Promise<void> {
         const {removeConfirm, removeLabel, value, deleteUrl, onChange} = this.props;
         if (removeConfirm) {
@@ -108,8 +117,9 @@ export class ImageUploadField extends AntiHookComponent<ImageUploadFieldProps> {
         onChange('');
     }
 
+    /** Render the image preview or picker and its confirmation dialog. */
     public render() {
-        const {value, uploadLabel, removeLabel, previewAlt, disabled, hint, notAnImageLabel} = this.props;
+        const {value} = this.props;
         const {uploading, confirmState} = this.useCarburetor(this.fieldStore);
         const modalState: ConfirmState = {
             visible: confirmState.visible,
@@ -120,18 +130,42 @@ export class ImageUploadField extends AntiHookComponent<ImageUploadFieldProps> {
         };
         return (
             <div>
-                {value ? (
-                    <div className="blk-img-preview">
-                        <img src={value} alt={previewAlt || ''} className="blk-img-preview-img" />
-                        <button type="button" className="blk-img-preview-remove" onClick={this.handleRemove} disabled={disabled} title={removeLabel}>
-                            &#215;
-                        </button>
-                    </div>
-                ) : (
-                    <ImageUploadArea onUpload={this.handleUpload} uploading={uploading} label={uploadLabel} hint={hint} notAnImageLabel={notAnImageLabel} />
-                )}
+                {value ? this.renderPreview(value) : this.renderPicker(uploading)}
                 <ConfirmModal state={modalState} onConfirm={this.handleConfirm} onCancel={this.handleCancel} />
             </div>
+        );
+    }
+
+    /** Render the current image and its remove control. */
+    private renderPreview(value: string) {
+        const {previewAlt, removeLabel, disabled} = this.props;
+        return (
+            <div className="blk-img-preview">
+                <img src={value} alt={previewAlt || ''} className="blk-img-preview-img" />
+                <button
+                    type="button"
+                    className="blk-img-preview-remove"
+                    onClick={this.handleRemove}
+                    disabled={disabled}
+                    title={removeLabel}
+                >
+                    &#215;
+                </button>
+            </div>
+        );
+    }
+
+    /** Render the image picker with its configured labels and guidance. */
+    private renderPicker(uploading: boolean) {
+        const {uploadLabel, hint, notAnImageLabel} = this.props;
+        return (
+            <ImageUploadArea
+                onUpload={this.handleUpload}
+                uploading={uploading}
+                label={uploadLabel}
+                hint={hint}
+                notAnImageLabel={notAnImageLabel}
+            />
         );
     }
 }

@@ -13,6 +13,7 @@ interface Props {
     row: ErrorRow;
 }
 
+/** Handles ErrorLogDetail. */
 export const ErrorLogDetail: React.FC<Props> = ({row}) => (
     <div data-test-id="log-detail-errors">
         <div className="log-detail-grid">

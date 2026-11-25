@@ -2,6 +2,7 @@ import {RespError} from '@common/Api/RespError';
 import {IApiResponse, IApiSuccessResponse} from '@common/Support/Models';
 import {isMaintenance503} from '@common/Api/maintenance503';
 
+/** Implements asyncJsonThen for the shared frontend API. */
 export const asyncJsonThen = async <T = Record<string, unknown>>(d: Response): Promise<IApiSuccessResponse<T>> => {
     // Maintenance: a 503 carries the HTML maintenance page, not JSON. Raise the
     // shared toast and bail BEFORE json() throws an opaque parse error.

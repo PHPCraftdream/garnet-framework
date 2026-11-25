@@ -1,17 +1,9 @@
 import * as React from 'react';
 import {AlertTriangle, Loader2} from 'lucide-react';
-import {AsyncIconState} from '@common/hooks/ui/useAsyncIcon';
+import {AsyncIconState} from '@common/hooks/ui/internal/useAsyncIcon';
 
-/**
- * Renders the correct glyph for an {@link AsyncIconState}:
- *   idle    → the supplied `icon`
- *   loading → a spinner
- *   error   → an error icon (danger-coloured)
- *
- * Icon-system agnostic: `icon` is any ReactNode, so it works with Lucide
- * components (`<Archive size={16}/>`) or Bootstrap glyphs
- * (`<i className="bi bi-archive"/>`).
- */
+/** Shows the icon corresponding to the current asynchronous state. */
+/** Shows the icon corresponding to the current asynchronous state. */
 export const AsyncIcon: React.FC<{
     state: AsyncIconState;
     icon: React.ReactNode;

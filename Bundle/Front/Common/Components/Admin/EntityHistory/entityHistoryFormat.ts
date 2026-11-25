@@ -1,13 +1,7 @@
-import {formatTs} from '@common/Utils/Time/DateUtils';
+import {formatTs} from '@common/Utils/Time/DateUtils/format/formatTs';
 
-/** TZ-aware history timestamp formatter — uses user's TZ via formatTs (AGENTS.md §12). */
+/** Formats a history timestamp in the user's configured timezone. */
 export const formatHistoryTime = (ts: number): string => {
     if (!ts) return '';
     return formatTs(ts);
-};
-
-export const renderHistoryValue = (v: unknown): string => {
-    if (v === null || v === undefined) return '∅';
-    if (typeof v === 'object') return JSON.stringify(v);
-    return String(v);
 };

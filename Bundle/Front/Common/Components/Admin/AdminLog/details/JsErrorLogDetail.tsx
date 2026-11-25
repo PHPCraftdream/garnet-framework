@@ -1,13 +1,14 @@
 import * as React from 'react';
-import {JsErrorEntry} from '../types';
+import {JsErrorEntry} from '@common/Components/Admin/AdminLog/types';
 import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
-import {formatTs} from '@common/Utils/Time/DateUtils';
-import {AdminUserLink} from '../AdminUserLink';
+import {formatTs} from '@common/Utils/Time/DateUtils/format/formatTs';
+import {AdminUserLink} from '@common/Components/Admin/AdminLog/AdminUserLink';
 
 interface Props {
     row: JsErrorEntry;
 }
 
+/** Handles JsErrorLogDetail. */
 export const JsErrorLogDetail: React.FC<Props> = ({row}) => (
     <div data-test-id="log-detail-js-errors">
         <div className="log-detail-grid">

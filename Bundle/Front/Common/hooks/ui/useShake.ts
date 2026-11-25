@@ -1,15 +1,20 @@
 import {useState, useRef, useCallback, useEffect, useSyncExternalStore} from 'react';
 import {Carburetor} from '@react-carburetor/core';
 
+/** Creates a shake-animation store. */
 function createShakeStore(): ShakeStore { return new ShakeStore(); }
 
 class ShakeStore extends Carburetor<{shaking: boolean}> {
+    /** Initializes the animation state. */
     constructor() { super({shaking: false}); }
+    /** Returns the current animation snapshot. */
     readonly snapshot = () => this.getData();
+    /** Subscribes to animation-state changes. */
     readonly subscribeSnapshot = (listener: () => void) => {
         const id = this.subscribe(listener);
         return () => this.unsubscribe(id);
     };
+    /** Updates the shake-animation state. */
     readonly setShaking = (shaking: boolean) => {
         const previous = this.getData();
         if (previous.shaking === shaking) return;

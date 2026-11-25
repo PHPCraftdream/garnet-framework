@@ -43,7 +43,7 @@ const configuration: Configuration = {
 		},
 	},
 
-	resolve: resolveConfig([path.resolve(baseDir, 'node_modules')]),
+	resolve: resolveConfig([path.resolve(baseDir, 'node_modules')], adminSrcDir),
 
 	module: {
 		parser: {css: {url: false}},

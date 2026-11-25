@@ -1,8 +1,8 @@
 import * as React from 'react';
-import {MailLogEntry} from '../types';
-import {AdminUserLink} from '../AdminUserLink';
+import {MailLogEntry} from '@common/Components/Admin/AdminLog/types';
+import {AdminUserLink} from '@common/Components/Admin/AdminLog/AdminUserLink';
 import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
-import {formatTs} from '@common/Utils/Time/DateUtils';
+import {formatTs} from '@common/Utils/Time/DateUtils/format/formatTs';
 
 interface Props {
     row: MailLogEntry;
@@ -12,6 +12,7 @@ const statusBadge = (status: string): React.ReactNode => {
     return <span className={status === 'sent' ? 'admin-log-section-status-success' : status === 'failed' ? 'admin-log-section-status-danger' : status === 'skipped_dev' ? 'admin-log-section-status-muted' : status === 'pending' ? 'admin-log-section-status-warning' : 'admin-log-section-status-info'}>{status}</span>;
 };
 
+/** Handles MailLogDetail. */
 export const MailLogDetail: React.FC<Props> = ({row}) => {
     let metaParsed: Record<string, unknown> | null = null;
     if (row.meta) {

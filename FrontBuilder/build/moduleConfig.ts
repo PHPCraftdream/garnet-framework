@@ -7,12 +7,13 @@ import type {RuleSetRule} from '@rspack/core';
 const frameworkRoot = path.resolve(__dirname, '..', '..');
 const fwFrontDir = path.resolve(frameworkRoot, 'Bundle', 'Front');
 
-export const resolveConfig = (modules: string[]) => ({
+export const resolveConfig = (modules: string[], sourceRoot: string) => ({
 	modules: modules,
 	extensions: ['.ts', '.tsx', '.js', '.jsx', '.less', '.css'],
 	alias: {
 		'react': path.resolve(frameworkRoot, 'FrontBuilder', 'node_modules', 'react'),
 		'react-dom': path.resolve(frameworkRoot, 'FrontBuilder', 'node_modules', 'react-dom'),
+		'@': sourceRoot,
 		'@common': path.resolve(fwFrontDir, 'Common'),
 		'@framework': fwFrontDir,
 	},

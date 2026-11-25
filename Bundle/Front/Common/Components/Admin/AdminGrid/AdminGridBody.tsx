@@ -29,15 +29,19 @@ interface BodyRowProps<T> extends Omit<React.ComponentProps<typeof AdminGridRow>
 }
 
 class AdminGridBodyRow<T> extends React.Component<BodyRowProps<T>> {
+    /** Handles handleClick. */
     private readonly handleClick = (): void => {
         const {canExpand, rowKey, row, onToggle, onRowClick} = this.props;
         if (canExpand) onToggle(rowKey);
         else onRowClick?.(row);
     };
 
+    /** Handles render. */
     public render() {
         const {testId, clickable, hasExpander, expanderIcon, cells, expandedContent, totalColumns} = this.props;
-        return <AdminGridRow testId={testId} clickable={clickable} onClick={clickable ? this.handleClick : undefined} hasExpander={hasExpander} expanderIcon={expanderIcon} cells={cells} expandedContent={expandedContent} totalColumns={totalColumns} />;
+        return <AdminGridRow testId={testId} clickable={clickable} onClick={clickable ? this.handleClick :
+            undefined} hasExpander={hasExpander} expanderIcon={expanderIcon} cells={cells}
+            expandedContent={expandedContent} totalColumns={totalColumns} />;
     }
 }
 
@@ -47,15 +51,19 @@ export class AdminGridBody<T> extends AntiHookComponent<BodyProps<T>> {
     // Rows and renderer inputs can change in place.
     private readonly updateOnParentRender = true;
 
+    /** Handles shouldComponentUpdate. */
     public shouldComponentUpdate(nextProps: Readonly<BodyProps<T>>, nextState: Readonly<{}>): boolean {
         return super.shouldComponentUpdate(nextProps, nextState) || this.updateOnParentRender;
     }
 
+    /** Handles toggleExpand. */
     private readonly toggleExpand = (key: RowKey): void => {
         const keys = this.expansion.getData().keys;
-        this.expansion.setData({keys: keys.includes(key) ? keys.filter(item => !Object.is(item, key) && item !== key) : [...keys, key]});
+        this.expansion.setData({keys: keys.includes(key) ? keys.filter(item => !Object.is(item, key) && item
+            !== key) : [...keys, key]});
     };
 
+    /** Handles renderRow. */
     private renderRow(row: T, keys: readonly RowKey[]): React.ReactNode {
         const {rowKey, expandable, expandRenderer, rowTestId, columns, renderCell, onRowClick} = this.props;
         const key = rowKey(row);
@@ -73,12 +81,16 @@ export class AdminGridBody<T> extends AntiHookComponent<BodyProps<T>> {
             cells.push({key: col.key, narrow: col.shrink, content: renderCell(row, col.key)});
         }
         return (
-            <AdminGridBodyRow key={key} row={row} rowKey={key} canExpand={canExpand} onToggle={this.toggleExpand} onRowClick={onRowClick}
-                testId={testId} clickable={!!(canExpand || onRowClick)} hasExpander={!!expandRenderer} expanderIcon={expanderIcon}
-                cells={cells} expandedContent={expandContent} totalColumns={columns.length + (expandRenderer ? 1 : 0)} />
+            <AdminGridBodyRow key={key} row={row} rowKey={key} canExpand={canExpand}
+                onToggle={this.toggleExpand} onRowClick={onRowClick}
+                testId={testId} clickable={!!(canExpand || onRowClick)} hasExpander={!!expandRenderer}
+                    expanderIcon={expanderIcon}
+                cells={cells} expandedContent={expandContent} totalColumns={columns.length + (expandRenderer ?
+                    1 : 0)} />
         );
     }
 
+    /** Handles render. */
     public render() {
         const {keys} = this.useCarburetor(this.expansion);
         const {rows, columns, expandRenderer, emptyMessage} = this.props;

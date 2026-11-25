@@ -4,9 +4,9 @@ import {sendPost} from '@common/Api/Send/sendPost';
 import {Combobox} from '@common/Components/ui/Combobox';
 import {DateInput} from '@common/Components/ui/DateInput';
 import {I18nFramework as t} from '@framework/I18nGen/I18nFramework';
-import {AdminUserLink} from '../AdminUserLink';
-import {LogDetailModal} from '../LogDetailModal';
-import {RequestLogDetail, RequestLogRow} from '../details/RequestLogDetail';
+import {AdminUserLink} from '@common/Components/Admin/AdminLog/AdminUserLink';
+import {LogDetailModal} from '@common/Components/Admin/AdminLog/LogDetailModal';
+import {RequestLogDetail, RequestLogRow} from '@common/Components/Admin/AdminLog/details/RequestLogDetail';
 
 type AccountsMap = Record<string, string>;
 
@@ -41,15 +41,23 @@ const DEFAULT_PER_PAGE = 50;
 const HTTP_METHODS = ['', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'];
 const STATUS_OPTIONS = ['', '2xx', '3xx', '4xx', '5xx'];
 
+/** Handles renderStatus. */
 function renderStatus(status: number) {
-    return <span className={status >= 500 ? 'admin-log-section-status-danger' : status >= 400 ? 'admin-log-section-status-warning' : status >= 300 ? 'admin-log-section-status-info' : 'admin-log-section-status-success'}>{status}</span>;
+    return <span className={status >= 500 ? 'admin-log-section-status-danger' : status >= 400 ?
+        'admin-log-section-status-warning' : status >= 300 ? 'admin-log-section-status-info' :
+        'admin-log-section-status-success'}>{status}</span>;
 }
 
+/** Handles renderFilterOption. */
 function renderFilterOption(value: string) { return <option key={value} value={value}>{value || '—'}</option>; }
-function renderPageOption(value: number) { return <option key={value} value={value}>{value} {t.Pagination_Items()}</option>; }
+/** Handles renderPageOption. */
+function renderPageOption(value: number) { return <option key={value} value={value}>{value}
+    {t.Pagination_Items()}</option>; }
 
 type FilterOption = {value: string; label: string};
+/** Handles compareOptionLabels. */
 function compareOptionLabels(a: FilterOption, b: FilterOption): number { return a.label.localeCompare(b.label); }
+/** Handles buildUserOptions. */
 function buildUserOptions(rows: readonly RequestLogRow[], accounts: AccountsMap): FilterOption[] {
     const seen = new Set<string>();
     const userOptions: {value: string; label: string}[] = [];
@@ -67,6 +75,7 @@ function buildUserOptions(rows: readonly RequestLogRow[], accounts: AccountsMap)
     return userOptions;
 }
 
+/** Handles matchesUser. */
 function matchesUser(row: RequestLogRow, filter: string): boolean {
     return !filter || (row.account_id == null ? filter === GUEST_FILTER_VALUE : String(row.account_id) === filter);
 }
@@ -110,41 +119,60 @@ class RequestLogFilters extends AntiHookComponent<Props> {
     private readonly accounts = this.connectSelection(this.request, state => state.accounts);
     private readonly selected = this.connectSelection(this.request, state => state.selected);
     private loader: LoadPage | null = null;
+    /** Handles setLoader. */
     private readonly setLoader = (load: LoadPage | null) => { this.loader = load; };
+    /** Handles goPrev. */
     private readonly goPrev = () => {
         const {date, page} = this.request.getData();
         if (page > 1) void this.loader?.(date, page - 1, this.appliedSnapshot);
     };
+    /** Handles goNext. */
     private readonly goNext = () => {
         const {date, page, total, perPage} = this.request.getData();
         if (page < Math.max(1, Math.ceil(total / perPage))) void this.loader?.(date, page + 1, this.appliedSnapshot);
     };
+    /** Handles updateRequest. */
     private readonly updateRequest = (patch: Partial<RequestState>) => {
         this.request.setData({...this.request.getData(), ...patch});
     };
-    private readonly changeDate = (event: React.ChangeEvent<HTMLInputElement>) => this.updateRequest({date: event.target.value});
-    private readonly changePerPage = (event: React.ChangeEvent<HTMLSelectElement>) => this.updateRequest({perPage: Number(event.target.value)});
+    /** Handles changeDate. */
+    private readonly changeDate = (event: React.ChangeEvent<HTMLInputElement>) => this.updateRequest({date:
+        event.target.value});
+    /** Handles changePerPage. */
+    private readonly changePerPage = (event: React.ChangeEvent<HTMLSelectElement>) =>
+        this.updateRequest({perPage: Number(event.target.value)});
+    /** Handles changeUser. */
     private readonly changeUser = (userFilter: string) => this.updateRequest({userFilter});
+    /** Handles selectRow. */
     private readonly selectRow = (event: React.MouseEvent<HTMLTableRowElement>) => {
         const row = this.rows()[Number(event.currentTarget.dataset.rowIndex)];
         if (row) this.updateRequest({selected: {...row}});
     };
+    /** Handles closeDetail. */
     private readonly closeDetail = () => this.updateRequest({selected: null});
 
     private filtersRevision = 0;
     private appliedRevision = -1;
     private appliedSnapshot: Filters = {status: '', method: '', uri: '', ua: ''};
 
+    /** Handles patch. */
     private patch(patch: Partial<Filters>): void {
         this.filtersRevision++;
         const state = this.ui.getData();
         this.ui.setData({...state, filters: {...state.filters, ...patch}});
     }
 
-    private readonly changeMethod = (event: React.ChangeEvent<HTMLSelectElement>) => this.patch({method: event.target.value});
-    private readonly changeStatus = (event: React.ChangeEvent<HTMLSelectElement>) => this.patch({status: event.target.value});
+    /** Handles changeMethod. */
+    private readonly changeMethod = (event: React.ChangeEvent<HTMLSelectElement>) => this.patch({method:
+        event.target.value});
+    /** Handles changeStatus. */
+    private readonly changeStatus = (event: React.ChangeEvent<HTMLSelectElement>) => this.patch({status:
+        event.target.value});
+    /** Handles changeUri. */
     private readonly changeUri = (event: React.ChangeEvent<HTMLInputElement>) => this.patch({uri: event.target.value});
+    /** Handles changeUa. */
     private readonly changeUa = (event: React.ChangeEvent<HTMLInputElement>) => this.patch({ua: event.target.value});
+    /** Handles applyFilters. */
     private readonly applyFilters = () => {
         if (this.appliedRevision === this.filtersRevision) return;
         this.appliedRevision = this.filtersRevision;
@@ -152,17 +180,21 @@ class RequestLogFilters extends AntiHookComponent<Props> {
         this.appliedSnapshot = {...state.filters};
         this.ui.setData({...state, appliedVersion: state.appliedVersion + 1});
     };
+    /** Handles resetFilters. */
     private readonly resetFilters = () => {
         const empty: Filters = {status: '', method: '', uri: '', ua: ''};
         this.appliedRevision = ++this.filtersRevision;
         this.appliedSnapshot = {...empty};
         this.ui.setData({filters: empty, appliedVersion: this.ui.getData().appliedVersion + 1});
     };
+    /** Handles onFilterEnter. */
     private readonly onFilterEnter = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter') this.applyFilters();
     };
 
-    private renderFilters(filters: Filters, dates: readonly string[], date: string, userFilter: string, userOptions: FilterOption[], total: number, rowCount: number, visibleCount: number, loading: boolean) {
+    /** Handles renderFilters. */
+    private renderFilters(filters: Filters, dates: readonly string[], date: string, userFilter: string,
+        userOptions: FilterOption[], total: number, rowCount: number, visibleCount: number, loading: boolean) {
         const minDate = dates[dates.length - 1];
         const maxDate = dates[0];
         return (
@@ -179,7 +211,8 @@ class RequestLogFilters extends AntiHookComponent<Props> {
                 />
             </div>
             <div className="admin-request-filter-cell">
-                <label className="admin-request-filter-label" htmlFor="request-log-method">{t.RequestLog_Method()}</label>
+                <label className="admin-request-filter-label"
+                    htmlFor="request-log-method">{t.RequestLog_Method()}</label>
                 <select
                     id="request-log-method"
                     className="admin-log-section-select"
@@ -191,7 +224,8 @@ class RequestLogFilters extends AntiHookComponent<Props> {
                 </select>
             </div>
             <div className="admin-request-filter-cell">
-                <label className="admin-request-filter-label" htmlFor="request-log-status">{t.RequestLog_Status()}</label>
+                <label className="admin-request-filter-label"
+                    htmlFor="request-log-status">{t.RequestLog_Status()}</label>
                 <select
                     id="request-log-status"
                     className="admin-log-section-select"
@@ -230,7 +264,8 @@ class RequestLogFilters extends AntiHookComponent<Props> {
             </div>
             {userOptions.length > 1 && (
                 <div className="admin-log-person-filter">
-                    <label className="admin-request-filter-label" htmlFor="request-log-user">{t.Logs_Requests_FilterByUser()}</label>
+                    <label className="admin-request-filter-label"
+                        htmlFor="request-log-user">{t.Logs_Requests_FilterByUser()}</label>
                     <Combobox
                         options={userOptions}
                         value={userFilter}
@@ -268,6 +303,7 @@ class RequestLogFilters extends AntiHookComponent<Props> {
         );
     }
 
+    /** Handles renderRow. */
     private renderRow(r: RequestLogRow, idx: number, sourceIndex: number, accounts: AccountsMap) {
         return (
         <tr
@@ -298,10 +334,12 @@ class RequestLogFilters extends AntiHookComponent<Props> {
         );
     }
 
+    /** Handles renderTable. */
     private renderTable(rows: readonly RequestLogRow[], accounts: AccountsMap, userFilter: string) {
         const renderedRows: React.ReactNode[] = [];
         for (const [sourceIndex, row] of rows.entries()) {
-            if (matchesUser(row, userFilter)) renderedRows.push(this.renderRow(row, renderedRows.length, sourceIndex, accounts));
+            if (matchesUser(row, userFilter)) renderedRows.push(this.renderRow(row, renderedRows.length,
+                sourceIndex, accounts));
         }
         return (
         <div className="admin-request-table-scroll">
@@ -326,6 +364,7 @@ class RequestLogFilters extends AntiHookComponent<Props> {
         );
     }
 
+    /** Handles renderPagination. */
     private renderPagination(page: number, perPage: number, total: number, loading: boolean) {
         const totalPages = Math.max(1, Math.ceil(total / perPage));
         return (
@@ -361,6 +400,7 @@ class RequestLogFilters extends AntiHookComponent<Props> {
         );
     }
 
+    /** Handles render. */
     render() {
         const {filters, appliedVersion} = this.useCarburetor(this.ui);
         const {dates, date, total, page, loading, perPage, userFilter} = this.useCarburetor(this.request);
@@ -375,24 +415,30 @@ class RequestLogFilters extends AntiHookComponent<Props> {
                 <RequestLogNetwork pageUrl={this.props.pageUrl} date={date} perPage={perPage}
                     appliedFilters={this.appliedSnapshot} appliedVersion={appliedVersion}
                     updateRequest={this.updateRequest} setLoader={this.setLoader} />
-                {this.renderFilters(filters, dates, date, userFilter, userOptions, total, rows.length, visibleCount, loading)}
+                {this.renderFilters(filters, dates, date, userFilter, userOptions, total, rows.length,
+                    visibleCount, loading)}
                 {dates.length === 0 || total === 0 ? (
                     <div className="admin-request-empty" data-test-id="request-log-empty">{t.RequestLog_NoData()}</div>
-                ) : <>{this.renderTable(rows, accounts, userFilter)}{this.renderPagination(page, perPage, total, loading)}</>}
-                {selected && <LogDetailModal onClose={this.closeDetail}><RequestLogDetail row={selected} accounts={accounts} /></LogDetailModal>}
+                ) : <>{this.renderTable(rows, accounts, userFilter)}{this.renderPagination(page, perPage,
+                    total, loading)}</>}
+                {selected && <LogDetailModal onClose={this.closeDetail}><RequestLogDetail row={selected}
+                    accounts={accounts} /></LogDetailModal>}
             </div>
         );
     }
 }
 
-async function loadRequestPage({pageUrl, perPage, updateRequest}: NetworkProps, targetDate: string, targetPage: number, filters: Filters): Promise<void> {
+/** Handles loadRequestPage. */
+async function loadRequestPage({pageUrl, perPage, updateRequest}: NetworkProps, targetDate: string,
+    targetPage: number, filters: Filters): Promise<void> {
     if (!targetDate) {
         updateRequest({rows: [], accounts: {}, total: 0});
         return;
     }
     updateRequest({loading: true});
     try {
-        const res = await sendPost<{date: string; page: number; perPage: number; status: string; method: string; uri: string; ua: string}, PageResponse>(
+        const res = await sendPost<{date: string; page: number; perPage: number; status: string; method:
+            string; uri: string; ua: string}, PageResponse>(
             pageUrl,
             {date: targetDate, page: targetPage, perPage, ...filters},
         );
@@ -407,9 +453,13 @@ async function loadRequestPage({pageUrl, perPage, updateRequest}: NetworkProps, 
 }
 
 class RequestLogNetwork extends AntiHookComponent<NetworkProps> {
-    private readonly load: LoadPage = (targetDate, targetPage, filters) => loadRequestPage(this.props, targetDate, targetPage, filters);
+    /** Handles load. */
+    private readonly load: LoadPage = (targetDate, targetPage, filters) => loadRequestPage(this.props,
+        targetDate, targetPage, filters);
+    /** Handles unregisterLoader. */
     private readonly unregisterLoader = () => this.props.setLoader(null);
 
+    /** Handles useEffects. */
     protected override useEffects(): void {
         const props = this.props;
         const {pageUrl, date, perPage, appliedFilters, appliedVersion, updateRequest, setLoader} = props;
@@ -426,6 +476,7 @@ class RequestLogNetwork extends AntiHookComponent<NetworkProps> {
         }, [date, appliedFilters, appliedVersion, pageUrl, perPage, updateRequest]);
     }
 
+    /** Handles render. */
     public render() {
         return null;
     }

@@ -1,3 +1,4 @@
+/** Formats a Unix timestamp in seconds as a local date and time. */
 export const printUtDateTime = (ut: number | string): string => {
     const a = new Date(Number(ut) * 1000);
     const year = a.getFullYear();

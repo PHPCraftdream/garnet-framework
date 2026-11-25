@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {markdownToHtml} from '@common/Utils/Ui/markdownToHtml';
-import {Labels, StaticPage} from '../types';
+import {Labels, StaticPage} from '@common/Components/Admin/StaticPages/StaticPagesAdminIsland/types';
 
 type Props = {
     labels: Labels;
@@ -15,43 +15,61 @@ type Props = {
     setShowPagePicker: (value: boolean) => void;
     setShowPreview: (value: boolean) => void;
 };
+
 const isPublished = (page: StaticPage) => page.is_published;
 
 export class BlockEditorText extends React.PureComponent<Props> {
+    /** Switches the editor to text entry. */
     private readonly showEdit = () => this.props.setShowPreview(false);
+    /** Switches the editor to the rendered preview. */
     private readonly showPreview = () => this.props.setShowPreview(true);
+    /** Opens or closes the page-link picker. */
     private readonly togglePicker = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation();
         this.props.setShowPagePicker(!this.props.showPagePicker);
     };
 
+    /** Inserts the markdown formatting selected in the toolbar. */
     private readonly insertFormat = (event: React.MouseEvent<HTMLButtonElement>) => {
-        this.props.insertMarkdown(event.currentTarget.dataset.before ?? '', event.currentTarget.dataset.after ?? '');
+        this.props.insertMarkdown(
+            event.currentTarget.dataset.before ?? '',
+            event.currentTarget.dataset.after ?? '',
+        );
     };
+    /** Inserts a link to the selected page and closes the picker. */
     private readonly insertPage = (event: React.MouseEvent<HTMLButtonElement>) => {
         this.props.insertMarkdown('{link:' + event.currentTarget.dataset.slug + '}', '');
         this.props.setShowPagePicker(false);
     };
-    private readonly changeContent = (event: React.ChangeEvent<HTMLTextAreaElement>) => this.props.propagateContent(event.target.value);
+    /** Propagates changes made in the text area. */
+    private readonly changeContent = (event: React.ChangeEvent<HTMLTextAreaElement>) =>
+        this.props.propagateContent(event.target.value);
 
+    /** Renders the picker of published page links. */
     private renderPagePicker() {
         const {pages, showPagePicker, labels} = this.props;
         if (!pages?.length) return null;
         const published = pages.filter(isPublished);
         return <div className="blk-page-picker">
-            <button type="button" className="snippet-format-button" onClick={this.togglePicker} title="Page link">Page</button>
+            <button type="button" className="snippet-format-button"
+                onClick={this.togglePicker} title="Page link">Page</button>
             {showPagePicker && <div className="blk-page-popup">
-                {published.length ? published.map(this.renderPageOption) : <div className="blk-page-empty">{labels.empty}</div>}
+                {published.length ? published.map(this.renderPageOption) : (
+                    <div className="blk-page-empty">{labels.empty}</div>
+                )}
             </div>}
         </div>;
     }
 
+    /** Renders one page link option. */
     private readonly renderPageOption = (page: StaticPage) => (
-        <button key={page.id} type="button" className="blk-page-option" data-slug={page.slug} onClick={this.insertPage}>
+        <button key={page.id} type="button" className="blk-page-option"
+            data-slug={page.slug} onClick={this.insertPage}>
             {page.title_rendered || page.title || page.slug}
         </button>
     );
 
+    /** Renders markdown formatting and preview controls. */
     private renderToolbar() {
         const {showPreview} = this.props;
         return (
@@ -96,6 +114,7 @@ export class BlockEditorText extends React.PureComponent<Props> {
         );
     }
 
+    /** Renders the markdown toolbar and editor or preview. */
     public render() {
         const {localContent, disabled, textareaRef, showPreview} = this.props;
         return (
@@ -103,7 +122,7 @@ export class BlockEditorText extends React.PureComponent<Props> {
                 {this.renderToolbar()}
                 {showPreview ? (
                     <div className="md-preview"
-                         dangerouslySetInnerHTML={{__html: markdownToHtml(localContent)}} />
+                        dangerouslySetInnerHTML={{__html: markdownToHtml(localContent)}} />
                 ) : (
                     <textarea
                         ref={textareaRef}

@@ -1,4 +1,5 @@
-import {IAuthData, ICheckCodeRequest, ICheckCodeRequestResponse, TInputRef, TSetAuthState} from '@framework/auth/Models';
+import {IAuthData, ICheckCodeRequest, ICheckCodeRequestResponse} from '@framework/auth/Models';
+import {TInputRef, TSetAuthState} from '@framework/auth/Models';
 import {EPhase} from '@framework/auth/Enums';
 import {sendPost} from '@common/Api/Send/sendPost';
 import {goTo} from '@common/Dom/Nav/GoTo';
@@ -6,7 +7,11 @@ import {isApiSuccess} from '@common/Api/isApiSuccess';
 
 const invalidCode = (state: IAuthData): IAuthData => ({...state, phase: EPhase.INPUT_CODE_WRONG_VALUE});
 const sendingRequest = (state: IAuthData): IAuthData => ({...state, isSendingRequest: true});
-const codeRequestError = (state: IAuthData): IAuthData => ({...state, isSendingRequest: false, phase: EPhase.INPUT_CODE_REQUEST_ERROR});
+const codeRequestError = (state: IAuthData): IAuthData => ({
+    ...state,
+    isSendingRequest: false,
+    phase: EPhase.INPUT_CODE_REQUEST_ERROR,
+});
 
 /**
  * Code verification handler.
@@ -76,7 +81,12 @@ export const handleCheckCode = (setData: TSetAuthState, inputRef: TInputRef) => 
             : '';
 
         setData((state) => {
-            return {...state, isSendingRequest: false, phase: EPhase.INPUT_CODE_REQUEST_ERROR, hint: serverMsg || undefined};
+            return {
+                ...state,
+                isSendingRequest: false,
+                phase: EPhase.INPUT_CODE_REQUEST_ERROR,
+                hint: serverMsg || undefined,
+            };
         });
     });
 };

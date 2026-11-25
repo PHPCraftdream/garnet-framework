@@ -1,10 +1,12 @@
 import * as React from 'react';
 import {AntiHookComponent} from '@react-carburetor/core';
 import {MenuItem, SidebarMenuProps} from './types';
-import {menuIconMap} from '@common/Utils/Ui/LucideIcons';
+import {menuIconMap} from '@common/Utils/Ui/menuIconMap';
 import {NavigationCountBadge} from './NavigationCountBadge';
 
+/** Renders a single linked entry in the sidebar navigation. */
 class SidebarMenuItem extends AntiHookComponent<{item: MenuItem}> {
+    /** Renders the menu item link. */
     public render() {
         const {item} = this.props;
         const Icon = menuIconMap[item.icon];
@@ -23,11 +25,14 @@ class SidebarMenuItem extends AntiHookComponent<{item: MenuItem}> {
     }
 }
 
+/** Renders an indexed menu item for the sidebar list. */
 function renderItem(item: MenuItem, index: number) {
     return <SidebarMenuItem key={index} item={item} />;
 }
 
+/** Renders the primary sidebar navigation list. */
 export class SidebarMenu extends AntiHookComponent<SidebarMenuProps> {
+    /** Renders all sidebar menu entries. */
     public render() {
         const {menuItems} = this.props;
         return (

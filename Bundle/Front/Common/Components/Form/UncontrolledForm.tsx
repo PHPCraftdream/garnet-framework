@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {AntiHookComponent} from '@react-carburetor/core';
-import {FormErrorProvider, FormErrorStore} from './useFormErrors';
+import {FormErrorContext} from './internal/FormErrorContext';
+import {FormErrorStore} from './internal/FormErrorStore';
 
 interface FormProps {
     onSubmit: (values: Record<string, string>, form: HTMLFormElement) => Promise<void> | void;
@@ -8,6 +9,7 @@ interface FormProps {
     children: React.ReactNode;
 }
 
+/** Imperative operations exposed by an uncontrolled form ref. */
 export interface UncontrolledFormHandle {
     setFieldErrors: (errors: Record<string, string>) => void;
     getFieldErrors: () => Record<string, string>;
@@ -42,12 +44,15 @@ export const UncontrolledForm = React.forwardRef<UncontrolledFormHandle, FormPro
 class FormView extends AntiHookComponent<FormProps> implements UncontrolledFormHandle {
     private readonly errors = new FormErrorStore();
 
+    /** Sets the current field errors. */
     public readonly setFieldErrors = (errors: Record<string, string>): void => {
         this.errors.setErrors(errors);
     };
 
+    /** Returns the current field errors. */
     public readonly getFieldErrors = (): Record<string, string> => this.errors.getErrors();
 
+    /** Reads native form values and invokes the submit callback. */
     private readonly handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
         e.preventDefault();
         const form = e.currentTarget;
@@ -59,16 +64,17 @@ class FormView extends AntiHookComponent<FormProps> implements UncontrolledFormH
         this.props.onSubmit(values, form);
     };
 
+    /** Renders the form and provides its field-error store. */
     public render() {
         return (
-            <FormErrorProvider value={this.errors}>
+            <FormErrorContext.Provider value={this.errors}>
                 <form
                     onSubmit={this.handleSubmit}
                     data-test-id={this.props['data-test-id']}
                 >
                     {this.props.children}
                 </form>
-            </FormErrorProvider>
+            </FormErrorContext.Provider>
         );
     }
 }

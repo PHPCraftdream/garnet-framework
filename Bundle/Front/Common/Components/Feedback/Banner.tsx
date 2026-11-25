@@ -27,10 +27,20 @@ const DEFAULT_ICONS: Record<BannerVariant, React.ReactNode> = {
  * timezone notices, error summaries, success confirmations. Variants share
  * padding/radius/layout — only the colour changes.
  */
+/** Return a concise class name for each banner variant. */
 export const Banner: React.FC<Props> = ({variant = 'info', icon, title, children, dataTestId}) => {
     const role = variant === 'warn' || variant === 'danger' ? 'alert' : undefined;
     return (
-        <div className={variant === 'warn' ? 'feedback-banner-warn' : variant === 'danger' ? 'feedback-banner-danger' : variant === 'success' ? 'feedback-banner-success' : 'feedback-banner-info'} role={role} data-test-id={dataTestId ?? `banner-${variant}`}>
+        <div
+            className={
+                variant === 'warn' ? 'feedback-banner-warn'
+                    : variant === 'danger' ? 'feedback-banner-danger'
+                        : variant === 'success' ? 'feedback-banner-success'
+                            : 'feedback-banner-info'
+            }
+            role={role}
+            data-test-id={dataTestId ?? `banner-${variant}`}
+        >
             <span aria-hidden="true" className="feedback-banner-icon">{icon ?? DEFAULT_ICONS[variant]}</span>
             <div className="feedback-banner-content">
                 {title && <strong className="feedback-banner-title">{title}</strong>}

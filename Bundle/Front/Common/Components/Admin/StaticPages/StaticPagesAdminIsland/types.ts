@@ -1,22 +1,6 @@
 /**
  * Формы данных и подписи, общие для всех частей экрана статических страниц.
  */
-import * as React from 'react';
-import {sendPost} from '@common/Api/Send/sendPost';
-import {sendPostFormData} from '@common/Api/Send/sendPostFormData';
-import {showToast} from '@common/Components/Feedback/GlobalToast';
-import {ConfirmModal} from '@common/Components/Feedback/ConfirmModal';
-import {EntityHistoryButton} from '@common/Components/Admin/EntityHistory/EntityHistoryButton';
-import {TabNav, TabDef} from '@common/Components/Layout/Navigation/TabNav';
-import {useSending} from '@common/hooks/data/useSending';
-import {useConfirm} from '@common/hooks/ui/useConfirm';
-import {formatTs} from '@common/Utils/Time/DateUtils';
-import {markdownToHtml} from '@common/Utils/Ui/markdownToHtml';
-import {PageHeader} from '@common/Components/Layout/PageHeader';
-import {ImageUploadArea} from '@common/Components/Controls/ImageUploadArea';
-import {ImageUploadField} from '@common/Components/Controls/ImageUploadField';
-import {FileText} from 'lucide-react';
-
 export interface StaticPage {
     id: number;
     slug: string;
@@ -201,21 +185,5 @@ export interface SnippetTabInfo {
     title: string;
 }
 
-export const STATIC_TABS = ['pages', 'snippets'] as const;
-export type StaticTabId = typeof STATIC_TABS[number];
-
-export const SNIPPET_TYPES = ['header', 'footer', 'variable', 'block'] as const;
-
-/* Карты подписей живут здесь, а не рядом с одним из потребителей: их
-   читают и редактор блоков, и редактор сниппетов, и вкладка сниппета.
-   Оставить их в файле-потребителе значило бы завести цикл импортов. */
-export const BLOCK_TYPE_LABELS: Record<string, (l: Labels) => string> = {
-    text: l => l.blockTypeText,
-    gallery: l => l.blockTypeGallery,
-};
-export const SNIPPET_TYPE_LABELS: Record<string, (l: Labels) => string> = {
-    header: l => l.snippetsTypeHeader,
-    footer: l => l.snippetsTypeFooter,
-    variable: l => l.snippetsTypeVariable,
-    block: l => l.snippetsTypeBlock,
-};
+/** Identifier of a built-in static-pages tab. */
+export type StaticTabId = typeof import('./values/staticTabs').STATIC_TABS[number];

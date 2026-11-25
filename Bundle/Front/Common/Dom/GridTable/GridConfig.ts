@@ -5,6 +5,7 @@ const formatPage = (page: any) => `${page}`;
 
 // Plain glyphs, not emoji: emoji are someone else's artwork — a different
 // picture on every platform, coloured whatever the font decides.
+/** Configures search, sorting, pagination, and translations for GridTable. */
 export const gridConfig = () => {
     return {
         search: true,

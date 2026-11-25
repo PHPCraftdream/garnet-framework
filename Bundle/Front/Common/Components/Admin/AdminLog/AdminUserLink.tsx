@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {AntiHookComponent} from '@react-carburetor/core';
-import {UserDetailContext} from '../AdminPanel/UserDetailContext';
+import {UserDetailContext} from '@common/Components/Admin/AdminPanel/UserDetailContext';
 import {appUrl} from '@common/Utils/Url/appUrl';
 
 /**
@@ -16,7 +16,9 @@ interface Props {
     role?: string;
 }
 
-class AdminUserLinkView extends AntiHookComponent<Props & {openUser: React.ContextType<typeof UserDetailContext>['openUser']}> {
+class AdminUserLinkView extends AntiHookComponent<Props & {openUser: React.ContextType<typeof
+    UserDetailContext>['openUser']}> {
+    /** Handles handleClick. */
     private readonly handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
         const {id, name, openUser} = this.props;
         event.stopPropagation();
@@ -24,6 +26,7 @@ class AdminUserLinkView extends AntiHookComponent<Props & {openUser: React.Conte
         openUser(id, name || `#${id}`);
     };
 
+    /** Handles render. */
     render() {
         const {id, name, role} = this.props;
         if (!id) {
@@ -31,13 +34,15 @@ class AdminUserLinkView extends AntiHookComponent<Props & {openUser: React.Conte
         }
         return (
             <span className="common-entity-link">
-                <a href={appUrl(`/admin/#user=${id}`)} className="common-link" onClick={this.handleClick}>{name || `#${id}`}</a>
+                <a href={appUrl(`/admin/#user=${id}`)} className="common-link"
+                    onClick={this.handleClick}>{name || `#${id}`}</a>
                 {role && <span className="common-role-tag">{role}</span>}
             </span>
         );
     }
 }
 
+/** Handles AdminUserLink. */
 export const AdminUserLink: React.FC<Props> = props => (
     <UserDetailContext.Consumer>
         {({openUser}) => <AdminUserLinkView {...props} openUser={openUser} />}

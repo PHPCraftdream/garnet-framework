@@ -89,7 +89,7 @@ const configuration: Configuration = {
 		},
 	},
 
-	resolve: resolveConfig(modules),
+	resolve: resolveConfig(modules, path.resolve(process.env.COMMON_GARNET_WEB_DIR, 'Front')),
 
 	module: {
 		parser: {css: {url: false}},

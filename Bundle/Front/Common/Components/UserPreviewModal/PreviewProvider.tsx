@@ -18,14 +18,17 @@ interface Props {
  */
 export class PreviewProvider extends AntiHookComponent<Props> {
     private readonly store = new Carburetor<{target: {userId: number; name?: string} | null}>({target: null});
+    /** Open a preview for the selected user. */
     private readonly openPreview = (userId: number, name?: string): void => {
         if (userId) this.store.setData({target: {userId, name}});
     };
+    /** Close the active user preview. */
     private readonly close = (): void => {
         this.store.setData({target: null});
     };
     private readonly contextValue = {openPreview: this.openPreview};
 
+    /** Render children with the preview context and optional modal. */
     public render() {
         const {target} = this.useCarburetor(this.store);
         const {labels, previewUrl, extraSection, children} = this.props;

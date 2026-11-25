@@ -27,8 +27,10 @@ interface DevRoleProps {
 }
 
 class DevRoleButton extends React.Component<DevRoleProps> {
+    /** Dispatches the role login action. */
     private readonly handleClick = (): void => { this.props.onLogin(this.props.role); };
 
+    /** Renders the role login button. */
     public render() {
         const {role, loading, busy} = this.props;
         return (
@@ -49,14 +51,17 @@ export class DevLoginButtons extends AntiHookComponent<Props> {
     private confirmResolver: ((confirmed: boolean) => void) | null = null;
     private readonly updateOnParentRender = true;
 
+    /** Updates when props or parent render changes. */
     public shouldComponentUpdate(nextProps: Readonly<Props>, nextState: Readonly<{}>): boolean {
         return super.shouldComponentUpdate(nextProps, nextState) || this.updateOnParentRender;
     }
 
+    /** Starts login for the selected role. */
     private readonly handleRole = (role: string): void => {
         void this.login(role);
     };
 
+    /** Authenticates the selected development role. */
     private async login(role: string): Promise<void> {
         this.store.setData({...this.store.getData(), loading: role});
         try {
@@ -71,6 +76,7 @@ export class DevLoginButtons extends AntiHookComponent<Props> {
         }
     }
 
+    /** Requests confirmation before resetting data. */
     private confirmReset(): Promise<boolean> {
         const confirmLabel = I18n.Common_Delete?.() || 'Reset';
         return new Promise(resolve => {
@@ -88,6 +94,7 @@ export class DevLoginButtons extends AntiHookComponent<Props> {
         });
     }
 
+    /** Resolves the pending reset confirmation. */
     private settleConfirm(confirmed: boolean): void {
         const data = this.store.getData();
         this.store.setData({...data, confirmState: {...data.confirmState, visible: false}});
@@ -95,10 +102,14 @@ export class DevLoginButtons extends AntiHookComponent<Props> {
         this.confirmResolver = null;
     }
 
+    /** Confirms the reset dialog. */
     private readonly handleConfirm = (): void => { this.settleConfirm(true); };
+    /** Cancels the reset dialog. */
     private readonly handleCancel = (): void => { this.settleConfirm(false); };
+    /** Starts the reset flow. */
     private readonly handleReset = (): void => { void this.reset(); };
 
+    /** Resets development data after confirmation. */
     private async reset(): Promise<void> {
         const ok = await this.confirmReset();
         if (!ok) return;
@@ -111,11 +122,20 @@ export class DevLoginButtons extends AntiHookComponent<Props> {
         }
     }
 
+    /** Renders login and reset buttons. */
     private renderButtons(roles: readonly string[], loading: string | null, resetting: boolean) {
         const busy = loading !== null || resetting;
         const buttons: React.ReactNode[] = [];
         for (const role of roles) {
-            buttons.push(<DevRoleButton key={role} role={role} loading={loading === role} busy={busy} onLogin={this.handleRole} />);
+            buttons.push(
+                <DevRoleButton
+                    key={role}
+                    role={role}
+                    loading={loading === role}
+                    busy={busy}
+                    onLogin={this.handleRole}
+                />
+            );
         }
         return (
             <>
@@ -134,6 +154,7 @@ export class DevLoginButtons extends AntiHookComponent<Props> {
         );
     }
 
+    /** Renders the development login controls. */
     public render() {
         const {floating = false, roles = DEFAULT_ROLES} = this.props;
         const {loading, resetting, confirmState} = this.useCarburetor(this.store);

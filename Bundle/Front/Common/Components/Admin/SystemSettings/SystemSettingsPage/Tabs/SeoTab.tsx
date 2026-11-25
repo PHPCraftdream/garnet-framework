@@ -8,7 +8,7 @@
  */
 import * as React from 'react';
 import {ImageUploadField} from '@common/Components/Controls/ImageUploadField';
-import {SettingsData, SystemSettingsLabels} from '../types';
+import {SettingsData, SystemSettingsLabels} from '@common/Components/Admin/SystemSettings/SystemSettingsPage/types';
 import {SaveButton} from './SaveButton';
 
 interface SeoTabProps {
@@ -21,24 +21,29 @@ interface SeoTabProps {
 }
 
 export class SeoTab extends React.Component<SeoTabProps> {
+    /** Updates the SEO description from its textarea. */
     private readonly handleDescription = (event: React.ChangeEvent<HTMLTextAreaElement>): void => {
         const value = event.target.value;
         this.props.setSettings(prev => ({...prev, seo: {...prev.seo, description: value}}));
     };
 
+    /** Stores an image URL selected or entered by the user. */
     private readonly handleImage = (value: string): void => {
         this.props.setSettings(prev => ({...prev, seo: {...prev.seo, ogImage: value}}));
     };
 
+    /** Updates the image URL from the fallback text input. */
     private readonly handleImageInput = (event: React.ChangeEvent<HTMLInputElement>): void => {
         this.handleImage(event.target.value);
     };
 
+    /** Updates the Twitter site account. */
     private readonly handleTwitter = (event: React.ChangeEvent<HTMLInputElement>): void => {
         const value = event.target.value;
         this.props.setSettings(prev => ({...prev, seo: {...prev.seo, twitterSite: value}}));
     };
 
+    /** Renders the SEO description field and optional hint. */
     private renderDescription() {
         const {settings, labels} = this.props;
         return (
@@ -57,6 +62,7 @@ export class SeoTab extends React.Component<SeoTabProps> {
         );
     }
 
+    /** Renders image upload controls or the URL fallback field. */
     private renderImage() {
         const {settings, labels, sending, uploadImageUrl, deleteImageUrl} = this.props;
         return (
@@ -89,6 +95,7 @@ export class SeoTab extends React.Component<SeoTabProps> {
         );
     }
 
+    /** Renders the Twitter site account field. */
     private renderTwitter() {
         const {settings, labels} = this.props;
         return (
@@ -104,6 +111,7 @@ export class SeoTab extends React.Component<SeoTabProps> {
         );
     }
 
+    /** Renders all SEO settings fields and the save action. */
     public render() {
         const {labels, sending} = this.props;
         return (
