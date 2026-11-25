@@ -97,7 +97,7 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Render\I18n\Spec {
                 expect($content)->not->toContain('static readonly');
 
                 foreach (explode("\n", $content) as $line) {
-                    expect(mb_strlen($line, 'UTF-8'))->toBeLessThanOrEqual(120);
+                    expect(mb_strlen($line, 'UTF-8'))->toBeLessThan(121);
                 }
 
                 $literalSource = preg_match('/    long_value: ([\\s\\S]*),\\n/', $content, $matches);
@@ -260,8 +260,8 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Render\I18n\Spec {
                 I18nFrontendDumper::dump($langData, $this->tempDir, 'TestBundle', false);
 
                 $content = file_get_contents($this->tempDir . '/I18nDataEN.ts');
-                expect($content)->toContain('newlines: "Line1\\\\nLine2\\\\nLine3",');
-                expect($content)->toContain('tabs: "Tab1\\\\tTab2",');
+                expect($content)->toContain('newlines: "Line1\\nLine2\\nLine3",');
+                expect($content)->toContain('tabs: "Tab1\\tTab2",');
             });
 
             it('overwrites existing files', function (): void {

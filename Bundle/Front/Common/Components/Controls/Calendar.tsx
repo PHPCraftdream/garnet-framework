@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {AntiHookComponent, Carburetor} from '@react-carburetor/core';
-import {appLocale} from '@common/Utils/Time/DateUtils/tz/appLocale';
+import {appLocale} from '@common/Utils/Time/DateUtils/shared/appLocale';
 import {resolvedUserTz} from '@common/Utils/Time/DateUtils/tz/resolvedUserTz';
 
 interface Props {
