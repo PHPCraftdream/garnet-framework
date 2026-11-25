@@ -155,7 +155,12 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Settings {
 
             $queryData = [];
 
-            foreach ($this->changedData as $param => $value) {
+            // One fixed row order for every writer: concurrent multi-row upserts that
+            // lock the same rows in different orders deadlock (see SessionData::buildDataRows).
+            $changedData = $this->changedData;
+            ksort($changedData, SORT_STRING);
+
+            foreach ($changedData as $param => $value) {
                 $queryData[] = [
                     'param' => $param,
                     'value' => $value,

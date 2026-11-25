@@ -87,6 +87,35 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session {
             $queryEx->exAsync($sql, $params, $callback);
         }
 
+        /**
+         * Rows of one flush for the multi-row upsert, ordered by param.
+         *
+         * A multi-row INSERT ... ON DUPLICATE KEY UPDATE takes its row locks in the
+         * order of the VALUES list. Two requests of one session (a page and its XHRs)
+         * flush the same params in whatever order each of them changed them, so with
+         * a request-dependent order each statement can hold the lock the other waits
+         * for: MySQL answers one of them with "Deadlock found" (error 1213) and the
+         * request ends in a 500. One fixed order for every writer rules that out.
+         *
+         * @param array<int|string, mixed> $data param => value
+         *
+         * @return list<array{sessionId: int, param: int|string, value: mixed}>
+         */
+        public static function buildDataRows(int $sessionId, array $data): array {
+            ksort($data, SORT_STRING);
+            $rows = [];
+
+            foreach ($data as $param => $value) {
+                $rows[] = [
+                    'sessionId' => $sessionId,
+                    'param' => $param,
+                    'value' => $value,
+                ];
+            }
+
+            return $rows;
+        }
+
         public function flush(string $sessionValue, int|null $sessionId, array $data, ?callable $callback = null): void {
             // The outer $sessionId is the caller's authoritative id (null on
             // first flush of a brand-new session, an int on every later one).
@@ -116,19 +145,9 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session {
                     return;
                 }
 
-                $queryData = [];
-
-                foreach ($data as $param => $value) {
-                    $queryData[] = [
-                        'sessionId' => $sessionId,
-                        'param' => $param,
-                        'value' => $value,
-                    ];
-                }
-
                 [$sql, $params] = QueryTools::makeInsertBatchNamed(
                     SessionDataTable::get()->getTableName(),
-                    $queryData,
+                    static::buildDataRows($sessionId, $data),
                     'value = VALUES(value)',
                     true,
                 );
