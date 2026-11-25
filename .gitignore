@@ -49,3 +49,6 @@
 
 # AI session checkpoints (local working notes)
 /docs/checkpoints/
+
+# /wrush task worktrees — always created here, in-tree
+/worktrees/
