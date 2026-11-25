@@ -5,15 +5,15 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session\Spec;
 use PHPCraftdream\Garnet\Kernel\Db\Entity\Session\SessionData;
 
 /**
- * The rows of one session flush go to MySQL as a single multi-row upsert whose row locks follow
- * the VALUES order. Requests of one session flush the same params in different orders, so the
- * order has to be fixed or two of them can deadlock (error 1213).
+ * The rows of one session flush go to MySQL as a single multi-row upsert whose locks follow
+ * the VALUES order. Requests of one session flush the same params, so the order has to be the
+ * index's (case-insensitive) or two of them can deadlock (error 1213).
  */
 describe('SessionData::buildDataRows', function (): void {
-    it('orders the rows by param whatever order the caller changed them in', function (): void {
-        $rows = SessionData::buildDataRows(7, ['auth_login' => 'a@b.test', 'AUTH_PHASE' => 'PHASE_DONE', 'csrf' => 'x']);
+    it('orders the rows like the index whatever order the caller changed them in', function (): void {
+        $rows = SessionData::buildDataRows(7, ['csrf' => 'x', 'AUTH_PHASE' => 'PHASE_DONE', 'auth_login' => 'a@b.test']);
 
-        expect(array_column($rows, 'param'))->toBe(['AUTH_PHASE', 'auth_login', 'csrf']);
+        expect(array_column($rows, 'param'))->toBe(['auth_login', 'AUTH_PHASE', 'csrf']);
     });
 
     it('gives two writers with opposite change orders the identical list', function (): void {

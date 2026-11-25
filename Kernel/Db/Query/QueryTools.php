@@ -5,6 +5,34 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Query {
     use PHPCraftdream\Garnet\Kernel\Exceptions\Db\DbException;
 
     class QueryTools {
+        /**
+         * Sorts a key => value map the way a UNIQUE index on a `utf8mb4_unicode_ci` column orders
+         * its keys: case is ignored, `_` goes before digits, digits before letters.
+         *
+         * A multi-row upsert takes its row and gap locks in VALUES order. Rows listed in any other
+         * order than the index's let two concurrent upserts of the same rows deadlock (error 1213).
+         * Keys are ASCII identifiers; a key with other bytes falls back to byte order.
+         *
+         * @param array<int|string, mixed> $map
+         *
+         * @return array<int|string, mixed>
+         */
+        public static function sortKeysInIndexOrder(array $map): array {
+            $indexKey = static fn (int|string $key): string => strtr(
+                (string)$key,
+                'ABCDEFGHIJKLMNOPQRSTUVWXYZ_',
+                'abcdefghijklmnopqrstuvwxyz' . "\x01",
+            );
+
+            uksort(
+                $map,
+                static fn (int|string $a, int|string $b): int => strcmp($indexKey($a), $indexKey($b))
+                    ?: strcmp((string)$a, (string)$b),
+            );
+
+            return $map;
+        }
+
         public static function makeInsertBatchNamed(
             string $table,
             array $queryData,

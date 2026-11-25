@@ -88,21 +88,22 @@ namespace PHPCraftdream\Garnet\Kernel\Db\Entity\Session {
         }
 
         /**
-         * Rows of one flush for the multi-row upsert, ordered by param.
+         * Rows of one flush for the multi-row upsert, in the order of the (sessionId, param) index.
          *
-         * A multi-row INSERT ... ON DUPLICATE KEY UPDATE takes its row locks in the
-         * order of the VALUES list. Two requests of one session (a page and its XHRs)
-         * flush the same params in whatever order each of them changed them, so with
-         * a request-dependent order each statement can hold the lock the other waits
-         * for: MySQL answers one of them with "Deadlock found" (error 1213) and the
-         * request ends in a 500. One fixed order for every writer rules that out.
+         * A multi-row INSERT ... ON DUPLICATE KEY UPDATE takes its row and gap locks in
+         * the order of the VALUES list. Two requests of one session flush the same
+         * params, and rows listed in any other order than the index's (the column is
+         * case-insensitive: `auth_login` precedes `AUTH_PHASE`) make each statement
+         * wait for a lock the other holds: MySQL answers one of them with "Deadlock
+         * found" (error 1213) and the request ends in a 500. Index order for every
+         * writer rules that out.
          *
          * @param array<int|string, mixed> $data param => value
          *
          * @return list<array{sessionId: int, param: int|string, value: mixed}>
          */
         public static function buildDataRows(int $sessionId, array $data): array {
-            ksort($data, SORT_STRING);
+            $data = QueryTools::sortKeysInIndexOrder($data);
             $rows = [];
 
             foreach ($data as $param => $value) {
