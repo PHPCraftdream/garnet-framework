@@ -23,7 +23,9 @@ import {OpcacheResetPanel} from './OpcacheResetPanel';
 import {VersionInfoPanel} from './VersionInfoPanel';
 import {SettingsTabStrip} from './SettingsTabStrip';
 import {SmtpTab} from './Tabs/SmtpTab';
-import {RegistrationTab, PenaltyTab, ContactsTab} from './Tabs/GeneralTabs';
+import {RegistrationTab} from './Tabs/RegistrationTab';
+import {PenaltyTab} from './Tabs/PenaltyTab';
+import {ContactsTab} from './Tabs/ContactsTab';
 import {SeoTab} from './Tabs/SeoTab';
 import {HistoryTab} from './Tabs/HistoryTab';
 
