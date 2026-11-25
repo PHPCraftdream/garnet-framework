@@ -163,6 +163,25 @@ them all without a suppression directive.
 - The smoke guard `pageloader-incoming-state-ids-guard` stubs the new
   `PageLoaderDefaults` import.
 
+## [0.1.5] — session writes no longer deadlock
+
+### Fixed
+- Requests that write the same session could fail with MySQL error 1213
+  "Deadlock found" on the multi-row `INSERT … ON DUPLICATE KEY UPDATE` into
+  `session_data` (a login ended in a 500). The statement takes its row and gap
+  locks in `VALUES` order, and the `param` column is case-insensitive
+  (`utf8mb4_unicode_ci`), so the index holds `auth_login` before `AUTH_PHASE`
+  while the request listed them the other way round. `QueryTools::sortKeysInIndexOrder`
+  puts the rows in the order of the index; `SessionData::buildDataRows` and
+  `Settings::flushChanged` use it. Data written and behaviour are unchanged; only
+  the row order inside one statement differs. Measured on MySQL, two concurrent
+  identical upserts of `AUTH_PHASE` and `auth_login`: 9114 deadlocks in 20 000
+  tries in byte order, 0 in index order.
+
+### Tooling
+- `QueryToolsSortKeysInIndexOrderSpec` and `SessionDataRowsSpec` cover the order;
+  the expected order is what MySQL returns for `ORDER BY param`.
+
 ## Stability
 
 While the version is `0.x`, the public API may change between minor
