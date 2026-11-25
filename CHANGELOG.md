@@ -96,6 +96,73 @@ See [`README.md` → Known limitations](README.md#known-limitations-v0x).
   `recommended` preset are errors, and `carburetor-lint` runs with
   `--deny-warnings`. No suppression directive is left in the React sources.
 
+## [0.1.4] — every Carburetor linter on
+
+All of the `house-style` preset is an error now, next to `recommended`: `require-tsdoc`,
+`max-line-length` (120), `one-export-per-file`, `no-parent-import`,
+`prefer-readonly-array-param`, `no-blank-line-after-tsdoc`,
+`tsdoc-blank-line-before-tags` and `no-module-level-store`. `oxlint` runs with
+`--deny-warnings`. The React sources (TS/TSX) of the framework and of `Templates/Application` pass
+them all without a suppression directive.
+
+### Changed (apps must adapt their imports)
+- `one-export-per-file`: a module that exported several values is split into one
+  file per export, named after the export. The old multi-export paths are gone,
+  and there are no re-export barrels. Names and behaviour are unchanged. Old
+  path → new path:
+  - `@common/Api/maintenance503`: `isMaintenanceError` → `@common/Api/isMaintenanceError`
+  - `@common/Components/Admin/AdminPanel/UserDetailContext`: `useOpenUser` → `@common/Components/Admin/AdminPanel/useOpenUser`
+  - `@common/Components/Admin/EntityHistory/entityHistoryFormat`: `renderHistoryValue` → `@common/Components/Admin/EntityHistory/renderHistoryValue`
+  - `@common/Components/Admin/StaticPages/StaticPagesAdminIsland/types`: `STATIC_TABS` → `@common/Components/Admin/StaticPages/StaticPagesAdminIsland/values/staticTabs`; `SNIPPET_TYPES` → `@common/Components/Admin/StaticPages/StaticPagesAdminIsland/values/snippetTypes`; `BLOCK_TYPE_LABELS` → `@common/Components/Admin/StaticPages/StaticPagesAdminIsland/values/blockTypeLabels`; `SNIPPET_TYPE_LABELS` → `@common/Components/Admin/StaticPages/StaticPagesAdminIsland/values/snippetTypeLabels`
+  - `@common/Components/Admin/SystemSettings/SystemSettingsPage/Tabs/GeneralTabs`: `RegistrationTab` → `@common/Components/Admin/SystemSettings/SystemSettingsPage/Tabs/RegistrationTab`; `PenaltyTab` → `@common/Components/Admin/SystemSettings/SystemSettingsPage/Tabs/PenaltyTab`; `ContactsTab` → `@common/Components/Admin/SystemSettings/SystemSettingsPage/Tabs/ContactsTab`
+  - `@common/Components/Form/FormBuilder/validation`: `parseValidation` → `@common/Components/Form/FormBuilder/parseValidation`
+  - `@common/Components/Form/useFormErrors`: `FormErrorProvider` → `@common/Components/Form/internal/FormErrorProvider`; `FormErrorStore` → `@common/Components/Form/internal/FormErrorStore`
+  - `@common/Components/Layout/PageHeader`: default `PageHeader` → `@common/Components/Layout/PageHeader`
+  - `@common/Components/UserPreviewModal/PreviewContext`: `usePreview` → `@common/Components/UserPreviewModal/usePreview`
+  - `@common/Components/ui/Dialog`: `DialogTrigger` → `@common/Components/ui/dialog/DialogTrigger`; `DialogClose` → `@common/Components/ui/dialog/DialogClose`; `DialogContent` → `@common/Components/ui/dialog/DialogContent`; `DialogHeader` → `@common/Components/ui/dialog/DialogHeader`; `DialogTitle` → `@common/Components/ui/dialog/DialogTitle`; `DialogDescription` → `@common/Components/ui/dialog/DialogDescription`
+  - `@common/Components/ui/Select`: `SelectGroup` → `@common/Components/ui/select/SelectGroup`; `SelectValue` → `@common/Components/ui/select/SelectValue`; `SelectTrigger` → `@common/Components/ui/select/SelectTrigger`; `SelectContent` → `@common/Components/ui/select/SelectContent`; `SelectItem` → `@common/Components/ui/select/SelectItem`; `SelectLabel` → `@common/Components/ui/select/SelectLabel`
+  - `@common/Components/ui/Tooltip`: `TooltipProvider` → `@common/Components/ui/tooltip/TooltipProvider`; `TooltipTrigger` → `@common/Components/ui/tooltip/TooltipTrigger`; `TooltipContent` → `@common/Components/ui/tooltip/TooltipContent`
+  - `@common/Dom/FormTool`: `FormTool` → `@common/Dom/Component/FormTool`
+  - `@common/Dom/Nav/DocumentPrefetch`: `prefetchDocument` → `@common/Dom/Nav/DocumentPrefetch/prefetchDocument`; `fetchDocumentPrefetched` → `@common/Dom/Nav/DocumentPrefetch/fetchDocumentPrefetched`; `initDocumentPrefetchTriggers` → `@common/Dom/Nav/DocumentPrefetch/initDocumentPrefetchTriggers`
+  - `@common/Dom/Nav/HotClickInit`: `hotClickHandler` → `@common/Dom/Nav/hotClickHandler`; `hotClickInit` → `@common/Dom/Nav/hotClickInit`
+  - `@common/Dom/updateProgress`: `updateProgress` → `@common/Dom/Progress/updateProgress`
+  - `@common/Support/Errors/JsErrorReporter`: `reportHandledError` → `@common/Support/Errors/reportHandledError`; `installJsErrorReporter` → `@common/Support/Errors/installJsErrorReporter`
+  - `@common/Utils/Data/liveCounts`: `LiveCounts` → `@common/Utils/Data/liveCounts/LiveCounts`; `startLiveCounts` → `@common/Utils/Data/liveCounts/startLiveCounts`; `subscribeLiveCounts` → `@common/Utils/Data/liveCounts/subscribeLiveCounts`; `refreshLiveCounts` → `@common/Utils/Data/liveCounts/refreshLiveCounts`
+  - `@common/Utils/Data/pagination`: `PAGE_SIZE_OPTIONS` → `@common/Utils/Data/pagination/PAGE_SIZE_OPTIONS`; `DEFAULT_PAGE_SIZE` → `@common/Utils/Data/pagination/DEFAULT_PAGE_SIZE`; `readPageSize` → `@common/Utils/Data/pagination/readPageSize`; `writePageSize` → `@common/Utils/Data/pagination/writePageSize`
+  - `@common/Utils/Time/DateUtils`: `appLocale` → `@common/Utils/Time/DateUtils/shared/appLocale`; `FormatTsOptions` → `@common/Utils/Time/DateUtils/format/formatTs`; `formatTs` → `@common/Utils/Time/DateUtils/format/formatTs`; `formatTime` → `@common/Utils/Time/DateUtils/format/formatTime`; `formatDateShort` → `@common/Utils/Time/DateUtils/format/formatDateShort`; `formatDateLong` → `@common/Utils/Time/DateUtils/format/formatDateLong`; `tsToInputDate` → `@common/Utils/Time/DateUtils/input/tsToInputDate`; `tsToInputTime` → `@common/Utils/Time/DateUtils/input/tsToInputTime`; `tsToInputDateTime` → `@common/Utils/Time/DateUtils/input/tsToInputDateTime`; `tsToHour` → `@common/Utils/Time/DateUtils/input/tsToHour`; `tsToDow` → `@common/Utils/Time/DateUtils/input/tsToDow`; `weekStartTs` → `@common/Utils/Time/DateUtils/week/weekStartTs`; `addDaysTs` → `@common/Utils/Time/DateUtils/week/addDaysTs`; `resolvedUserTz` → `@common/Utils/Time/DateUtils/tz/resolvedUserTz`; `resolvedBrowserTz` → `@common/Utils/Time/DateUtils/tz/resolvedBrowserTz`; `userTzDiffersFromBrowser` → `@common/Utils/Time/DateUtils/tz/userTzDiffersFromBrowser`; `tzOffsetMinutes` → `@common/Utils/Time/DateUtils/tz/tzOffsetMinutes`
+  - `@common/Utils/Time/TzList`: `currentTz` → `@common/Utils/Time/tz/currentTz`; `TzList` → `@common/Utils/Time/tz/tzList`
+  - `@common/Utils/Ui/LucideIcons`: `menuIconMap` → `@common/Utils/Ui/menuIconMap`; `iconSvg` → `@common/Utils/Ui/iconSvg`
+  - `@common/Utils/Ui/ThemeManager`: `Theme` → `@common/Utils/Ui/theme/themeTypes`; `getTheme` → `@common/Utils/Ui/theme/getTheme`; `setTheme` → `@common/Utils/Ui/theme/setTheme`; `initTheme` → `@common/Utils/Ui/theme/initTheme`
+  - `@common/Utils/Url/staticPageUrl`: `renderMarkdownLinks` → `@common/Utils/Url/renderMarkdownLinks`
+  - `@common/hooks/ui/useAsyncIcon`: `AsyncIconState` → `@common/hooks/ui/internal/useAsyncIcon`; `UseAsyncIconOptions` → `@common/hooks/ui/internal/useAsyncIcon`; `AsyncIconControls` → `@common/hooks/ui/internal/useAsyncIcon`; `useAsyncIcon` → `@common/hooks/ui/internal/useAsyncIcon`
+  - `@common/hooks/ui/useBodyScrollLock`: `useBodyScrollLock` → `@common/hooks/ui/internal/useBodyScrollLock`
+- `@common/Components/Layout/PageHeader` has a named export `PageHeader` only; the
+  default export is gone.
+- Static-only classes became plain objects with the same call syntax:
+  `PageLoader`, `TzList`, `I18nData*` (`export const … as const`). `GridUtils` is a
+  namespace with the same members.
+- The Radix wrappers keep every sub-component, one per file:
+  `@common/Components/ui/{dialog,select,tooltip}/*`; `Dialog`, `Select` and `Tooltip`
+  stay in their files.
+- `I18nFrontendDumper` (the generator behind `I18nGen`) writes TSDoc and `as const` objects, and a
+  JSON-escaped string literal for values with newlines or quotes (the old output
+  put a raw line break inside a single-quoted string). Regenerate `I18nGen` with
+  `php garnet prepare`.
+
+### Added
+- `@/` — an alias for the application's `Front` directory, in the rspack builds
+  (`resolve.alias['@']`, admin build included), `tsconfig*` files and
+  `Templates/Application`. `@common` and `@framework` are unchanged.
+- `no-parent-import` roots: `@/` (application), `@common/`, `@framework/`. Apps can
+  turn the rule on with `{"roots": [{"path": "Front", "prefix": "@/"}]}` and
+  rewrite `../` imports to `@/…`.
+
+### Tooling
+- `Templates/Application` ships the same linter configuration as the framework.
+- The `one-export-per-component` override list is gone: no file needs it.
+- The smoke guard `pageloader-incoming-state-ids-guard` stubs the new
+  `PageLoaderDefaults` import.
+
 ## Stability
 
 While the version is `0.x`, the public API may change between minor
