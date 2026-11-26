@@ -20,10 +20,19 @@
   --color-staticadmincancel-fill-hover: var(--color-gray-600);
   /* carburetor-disable-next-line valid-color-role */
   --color-staticadmincancel-on-fill: var(--color-white);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-mdpreview-wash: var(--color-bg-surface-alt);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-mdpreview-edge: var(--color-border-subtle);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-mdpreview-ink: var(--color-text-primary);
 }
 
 @utility tone-staticadminbody-outlined { @apply bg-staticadminbody-wash divide-staticadminbody-edge; }
 @utility tone-staticadmindelete-plain { @apply text-staticadmindelete-ink hover:text-staticadmindelete-ink-hover; }
+@utility tone-mdpreview-outlined { @apply border-mdpreview-edge text-mdpreview-ink bg-mdpreview-wash; }
+@utility shape-md-preview { @apply rounded border p-3 min-h-[120px]; }
+@utility type-md-preview { @apply text-sm; }
 @utility tone-staticadmincancel-solid { @apply bg-staticadmincancel-fill text-staticadmincancel-on-fill hover:bg-staticadmincancel-fill-hover border-transparent; }
 
 @utility layout-static-admin-toolbar { @apply flex items-center justify-between gap-3; }
@@ -196,7 +205,7 @@
   .snippet-mode { @apply tone-gridborder-outline layout-snippet-mode shape-snippet-mode; }
   .snippet-mode-button { @apply tone-snippettool-soft shape-snippet-mode-button type-snippet-mode-button motion-admin-log-tab-button behavior-snippet-label; }
   .snippet-mode-button[aria-pressed="true"] { @apply tone-authprimary-solid; }
-  .md-preview { @apply tone-supportinherit-plain; }
+  .md-preview { @apply tone-mdpreview-outlined shape-md-preview type-md-preview; }
   .snippet-content { @apply tone-garnetfield-outlined shape-native-control shape-native-field layout-native-select type-snippet-content focus-native-select motion-native-select; }
   .snippet-editor { @apply tone-settingspanel-outlined shape-snippet-editor; }
   .snippet-delete { @apply tone-confirmdanger-solid layout-history-button shape-history-button type-history-button behavior-history-button effect-history-button effect-confirm-danger motion-history-button; }

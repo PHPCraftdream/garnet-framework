@@ -22,12 +22,6 @@
    counts) sits inline in the always-visible top bar; on mobile that same
    cluster only renders once the drawer is open. Without this dot, unread
    messages/support were invisible until you opened the menu "just in case". */
-/* The island mount wrapper carries no box (display:contents) so the sticky
-   bar inside it sticks against <body>, not this 1-row-tall wrapper. */
-.mobile-menu-mount {
-  display: contents;
-}
-
 .mobile-topbar {
   @apply sticky top-0 z-30 flex items-center justify-between px-2 h-14 bg-surface border-b border-default;
 }

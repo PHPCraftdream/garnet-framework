@@ -15,6 +15,8 @@
   /* carburetor-disable-next-line valid-color-role */
   --color-staticpagelink-ink: var(--color-text-secondary);
   /* carburetor-disable-next-line valid-color-role */
+  --color-staticpagesecondary-ink: var(--color-text-secondary);
+  /* carburetor-disable-next-line valid-color-role */
   --color-staticpagecopyright-ink: var(--color-text-muted);
   /* carburetor-disable-next-line valid-color-role */
   --color-staticpagecopyright-edge: var(--color-border-subtle);
@@ -72,6 +74,21 @@
 @utility shape-sp-snippet-footer { @apply mt-4; }
 @utility shape-sp-snippet-header { @apply mb-4; }
 
+@utility tone-staticpagesecondary-plain { @apply text-staticpagesecondary-ink; }
+@utility shape-sp-notfound { @apply py-12; }
+@utility type-sp-notfound { @apply text-center; }
+@utility shape-sp-notfound-code { @apply mb-2; }
+@utility type-sp-notfound-code { @apply text-6xl font-bold leading-none; }
+@utility shape-sp-notfound-title { @apply mb-2!; }
+@utility type-sp-notfound-title { @apply text-2xl font-semibold; }
+@utility shape-sp-notfound-text { @apply mb-6; }
+@utility shape-sp-block-image { @apply max-w-full rounded-lg; }
+@utility layout-sp-image-block { @apply flex justify-center; }
+@utility behavior-sp-lightbox-link { @apply cursor-zoom-in; }
+@utility shape-sp-gallery-block { @apply space-y-2; }
+@utility layout-sp-gallery-row { @apply grid gap-2; }
+@utility shape-sp-gallery-image { @apply w-full h-full object-cover rounded-lg; }
+
 @layer components {
   .static-page-body { @apply tone-staticpageinherit-plain shape-static-page-body; }
   .static-page-moderator-banner { @apply tone-staticpagenotice-outlined shape-static-page-notice type-static-page-notice; }
@@ -97,6 +114,16 @@
   .sp-footer-link { @apply tone-staticpagelink-plain type-sp-nav-link motion-sp-nav-link; }
   .sp-footer-copyright { @apply tone-staticpagecopyright-outline shape-sp-footer-copyright type-sp-footer-copyright; }
   .sp-footer-row { @apply tone-staticpageinherit-plain layout-sp-footer-row shape-sp-footer-row type-sp-footer-row; }
+  .sp-notfound { @apply tone-staticpageinherit-plain shape-sp-notfound type-sp-notfound; }
+  .sp-notfound-code { @apply tone-garnetaccent-plain shape-sp-notfound-code type-sp-notfound-code; }
+  .sp-notfound-title { @apply tone-staticpagetext-plain shape-sp-notfound-title type-sp-notfound-title; }
+  .sp-notfound-text { @apply tone-staticpagesecondary-plain shape-sp-notfound-text; }
+  .sp-block-image { @apply tone-staticpageinherit-plain shape-sp-block-image; }
+  .sp-image-block { @apply tone-staticpageinherit-plain layout-sp-image-block; }
+  .sp-lightbox-link { @apply tone-staticpageinherit-plain behavior-sp-lightbox-link; }
+  .sp-gallery-block { @apply tone-staticpageinherit-plain shape-sp-gallery-block; }
+  .sp-gallery-row { @apply tone-staticpageinherit-plain layout-sp-gallery-row; }
+  .sp-gallery-image { @apply tone-staticpageinherit-plain shape-sp-gallery-image; }
 }
 
 /* Unlayered overrides retain priority over layered navigation and utilities. */

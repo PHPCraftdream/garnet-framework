@@ -45,6 +45,10 @@
   @apply border-garnetmuted-edge text-garnetmuted-ink hover:text-garnetmuted-ink-hover hover:bg-garnetmuted-wash-hover;
 }
 
+@utility tone-garnetaccent-plain {
+  @apply text-garnetaccent-ink;
+}
+
 @utility tone-garnetaccent-outlined {
   @apply border-garnetaccent-edge text-garnetaccent-ink hover:text-garnetaccent-ink-hover hover:bg-garnetaccent-wash-hover;
 }

@@ -379,10 +379,6 @@
 
 /* ---------- Markdown Preview ---------- */
 
-.md-preview {
-  @apply rounded border border-subtle p-3 min-h-[120px] text-sm text-on-surface bg-surface-alt;
-}
-
 .md-preview p { @apply mb-2 last:mb-0; }
 .md-preview ul { @apply list-disc pl-5 mb-2; }
 .md-preview ol { @apply list-decimal pl-5 mb-2; }

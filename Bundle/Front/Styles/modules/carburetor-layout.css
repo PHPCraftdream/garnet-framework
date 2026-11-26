@@ -6,10 +6,20 @@
   --color-shellpage-wash: var(--color-bg-page);
   /* carburetor-disable-next-line valid-color-role */
   --color-shellinherit-ink: currentColor;
+  /* carburetor-disable-next-line valid-color-role */
+  --color-shellsidebar-wash: var(--color-bg-surface);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-shellsidebar-edge: var(--color-border);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-shellfooter-ink: var(--color-text-muted);
+  /* carburetor-disable-next-line valid-color-role */
+  --color-shellfooter-edge: var(--color-border-subtle);
 }
 
 @utility tone-shellpage-soft { @apply text-shellpage-ink bg-shellpage-wash; }
 @utility tone-shellinherit-plain { @apply text-shellinherit-ink; }
+@utility tone-shellsidebar-outlined { @apply bg-shellsidebar-wash border-shellsidebar-edge; }
+@utility tone-shellfooter-outline { @apply text-shellfooter-ink border-shellfooter-edge; }
 @utility layout-shell-page { @apply flex flex-col; }
 @utility shape-shell-page { @apply min-h-screen; }
 @utility type-shell-page { @apply text-sm; }
@@ -17,6 +27,18 @@
 @utility layout-shell-column { @apply grow flex flex-col; }
 @utility shape-shell-column { @apply min-w-0; }
 @utility shape-shell-main-padding { @apply p-4 lg:p-6; }
+/* Island mount wrapper without a box: the sticky bar inside sticks against <body>. */
+@utility layout-shell-mount { display: contents; }
+@utility layout-app-topbar { @apply hidden lg:block lg:sticky lg:top-0 z-30; }
+/* Reserved height (h-14 row + 1px border) keeps content from jumping when the island hydrates. */
+@utility shape-app-topbar { min-height: 57px; }
+@utility layout-app-sidebar { @apply hidden lg:block shrink-0 self-start overflow-y-auto overflow-x-hidden lg:sticky lg:top-14; }
+/* Fixed w-20 reserves the column width before the sidebar island hydrates. */
+@utility shape-app-sidebar { @apply w-20 border-r; max-height: calc(100vh - 3.5rem); }
+@utility layout-app-footer { @apply flex items-center justify-center gap-1.5 flex-wrap shrink-0; }
+@utility shape-app-footer { @apply px-4 py-3 mt-auto border-t; }
+@utility type-app-footer { @apply text-xs; }
+@utility type-app-footer-email { @apply hover:underline; }
 
 @layer components {
   .shell-page { @apply tone-shellpage-soft layout-shell-page shape-shell-page type-shell-page; }
@@ -24,4 +46,9 @@
   .shell-column { @apply tone-shellinherit-plain layout-shell-column shape-shell-column; }
   .shell-main { @apply tone-shellinherit-plain layout-shell-column shape-shell-column; }
   .shell-main-padded { @apply tone-shellinherit-plain layout-shell-column shape-shell-column shape-shell-main-padding; }
+  .mobile-menu-mount { @apply tone-shellinherit-plain layout-shell-mount; }
+  .app-topbar { @apply tone-shellinherit-plain layout-app-topbar shape-app-topbar; }
+  .app-sidebar { @apply tone-shellsidebar-outlined layout-app-sidebar shape-app-sidebar; }
+  .app-footer { @apply tone-shellfooter-outline layout-app-footer shape-app-footer type-app-footer; }
+  .app-footer-email { @apply tone-garnetaccent-plain type-app-footer-email; }
 }

@@ -7,6 +7,17 @@ API is allowed to shift between minor releases — see "Stability" below.
 
 ## [Unreleased]
 
+### Changed
+- The classes the framework's Twig templates emit now come from the functional
+  classes (`carburetor-*.css`) instead of raw `@apply` rules in
+  `components/*.css`: the not-found page (`sp-notfound*`), static-page images
+  and galleries (`sp-block-image`, `sp-image-block`, `sp-lightbox-link`,
+  `sp-gallery-*`), the page shell (`app-topbar`, `app-sidebar`, `app-footer`,
+  `app-footer-email`, `mobile-menu-mount`) and the Markdown block
+  (`md-preview`). Class names are unchanged and the compiled declarations are
+  identical; the not-found title keeps its margin with `!important`, because the
+  base `h1` rule sits outside the cascade layers and would otherwise win.
+
 Planned for `1.0`:
 - Rename `FwBalanceLedger` enum values from `booking_*` to generic `tx_*`
   with a documented migration path.

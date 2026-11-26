@@ -269,24 +269,6 @@
   @apply bg-surface border-b border-default px-4;
 }
 
-/* Sticky slot that carries the top-menu island so it frosts over scrolled
-   content (the island consumes its *-init class but keeps these). The reserved
-   min-height matches the rendered bar (h-14 row + 1px border) so content below
-   doesn't jump down when the top-menu island hydrates after load. */
-.app-topbar {
-  @apply hidden lg:block lg:sticky lg:top-0 z-30;
-  min-height: 57px;
-}
-
-/* Admin sidebar column — sticky under the top bar, own scroll when tall.
-   The fixed w-20 (matching the inner .nav-sidebar) reserves the column width
-   server-side, so content doesn't jump right by ~80px when the sidebar island
-   hydrates after load. */
-.app-sidebar {
-  @apply hidden lg:block w-20 shrink-0 self-start overflow-y-auto overflow-x-hidden bg-surface border-r border-default lg:sticky lg:top-14;
-  max-height: calc(100vh - 3.5rem);
-}
-
 .nav-topbar-row {
   @apply grid w-full items-center h-14 gap-3;
   grid-template-columns: 1fr auto 1fr;
@@ -313,14 +295,6 @@
   width: 28px;
   height: 28px;
 }
-/* Page footer with the configured support/contact email. */
-.app-footer {
-  @apply flex items-center justify-center gap-1.5 flex-wrap px-4 py-3 text-xs text-muted border-t border-subtle mt-auto shrink-0;
-}
-.app-footer-email {
-  @apply text-accent hover:underline;
-}
-
 .mobile-topbar-logo {
   @apply inline-flex items-center no-underline;
 }

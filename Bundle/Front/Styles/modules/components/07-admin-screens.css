@@ -156,12 +156,6 @@
 
 /* ---------- Static Page Image/Gallery Blocks ---------- */
 
-.sp-block-image { @apply max-w-full rounded-lg; }
-.sp-image-block { @apply flex justify-center; }
-.sp-lightbox-link { @apply cursor-zoom-in; }
-.sp-gallery-block { @apply space-y-2; }
-.sp-gallery-row { @apply grid gap-2; }
-.sp-gallery-image { @apply w-full h-full object-cover rounded-lg; }
 
 /* Static Page Admin: gallery thumbnail grid */
 .blk-gal-grid {
@@ -191,10 +185,6 @@
 .sp-footer-row li + li::before { content: "·"; @apply text-muted mr-4; }
 
 /* Default 404 body (rendered inside the public-page shell). */
-.sp-notfound { @apply text-center py-12; }
-.sp-notfound-code { @apply text-6xl font-bold text-accent leading-none mb-2; }
-.sp-notfound-title { @apply text-2xl font-semibold text-on-surface mb-2; }
-.sp-notfound-text { @apply text-secondary mb-6; }
 .sp-notfound-home { @apply inline-block rounded-lg bg-accent px-4 py-2 font-medium text-accent-text no-underline hover:bg-accent-hover transition-colors; }
 
 /* Lift sp-nav / sp-footer link colour in dark mode — the resolved
