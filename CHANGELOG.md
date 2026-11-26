@@ -7,28 +7,6 @@ API is allowed to shift between minor releases — see "Stability" below.
 
 ## [Unreleased]
 
-### Security
-- `twig/twig` 3.28.0 → 3.31.1 in `composer.lock`: nine advisories (Twig sandbox policy bypasses and
-  missing autoescaping for a variable named like a macro import) made the production dependency
-  audit fail in CI. The constraint `^3.4` is unchanged.
-
-### Fixed
-- `php garnet prepare` wrote a lookup method of `I18n*.ts` on one line however
-  long the key was, so a key of about 40 characters broke `max-line-length` (120)
-  in the generated file. A line past 120 characters now breaks after the arrow
-  (`key: t = (a = []) =>` / `this.t('key', a);`); shorter ones are unchanged.
-
-### Changed
-- The classes the framework's Twig templates emit now come from the functional
-  classes (`carburetor-*.css`) instead of raw `@apply` rules in
-  `components/*.css`: the not-found page (`sp-notfound*`), static-page images
-  and galleries (`sp-block-image`, `sp-image-block`, `sp-lightbox-link`,
-  `sp-gallery-*`), the page shell (`app-topbar`, `app-sidebar`, `app-footer`,
-  `app-footer-email`, `mobile-menu-mount`) and the Markdown block
-  (`md-preview`). Class names are unchanged and the compiled declarations are
-  identical; the not-found title keeps its margin with `!important`, because the
-  base `h1` rule sits outside the cascade layers and would otherwise win.
-
 Planned for `1.0`:
 - Rename `FwBalanceLedger` enum values from `booking_*` to generic `tx_*`
   with a documented migration path.
@@ -203,6 +181,30 @@ them all without a suppression directive.
 ### Tooling
 - `QueryToolsSortKeysInIndexOrderSpec` and `SessionDataRowsSpec` cover the order;
   the expected order is what MySQL returns for `ORDER BY param`.
+
+## [0.1.6] — twig advisories, I18n line breaks, Twig classes from functional classes
+
+### Security
+- `twig/twig` 3.28.0 → 3.31.1 in `composer.lock`: nine advisories (Twig sandbox policy bypasses and
+  missing autoescaping for a variable named like a macro import) made the production dependency
+  audit fail in CI. The constraint `^3.4` is unchanged.
+
+### Fixed
+- `php garnet prepare` wrote a lookup method of `I18n*.ts` on one line however
+  long the key was, so a key of about 40 characters broke `max-line-length` (120)
+  in the generated file. A line past 120 characters now breaks after the arrow
+  (`key: t = (a = []) =>` / `this.t('key', a);`); shorter ones are unchanged.
+
+### Changed
+- The classes the framework's Twig templates emit now come from the functional
+  classes (`carburetor-*.css`) instead of raw `@apply` rules in
+  `components/*.css`: the not-found page (`sp-notfound*`), static-page images
+  and galleries (`sp-block-image`, `sp-image-block`, `sp-lightbox-link`,
+  `sp-gallery-*`), the page shell (`app-topbar`, `app-sidebar`, `app-footer`,
+  `app-footer-email`, `mobile-menu-mount`) and the Markdown block
+  (`md-preview`). Class names are unchanged and the compiled declarations are
+  identical; the not-found title keeps its margin with `!important`, because the
+  base `h1` rule sits outside the cascade layers and would otherwise win.
 
 ## Stability
 
