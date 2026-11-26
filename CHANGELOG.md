@@ -7,6 +7,12 @@ API is allowed to shift between minor releases — see "Stability" below.
 
 ## [Unreleased]
 
+### Changed
+- The legacy stylesheets (`components/*.css`) no longer use Tailwind's stock palette (`bg-green-600`, `text-white`,
+  `bg-black/50`, …): the exact values are the `--palette-*` tokens of `carburetor-palette.css`. No visible
+  change; it prepares resetting the stock palette (`--color-*: initial`), which the functional-class
+  linter requires. An application that uses a stock colour utility itself must name its colour first.
+
 Planned for `1.0`:
 - Rename `FwBalanceLedger` enum values from `booking_*` to generic `tx_*`
   with a documented migration path.

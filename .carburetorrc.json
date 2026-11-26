@@ -23,6 +23,7 @@
       "Bundle/Front/Styles/modules/carburetor-radix-controls.css",
       "Kernel/Io/GarnetCli/Admin/Ui/Front/Styles/admin-access.css",
       "Bundle/Front/Styles/modules/carburetor-classes.css",
+      "Bundle/Front/Styles/modules/carburetor-palette.css",
       "Bundle/Front/Styles/modules/carburetor-calendar.css",
       "Bundle/Front/Styles/modules/carburetor-attachment.css",
       "Bundle/Front/Styles/modules/carburetor-upload.css",

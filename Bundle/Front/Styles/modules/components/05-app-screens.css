@@ -12,7 +12,9 @@
 /* ─── modals (shared, for foreground islands) ─── */
 
 .fg-modal-overlay {
-  @apply fixed inset-0 z-50 flex items-center justify-center bg-black/50;
+  @apply fixed inset-0 z-50 flex items-center justify-center;
+  background-color: rgba(0, 0, 0, 0.5);
+  background-color: color-mix(in oklab, var(--palette-black) 50%, transparent);
 }
 .fg-modal-card {
   @apply bg-surface rounded-xl shadow-2xl border border-default w-full mx-4 p-6;

@@ -208,7 +208,9 @@
 }
 
 .common-pick-lightbox {
-  @apply fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center;
+  @apply fixed inset-0 z-[9999] flex items-center justify-center;
+  background-color: rgba(0, 0, 0, 0.8);
+  background-color: color-mix(in oklab, var(--palette-black) 80%, transparent);
 }
 
 .common-pick-lightbox-frame {
@@ -232,11 +234,19 @@
 }
 
 .common-pick-lightbox-nav {
-  @apply absolute top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-black/70 text-xl;
+  @apply absolute top-1/2 -translate-y-1/2 rounded-full w-10 h-10 flex items-center justify-center text-xl;
+  color: var(--palette-white);
+  background-color: rgba(0, 0, 0, 0.5);
+  background-color: color-mix(in oklab, var(--palette-black) 50%, transparent);
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.7);
+  background-color: color-mix(in oklab, var(--palette-black) 70%, transparent);
+  }
 }
 
 .common-pick-lightbox-caption {
-  @apply text-center text-white text-sm mt-2 opacity-70;
+  @apply text-center text-sm mt-2 opacity-70;
+  color: var(--palette-white);
 }
 
 .common-spinner {
