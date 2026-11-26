@@ -7,6 +7,12 @@ API is allowed to shift between minor releases — see "Stability" below.
 
 ## [Unreleased]
 
+### Fixed
+- `php garnet prepare` wrote a lookup method of `I18n*.ts` on one line however
+  long the key was, so a key of about 40 characters broke `max-line-length` (120)
+  in the generated file. A line past 120 characters now breaks after the arrow
+  (`key: t = (a = []) =>` / `this.t('key', a);`); shorter ones are unchanged.
+
 ### Changed
 - The classes the framework's Twig templates emit now come from the functional
   classes (`carburetor-*.css`) instead of raw `@apply` rules in

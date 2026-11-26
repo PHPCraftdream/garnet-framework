@@ -78,13 +78,23 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Render\I18n {
             }
 
             $methods = array_values($methods);
-            $methods = array_map(
-                fn ($method) => "    /** Translation lookup for `{$method}`. */\n    {$method}: t = (a = []) => this.t('{$method}', a);",
-                $methods
-            );
+            $methods = array_map(static fn ($method) => self::formatMethod($method), $methods);
 
             $tr = str_replace('[[methods]]', join("\n", $methods), $tr);
             file_put_contents($dir . DIRECTORY_SEPARATOR . "{$className}.ts", $tr);
+        }
+
+        /**
+         * Format one lookup method; a line past 120 characters breaks after the arrow.
+         */
+        private static function formatMethod(string $method): string {
+            $line = "    {$method}: t = (a = []) => this.t('{$method}', a);";
+
+            if (mb_strlen($line, 'UTF-8') > 120) {
+                $line = "    {$method}: t = (a = []) =>\n        this.t('{$method}', a);";
+            }
+
+            return "    /** Translation lookup for `{$method}`. */\n" . $line;
         }
 
         /**

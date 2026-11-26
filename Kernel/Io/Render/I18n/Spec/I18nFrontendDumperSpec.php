@@ -175,6 +175,21 @@ namespace PHPCraftdream\Garnet\Kernel\Io\Render\I18n\Spec {
                 expect($content)->toContain("    /** Translation lookup for `welcome`. */\n    welcome: t = (a = []) => this.t('welcome', a);");
             });
 
+            it('breaks a lookup method line longer than 120 characters after the arrow', function (): void {
+                $key = 'Admin_' . str_repeat('LongKey', 10) . '_Generic';
+                I18nFrontendDumper::dump(['EN' => [$key => 'Text', 'short' => 'Text']], $this->tempDir, 'TestBundle', false);
+
+                $content = file_get_contents($this->tempDir . '/I18nTestBundle.ts');
+                expect($content)->toContain("    {$key}: t = (a = []) =>\n        this.t('{$key}', a);");
+                expect($content)->toContain("    short: t = (a = []) => this.t('short', a);");
+
+                foreach (explode("\n", $content) as $line) {
+                    if (!str_contains($line, '/**')) {
+                        expect(mb_strlen($line, 'UTF-8'))->toBeLessThan(121);
+                    }
+                }
+            });
+
             it('returns early when methods array is empty', function (): void {
                 $langData = [
                     'EN' => [
