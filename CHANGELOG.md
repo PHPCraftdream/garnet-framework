@@ -7,6 +7,11 @@ API is allowed to shift between minor releases — see "Stability" below.
 
 ## [Unreleased]
 
+### Security
+- `twig/twig` 3.28.0 → 3.31.1 in `composer.lock`: nine advisories (Twig sandbox policy bypasses and
+  missing autoescaping for a variable named like a macro import) made the production dependency
+  audit fail in CI. The constraint `^3.4` is unchanged.
+
 ### Fixed
 - `php garnet prepare` wrote a lookup method of `I18n*.ts` on one line however
   long the key was, so a key of about 40 characters broke `max-line-length` (120)
