@@ -1,8 +1,6 @@
 /* Time-slot surface follows the existing Garnet theme. */
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-timeslotsurface-wash: var(--color-bg-surface);
+@theme {
+  --color-timeslotsurface-wash: var(--palette-bg-surface);
 }
 
 @utility tone-timeslotsurface-soft { @apply bg-timeslotsurface-wash; }

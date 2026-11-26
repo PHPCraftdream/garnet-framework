@@ -1,23 +1,13 @@
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-dropzoneidle-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-dropzoneidle-ink: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-dropzonedrag-edge: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-dropzonedrag-wash: var(--color-accent-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-dropzonedrag-ink: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-dropzoneremove-wash: var(--color-danger-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-dropzoneremove-ink: var(--color-danger);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-dropzonefile-wash: rgb(0 0 0 / 50%);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-dropzonefile-ink: var(--color-white);
+@theme {
+  --color-dropzoneidle-edge: var(--palette-border);
+  --color-dropzoneidle-ink: var(--palette-text-muted);
+  --color-dropzonedrag-edge: var(--palette-accent);
+  --color-dropzonedrag-wash: var(--palette-accent-subtle);
+  --color-dropzonedrag-ink: var(--palette-text-muted);
+  --color-dropzoneremove-wash: var(--palette-danger-subtle);
+  --color-dropzoneremove-ink: var(--palette-danger);
+  --color-dropzonefile-wash: var(--palette-black-50);
+  --color-dropzonefile-ink: var(--palette-white);
 }
 
 @utility shape-dropzone { @apply space-y-2; }

@@ -1,52 +1,28 @@
 /* System settings roles use the existing Garnet theme. */
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-settingsinherit-ink: currentColor;
-  /* carburetor-disable-next-line valid-color-role */
-  --color-settingsmuted-ink: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-settingssecondary-ink: var(--color-text-secondary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-settingsrefresh-ink: currentColor;
-  /* carburetor-disable-next-line valid-color-role */
-  --color-settingsrefresh-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-settingsrefresh-wash-hover: var(--color-strong);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-settingsprimary-ink: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-settingsfield-ink: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-settingsfield-ink-placeholder: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-settingsfield-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-settingsfield-edge-focus: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-settingsfield-wash: var(--color-bg-surface);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-settingspanel-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-settingspanel-wash: var(--color-bg-surface);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-settingssave-ink: var(--color-accent-text);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-settingssave-wash: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-settingssave-wash-hover: var(--color-accent-hover);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-settingssuccess-ink: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-settingssuccess-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-settingssuccess-wash: var(--color-success-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-settingserror-ink: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-settingserror-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-settingserror-wash: var(--color-danger-subtle);
+@theme {
+  --color-settingsinherit-ink: var(--palette-current);
+  --color-settingsmuted-ink: var(--palette-text-muted);
+  --color-settingssecondary-ink: var(--palette-text-secondary);
+  --color-settingsrefresh-ink: var(--palette-current);
+  --color-settingsrefresh-edge: var(--palette-border);
+  --color-settingsrefresh-wash-hover: var(--palette-transparent);
+  --color-settingsprimary-ink: var(--palette-text-primary);
+  --color-settingsfield-ink: var(--palette-text-primary);
+  --color-settingsfield-ink-placeholder: var(--palette-text-muted);
+  --color-settingsfield-edge: var(--palette-border);
+  --color-settingsfield-edge-focus: var(--palette-accent);
+  --color-settingsfield-wash: var(--palette-bg-surface);
+  --color-settingspanel-edge: var(--palette-border);
+  --color-settingspanel-wash: var(--palette-bg-surface);
+  --color-settingssave-ink: var(--palette-accent-text);
+  --color-settingssave-wash: var(--palette-accent);
+  --color-settingssave-wash-hover: var(--palette-accent-hover);
+  --color-settingssuccess-ink: var(--palette-text-primary);
+  --color-settingssuccess-edge: var(--palette-border);
+  --color-settingssuccess-wash: var(--palette-success-subtle);
+  --color-settingserror-ink: var(--palette-text-primary);
+  --color-settingserror-edge: var(--palette-border);
+  --color-settingserror-wash: var(--palette-danger-subtle);
 }
 
 @utility tone-settingsinherit-plain { @apply text-settingsinherit-ink; }

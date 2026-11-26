@@ -1,18 +1,11 @@
 /* Photo field roles use the existing Garnet and Tailwind colours. */
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-photoinherit-ink: currentColor;
-  /* carburetor-disable-next-line valid-color-role */
-  --color-photohint-ink: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-photobutton-ink: var(--color-text-secondary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-photobutton-edge: var(--color-border-strong);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-photobutton-wash: var(--color-bg-surface-hover);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-photobutton-wash-hover: var(--color-gray-200);
+@theme {
+  --color-photoinherit-ink: var(--palette-current);
+  --color-photohint-ink: var(--palette-text-muted);
+  --color-photobutton-ink: var(--palette-text-secondary);
+  --color-photobutton-edge: var(--palette-border-strong);
+  --color-photobutton-wash: var(--palette-bg-surface-hover);
+  --color-photobutton-wash-hover: var(--palette-gray-200);
 }
 
 @utility tone-photoinherit-plain { @apply text-photoinherit-ink; }

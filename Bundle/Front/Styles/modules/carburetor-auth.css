@@ -7,25 +7,16 @@
   --palette-dev-danger: #f87171;
 }
 
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-authprimary-fill: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-authprimary-fill-hover: var(--color-accent-hover);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-authprimary-on-fill: var(--color-accent-text);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-authsuccess-fill: var(--color-green-600);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-authsuccess-fill-hover: var(--color-green-700);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-authsuccess-on-fill: var(--color-white);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-authspinner-edge: currentColor;
+@theme {
+  --color-authprimary-fill: var(--palette-accent);
+  --color-authprimary-fill-hover: var(--palette-accent-hover);
+  --color-authprimary-on-fill: var(--palette-accent-text);
+  --color-authsuccess-fill: var(--palette-green-600);
+  --color-authsuccess-fill-hover: var(--palette-green-700);
+  --color-authsuccess-on-fill: var(--palette-white);
+  --color-authspinner-edge: var(--palette-current);
   --color-devpanel-edge: var(--palette-dev-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-devpanel-wash: var(--color-bg-surface, rgba(255,255,255,0.92));
+  --color-devpanel-wash: var(--palette-bg-surface);
   --color-devlabel-ink: var(--palette-dev-muted);
   --color-devrole-ink: var(--palette-dev-muted);
   --color-devrole-edge: var(--palette-dev-border);
@@ -35,8 +26,7 @@
   --color-devreset-edge: var(--palette-dev-danger-border);
   --color-devresetloading-ink: var(--palette-dev-loading);
   --color-devresetloading-edge: var(--palette-dev-danger-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-devinherit-ink: currentColor;
+  --color-devinherit-ink: var(--palette-current);
 }
 
 @utility tone-devpanel-outlined { @apply border-devpanel-edge; }

@@ -1,33 +1,18 @@
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-datefield-edge: var(--color-border-strong);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-datefield-edge-focus: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-datefield-wash: var(--color-bg-surface);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-datefield-ink: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-datefield-ink-placeholder: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-datepopup-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-datepopup-wash: var(--color-bg-surface);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-datepopup-ink: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-dateday-ink: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-dateday-wash-hover: var(--color-bg-surface-alt);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-datemuted-ink: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-dateselected-fill: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-dateselected-on-fill: var(--color-white);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-datelink-ink: var(--color-accent);
+@theme {
+  --color-datefield-edge: var(--palette-border-strong);
+  --color-datefield-edge-focus: var(--palette-accent);
+  --color-datefield-wash: var(--palette-bg-surface);
+  --color-datefield-ink: var(--palette-text-primary);
+  --color-datefield-ink-placeholder: var(--palette-text-muted);
+  --color-datepopup-edge: var(--palette-border);
+  --color-datepopup-wash: var(--palette-bg-surface);
+  --color-datepopup-ink: var(--palette-text-primary);
+  --color-dateday-ink: var(--palette-text-primary);
+  --color-dateday-wash-hover: var(--palette-bg-surface-alt);
+  --color-datemuted-ink: var(--palette-text-muted);
+  --color-dateselected-fill: var(--palette-accent);
+  --color-dateselected-on-fill: var(--palette-white);
+  --color-datelink-ink: var(--palette-accent);
 }
 
 @utility tone-datefield-outlined { @apply border-datefield-edge bg-datefield-wash text-datefield-ink placeholder:text-datefield-ink-placeholder focus:border-datefield-edge-focus focus:ring-datefield-edge-focus/15; }

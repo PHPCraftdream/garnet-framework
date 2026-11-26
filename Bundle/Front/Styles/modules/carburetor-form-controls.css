@@ -1,16 +1,10 @@
 /* Form control roles reference the existing Garnet and Tailwind colours. */
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-formcontrolinherit-ink: currentColor;
-  /* carburetor-disable-next-line valid-color-role */
-  --color-formtoggle-ink: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-formtoggle-on-fill: var(--color-white);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-formtoggle-wash: var(--color-gray-300);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-formtoggle-wash-checked: var(--color-accent);
+@theme {
+  --color-formcontrolinherit-ink: var(--palette-current);
+  --color-formtoggle-ink: var(--palette-accent);
+  --color-formtoggle-on-fill: var(--palette-white);
+  --color-formtoggle-wash: var(--palette-gray-300);
+  --color-formtoggle-wash-checked: var(--palette-accent);
 }
 
 @utility tone-formcontrolinherit-plain { @apply text-formcontrolinherit-ink; }

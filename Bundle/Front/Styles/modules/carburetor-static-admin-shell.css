@@ -1,31 +1,17 @@
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-staticadminopen-wash: var(--color-bg-surface-hover);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-staticadminfilteractive-wash: var(--color-status-cyan-bg);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-staticadminfilteractive-ink: var(--color-status-cyan);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-staticadminbody-wash: var(--color-bg-surface);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-staticadminbody-edge: var(--color-border-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-staticadmindelete-ink: var(--color-danger);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-staticadmindelete-ink-hover: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-staticadmincancel-fill: var(--color-gray-500);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-staticadmincancel-fill-hover: var(--color-gray-600);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-staticadmincancel-on-fill: var(--color-white);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-mdpreview-wash: var(--color-bg-surface-alt);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-mdpreview-edge: var(--color-border-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-mdpreview-ink: var(--color-text-primary);
+@theme {
+  --color-staticadminopen-wash: var(--palette-bg-surface-hover);
+  --color-staticadminfilteractive-wash: var(--palette-status-cyan-bg);
+  --color-staticadminfilteractive-ink: var(--palette-status-cyan);
+  --color-staticadminbody-wash: var(--palette-bg-surface);
+  --color-staticadminbody-edge: var(--palette-border-subtle);
+  --color-staticadmindelete-ink: var(--palette-danger);
+  --color-staticadmindelete-ink-hover: var(--palette-text-primary);
+  --color-staticadmincancel-fill: var(--palette-gray-500);
+  --color-staticadmincancel-fill-hover: var(--palette-gray-600);
+  --color-staticadmincancel-on-fill: var(--palette-white);
+  --color-mdpreview-wash: var(--palette-bg-surface-alt);
+  --color-mdpreview-edge: var(--palette-border-subtle);
+  --color-mdpreview-ink: var(--palette-text-primary);
 }
 
 @utility tone-staticadminbody-outlined { @apply bg-staticadminbody-wash divide-staticadminbody-edge; }
@@ -123,16 +109,11 @@
   .static-admin-usage { @apply tone-supportmuted-plain type-static-admin-small; }
 }
 
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-snippettool-wash: var(--color-bg-surface-alt);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-snippettool-wash-hover: var(--color-bg-surface-hover);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-snippettool-ink: var(--color-text-secondary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-snippettool-ink-hover: var(--color-text-primary);
+@theme {
+  --color-snippettool-wash: var(--palette-bg-surface-alt);
+  --color-snippettool-wash-hover: var(--palette-bg-surface-hover);
+  --color-snippettool-ink: var(--palette-text-secondary);
+  --color-snippettool-ink-hover: var(--palette-text-primary);
 }
 @utility tone-snippettool-soft { @apply bg-snippettool-wash text-snippettool-ink hover:bg-snippettool-wash-hover hover:text-snippettool-ink-hover; }
 @utility layout-snippet-format-bar { @apply flex items-center flex-wrap gap-0.5; }
@@ -231,31 +212,20 @@
   .blk-icon-btn-danger { @apply tone-snippetdanger-soft layout-snippet-format-button shape-snippet-menu-icon type-static-admin-small motion-admin-log-tab-button effect-snippet-menu-icon; }
 }
 
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-snippetdanger-wash: var(--color-bg-surface-hover);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-snippetdanger-wash-hover: var(--color-danger-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-snippetdanger-ink: var(--color-danger);
+@theme {
+  --color-snippetdanger-wash: var(--palette-bg-surface-hover);
+  --color-snippetdanger-wash-hover: var(--palette-danger-subtle);
+  --color-snippetdanger-ink: var(--palette-danger);
 }
 @utility tone-snippetdanger-soft { @apply bg-snippetdanger-wash text-snippetdanger-ink hover:bg-snippetdanger-wash-hover; }
 
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-pageeditordirty-ink: var(--color-warning);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-pageeditoradd-wash: var(--color-bg-surface);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-pageeditoradd-ink: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-pageeditoradd-edge: var(--color-border-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-pageeditoradd-ink-hover: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-pageeditoradd-edge-hover: var(--color-accent);
+@theme {
+  --color-pageeditordirty-ink: var(--palette-warning);
+  --color-pageeditoradd-wash: var(--palette-bg-surface);
+  --color-pageeditoradd-ink: var(--palette-text-muted);
+  --color-pageeditoradd-edge: var(--palette-border-subtle);
+  --color-pageeditoradd-ink-hover: var(--palette-accent);
+  --color-pageeditoradd-edge-hover: var(--palette-accent);
 }
 @utility tone-pageeditoradd-outlined { @apply bg-pageeditoradd-wash text-pageeditoradd-ink border-pageeditoradd-edge hover:border-pageeditoradd-edge-hover hover:text-pageeditoradd-ink-hover; }
 @utility tone-pageeditordirty-plain { @apply text-pageeditordirty-ink; }
@@ -303,20 +273,13 @@
 
 }
 
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-blockoption-ink: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-blockoption-wash-hover: var(--color-bg-surface-hover);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-blockvisible-ink: var(--color-success);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-blockvisible-wash: var(--color-success-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-blockhidden-ink: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-blockhidden-wash: var(--color-bg-surface-hover);
+@theme {
+  --color-blockoption-ink: var(--palette-text-primary);
+  --color-blockoption-wash-hover: var(--palette-bg-surface-hover);
+  --color-blockvisible-ink: var(--palette-success);
+  --color-blockvisible-wash: var(--palette-success-subtle);
+  --color-blockhidden-ink: var(--palette-text-muted);
+  --color-blockhidden-wash: var(--palette-bg-surface-hover);
 }
 @utility tone-blockoption-soft { @apply text-blockoption-ink hover:bg-blockoption-wash-hover; }
 @utility tone-blockvisible-soft { @apply text-blockvisible-ink bg-blockvisible-wash; }

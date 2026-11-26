@@ -1,53 +1,28 @@
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-requestpager-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-requestpager-ink: var(--color-text-secondary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-requestpager-wash-hover: var(--color-bg-surface-hover);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-logtab-edge: transparent;
-  /* carburetor-disable-next-line valid-color-role */
-  --color-logtab-edge-hover: var(--color-border-strong);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-logtab-ink: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-logtab-ink-hover: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-logtabactive-edge: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-logtabactive-ink: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-logstatussuccess-ink: var(--color-status-green);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-logstatussuccess-wash: var(--color-status-green-bg);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-logstatusdanger-ink: var(--color-status-red);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-logstatusdanger-wash: var(--color-status-red-bg);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-logstatuswarning-ink: var(--color-status-yellow);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-logstatuswarning-wash: var(--color-status-yellow-bg);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-logstatusmuted-ink: var(--color-status-gray);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-logstatusmuted-wash: var(--color-status-gray-bg);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-logstatusinfo-ink: var(--color-status-blue);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-logstatusinfo-wash: var(--color-status-blue-bg);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-logreset-edge: var(--color-border-strong);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-logreset-edge-hover: var(--color-gray-400);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-logreset-ink: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-logreset-ink-hover: var(--color-text-secondary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-logreset-wash-hover: var(--color-bg-surface-hover);
+@theme {
+  --color-requestpager-edge: var(--palette-border);
+  --color-requestpager-ink: var(--palette-text-secondary);
+  --color-requestpager-wash-hover: var(--palette-bg-surface-hover);
+  --color-logtab-edge: var(--palette-transparent);
+  --color-logtab-edge-hover: var(--palette-border-strong);
+  --color-logtab-ink: var(--palette-text-muted);
+  --color-logtab-ink-hover: var(--palette-text-primary);
+  --color-logtabactive-edge: var(--palette-accent);
+  --color-logtabactive-ink: var(--palette-accent);
+  --color-logstatussuccess-ink: var(--palette-status-green);
+  --color-logstatussuccess-wash: var(--palette-status-green-bg);
+  --color-logstatusdanger-ink: var(--palette-status-red);
+  --color-logstatusdanger-wash: var(--palette-status-red-bg);
+  --color-logstatuswarning-ink: var(--palette-status-yellow);
+  --color-logstatuswarning-wash: var(--palette-status-yellow-bg);
+  --color-logstatusmuted-ink: var(--palette-status-gray);
+  --color-logstatusmuted-wash: var(--palette-status-gray-bg);
+  --color-logstatusinfo-ink: var(--palette-status-blue);
+  --color-logstatusinfo-wash: var(--palette-status-blue-bg);
+  --color-logreset-edge: var(--palette-border-strong);
+  --color-logreset-edge-hover: var(--palette-gray-400);
+  --color-logreset-ink: var(--palette-text-muted);
+  --color-logreset-ink-hover: var(--palette-text-secondary);
+  --color-logreset-wash-hover: var(--palette-bg-surface-hover);
 }
 
 @utility tone-logreset-outlined { @apply border-logreset-edge text-logreset-ink bg-transparent hover:border-logreset-edge-hover hover:text-logreset-ink-hover hover:bg-logreset-wash-hover; }

@@ -1,46 +1,25 @@
 /* Support roles reference the existing Garnet theme. */
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-supportinherit-ink: currentColor;
-  /* carburetor-disable-next-line valid-color-role */
-  --color-supportmuted-ink: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-supportaccent-ink: var(--color-accent-text);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-supportaccent-wash: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-supportaccent-wash-hover: var(--color-accent-hover);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-supportbadge-ink: var(--color-status-red);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-supportbadge-wash: var(--color-status-red-bg);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-supportaccent-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-supportsoft-ink: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-supportsoft-wash: var(--color-accent-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-supportsoft-wash-hover: var(--color-bg-surface-hover);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-supportrow-edge: var(--color-border-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-supportrow-wash-hover: var(--color-bg-surface-hover);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-supportprimary-ink: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-supportsecondary-ink: var(--color-text-secondary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-supportlink-ink: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-supportconv-edge: var(--color-border-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-supportconv-wash: var(--color-bg-surface-alt);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-supportpanel-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-supportpanel-wash: var(--color-bg-surface);
+@theme {
+  --color-supportinherit-ink: var(--palette-current);
+  --color-supportmuted-ink: var(--palette-text-muted);
+  --color-supportaccent-ink: var(--palette-accent-text);
+  --color-supportaccent-wash: var(--palette-accent);
+  --color-supportaccent-wash-hover: var(--palette-accent-hover);
+  --color-supportbadge-ink: var(--palette-status-red);
+  --color-supportbadge-wash: var(--palette-status-red-bg);
+  --color-supportaccent-edge: var(--palette-border);
+  --color-supportsoft-ink: var(--palette-accent);
+  --color-supportsoft-wash: var(--palette-accent-subtle);
+  --color-supportsoft-wash-hover: var(--palette-bg-surface-hover);
+  --color-supportrow-edge: var(--palette-border-subtle);
+  --color-supportrow-wash-hover: var(--palette-bg-surface-hover);
+  --color-supportprimary-ink: var(--palette-text-primary);
+  --color-supportsecondary-ink: var(--palette-text-secondary);
+  --color-supportlink-ink: var(--palette-accent);
+  --color-supportconv-edge: var(--palette-border-subtle);
+  --color-supportconv-wash: var(--palette-bg-surface-alt);
+  --color-supportpanel-edge: var(--palette-border);
+  --color-supportpanel-wash: var(--palette-bg-surface);
 }
 
 @utility tone-supportinherit-plain { @apply text-supportinherit-ink; }

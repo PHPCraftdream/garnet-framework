@@ -1,21 +1,12 @@
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-radixpanel-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-radixpanel-wash: var(--color-bg-surface);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-radixpanel-ink: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-radixpanel-ink-placeholder: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-radixpanel-edge-focus: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-radixoption-wash-focus: var(--color-accent-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-radixoption-ink-focus: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-radixshade-wash: rgb(0 0 0 / 50%);
+@theme {
+  --color-radixpanel-edge: var(--palette-border);
+  --color-radixpanel-wash: var(--palette-bg-surface);
+  --color-radixpanel-ink: var(--palette-text-primary);
+  --color-radixpanel-ink-placeholder: var(--palette-text-muted);
+  --color-radixpanel-edge-focus: var(--palette-accent);
+  --color-radixoption-wash-focus: var(--palette-accent-subtle);
+  --color-radixoption-ink-focus: var(--palette-accent);
+  --color-radixshade-wash: var(--palette-black-50);
 }
 
 @utility layout-radix-dialog-overlay { @apply fixed inset-0 z-50; }

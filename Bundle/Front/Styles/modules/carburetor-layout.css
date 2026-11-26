@@ -1,19 +1,11 @@
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-shellpage-ink: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-shellpage-wash: var(--color-bg-page);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-shellinherit-ink: currentColor;
-  /* carburetor-disable-next-line valid-color-role */
-  --color-shellsidebar-wash: var(--color-bg-surface);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-shellsidebar-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-shellfooter-ink: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-shellfooter-edge: var(--color-border-subtle);
+@theme {
+  --color-shellpage-ink: var(--palette-text-primary);
+  --color-shellpage-wash: var(--palette-bg-page);
+  --color-shellinherit-ink: var(--palette-current);
+  --color-shellsidebar-wash: var(--palette-bg-surface);
+  --color-shellsidebar-edge: var(--palette-border);
+  --color-shellfooter-ink: var(--palette-text-muted);
+  --color-shellfooter-edge: var(--palette-border-subtle);
 }
 
 @utility tone-shellpage-soft { @apply text-shellpage-ink bg-shellpage-wash; }

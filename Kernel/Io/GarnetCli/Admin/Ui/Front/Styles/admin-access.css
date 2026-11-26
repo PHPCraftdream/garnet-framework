@@ -1,4 +1,4 @@
-/* Match the stock Tailwind colors without resetting the global palette. */
+/* The stock Tailwind values the CLI Admin uses, as palette tokens. */
 :root {
   --palette-clidash-white: #fff;
   --palette-clidash-gray-50: oklch(98.5% 0.002 247.839);
@@ -23,21 +23,15 @@
   --palette-clidash-red-700: oklch(50.5% 0.213 27.518);
 }
 
-/* Preserve the CLI Admin's existing Tailwind palette. */
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-cliaccesscard-wash: var(--color-white);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-cliaccessdanger-ink: var(--color-red-600);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-cliaccessmessage-ink: var(--color-gray-600);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-cliaccesscommand-wash: var(--color-gray-100);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-cliaccesshint-ink: var(--color-gray-400);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-cliaccessdenied-ink: var(--color-gray-500);
+/* The stock palette is reset: every colour of the console is a role over the tokens above. */
+@theme {
+  --color-*: initial;
+  --color-cliaccesscard-wash: var(--palette-clidash-white);
+  --color-cliaccessdanger-ink: var(--palette-clidash-red-600);
+  --color-cliaccessmessage-ink: var(--palette-clidash-gray-600);
+  --color-cliaccesscommand-wash: var(--palette-clidash-gray-100);
+  --color-cliaccesshint-ink: var(--palette-clidash-gray-400);
+  --color-cliaccessdenied-ink: var(--palette-clidash-gray-500);
   --color-clidashpage-wash: var(--palette-clidash-gray-50);
   --color-clidashheader-wash: var(--palette-clidash-white);
   --color-clidashheader-edge: var(--palette-clidash-gray-200);

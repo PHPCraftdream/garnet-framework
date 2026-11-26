@@ -1,42 +1,23 @@
 /* Tab helper roles reference the existing Garnet theme. */
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-tabcrumb-ink: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-tabcrumb-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-tabaction-ink: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-tabaction-ink-hover: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-tabclose-ink: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-tabclose-ink-hover: var(--color-text-secondary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-tabcurrent-ink: var(--color-text-secondary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-tabinherit-ink: currentColor;
-  /* carburetor-disable-next-line valid-color-role */
-  --color-tabbar-ink: currentColor;
-  /* carburetor-disable-next-line valid-color-role */
-  --color-tabbar-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-tabnavinactive-ink: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-tabnavinactive-ink-hover: var(--color-text-secondary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-tabnavinactive-edge: transparent;
-  /* carburetor-disable-next-line valid-color-role */
-  --color-tabnavinactive-edge-hover: var(--color-border-strong);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-tabnavactive-ink: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-tabnavactive-ink-hover: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-tabnavactive-edge: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-tabnavactive-edge-hover: var(--color-accent);
+@theme {
+  --color-tabcrumb-ink: var(--palette-text-muted);
+  --color-tabcrumb-edge: var(--palette-border);
+  --color-tabaction-ink: var(--palette-text-muted);
+  --color-tabaction-ink-hover: var(--palette-accent);
+  --color-tabclose-ink: var(--palette-text-muted);
+  --color-tabclose-ink-hover: var(--palette-text-secondary);
+  --color-tabcurrent-ink: var(--palette-text-secondary);
+  --color-tabinherit-ink: var(--palette-current);
+  --color-tabbar-ink: var(--palette-current);
+  --color-tabbar-edge: var(--palette-border);
+  --color-tabnavinactive-ink: var(--palette-text-muted);
+  --color-tabnavinactive-ink-hover: var(--palette-text-secondary);
+  --color-tabnavinactive-edge: var(--palette-transparent);
+  --color-tabnavinactive-edge-hover: var(--palette-border-strong);
+  --color-tabnavactive-ink: var(--palette-accent);
+  --color-tabnavactive-ink-hover: var(--palette-accent);
+  --color-tabnavactive-edge: var(--palette-accent);
+  --color-tabnavactive-edge-hover: var(--palette-accent);
 }
 
 @utility tone-tabcrumb-outline { @apply text-tabcrumb-ink border-tabcrumb-edge; }

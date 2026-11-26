@@ -1,16 +1,10 @@
 /* Native select roles use the existing Garnet theme. */
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetfield-ink: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetfield-wash: var(--color-bg-surface);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetfield-edge: var(--color-border-strong);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetfield-edge-focus: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetfield-ink-placeholder: var(--color-text-muted);
+@theme {
+  --color-garnetfield-ink: var(--palette-text-primary);
+  --color-garnetfield-wash: var(--palette-bg-surface);
+  --color-garnetfield-edge: var(--palette-border-strong);
+  --color-garnetfield-edge-focus: var(--palette-accent);
+  --color-garnetfield-ink-placeholder: var(--palette-text-muted);
 }
 
 @utility tone-garnetfield-outlined {

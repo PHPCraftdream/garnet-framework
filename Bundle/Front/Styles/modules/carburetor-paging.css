@@ -1,38 +1,21 @@
 /* Paging roles reference the existing Garnet theme. */
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-paginginherit-ink: currentColor;
-  /* carburetor-disable-next-line valid-color-role */
-  --color-pagingtext-ink: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-pagingnormal-ink: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-pagingnormal-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-pagingnormal-wash: var(--color-bg-surface);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-pagingnormal-wash-hover: var(--color-bg-surface-hover);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-pagingactive-ink: var(--color-accent-text);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-pagingactive-edge: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-pagingactive-wash: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-pagingactive-wash-hover: var(--color-accent-hover);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-pagingactive-wash-focus: var(--color-accent-hover);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-pagingactive-wash-active: var(--color-accent-hover);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-pagingform-ink: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-pagingform-edge: var(--color-border-strong);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-pagingform-edge-focus: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-pagingform-wash: var(--color-bg-surface);
+@theme {
+  --color-paginginherit-ink: var(--palette-current);
+  --color-pagingtext-ink: var(--palette-text-muted);
+  --color-pagingnormal-ink: var(--palette-text-primary);
+  --color-pagingnormal-edge: var(--palette-border);
+  --color-pagingnormal-wash: var(--palette-bg-surface);
+  --color-pagingnormal-wash-hover: var(--palette-bg-surface-hover);
+  --color-pagingactive-ink: var(--palette-accent-text);
+  --color-pagingactive-edge: var(--palette-accent);
+  --color-pagingactive-wash: var(--palette-accent);
+  --color-pagingactive-wash-hover: var(--palette-accent-hover);
+  --color-pagingactive-wash-focus: var(--palette-accent-hover);
+  --color-pagingactive-wash-active: var(--palette-accent-hover);
+  --color-pagingform-ink: var(--palette-text-primary);
+  --color-pagingform-edge: var(--palette-border-strong);
+  --color-pagingform-edge-focus: var(--palette-accent);
+  --color-pagingform-wash: var(--palette-bg-surface);
 }
 
 @utility tone-paginginherit-plain { @apply text-paginginherit-ink; }

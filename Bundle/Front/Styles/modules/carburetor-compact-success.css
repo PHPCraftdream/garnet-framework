@@ -1,12 +1,8 @@
 /* Compact success actions use the existing Tailwind colours. */
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-compactsuccess-fill: var(--color-green-600);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-compactsuccess-fill-hover: var(--color-green-700);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-compactsuccess-on-fill: var(--color-white);
+@theme {
+  --color-compactsuccess-fill: var(--palette-green-600);
+  --color-compactsuccess-fill-hover: var(--palette-green-700);
+  --color-compactsuccess-on-fill: var(--palette-white);
 }
 
 @utility tone-compactsuccess-solid {

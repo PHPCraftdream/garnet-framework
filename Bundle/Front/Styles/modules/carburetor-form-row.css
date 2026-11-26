@@ -1,10 +1,7 @@
 /* Form roles bridge existing Garnet colours. */
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-formrowinherit-ink: currentColor;
-  /* carburetor-disable-next-line valid-color-role */
-  --color-formrowerror-ink: var(--color-danger);
+@theme {
+  --color-formrowinherit-ink: var(--palette-current);
+  --color-formrowerror-ink: var(--palette-danger);
 }
 
 @utility tone-formrowinherit-plain { @apply text-formrowinherit-ink; }

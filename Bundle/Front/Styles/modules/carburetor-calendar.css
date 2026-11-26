@@ -1,58 +1,31 @@
 /* Calendar roles bridge the existing Garnet theme. */
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetcalendar-ink: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetcalendar-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetcalendar-wash: var(--color-bg-surface-alt);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-calnormal-ink: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-calnormal-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-calnormal-wash: var(--color-bg-surface-alt);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-calrestricted-ink: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-calrestricted-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-calrestricted-wash: var(--color-danger-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-calavailable-ink: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-calavailable-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-calavailable-wash: var(--color-success-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-calavailable-wash-hover: var(--color-accent-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-calproposed-ink: var(--color-accent-text);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-calproposed-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-calproposed-wash: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-calproposed-wash-hover: var(--color-accent-hover);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-calover-ink: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-calover-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-calover-wash: var(--color-accent-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-calover-wash-hover: var(--color-accent-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-caloverproposed-ink: var(--color-accent-text);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-caloverproposed-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-caloverproposed-wash: var(--color-accent-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-caloverproposed-wash-hover: var(--color-accent-hover);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-calendarplain-ink: currentColor;
+@theme {
+  --color-garnetcalendar-ink: var(--palette-text-muted);
+  --color-garnetcalendar-edge: var(--palette-border);
+  --color-garnetcalendar-wash: var(--palette-bg-surface-alt);
+  --color-calnormal-ink: var(--palette-text-primary);
+  --color-calnormal-edge: var(--palette-border);
+  --color-calnormal-wash: var(--palette-bg-surface-alt);
+  --color-calrestricted-ink: var(--palette-text-primary);
+  --color-calrestricted-edge: var(--palette-border);
+  --color-calrestricted-wash: var(--palette-danger-subtle);
+  --color-calavailable-ink: var(--palette-text-primary);
+  --color-calavailable-edge: var(--palette-border);
+  --color-calavailable-wash: var(--palette-success-subtle);
+  --color-calavailable-wash-hover: var(--palette-accent-subtle);
+  --color-calproposed-ink: var(--palette-accent-text);
+  --color-calproposed-edge: var(--palette-border);
+  --color-calproposed-wash: var(--palette-accent);
+  --color-calproposed-wash-hover: var(--palette-accent-hover);
+  --color-calover-ink: var(--palette-text-primary);
+  --color-calover-edge: var(--palette-border);
+  --color-calover-wash: var(--palette-accent-subtle);
+  --color-calover-wash-hover: var(--palette-accent-subtle);
+  --color-caloverproposed-ink: var(--palette-accent-text);
+  --color-caloverproposed-edge: var(--palette-border);
+  --color-caloverproposed-wash: var(--palette-accent-subtle);
+  --color-caloverproposed-wash-hover: var(--palette-accent-hover);
+  --color-calendarplain-ink: var(--palette-current);
 }
 
 @utility tone-calendarplain-plain { @apply text-calendarplain-ink; }

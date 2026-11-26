@@ -1,21 +1,12 @@
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-previewsection-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-previewsection-wash: var(--color-bg-surface-alt);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-previewsection-ink: currentColor;
-  /* carburetor-disable-next-line valid-color-role */
-  --color-previewavatar-wash: var(--color-accent-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-previewavatar-ink: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-previewclose-ink: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-previewclose-ink-hover: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-previewimage-edge: var(--color-border);
+@theme {
+  --color-previewsection-edge: var(--palette-border);
+  --color-previewsection-wash: var(--palette-bg-surface-alt);
+  --color-previewsection-ink: var(--palette-current);
+  --color-previewavatar-wash: var(--palette-accent-subtle);
+  --color-previewavatar-ink: var(--palette-accent);
+  --color-previewclose-ink: var(--palette-text-muted);
+  --color-previewclose-ink-hover: var(--palette-text-primary);
+  --color-previewimage-edge: var(--palette-border);
 }
 
 @utility tone-previewsection-outlined { @apply border-previewsection-edge bg-previewsection-wash text-previewsection-ink; }

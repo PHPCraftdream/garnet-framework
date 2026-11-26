@@ -1,9 +1,15 @@
-/* Literal colours that stylesheets outside the Role floor read: Tailwind's stock palette is reset
-   (`--color-*: initial`), so the few legacy rules that used its blues, grays and whites keep the exact
-   values here. */
+/* Palette: literal colours, the only thing roles read. Themes switch roles (see carburetor-theme-dark.css), not
+   these tokens; `-dark` tokens are the dark values of the themed ones. Tailwind's stock palette is reset once, here,
+   before any role is declared. */
+@theme {
+  --color-*: initial;
+}
+
 :root {
+  /* Tailwind stock values used by legacy rules and roles */
   --palette-white: #fff;
   --palette-black: #000;
+  --palette-gray-100: oklch(96.7% 0.003 264.542);
   --palette-gray-200: oklch(92.8% 0.006 264.531);
   --palette-gray-300: oklch(87.2% 0.01 258.338);
   --palette-gray-400: oklch(70.7% 0.022 261.325);
@@ -18,4 +24,107 @@
   --palette-cyan-600: oklch(60.9% 0.126 221.723);
   --palette-amber-50: oklch(98.7% 0.022 95.277);
   --palette-amber-600: oklch(66.6% 0.179 58.318);
+
+  /* Keywords */
+  --palette-current: currentColor;
+  --palette-transparent: transparent;
+
+  /* Theme colours (light); `-dark` is the dark value */
+  --palette-bg-page: #FAFAF7;
+  --palette-bg-page-dark: #0A0A0B;
+  --palette-bg-surface: #FFFFFF;
+  --palette-bg-surface-dark: #18181B;
+  --palette-bg-surface-alt: #F4F2EE;
+  --palette-bg-surface-alt-dark: #27272A;
+  --palette-bg-surface-hover: #F5F5F4;
+  --palette-bg-surface-hover-dark: #27272A;
+  --palette-text-primary: #1C1917;
+  --palette-text-primary-dark: #FAFAF9;
+  --palette-text-secondary: #57534E;
+  --palette-text-secondary-dark: #D4D4D8;
+  --palette-text-muted: #A8A29E;
+  --palette-text-muted-dark: #A1A1AA;
+  --palette-text-inverse: #ffffff;
+  --palette-text-inverse-dark: #18181B;
+  --palette-border: #E7E5E4;
+  --palette-border-dark: #27272A;
+  --palette-border-subtle: #EFEDEA;
+  --palette-border-subtle-dark: #1F1F22;
+  --palette-border-strong: #D6D3D1;
+  --palette-border-strong-dark: #3F3F46;
+  --palette-accent: #6f6da6;
+  --palette-accent-dark: #6366A6;
+  --palette-accent-hover: #8785c2;
+  --palette-accent-hover-dark: #7B7DBA;
+  --palette-accent-subtle: #EEEDF7;
+  --palette-accent-subtle-dark: #2A2A4D;
+  --palette-accent-text: #ffffff;
+  --palette-accent-text-dark: #FAFAF9;
+  --palette-success: #5b9d76;
+  --palette-success-dark: #5fa078;
+  --palette-success-subtle: #f1f7f3;
+  --palette-success-subtle-dark: #1c3b29;
+  --palette-warning: #c79248;
+  --palette-warning-dark: #cc9a52;
+  --palette-warning-subtle: #faf6ee;
+  --palette-warning-subtle-dark: #3a2a12;
+  --palette-danger: #cf6a63;
+  --palette-danger-dark: #d07a72;
+  --palette-danger-subtle: #faf1f0;
+  --palette-danger-subtle-dark: #3d1f1d;
+  --palette-info: #6385bb;
+  --palette-info-dark: #6f8fc2;
+  --palette-info-subtle: #f0f3f8;
+  --palette-info-subtle-dark: #1e3a5f;
+  --palette-status-blue: #4a4886;
+  --palette-status-blue-dark: #6366A6;
+  --palette-status-blue-bg: rgba(74,72,134,0.09);
+  --palette-status-blue-bg-dark: rgba(99,102,166,0.15);
+  --palette-status-green: #4f8a66;
+  --palette-status-green-dark: #4ade80;
+  --palette-status-green-bg: rgba(79,138,102,0.11);
+  --palette-status-green-bg-dark: rgba(74,222,128,0.15);
+  --palette-status-red: #c25c55;
+  --palette-status-red-dark: #f87171;
+  --palette-status-red-bg: rgba(194,92,85,0.11);
+  --palette-status-red-bg-dark: rgba(248,113,113,0.15);
+  --palette-status-yellow: #927233;
+  --palette-status-yellow-dark: #fbbf24;
+  --palette-status-yellow-bg: rgba(146,114,51,0.11);
+  --palette-status-yellow-bg-dark: rgba(251,191,36,0.15);
+  --palette-status-orange: #b06a4a;
+  --palette-status-orange-dark: #fb923c;
+  --palette-status-orange-bg: rgba(176,106,74,0.11);
+  --palette-status-orange-bg-dark: rgba(251,146,60,0.15);
+  --palette-status-purple: #9b8bc4;
+  --palette-status-purple-dark: #c084fc;
+  --palette-status-purple-bg: rgba(124,99,170,0.11);
+  --palette-status-purple-bg-dark: rgba(192,132,252,0.15);
+  --palette-status-cyan: #4a8a9b;
+  --palette-status-cyan-dark: #22d3ee;
+  --palette-status-cyan-bg: rgba(74,138,155,0.11);
+  --palette-status-cyan-bg-dark: rgba(34,211,238,0.15);
+  --palette-status-gray: #6b7280;
+  --palette-status-gray-dark: #9ca3af;
+  --palette-status-gray-bg: rgba(107,114,128,0.10);
+  --palette-status-gray-bg-dark: rgba(156,163,175,0.15);
+
+  /* Colours composed from a theme colour */
+  --palette-black-50: rgb(0 0 0 / 50%);
+  --palette-fbactive-wash: rgba(91, 157, 118, 0.12);
+  --palette-fbactive-wash-dark: rgba(95, 160, 120, 0.12);
+  --palette-fbactive-edge: rgba(91, 157, 118, 0.45);
+  --palette-fbactive-edge-dark: rgba(95, 160, 120, 0.45);
+  --palette-fbbrowser-wash: rgba(255, 255, 255, 0.55);
+  --palette-fbbrowser-wash-dark: rgba(24, 24, 27, 0.55);
+  --palette-fbbrowser-edge: rgba(199, 146, 72, 0.25);
+  --palette-fbbrowser-edge-dark: rgba(204, 154, 82, 0.25);
+  --palette-fbdiff-wash: rgba(199, 146, 72, 0.18);
+  --palette-fbdiff-wash-dark: rgba(204, 154, 82, 0.18);
+  --palette-navdivider-wash: rgba(231, 229, 228, 0.6);
+  --palette-navdivider-wash-dark: rgba(39, 39, 42, 0.6);
+  --palette-utilpill-edge: rgba(231, 229, 228, 0.7);
+  --palette-utilpill-edge-dark: rgba(39, 39, 42, 0.7);
+  --palette-utilcluster-edge: rgba(231, 229, 228, 0.6);
+  --palette-utilcluster-edge-dark: rgba(39, 39, 42, 0.6);
 }

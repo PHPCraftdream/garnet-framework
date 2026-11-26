@@ -1,15 +1,9 @@
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-formbuildererror-ink: var(--color-danger);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-formbuildererror-edge: var(--color-danger);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-formbuildererror-wash: var(--color-danger-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-formbuilderprogress-wash: var(--color-border-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-formbuilderfill-wash: var(--color-accent);
+@theme {
+  --color-formbuildererror-ink: var(--palette-danger);
+  --color-formbuildererror-edge: var(--palette-danger);
+  --color-formbuildererror-wash: var(--palette-danger-subtle);
+  --color-formbuilderprogress-wash: var(--palette-border-subtle);
+  --color-formbuilderfill-wash: var(--palette-accent);
 }
 
 @utility tone-formbuilderprogress-outlined { @apply bg-formbuilderprogress-wash; }

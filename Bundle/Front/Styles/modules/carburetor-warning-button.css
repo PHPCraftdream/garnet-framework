@@ -1,13 +1,8 @@
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fgwarning-edge: var(--color-warning);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fgwarning-ink: var(--color-warning);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fgwarning-ink-hover: #fff;
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fgwarning-wash-hover: var(--color-warning);
+@theme {
+  --color-fgwarning-edge: var(--palette-warning);
+  --color-fgwarning-ink: var(--palette-warning);
+  --color-fgwarning-ink-hover: var(--palette-white);
+  --color-fgwarning-wash-hover: var(--palette-warning);
 }
 
 @utility tone-fgwarning-outlined {

@@ -1,39 +1,21 @@
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-combotrigger-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-combotrigger-wash: var(--color-bg-surface);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-combotrigger-wash-hover: var(--color-bg-surface-hover);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-combotrigger-ink: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-combotrigger-edge-focus: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-comboempty-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-comboempty-wash: var(--color-bg-surface);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-comboempty-wash-hover: var(--color-bg-surface-hover);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-comboempty-ink: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-comboempty-edge-focus: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-combosearch-wash: var(--color-bg-surface-alt);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-combosearch-ink: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-combosearch-ink-placeholder: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-combooption-ink: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-combooption-wash-hover: var(--color-accent-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-comboselected-ink: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-comboselected-wash: var(--color-accent-subtle);
+@theme {
+  --color-combotrigger-edge: var(--palette-border);
+  --color-combotrigger-wash: var(--palette-bg-surface);
+  --color-combotrigger-wash-hover: var(--palette-bg-surface-hover);
+  --color-combotrigger-ink: var(--palette-text-primary);
+  --color-combotrigger-edge-focus: var(--palette-accent);
+  --color-comboempty-edge: var(--palette-border);
+  --color-comboempty-wash: var(--palette-bg-surface);
+  --color-comboempty-wash-hover: var(--palette-bg-surface-hover);
+  --color-comboempty-ink: var(--palette-text-muted);
+  --color-comboempty-edge-focus: var(--palette-accent);
+  --color-combosearch-wash: var(--palette-bg-surface-alt);
+  --color-combosearch-ink: var(--palette-text-primary);
+  --color-combosearch-ink-placeholder: var(--palette-text-muted);
+  --color-combooption-ink: var(--palette-text-primary);
+  --color-combooption-wash-hover: var(--palette-accent-subtle);
+  --color-comboselected-ink: var(--palette-accent);
+  --color-comboselected-wash: var(--palette-accent-subtle);
 }
 
 @utility tone-combotrigger-outlined { @apply border-combotrigger-edge bg-combotrigger-wash text-combotrigger-ink hover:bg-combotrigger-wash-hover focus:ring-combotrigger-edge-focus; }

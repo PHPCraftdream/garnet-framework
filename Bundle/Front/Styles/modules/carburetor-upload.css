@@ -1,18 +1,11 @@
 /* Upload roles follow the existing Garnet theme. */
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetupload-edge: var(--color-border-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetupload-wash: var(--color-bg-surface-alt);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetuploadactive-edge: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetuploadactive-wash: var(--color-accent-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetuploadhint-ink: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetuploadhidden-ink: currentColor;
+@theme {
+  --color-garnetupload-edge: var(--palette-border-subtle);
+  --color-garnetupload-wash: var(--palette-bg-surface-alt);
+  --color-garnetuploadactive-edge: var(--palette-accent);
+  --color-garnetuploadactive-wash: var(--palette-accent-subtle);
+  --color-garnetuploadhint-ink: var(--palette-text-muted);
+  --color-garnetuploadhidden-ink: var(--palette-current);
 }
 
 @utility tone-garnetupload-outlined {

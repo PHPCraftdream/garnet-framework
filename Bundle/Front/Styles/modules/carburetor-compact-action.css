@@ -1,14 +1,9 @@
 /* Compact actions use the existing Garnet accent roles. */
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-compactaction-ink: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-compactaction-ink-hover: var(--color-accent-text);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-compactaction-edge: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-compactaction-wash-hover: var(--color-accent);
+@theme {
+  --color-compactaction-ink: var(--palette-accent);
+  --color-compactaction-ink-hover: var(--palette-accent-text);
+  --color-compactaction-edge: var(--palette-accent);
+  --color-compactaction-wash-hover: var(--palette-accent);
 }
 
 @utility tone-compactaction-outlined {

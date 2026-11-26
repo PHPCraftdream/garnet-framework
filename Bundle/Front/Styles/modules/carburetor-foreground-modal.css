@@ -1,9 +1,6 @@
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fgbackdrop-wash: rgb(0 0 0 / 50%);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fgbackdrop-ink: currentColor;
+@theme {
+  --color-fgbackdrop-wash: var(--palette-black-50);
+  --color-fgbackdrop-ink: var(--palette-current);
 }
 
 @utility tone-fgbackdrop-soft { @apply text-fgbackdrop-ink bg-fgbackdrop-wash; }

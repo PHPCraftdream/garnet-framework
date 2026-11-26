@@ -1,9 +1,6 @@
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-finishingrole-ink: var(--color-status-gray);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-finishingrole-wash: var(--color-status-gray-bg);
+@theme {
+  --color-finishingrole-ink: var(--palette-status-gray);
+  --color-finishingrole-wash: var(--palette-status-gray-bg);
 }
 
 @utility tone-finishingrole-soft { @apply text-finishingrole-ink bg-finishingrole-wash; }

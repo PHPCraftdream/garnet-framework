@@ -1,23 +1,13 @@
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-historysuccess-ink: var(--color-success);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-historyheading-edge: var(--color-border-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-historyheading-wash: var(--color-bg-surface-alt);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-historyheading-ink: var(--color-text-secondary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-historyborder-edge: var(--color-border-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-historybutton-edge: transparent;
-  /* carburetor-disable-next-line valid-color-role */
-  --color-historybutton-ink: currentColor;
-  /* carburetor-disable-next-line valid-color-role */
-  --color-historylink-ink: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-historylink-ink-hover: var(--color-text-primary);
+@theme {
+  --color-historysuccess-ink: var(--palette-success);
+  --color-historyheading-edge: var(--palette-border-subtle);
+  --color-historyheading-wash: var(--palette-bg-surface-alt);
+  --color-historyheading-ink: var(--palette-text-secondary);
+  --color-historyborder-edge: var(--palette-border-subtle);
+  --color-historybutton-edge: var(--palette-transparent);
+  --color-historybutton-ink: var(--palette-current);
+  --color-historylink-ink: var(--palette-accent);
+  --color-historylink-ink-hover: var(--palette-text-primary);
 }
 
 @utility tone-historysuccess-plain { @apply text-historysuccess-ink; }

@@ -1,20 +1,12 @@
 /* Toast roles preserve the existing Garnet and Tailwind colours. */
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-toastinherit-ink: currentColor;
-  /* carburetor-disable-next-line valid-color-role */
-  --color-toastprimary-ink: var(--color-accent-text);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-toastprimary-wash: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-toastdanger-ink: var(--color-white);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-toastdanger-wash: var(--color-red-600);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-toastsuccess-ink: var(--color-white);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-toastsuccess-wash: var(--color-green-600);
+@theme {
+  --color-toastinherit-ink: var(--palette-current);
+  --color-toastprimary-ink: var(--palette-accent-text);
+  --color-toastprimary-wash: var(--palette-accent);
+  --color-toastdanger-ink: var(--palette-white);
+  --color-toastdanger-wash: var(--palette-red-600);
+  --color-toastsuccess-ink: var(--palette-white);
+  --color-toastsuccess-wash: var(--palette-green-600);
 }
 
 @utility tone-toastinherit-plain { @apply text-toastinherit-ink; }

@@ -1,16 +1,10 @@
 /* Bridge Garnet's existing button colours without resetting the palette. */
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetattachment-ink: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetattachment-ink-hover: var(--color-text-secondary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetattachment-edge: var(--color-border-strong);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetattachment-edge-hover: var(--color-gray-400);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetattachment-wash-hover: var(--color-bg-surface-hover);
+@theme {
+  --color-garnetattachment-ink: var(--palette-text-muted);
+  --color-garnetattachment-ink-hover: var(--palette-text-secondary);
+  --color-garnetattachment-edge: var(--palette-border-strong);
+  --color-garnetattachment-edge-hover: var(--palette-gray-400);
+  --color-garnetattachment-wash-hover: var(--palette-bg-surface-hover);
 }
 
 @utility tone-garnetattachment-outlined {

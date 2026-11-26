@@ -1,52 +1,28 @@
 /* Feedback roles reference the existing Garnet theme. */
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fbinherit-ink: currentColor;
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fbmuted-ink: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fbinfo-ink: var(--color-text-secondary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fbinfo-wash: var(--color-bg-surface-alt);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fbinfo-edge: var(--border-default-color, transparent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fbwarn-ink: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fbwarn-wash: var(--color-warning-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fbwarn-edge: var(--color-warning);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fbdanger-ink: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fbdanger-wash: var(--color-danger-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fbdanger-edge: var(--color-danger);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fbsuccess-ink: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fbsuccess-wash: var(--color-success-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fbsuccess-edge: var(--color-success);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fbactive-ink: currentColor;
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fbactive-wash: color-mix(in srgb, var(--color-success, #16a34a) 12%, transparent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fbactive-edge: color-mix(in srgb, var(--color-success, #16a34a) 45%, transparent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fbbrowser-ink: currentColor;
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fbbrowser-wash: color-mix(in srgb, var(--color-bg-surface) 55%, transparent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fbbrowser-edge: color-mix(in srgb, var(--color-warning, #d97706) 25%, transparent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fbcheck-ink: var(--color-success, #16a34a);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fbdiff-ink: var(--color-warning, #b45309);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-fbdiff-wash: color-mix(in srgb, var(--color-warning, #d97706) 18%, transparent);
+@theme {
+  --color-fbinherit-ink: var(--palette-current);
+  --color-fbmuted-ink: var(--palette-text-muted);
+  --color-fbinfo-ink: var(--palette-text-secondary);
+  --color-fbinfo-wash: var(--palette-bg-surface-alt);
+  --color-fbinfo-edge: var(--palette-transparent);
+  --color-fbwarn-ink: var(--palette-text-primary);
+  --color-fbwarn-wash: var(--palette-warning-subtle);
+  --color-fbwarn-edge: var(--palette-warning);
+  --color-fbdanger-ink: var(--palette-text-primary);
+  --color-fbdanger-wash: var(--palette-danger-subtle);
+  --color-fbdanger-edge: var(--palette-danger);
+  --color-fbsuccess-ink: var(--palette-text-primary);
+  --color-fbsuccess-wash: var(--palette-success-subtle);
+  --color-fbsuccess-edge: var(--palette-success);
+  --color-fbactive-ink: var(--palette-current);
+  --color-fbactive-wash: var(--palette-fbactive-wash);
+  --color-fbactive-edge: var(--palette-fbactive-edge);
+  --color-fbbrowser-ink: var(--palette-current);
+  --color-fbbrowser-wash: var(--palette-fbbrowser-wash);
+  --color-fbbrowser-edge: var(--palette-fbbrowser-edge);
+  --color-fbcheck-ink: var(--palette-success);
+  --color-fbdiff-ink: var(--palette-warning);
+  --color-fbdiff-wash: var(--palette-fbdiff-wash);
 }
 
 @utility tone-fbinherit-plain { @apply text-fbinherit-ink; }

@@ -1,17 +1,10 @@
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-logdetailpre-ink: currentColor;
-  /* carburetor-disable-next-line valid-color-role */
-  --color-logdetailpre-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-logdetailpre-wash: var(--color-bg-surface-alt);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-logdetailerror-ink: var(--color-danger);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-logdetailerror-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-logdetailerror-wash: var(--color-bg-surface-alt);
+@theme {
+  --color-logdetailpre-ink: var(--palette-current);
+  --color-logdetailpre-edge: var(--palette-border);
+  --color-logdetailpre-wash: var(--palette-bg-surface-alt);
+  --color-logdetailerror-ink: var(--palette-danger);
+  --color-logdetailerror-edge: var(--palette-border);
+  --color-logdetailerror-wash: var(--palette-bg-surface-alt);
 }
 
 @utility tone-logdetailpre-outlined { @apply text-logdetailpre-ink border-logdetailpre-edge bg-logdetailpre-wash; }

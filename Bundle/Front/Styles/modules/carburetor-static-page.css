@@ -1,25 +1,14 @@
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-staticpageinherit-ink: currentColor;
-  /* carburetor-disable-next-line valid-color-role */
-  --color-staticpagetext-ink: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-staticpagenotice-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-staticpagenotice-wash: var(--color-bg-surface-alt);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-staticpagechrome-edge: var(--color-border-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-staticpagenav-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-staticpagelink-ink: var(--color-text-secondary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-staticpagesecondary-ink: var(--color-text-secondary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-staticpagecopyright-ink: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-staticpagecopyright-edge: var(--color-border-subtle);
+@theme {
+  --color-staticpageinherit-ink: var(--palette-current);
+  --color-staticpagetext-ink: var(--palette-text-primary);
+  --color-staticpagenotice-edge: var(--palette-border);
+  --color-staticpagenotice-wash: var(--palette-bg-surface-alt);
+  --color-staticpagechrome-edge: var(--palette-border-subtle);
+  --color-staticpagenav-edge: var(--palette-border);
+  --color-staticpagelink-ink: var(--palette-text-secondary);
+  --color-staticpagesecondary-ink: var(--palette-text-secondary);
+  --color-staticpagecopyright-ink: var(--palette-text-muted);
+  --color-staticpagecopyright-edge: var(--palette-border-subtle);
 }
 
 @utility tone-staticpageinherit-plain { @apply text-staticpageinherit-ink; }

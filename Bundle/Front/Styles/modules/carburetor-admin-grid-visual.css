@@ -1,24 +1,14 @@
 /* Admin grid presentation uses the existing Garnet theme. */
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-gridinherit-ink: currentColor;
-  /* carburetor-disable-next-line valid-color-role */
-  --color-gridheader-ink: currentColor;
-  /* carburetor-disable-next-line valid-color-role */
-  --color-gridheader-wash-hover: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-gridsortactive-ink: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-gridsortidle-ink: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-gridborder-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-gridrow-wash: var(--color-bg-surface);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-gridrow-wash-hover: var(--color-bg-surface-hover);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-gridtext-ink: var(--color-text-primary);
+@theme {
+  --color-gridinherit-ink: var(--palette-current);
+  --color-gridheader-ink: var(--palette-current);
+  --color-gridheader-wash-hover: var(--palette-border);
+  --color-gridsortactive-ink: var(--palette-accent);
+  --color-gridsortidle-ink: var(--palette-text-muted);
+  --color-gridborder-edge: var(--palette-border);
+  --color-gridrow-wash: var(--palette-bg-surface);
+  --color-gridrow-wash-hover: var(--palette-bg-surface-hover);
+  --color-gridtext-ink: var(--palette-text-primary);
 }
 
 @utility tone-gridinherit-plain { @apply text-gridinherit-ink; }

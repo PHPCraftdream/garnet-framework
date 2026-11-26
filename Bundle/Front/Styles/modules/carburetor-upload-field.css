@@ -1,14 +1,9 @@
 /* Preview roles follow the existing Garnet theme. */
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetpreview-ink: currentColor;
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetpreviewremove-ink: var(--color-danger);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetpreviewremove-wash: var(--color-bg-surface-hover);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetpreviewremove-wash-hover: var(--color-danger-subtle);
+@theme {
+  --color-garnetpreview-ink: var(--palette-current);
+  --color-garnetpreviewremove-ink: var(--palette-danger);
+  --color-garnetpreviewremove-wash: var(--palette-bg-surface-hover);
+  --color-garnetpreviewremove-wash-hover: var(--palette-danger-subtle);
 }
 
 @utility tone-garnetpreview-plain { @apply text-garnetpreview-ink; }

@@ -1,32 +1,18 @@
 /* Bridge existing theme variables while legacy pages still use them. */
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnet-ink: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnet-ink-hover: var(--color-warning);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnet-wash-hover: var(--color-warning-subtle);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garneticon-ink: currentColor;
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetdanger-ink: var(--color-danger);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetmuted-ink: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetmuted-ink-hover: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetmuted-wash-hover: var(--color-bg-surface-hover);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetmuted-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetaccent-ink: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetaccent-ink-hover: var(--color-accent-text);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetaccent-wash-hover: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-garnetaccent-edge: var(--color-accent);
+@theme {
+  --color-garnet-ink: var(--palette-text-muted);
+  --color-garnet-ink-hover: var(--palette-warning);
+  --color-garnet-wash-hover: var(--palette-warning-subtle);
+  --color-garneticon-ink: var(--palette-current);
+  --color-garnetdanger-ink: var(--palette-danger);
+  --color-garnetmuted-ink: var(--palette-text-muted);
+  --color-garnetmuted-ink-hover: var(--palette-text-primary);
+  --color-garnetmuted-wash-hover: var(--palette-bg-surface-hover);
+  --color-garnetmuted-edge: var(--palette-border);
+  --color-garnetaccent-ink: var(--palette-accent);
+  --color-garnetaccent-ink-hover: var(--palette-accent-text);
+  --color-garnetaccent-wash-hover: var(--palette-accent);
+  --color-garnetaccent-edge: var(--palette-accent);
 }
 
 @utility tone-garnet-soft {

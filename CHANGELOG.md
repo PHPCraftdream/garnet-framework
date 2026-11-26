@@ -7,11 +7,19 @@ API is allowed to shift between minor releases — see "Stability" below.
 
 ## [Unreleased]
 
-### Changed
+### Changed (apps that use a stock colour utility must adapt)
+- Tailwind's stock palette is reset (`--color-*: initial`): `bg-blue-500`, `text-gray-600`, `bg-white` and the like no
+  longer exist in `framework.css`. Name the colour in the app instead (a palette token and a role, or a CSS variable).
+- The colour roles of `carburetor-*.css` read palette tokens instead of bridging the themed `--color-*` variables:
+  388 roles are `var(--palette-…)` in `@theme`, the dark theme is the set of role overrides in
+  `carburetor-theme-dark.css`, and `theme.css` derives its variables from `carburetor-palette.css`. The 440
+  `valid-color-role` suppressions are gone. Computed colours of every class of the stylesheet are identical in light,
+  dark and glass, at rest and on hover. Two variables that were never defined (`--border-default-color`,
+  `--color-strong`) are now `transparent`, which is what they always resolved to. The CLI Admin's roles use its own
+  palette tokens and its bundle is rebuilt.
 - The legacy stylesheets (`components/*.css`) no longer use Tailwind's stock palette (`bg-green-600`, `text-white`,
   `bg-black/50`, …): the exact values are the `--palette-*` tokens of `carburetor-palette.css`. No visible
-  change; it prepares resetting the stock palette (`--color-*: initial`), which the functional-class
-  linter requires. An application that uses a stock colour utility itself must name its colour first.
+  change.
 
 Planned for `1.0`:
 - Rename `FwBalanceLedger` enum values from `booking_*` to generic `tx_*`

@@ -1,21 +1,12 @@
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-confirmfooter-edge: var(--color-border);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-confirmfooter-wash: var(--color-bg-surface-alt);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-confirmsecondary-fill: var(--color-gray-500);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-confirmsecondary-fill-hover: var(--color-gray-600);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-confirmsecondary-on-fill: var(--color-white);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-confirmdanger-fill: var(--color-red-600);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-confirmdanger-fill-hover: var(--color-red-700);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-confirmdanger-on-fill: var(--color-white);
+@theme {
+  --color-confirmfooter-edge: var(--palette-border);
+  --color-confirmfooter-wash: var(--palette-bg-surface-alt);
+  --color-confirmsecondary-fill: var(--palette-gray-500);
+  --color-confirmsecondary-fill-hover: var(--palette-gray-600);
+  --color-confirmsecondary-on-fill: var(--palette-white);
+  --color-confirmdanger-fill: var(--palette-red-600);
+  --color-confirmdanger-fill-hover: var(--palette-red-700);
+  --color-confirmdanger-on-fill: var(--palette-white);
 }
 
 @utility tone-confirmfooter-outlined { @apply border-confirmfooter-edge bg-confirmfooter-wash; }

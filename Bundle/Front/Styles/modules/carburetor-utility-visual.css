@@ -1,30 +1,18 @@
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-utilbutton-ink: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-utilpill-wash: var(--color-bg-surface-alt);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-utilpill-ink: var(--color-text-primary);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-utilpill-edge: color-mix(in srgb, var(--color-border) 70%, transparent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-utilunread-fill: var(--color-accent);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-utilunread-on-fill: var(--color-accent-text);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-utilcluster-edge: color-mix(in srgb, var(--color-border) 60%, transparent);
+@theme {
+  --color-utilbutton-ink: var(--palette-text-muted);
+  --color-utilpill-wash: var(--palette-bg-surface-alt);
+  --color-utilpill-ink: var(--palette-text-primary);
+  --color-utilpill-edge: var(--palette-utilpill-edge);
+  --color-utilunread-fill: var(--palette-accent);
+  --color-utilunread-on-fill: var(--palette-accent-text);
+  --color-utilcluster-edge: var(--palette-utilcluster-edge);
 }
 
 /* Utility link details use the current Garnet theme. */
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-utilicon-ink: var(--color-success);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-utilcurrency-ink: var(--color-text-muted);
-  /* carburetor-disable-next-line valid-color-role */
-  --color-utilinherit-ink: currentColor;
+@theme {
+  --color-utilicon-ink: var(--palette-success);
+  --color-utilcurrency-ink: var(--palette-text-muted);
+  --color-utilinherit-ink: var(--palette-current);
 }
 
 @utility tone-utilicon-plain { @apply text-utilicon-ink; }

@@ -1,10 +1,7 @@
 /* Consent controls retain the existing inherited and muted colours. */
-/* carburetor-disable-next-line valid-color-role */
-@theme inline {
-  /* carburetor-disable-next-line valid-color-role */
-  --color-authconsent-ink: currentColor;
-  /* carburetor-disable-next-line valid-color-role */
-  --color-authconsentmuted-ink: var(--color-text-muted);
+@theme {
+  --color-authconsent-ink: var(--palette-current);
+  --color-authconsentmuted-ink: var(--palette-text-muted);
 }
 
 @utility tone-authconsent-plain { @apply text-authconsent-ink; }

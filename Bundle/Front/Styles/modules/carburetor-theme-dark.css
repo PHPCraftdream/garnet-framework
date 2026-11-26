@@ -1,0 +1,366 @@
+/* Dark theme: roles whose colour differs from the light one point at the dark palette token. Everything else
+   (currentColor, transparent, one colour in both themes) is not repeated. */
+[data-theme="dark"] {
+  /* carburetor-photo-field.css */
+  --color-photohint-ink: var(--palette-text-muted-dark);
+  --color-photobutton-ink: var(--palette-text-secondary-dark);
+  --color-photobutton-edge: var(--palette-border-strong-dark);
+  --color-photobutton-wash: var(--palette-bg-surface-hover-dark);
+  /* carburetor-form-builder.css */
+  --color-formbuildererror-ink: var(--palette-danger-dark);
+  --color-formbuildererror-edge: var(--palette-danger-dark);
+  --color-formbuildererror-wash: var(--palette-danger-subtle-dark);
+  --color-formbuilderprogress-wash: var(--palette-border-subtle-dark);
+  --color-formbuilderfill-wash: var(--palette-accent-dark);
+  /* carburetor-static-admin-shell.css */
+  --color-staticadminopen-wash: var(--palette-bg-surface-hover-dark);
+  --color-staticadminfilteractive-wash: var(--palette-status-cyan-bg-dark);
+  --color-staticadminfilteractive-ink: var(--palette-status-cyan-dark);
+  --color-staticadminbody-wash: var(--palette-bg-surface-dark);
+  --color-staticadminbody-edge: var(--palette-border-subtle-dark);
+  --color-staticadmindelete-ink: var(--palette-danger-dark);
+  --color-staticadmindelete-ink-hover: var(--palette-text-primary-dark);
+  --color-mdpreview-wash: var(--palette-bg-surface-alt-dark);
+  --color-mdpreview-edge: var(--palette-border-subtle-dark);
+  --color-mdpreview-ink: var(--palette-text-primary-dark);
+  --color-snippettool-wash: var(--palette-bg-surface-alt-dark);
+  --color-snippettool-wash-hover: var(--palette-bg-surface-hover-dark);
+  --color-snippettool-ink: var(--palette-text-secondary-dark);
+  --color-snippettool-ink-hover: var(--palette-text-primary-dark);
+  --color-snippetdanger-wash: var(--palette-bg-surface-hover-dark);
+  --color-snippetdanger-wash-hover: var(--palette-danger-subtle-dark);
+  --color-snippetdanger-ink: var(--palette-danger-dark);
+  --color-pageeditordirty-ink: var(--palette-warning-dark);
+  --color-pageeditoradd-wash: var(--palette-bg-surface-dark);
+  --color-pageeditoradd-ink: var(--palette-text-muted-dark);
+  --color-pageeditoradd-edge: var(--palette-border-subtle-dark);
+  --color-pageeditoradd-ink-hover: var(--palette-accent-dark);
+  --color-pageeditoradd-edge-hover: var(--palette-accent-dark);
+  --color-blockoption-ink: var(--palette-text-primary-dark);
+  --color-blockoption-wash-hover: var(--palette-bg-surface-hover-dark);
+  --color-blockvisible-ink: var(--palette-success-dark);
+  --color-blockvisible-wash: var(--palette-success-subtle-dark);
+  --color-blockhidden-ink: var(--palette-text-muted-dark);
+  --color-blockhidden-wash: var(--palette-bg-surface-hover-dark);
+  /* carburetor-admin-log-sections.css */
+  --color-requestpager-edge: var(--palette-border-dark);
+  --color-requestpager-ink: var(--palette-text-secondary-dark);
+  --color-requestpager-wash-hover: var(--palette-bg-surface-hover-dark);
+  --color-logtab-edge-hover: var(--palette-border-strong-dark);
+  --color-logtab-ink: var(--palette-text-muted-dark);
+  --color-logtab-ink-hover: var(--palette-text-primary-dark);
+  --color-logtabactive-edge: var(--palette-accent-dark);
+  --color-logtabactive-ink: var(--palette-accent-dark);
+  --color-logstatussuccess-ink: var(--palette-status-green-dark);
+  --color-logstatussuccess-wash: var(--palette-status-green-bg-dark);
+  --color-logstatusdanger-ink: var(--palette-status-red-dark);
+  --color-logstatusdanger-wash: var(--palette-status-red-bg-dark);
+  --color-logstatuswarning-ink: var(--palette-status-yellow-dark);
+  --color-logstatuswarning-wash: var(--palette-status-yellow-bg-dark);
+  --color-logstatusmuted-ink: var(--palette-status-gray-dark);
+  --color-logstatusmuted-wash: var(--palette-status-gray-bg-dark);
+  --color-logstatusinfo-ink: var(--palette-status-blue-dark);
+  --color-logstatusinfo-wash: var(--palette-status-blue-bg-dark);
+  --color-logreset-edge: var(--palette-border-strong-dark);
+  --color-logreset-ink: var(--palette-text-muted-dark);
+  --color-logreset-ink-hover: var(--palette-text-secondary-dark);
+  --color-logreset-wash-hover: var(--palette-bg-surface-hover-dark);
+  /* carburetor-control-finishing.css */
+  --color-finishingrole-ink: var(--palette-status-gray-dark);
+  --color-finishingrole-wash: var(--palette-status-gray-bg-dark);
+  /* carburetor-user-preview.css */
+  --color-previewsection-edge: var(--palette-border-dark);
+  --color-previewsection-wash: var(--palette-bg-surface-alt-dark);
+  --color-previewavatar-wash: var(--palette-accent-subtle-dark);
+  --color-previewavatar-ink: var(--palette-accent-dark);
+  --color-previewclose-ink: var(--palette-text-muted-dark);
+  --color-previewclose-ink-hover: var(--palette-text-primary-dark);
+  --color-previewimage-edge: var(--palette-border-dark);
+  /* carburetor-entity-history.css */
+  --color-historysuccess-ink: var(--palette-success-dark);
+  --color-historyheading-edge: var(--palette-border-subtle-dark);
+  --color-historyheading-wash: var(--palette-bg-surface-alt-dark);
+  --color-historyheading-ink: var(--palette-text-secondary-dark);
+  --color-historyborder-edge: var(--palette-border-subtle-dark);
+  --color-historylink-ink: var(--palette-accent-dark);
+  --color-historylink-ink-hover: var(--palette-text-primary-dark);
+  /* carburetor-combobox.css */
+  --color-combotrigger-edge: var(--palette-border-dark);
+  --color-combotrigger-wash: var(--palette-bg-surface-dark);
+  --color-combotrigger-wash-hover: var(--palette-bg-surface-hover-dark);
+  --color-combotrigger-ink: var(--palette-text-primary-dark);
+  --color-combotrigger-edge-focus: var(--palette-accent-dark);
+  --color-comboempty-edge: var(--palette-border-dark);
+  --color-comboempty-wash: var(--palette-bg-surface-dark);
+  --color-comboempty-wash-hover: var(--palette-bg-surface-hover-dark);
+  --color-comboempty-ink: var(--palette-text-muted-dark);
+  --color-comboempty-edge-focus: var(--palette-accent-dark);
+  --color-combosearch-wash: var(--palette-bg-surface-alt-dark);
+  --color-combosearch-ink: var(--palette-text-primary-dark);
+  --color-combosearch-ink-placeholder: var(--palette-text-muted-dark);
+  --color-combooption-ink: var(--palette-text-primary-dark);
+  --color-combooption-wash-hover: var(--palette-accent-subtle-dark);
+  --color-comboselected-ink: var(--palette-accent-dark);
+  --color-comboselected-wash: var(--palette-accent-subtle-dark);
+  /* carburetor-date-input.css */
+  --color-datefield-edge: var(--palette-border-strong-dark);
+  --color-datefield-edge-focus: var(--palette-accent-dark);
+  --color-datefield-wash: var(--palette-bg-surface-dark);
+  --color-datefield-ink: var(--palette-text-primary-dark);
+  --color-datefield-ink-placeholder: var(--palette-text-muted-dark);
+  --color-datepopup-edge: var(--palette-border-dark);
+  --color-datepopup-wash: var(--palette-bg-surface-dark);
+  --color-datepopup-ink: var(--palette-text-primary-dark);
+  --color-dateday-ink: var(--palette-text-primary-dark);
+  --color-dateday-wash-hover: var(--palette-bg-surface-alt-dark);
+  --color-datemuted-ink: var(--palette-text-muted-dark);
+  --color-dateselected-fill: var(--palette-accent-dark);
+  --color-datelink-ink: var(--palette-accent-dark);
+  /* carburetor-dropzone.css */
+  --color-dropzoneidle-edge: var(--palette-border-dark);
+  --color-dropzoneidle-ink: var(--palette-text-muted-dark);
+  --color-dropzonedrag-edge: var(--palette-accent-dark);
+  --color-dropzonedrag-wash: var(--palette-accent-subtle-dark);
+  --color-dropzonedrag-ink: var(--palette-text-muted-dark);
+  --color-dropzoneremove-wash: var(--palette-danger-subtle-dark);
+  --color-dropzoneremove-ink: var(--palette-danger-dark);
+  /* carburetor-radix-controls.css */
+  --color-radixpanel-edge: var(--palette-border-dark);
+  --color-radixpanel-wash: var(--palette-bg-surface-dark);
+  --color-radixpanel-ink: var(--palette-text-primary-dark);
+  --color-radixpanel-ink-placeholder: var(--palette-text-muted-dark);
+  --color-radixpanel-edge-focus: var(--palette-accent-dark);
+  --color-radixoption-wash-focus: var(--palette-accent-subtle-dark);
+  --color-radixoption-ink-focus: var(--palette-accent-dark);
+  /* carburetor-classes.css */
+  --color-garnet-ink: var(--palette-text-muted-dark);
+  --color-garnet-ink-hover: var(--palette-warning-dark);
+  --color-garnet-wash-hover: var(--palette-warning-subtle-dark);
+  --color-garnetdanger-ink: var(--palette-danger-dark);
+  --color-garnetmuted-ink: var(--palette-text-muted-dark);
+  --color-garnetmuted-ink-hover: var(--palette-text-primary-dark);
+  --color-garnetmuted-wash-hover: var(--palette-bg-surface-hover-dark);
+  --color-garnetmuted-edge: var(--palette-border-dark);
+  --color-garnetaccent-ink: var(--palette-accent-dark);
+  --color-garnetaccent-ink-hover: var(--palette-accent-text-dark);
+  --color-garnetaccent-wash-hover: var(--palette-accent-dark);
+  --color-garnetaccent-edge: var(--palette-accent-dark);
+  /* carburetor-calendar.css */
+  --color-garnetcalendar-ink: var(--palette-text-muted-dark);
+  --color-garnetcalendar-edge: var(--palette-border-dark);
+  --color-garnetcalendar-wash: var(--palette-bg-surface-alt-dark);
+  --color-calnormal-ink: var(--palette-text-primary-dark);
+  --color-calnormal-edge: var(--palette-border-dark);
+  --color-calnormal-wash: var(--palette-bg-surface-alt-dark);
+  --color-calrestricted-ink: var(--palette-text-primary-dark);
+  --color-calrestricted-edge: var(--palette-border-dark);
+  --color-calrestricted-wash: var(--palette-danger-subtle-dark);
+  --color-calavailable-ink: var(--palette-text-primary-dark);
+  --color-calavailable-edge: var(--palette-border-dark);
+  --color-calavailable-wash: var(--palette-success-subtle-dark);
+  --color-calavailable-wash-hover: var(--palette-accent-subtle-dark);
+  --color-calproposed-ink: var(--palette-accent-text-dark);
+  --color-calproposed-edge: var(--palette-border-dark);
+  --color-calproposed-wash: var(--palette-accent-dark);
+  --color-calproposed-wash-hover: var(--palette-accent-hover-dark);
+  --color-calover-ink: var(--palette-text-primary-dark);
+  --color-calover-edge: var(--palette-border-dark);
+  --color-calover-wash: var(--palette-accent-subtle-dark);
+  --color-calover-wash-hover: var(--palette-accent-subtle-dark);
+  --color-caloverproposed-ink: var(--palette-accent-text-dark);
+  --color-caloverproposed-edge: var(--palette-border-dark);
+  --color-caloverproposed-wash: var(--palette-accent-subtle-dark);
+  --color-caloverproposed-wash-hover: var(--palette-accent-hover-dark);
+  /* carburetor-attachment.css */
+  --color-garnetattachment-ink: var(--palette-text-muted-dark);
+  --color-garnetattachment-ink-hover: var(--palette-text-secondary-dark);
+  --color-garnetattachment-edge: var(--palette-border-strong-dark);
+  --color-garnetattachment-wash-hover: var(--palette-bg-surface-hover-dark);
+  /* carburetor-upload.css */
+  --color-garnetupload-edge: var(--palette-border-subtle-dark);
+  --color-garnetupload-wash: var(--palette-bg-surface-alt-dark);
+  --color-garnetuploadactive-edge: var(--palette-accent-dark);
+  --color-garnetuploadactive-wash: var(--palette-accent-subtle-dark);
+  --color-garnetuploadhint-ink: var(--palette-text-muted-dark);
+  /* carburetor-upload-field.css */
+  --color-garnetpreviewremove-ink: var(--palette-danger-dark);
+  --color-garnetpreviewremove-wash: var(--palette-bg-surface-hover-dark);
+  --color-garnetpreviewremove-wash-hover: var(--palette-danger-subtle-dark);
+  /* carburetor-paging.css */
+  --color-pagingtext-ink: var(--palette-text-muted-dark);
+  --color-pagingnormal-ink: var(--palette-text-primary-dark);
+  --color-pagingnormal-edge: var(--palette-border-dark);
+  --color-pagingnormal-wash: var(--palette-bg-surface-dark);
+  --color-pagingnormal-wash-hover: var(--palette-bg-surface-hover-dark);
+  --color-pagingactive-ink: var(--palette-accent-text-dark);
+  --color-pagingactive-edge: var(--palette-accent-dark);
+  --color-pagingactive-wash: var(--palette-accent-dark);
+  --color-pagingactive-wash-hover: var(--palette-accent-hover-dark);
+  --color-pagingactive-wash-focus: var(--palette-accent-hover-dark);
+  --color-pagingactive-wash-active: var(--palette-accent-hover-dark);
+  --color-pagingform-ink: var(--palette-text-primary-dark);
+  --color-pagingform-edge: var(--palette-border-strong-dark);
+  --color-pagingform-edge-focus: var(--palette-accent-dark);
+  --color-pagingform-wash: var(--palette-bg-surface-dark);
+  /* carburetor-support.css */
+  --color-supportmuted-ink: var(--palette-text-muted-dark);
+  --color-supportaccent-ink: var(--palette-accent-text-dark);
+  --color-supportaccent-wash: var(--palette-accent-dark);
+  --color-supportaccent-wash-hover: var(--palette-accent-hover-dark);
+  --color-supportbadge-ink: var(--palette-status-red-dark);
+  --color-supportbadge-wash: var(--palette-status-red-bg-dark);
+  --color-supportaccent-edge: var(--palette-border-dark);
+  --color-supportsoft-ink: var(--palette-accent-dark);
+  --color-supportsoft-wash: var(--palette-accent-subtle-dark);
+  --color-supportsoft-wash-hover: var(--palette-bg-surface-hover-dark);
+  --color-supportrow-edge: var(--palette-border-subtle-dark);
+  --color-supportrow-wash-hover: var(--palette-bg-surface-hover-dark);
+  --color-supportprimary-ink: var(--palette-text-primary-dark);
+  --color-supportsecondary-ink: var(--palette-text-secondary-dark);
+  --color-supportlink-ink: var(--palette-accent-dark);
+  --color-supportconv-edge: var(--palette-border-subtle-dark);
+  --color-supportconv-wash: var(--palette-bg-surface-alt-dark);
+  --color-supportpanel-edge: var(--palette-border-dark);
+  --color-supportpanel-wash: var(--palette-bg-surface-dark);
+  /* carburetor-feedback.css */
+  --color-fbmuted-ink: var(--palette-text-muted-dark);
+  --color-fbinfo-ink: var(--palette-text-secondary-dark);
+  --color-fbinfo-wash: var(--palette-bg-surface-alt-dark);
+  --color-fbwarn-ink: var(--palette-text-primary-dark);
+  --color-fbwarn-wash: var(--palette-warning-subtle-dark);
+  --color-fbwarn-edge: var(--palette-warning-dark);
+  --color-fbdanger-ink: var(--palette-text-primary-dark);
+  --color-fbdanger-wash: var(--palette-danger-subtle-dark);
+  --color-fbdanger-edge: var(--palette-danger-dark);
+  --color-fbsuccess-ink: var(--palette-text-primary-dark);
+  --color-fbsuccess-wash: var(--palette-success-subtle-dark);
+  --color-fbsuccess-edge: var(--palette-success-dark);
+  --color-fbactive-wash: var(--palette-fbactive-wash-dark);
+  --color-fbactive-edge: var(--palette-fbactive-edge-dark);
+  --color-fbbrowser-wash: var(--palette-fbbrowser-wash-dark);
+  --color-fbbrowser-edge: var(--palette-fbbrowser-edge-dark);
+  --color-fbcheck-ink: var(--palette-success-dark);
+  --color-fbdiff-ink: var(--palette-warning-dark);
+  --color-fbdiff-wash: var(--palette-fbdiff-wash-dark);
+  /* carburetor-auth.css */
+  --color-authprimary-fill: var(--palette-accent-dark);
+  --color-authprimary-fill-hover: var(--palette-accent-hover-dark);
+  --color-authprimary-on-fill: var(--palette-accent-text-dark);
+  --color-devpanel-wash: var(--palette-bg-surface-dark);
+  /* carburetor-auth-consent.css */
+  --color-authconsentmuted-ink: var(--palette-text-muted-dark);
+  /* carburetor-toast.css */
+  --color-toastprimary-ink: var(--palette-accent-text-dark);
+  --color-toastprimary-wash: var(--palette-accent-dark);
+  /* carburetor-tab-helpers.css */
+  --color-tabcrumb-ink: var(--palette-text-muted-dark);
+  --color-tabcrumb-edge: var(--palette-border-dark);
+  --color-tabaction-ink: var(--palette-text-muted-dark);
+  --color-tabaction-ink-hover: var(--palette-accent-dark);
+  --color-tabclose-ink: var(--palette-text-muted-dark);
+  --color-tabclose-ink-hover: var(--palette-text-secondary-dark);
+  --color-tabcurrent-ink: var(--palette-text-secondary-dark);
+  --color-tabbar-edge: var(--palette-border-dark);
+  --color-tabnavinactive-ink: var(--palette-text-muted-dark);
+  --color-tabnavinactive-ink-hover: var(--palette-text-secondary-dark);
+  --color-tabnavinactive-edge-hover: var(--palette-border-strong-dark);
+  --color-tabnavactive-ink: var(--palette-accent-dark);
+  --color-tabnavactive-ink-hover: var(--palette-accent-dark);
+  --color-tabnavactive-edge: var(--palette-accent-dark);
+  --color-tabnavactive-edge-hover: var(--palette-accent-dark);
+  /* carburetor-cards.css */
+  --color-cardsurface-edge: var(--palette-border-dark);
+  --color-cardsurface-wash: var(--palette-bg-surface-dark);
+  /* carburetor-native-select.css */
+  --color-garnetfield-ink: var(--palette-text-primary-dark);
+  --color-garnetfield-wash: var(--palette-bg-surface-dark);
+  --color-garnetfield-edge: var(--palette-border-strong-dark);
+  --color-garnetfield-edge-focus: var(--palette-accent-dark);
+  --color-garnetfield-ink-placeholder: var(--palette-text-muted-dark);
+  /* carburetor-form-row.css */
+  --color-formrowerror-ink: var(--palette-danger-dark);
+  /* carburetor-form-controls.css */
+  --color-formtoggle-ink: var(--palette-accent-dark);
+  --color-formtoggle-wash-checked: var(--palette-accent-dark);
+  /* carburetor-compact-action.css */
+  --color-compactaction-ink: var(--palette-accent-dark);
+  --color-compactaction-ink-hover: var(--palette-accent-text-dark);
+  --color-compactaction-edge: var(--palette-accent-dark);
+  --color-compactaction-wash-hover: var(--palette-accent-dark);
+  /* carburetor-time-slot.css */
+  --color-timeslotsurface-wash: var(--palette-bg-surface-dark);
+  /* carburetor-navigation-details.css */
+  --color-navbadge-ink: var(--palette-warning-dark);
+  --color-navbadge-wash: var(--palette-warning-subtle-dark);
+  --color-navdot-wash: var(--palette-warning-dark);
+  --color-navdivider-wash: var(--palette-navdivider-wash-dark);
+  /* carburetor-utility-visual.css */
+  --color-utilbutton-ink: var(--palette-text-muted-dark);
+  --color-utilpill-wash: var(--palette-bg-surface-alt-dark);
+  --color-utilpill-ink: var(--palette-text-primary-dark);
+  --color-utilpill-edge: var(--palette-utilpill-edge-dark);
+  --color-utilunread-fill: var(--palette-accent-dark);
+  --color-utilunread-on-fill: var(--palette-accent-text-dark);
+  --color-utilcluster-edge: var(--palette-utilcluster-edge-dark);
+  --color-utilicon-ink: var(--palette-success-dark);
+  --color-utilcurrency-ink: var(--palette-text-muted-dark);
+  /* carburetor-admin-grid-visual.css */
+  --color-gridheader-wash-hover: var(--palette-border-dark);
+  --color-gridsortactive-ink: var(--palette-accent-dark);
+  --color-gridsortidle-ink: var(--palette-text-muted-dark);
+  --color-gridborder-edge: var(--palette-border-dark);
+  --color-gridrow-wash: var(--palette-bg-surface-dark);
+  --color-gridrow-wash-hover: var(--palette-bg-surface-hover-dark);
+  --color-gridtext-ink: var(--palette-text-primary-dark);
+  /* carburetor-system-settings-visual.css */
+  --color-settingsmuted-ink: var(--palette-text-muted-dark);
+  --color-settingssecondary-ink: var(--palette-text-secondary-dark);
+  --color-settingsrefresh-edge: var(--palette-border-dark);
+  --color-settingsprimary-ink: var(--palette-text-primary-dark);
+  --color-settingsfield-ink: var(--palette-text-primary-dark);
+  --color-settingsfield-ink-placeholder: var(--palette-text-muted-dark);
+  --color-settingsfield-edge: var(--palette-border-dark);
+  --color-settingsfield-edge-focus: var(--palette-accent-dark);
+  --color-settingsfield-wash: var(--palette-bg-surface-dark);
+  --color-settingspanel-edge: var(--palette-border-dark);
+  --color-settingspanel-wash: var(--palette-bg-surface-dark);
+  --color-settingssave-ink: var(--palette-accent-text-dark);
+  --color-settingssave-wash: var(--palette-accent-dark);
+  --color-settingssave-wash-hover: var(--palette-accent-hover-dark);
+  --color-settingssuccess-ink: var(--palette-text-primary-dark);
+  --color-settingssuccess-edge: var(--palette-border-dark);
+  --color-settingssuccess-wash: var(--palette-success-subtle-dark);
+  --color-settingserror-ink: var(--palette-text-primary-dark);
+  --color-settingserror-edge: var(--palette-border-dark);
+  --color-settingserror-wash: var(--palette-danger-subtle-dark);
+  /* carburetor-warning-button.css */
+  --color-fgwarning-edge: var(--palette-warning-dark);
+  --color-fgwarning-ink: var(--palette-warning-dark);
+  --color-fgwarning-wash-hover: var(--palette-warning-dark);
+  /* carburetor-confirm-modal.css */
+  --color-confirmfooter-edge: var(--palette-border-dark);
+  --color-confirmfooter-wash: var(--palette-bg-surface-alt-dark);
+  /* carburetor-static-page.css */
+  --color-staticpagetext-ink: var(--palette-text-primary-dark);
+  --color-staticpagenotice-edge: var(--palette-border-dark);
+  --color-staticpagenotice-wash: var(--palette-bg-surface-alt-dark);
+  --color-staticpagechrome-edge: var(--palette-border-subtle-dark);
+  --color-staticpagenav-edge: var(--palette-border-dark);
+  --color-staticpagelink-ink: var(--palette-text-secondary-dark);
+  --color-staticpagesecondary-ink: var(--palette-text-secondary-dark);
+  --color-staticpagecopyright-ink: var(--palette-text-muted-dark);
+  --color-staticpagecopyright-edge: var(--palette-border-subtle-dark);
+  /* carburetor-layout.css */
+  --color-shellpage-ink: var(--palette-text-primary-dark);
+  --color-shellpage-wash: var(--palette-bg-page-dark);
+  --color-shellsidebar-wash: var(--palette-bg-surface-dark);
+  --color-shellsidebar-edge: var(--palette-border-dark);
+  --color-shellfooter-ink: var(--palette-text-muted-dark);
+  --color-shellfooter-edge: var(--palette-border-subtle-dark);
+  /* carburetor-admin-log-detail.css */
+  --color-logdetailpre-edge: var(--palette-border-dark);
+  --color-logdetailpre-wash: var(--palette-bg-surface-alt-dark);
+  --color-logdetailerror-ink: var(--palette-danger-dark);
+  --color-logdetailerror-edge: var(--palette-border-dark);
+  --color-logdetailerror-wash: var(--palette-bg-surface-alt-dark);
+}
