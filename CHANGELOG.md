@@ -20,6 +20,11 @@ API is allowed to shift between minor releases — see "Stability" below.
 - The legacy stylesheets (`components/*.css`) no longer use Tailwind's stock palette (`bg-green-600`, `text-white`,
   `bg-black/50`, …): the exact values are the `--palette-*` tokens of `carburetor-palette.css`. No visible
   change.
+- The static-page navigation (`.sp-nav-*`), the snippet wrappers and `.auth2-mount` are functional classes without
+  `valid-function-class` suppressions: the open mobile menu, the burger bars, the centred layout and the link hover are
+  Traits and Tones with the `sp-nav-open` / `sp-nav-center` variants. `Nav.{en,ru}.twig` give the logo image and the
+  burger bars their own classes (`sp-nav-logo-image`, `sp-nav-burger-bar`). Computed styles are identical in every
+  theme and at both widths, except properties that cannot show: a menu left checked on a desktop width.
 
 Planned for `1.0`:
 - Rename `FwBalanceLedger` enum values from `booking_*` to generic `tx_*`

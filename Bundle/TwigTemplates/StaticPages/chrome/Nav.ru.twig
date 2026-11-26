@@ -22,7 +22,7 @@
     <div class="sp-nav-inner">
         {% if logo and logo.url %}
             <a href="{{ logo.link }}" class="sp-nav-logo">
-                <img src="{{ logo.url }}" alt="{{ logo.alt }}" style="height:{{ logo.height }}px"/>
+                <img class="sp-nav-logo-image" src="{{ logo.url }}" alt="{{ logo.alt }}" style="height:{{ logo.height }}px"/>
             </a>
         {% endif %}
         {% if menu_items|length > 0 %}
@@ -39,7 +39,7 @@
         {{ theme_toggle | raw }}
         {% if menu_items|length > 0 %}
             <label for="{{ nav_id }}" class="sp-nav-burger" aria-label="{{ menu_label }}" data-test-id="sp-nav-burger">
-                <span></span><span></span><span></span>
+                <span class="sp-nav-burger-bar"></span><span class="sp-nav-burger-bar"></span><span class="sp-nav-burger-bar"></span>
             </label>
         {% endif %}
     </div>

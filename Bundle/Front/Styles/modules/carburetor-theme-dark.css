@@ -350,6 +350,10 @@
   --color-staticpagesecondary-ink: var(--palette-text-secondary-dark);
   --color-staticpagecopyright-ink: var(--palette-text-muted-dark);
   --color-staticpagecopyright-edge: var(--palette-border-subtle-dark);
+  --color-staticpagenavlink-ink: var(--palette-text-secondary-dark);
+  --color-staticpagenavlink-ink-hover: var(--palette-accent-dark);
+  --color-staticpagemenu-edge: var(--palette-border-subtle-dark);
+  --color-staticpagemenu-wash: var(--palette-staticpagemenu-wash-dark);
   /* carburetor-layout.css */
   --color-shellpage-ink: var(--palette-text-primary-dark);
   --color-shellpage-wash: var(--palette-bg-page-dark);

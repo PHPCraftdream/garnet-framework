@@ -97,8 +97,7 @@
     @apply tone-devreset-outline shape-dev-button shape-dev-reset type-dev-button behavior-dev-button;
     &[data-loading="true"] { @apply tone-devresetloading-outline; }
   }
-  /* carburetor-disable-next-line valid-function-class */
-  .auth2-mount { @apply shape-auth-mount layout-auth-mount; }
+  .auth2-mount { @apply tone-devinherit-plain shape-auth-mount layout-auth-mount; }
   .auth2-timer { @apply tone-devinherit-plain layout-auth-timer; }
   .auth2-shell { @apply tone-devinherit-plain shape-auth-shell; }
   .auth2-heading { @apply tone-devinherit-plain layout-auth-heading shape-auth-space-bottom; }

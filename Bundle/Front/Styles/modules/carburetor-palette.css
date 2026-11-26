@@ -127,4 +127,6 @@
   --palette-utilpill-edge-dark: rgba(39, 39, 42, 0.7);
   --palette-utilcluster-edge: rgba(231, 229, 228, 0.6);
   --palette-utilcluster-edge-dark: rgba(39, 39, 42, 0.6);
+  --palette-staticpagemenu-wash: rgba(255, 255, 255, 0.92);
+  --palette-staticpagemenu-wash-dark: rgba(24, 24, 27, 0.92);
 }
